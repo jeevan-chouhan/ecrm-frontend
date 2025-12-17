@@ -1,10 +1,14 @@
+import type { CSSProperties } from "react";
+
 interface UserProps {
   className?: string;
+  style?: CSSProperties;
 }
 
-const User = ({ className = "h-5 w-5" }: UserProps) => (
+const User = ({ className = "h-5 w-5", style }: UserProps) => (
   <svg
     className={className}
+    style={style}
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
     fill="none"
@@ -19,4 +23,3 @@ const User = ({ className = "h-5 w-5" }: UserProps) => (
 );
 
 export default User;
-

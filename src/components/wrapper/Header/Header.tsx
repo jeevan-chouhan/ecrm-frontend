@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, User, Logout, Notification, Menu, Settings } from "../../../assets";
 import { colors } from "../../../constants";
+import { LanguageSwitcher } from "../../../language";
 
 interface ProfileDropdownItem {
   label: string;
@@ -87,8 +88,11 @@ const Header = ({
         )}
       </div>
 
-      {/* Right side - Notification and Profile */}
+      {/* Right side - Language, Notification and Profile */}
       <div className="flex items-center gap-2 md:gap-4">
+        {/* Language Switcher */}
+        <LanguageSwitcher variant="dropdown" showLabel={false} />
+
         {/* Notification Icon */}
         <button
           onClick={onNotificationClick}

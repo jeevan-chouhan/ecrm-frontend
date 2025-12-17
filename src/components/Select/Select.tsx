@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import type { ReactNode } from "react";
-import { ChevronDown } from "../../assets";
+import { ChevronDown, Search } from "../../assets";
+import { colors } from "../../constants";
 
 export interface SelectOption {
   value: string;
@@ -17,6 +18,8 @@ interface SelectProps {
   disabled?: boolean;
   fullWidth?: boolean;
   leftIcon?: ReactNode;
+  searchable?: boolean;
+  searchPlaceholder?: string;
 }
 
 const Select = ({
@@ -29,11 +32,21 @@ const Select = ({
   disabled = false,
   fullWidth = false,
   leftIcon,
+  searchable = false,
+  searchPlaceholder = "Search...",
 }: SelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const selectRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const selectedOption = options.find((opt) => opt.value === value);
+
+  const filteredOptions = searchable
+    ? options.filter((opt) =>
+        opt.label.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : options;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -42,6 +55,7 @@ const Select = ({
         !selectRef.current.contains(event.target as Node)
       ) {
         setIsOpen(false);
+        setSearchTerm("");
       }
     };
 
@@ -49,15 +63,25 @@ const Select = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (isOpen && searchable && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isOpen, searchable]);
+
   const handleSelect = (optionValue: string) => {
     onChange?.(optionValue);
     setIsOpen(false);
+    setSearchTerm("");
   };
 
   return (
     <div className={`${fullWidth ? "w-full" : ""}`} ref={selectRef}>
       {label && (
-        <label className="block text-sm font-medium text-slate-700 mb-1.5">
+        <label
+          className="block text-sm font-medium mb-1.5"
+          style={{ color: colors.textDark }}
+        >
           {label}
         </label>
       )}
@@ -73,56 +97,119 @@ const Select = ({
             focus:outline-none focus:ring-2 focus:ring-offset-0
             disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed
             ${leftIcon ? "pl-10" : ""}
-            ${
-              error
-                ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
-                : "border-slate-300 focus:border-indigo-500 focus:ring-indigo-500/20"
-            }
-            ${isOpen ? "ring-2 ring-indigo-500/20 border-indigo-500" : ""}
           `}
+          style={{
+            borderColor: error
+              ? colors.error
+              : isOpen
+              ? colors.primary
+              : colors.border,
+            boxShadow: isOpen ? `0 0 0 3px ${colors.primary}20` : "none",
+          }}
         >
           {leftIcon && (
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+            <div
+              className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+              style={{ color: colors.textMuted }}
+            >
               {leftIcon}
             </div>
           )}
-          <span
-            className={selectedOption ? "text-slate-900" : "text-slate-400"}
-          >
+          <span style={{ color: selectedOption ? colors.textDark : colors.textMuted }}>
             {selectedOption?.label || placeholder}
           </span>
           <span className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
             <ChevronDown
-              className={`h-5 w-5 text-slate-400 transition-transform duration-200 ${
+              className={`h-5 w-5 transition-transform duration-200 ${
                 isOpen ? "rotate-180" : ""
               }`}
+              style={{ color: colors.textMuted }}
             />
           </span>
         </button>
 
         {isOpen && (
-          <ul className="absolute z-10 mt-1 w-full bg-white rounded-lg border border-slate-200 shadow-lg max-h-60 overflow-auto">
-            {options.map((option) => (
-              <li
-                key={option.value}
-                onClick={() => handleSelect(option.value)}
-                className={`
-                  px-4 py-2.5 cursor-pointer
-                  transition-colors duration-150
-                  ${
-                    option.value === value
-                      ? "bg-indigo-50 text-indigo-600"
-                      : "text-slate-900 hover:bg-slate-50"
-                  }
-                `}
+          <div
+            className="absolute z-10 mt-1 w-full rounded-lg overflow-hidden"
+            style={{
+              backgroundColor: colors.surface,
+              border: `1px solid ${colors.border}`,
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+            }}
+          >
+            {/* Search Input */}
+            {searchable && (
+              <div
+                className="p-2"
+                style={{ borderBottom: `1px solid ${colors.border}` }}
               >
-                {option.label}
-              </li>
-            ))}
-          </ul>
+                <div className="relative">
+                  <Search
+                    className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
+                    style={{ color: colors.textMuted }}
+                  />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder={searchPlaceholder}
+                    className="w-full pl-9 pr-3 py-2 text-sm rounded-md outline-none"
+                    style={{
+                      border: `1px solid ${colors.border}`,
+                      color: colors.textDark,
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Options List */}
+            <ul className="max-h-60 overflow-auto">
+              {filteredOptions.length > 0 ? (
+                filteredOptions.map((option) => (
+                  <li
+                    key={option.value}
+                    onClick={() => handleSelect(option.value)}
+                    className="px-4 py-2.5 cursor-pointer transition-colors duration-150"
+                    style={{
+                      backgroundColor:
+                        option.value === value ? colors.surfaceHover : "transparent",
+                      color:
+                        option.value === value ? colors.primary : colors.textDark,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (option.value !== value) {
+                        e.currentTarget.style.backgroundColor = colors.surfaceHover;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (option.value !== value) {
+                        e.currentTarget.style.backgroundColor = "transparent";
+                      }
+                    }}
+                  >
+                    {option.label}
+                  </li>
+                ))
+              ) : (
+                <li
+                  className="px-4 py-2.5 text-center"
+                  style={{ color: colors.textMuted }}
+                >
+                  No options found
+                </li>
+              )}
+            </ul>
+          </div>
         )}
       </div>
-      {error && <p className="mt-1.5 text-sm text-red-600">{error}</p>}
+      {error && (
+        <p className="mt-1.5 text-sm" style={{ color: colors.error }}>
+          {error}
+        </p>
+      )}
     </div>
   );
 };

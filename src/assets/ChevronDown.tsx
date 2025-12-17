@@ -1,10 +1,14 @@
+import type { CSSProperties } from "react";
+
 interface ChevronDownProps {
   className?: string;
+  style?: CSSProperties;
 }
 
-const ChevronDown = ({ className = "h-5 w-5" }: ChevronDownProps) => (
+const ChevronDown = ({ className = "h-5 w-5", style }: ChevronDownProps) => (
   <svg
     className={className}
+    style={style}
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 20 20"
     fill="currentColor"
@@ -18,4 +22,3 @@ const ChevronDown = ({ className = "h-5 w-5" }: ChevronDownProps) => (
 );
 
 export default ChevronDown;
-

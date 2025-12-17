@@ -1,10 +1,14 @@
+import type { CSSProperties } from "react";
+
 interface SearchProps {
   className?: string;
+  style?: CSSProperties;
 }
 
-const Search = ({ className = "h-5 w-5" }: SearchProps) => (
+const Search = ({ className = "h-5 w-5", style }: SearchProps) => (
   <svg
     className={className}
+    style={style}
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 20 20"
     fill="currentColor"
@@ -18,4 +22,3 @@ const Search = ({ className = "h-5 w-5" }: SearchProps) => (
 );
 
 export default Search;
-

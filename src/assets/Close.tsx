@@ -1,10 +1,14 @@
+import type { CSSProperties } from "react";
+
 interface CloseProps {
   className?: string;
+  style?: CSSProperties;
 }
 
-const Close = ({ className = "h-4 w-4" }: CloseProps) => (
+const Close = ({ className = "h-4 w-4", style }: CloseProps) => (
   <svg
     className={className}
+    style={style}
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 20 20"
     fill="currentColor"
@@ -14,4 +18,3 @@ const Close = ({ className = "h-4 w-4" }: CloseProps) => (
 );
 
 export default Close;
-

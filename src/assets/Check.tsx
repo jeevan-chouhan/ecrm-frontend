@@ -1,10 +1,14 @@
+import type { CSSProperties } from "react";
+
 interface CheckProps {
   className?: string;
+  style?: CSSProperties;
 }
 
-const Check = ({ className = "h-3.5 w-3.5" }: CheckProps) => (
+const Check = ({ className = "h-3.5 w-3.5", style }: CheckProps) => (
   <svg
     className={className}
+    style={style}
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 20 20"
     fill="currentColor"
@@ -18,4 +22,3 @@ const Check = ({ className = "h-3.5 w-3.5" }: CheckProps) => (
 );
 
 export default Check;
-

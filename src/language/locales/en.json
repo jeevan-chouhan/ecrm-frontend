@@ -1,0 +1,105 @@
+{
+  "common": {
+    "welcome": "Welcome",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "filter": "Filter",
+    "submit": "Submit",
+    "reset": "Reset",
+    "yes": "Yes",
+    "no": "No",
+    "confirm": "Confirm",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "settings": "Settings",
+    "candidates": "Candidates",
+    "reports": "Reports",
+    "applications": "Applications"
+  },
+  "header": {
+    "profile": "Profile",
+    "logout": "Logout",
+    "notifications": "Notifications",
+    "settings": "Settings"
+  },
+  "footer": {
+    "copyright": "© {{year}} {{company}}. All rights reserved."
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "forgotPassword": "Forgot Password?",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "rememberMe": "Remember Me",
+    "loginSuccess": "Login successful!",
+    "loginError": "Invalid credentials",
+    "logoutSuccess": "Logged out successfully"
+  },
+  "validation": {
+    "required": "This field is required",
+    "email": "Please enter a valid email",
+    "minLength": "Minimum {{count}} characters required",
+    "maxLength": "Maximum {{count}} characters allowed",
+    "passwordMatch": "Passwords do not match"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcomeMessage": "Welcome to E-CRM",
+    "subtitle": "Your dashboard content goes here.",
+    "totalUsers": "Total Users",
+    "totalCandidates": "Total Candidates",
+    "pendingApplications": "Pending Applications",
+    "recentActivity": "Recent Activity"
+  },
+  "users": {
+    "title": "Users",
+    "addUser": "Add User",
+    "editUser": "Edit User",
+    "deleteUser": "Delete User",
+    "userName": "User Name",
+    "userEmail": "Email",
+    "userRole": "Role",
+    "userStatus": "Status",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "candidates": {
+    "title": "Candidates",
+    "addCandidate": "Add Candidate",
+    "editCandidate": "Edit Candidate",
+    "candidateName": "Name",
+    "candidateEmail": "Email",
+    "candidatePhone": "Phone",
+    "candidateStatus": "Status"
+  },
+  "status": {
+    "pending": "Pending",
+    "lead": "Lead",
+    "applicationSubmitted": "Application Submitted",
+    "documentSubmission": "Document Submission",
+    "counselling": "Counselling",
+    "offer": "Offer",
+    "visa": "Visa",
+    "selected": "Selected",
+    "enrolled": "Enrolled",
+    "rejected": "Rejected"
+  }
+}
+

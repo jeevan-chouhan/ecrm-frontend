@@ -1,0 +1,105 @@
+{
+  "common": {
+    "welcome": "स्वागत है",
+    "loading": "लोड हो रहा है...",
+    "save": "सहेजें",
+    "cancel": "रद्द करें",
+    "delete": "हटाएं",
+    "edit": "संपादित करें",
+    "add": "जोड़ें",
+    "search": "खोजें",
+    "filter": "फ़िल्टर",
+    "submit": "जमा करें",
+    "reset": "रीसेट",
+    "yes": "हाँ",
+    "no": "नहीं",
+    "confirm": "पुष्टि करें",
+    "close": "बंद करें",
+    "back": "वापस",
+    "next": "अगला",
+    "previous": "पिछला",
+    "success": "सफल",
+    "error": "त्रुटि",
+    "warning": "चेतावनी",
+    "info": "जानकारी"
+  },
+  "sidebar": {
+    "dashboard": "डैशबोर्ड",
+    "users": "उपयोगकर्ता",
+    "settings": "सेटिंग्स",
+    "candidates": "उम्मीदवार",
+    "reports": "रिपोर्ट",
+    "applications": "आवेदन"
+  },
+  "header": {
+    "profile": "प्रोफ़ाइल",
+    "logout": "लॉग आउट",
+    "notifications": "सूचनाएं",
+    "settings": "सेटिंग्स"
+  },
+  "footer": {
+    "copyright": "© {{year}} {{company}}. सर्वाधिकार सुरक्षित।"
+  },
+  "auth": {
+    "login": "लॉग इन",
+    "register": "पंजीकरण",
+    "forgotPassword": "पासवर्ड भूल गए?",
+    "email": "ईमेल",
+    "password": "पासवर्ड",
+    "confirmPassword": "पासवर्ड की पुष्टि करें",
+    "rememberMe": "मुझे याद रखें",
+    "loginSuccess": "लॉगिन सफल!",
+    "loginError": "अमान्य क्रेडेंशियल",
+    "logoutSuccess": "सफलतापूर्वक लॉग आउट"
+  },
+  "validation": {
+    "required": "यह फ़ील्ड आवश्यक है",
+    "email": "कृपया वैध ईमेल दर्ज करें",
+    "minLength": "न्यूनतम {{count}} अक्षर आवश्यक हैं",
+    "maxLength": "अधिकतम {{count}} अक्षर अनुमत हैं",
+    "passwordMatch": "पासवर्ड मेल नहीं खाते"
+  },
+  "dashboard": {
+    "title": "डैशबोर्ड",
+    "welcomeMessage": "E-CRM में आपका स्वागत है",
+    "subtitle": "आपकी डैशबोर्ड सामग्री यहाँ है।",
+    "totalUsers": "कुल उपयोगकर्ता",
+    "totalCandidates": "कुल उम्मीदवार",
+    "pendingApplications": "लंबित आवेदन",
+    "recentActivity": "हाल की गतिविधि"
+  },
+  "users": {
+    "title": "उपयोगकर्ता",
+    "addUser": "उपयोगकर्ता जोड़ें",
+    "editUser": "उपयोगकर्ता संपादित करें",
+    "deleteUser": "उपयोगकर्ता हटाएं",
+    "userName": "उपयोगकर्ता नाम",
+    "userEmail": "ईमेल",
+    "userRole": "भूमिका",
+    "userStatus": "स्थिति",
+    "active": "सक्रिय",
+    "inactive": "निष्क्रिय"
+  },
+  "candidates": {
+    "title": "उम्मीदवार",
+    "addCandidate": "उम्मीदवार जोड़ें",
+    "editCandidate": "उम्मीदवार संपादित करें",
+    "candidateName": "नाम",
+    "candidateEmail": "ईमेल",
+    "candidatePhone": "फ़ोन",
+    "candidateStatus": "स्थिति"
+  },
+  "status": {
+    "pending": "लंबित",
+    "lead": "लीड",
+    "applicationSubmitted": "आवेदन जमा",
+    "documentSubmission": "दस्तावेज़ जमा",
+    "counselling": "परामर्श",
+    "offer": "प्रस्ताव",
+    "visa": "वीज़ा",
+    "selected": "चयनित",
+    "enrolled": "नामांकित",
+    "rejected": "अस्वीकृत"
+  }
+}
+
