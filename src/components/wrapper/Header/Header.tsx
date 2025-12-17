@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { ChevronDown, User, Logout, Notification, Menu, Settings } from "../../../assets";
 import { colors } from "../../../constants";
 import { LanguageSwitcher } from "../../../language";
+import PublicHeader from "./PublicHeader";
 
 interface ProfileDropdownItem {
   label: string;
@@ -19,6 +20,10 @@ interface HeaderProps {
   onLogoutClick?: () => void;
   onMenuClick?: () => void;
   showMenuButton?: boolean;
+  isLoggedIn?: boolean;
+  onRegisterClick?: () => void;
+  onLoginClick?: () => void;
+  onPricingClick?: () => void;
 }
 
 const Header = ({
@@ -31,6 +36,10 @@ const Header = ({
   onLogoutClick,
   onMenuClick,
   showMenuButton = false,
+  isLoggedIn = true,
+  onRegisterClick,
+  onLoginClick,
+  onPricingClick,
 }: HeaderProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -48,6 +57,17 @@ const Header = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Render public header for non-logged in users
+  if (!isLoggedIn) {
+    return (
+      <PublicHeader
+        onRegisterClick={onRegisterClick}
+        onLoginClick={onLoginClick}
+        onPricingClick={onPricingClick}
+      />
+    );
+  }
 
   const dropdownItems: ProfileDropdownItem[] = [
     {
