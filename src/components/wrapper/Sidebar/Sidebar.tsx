@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
+import { NavLink } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Close } from "../../../assets";
 import { colors, componentSpecs } from "../../../constants";
 
@@ -106,6 +107,50 @@ const Sidebar = ({
                 const isHovered = hoveredIndex === index;
                 const isActive = item.isActive;
 
+                // Use NavLink for items with path
+                if (item.path) {
+                  return (
+                    <li key={index}>
+                      <NavLink
+                        to={item.path}
+                        onMouseEnter={() => setHoveredIndex(index)}
+                        onMouseLeave={() => setHoveredIndex(null)}
+                        onClick={onMobileClose}
+                        title={collapsed ? item.label : undefined}
+                        className={`
+                          w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
+                          text-sm font-medium
+                          transition-all duration-150
+                          ${collapsed ? "justify-center" : ""}
+                        `}
+                        style={{
+                          backgroundColor: isActive
+                            ? colors.accent
+                            : isHovered
+                            ? colors.surfaceHover
+                            : "transparent",
+                          color: isActive ? colors.textWhite : colors.textDark,
+                          fontFamily: "'Inter', sans-serif",
+                          textDecoration: "none",
+                        }}
+                      >
+                        {item.icon && (
+                          <span
+                            className="shrink-0"
+                            style={{
+                              color: isActive ? colors.textWhite : colors.accent,
+                            }}
+                          >
+                            {item.icon}
+                          </span>
+                        )}
+                        {!collapsed && <span>{item.label}</span>}
+                      </NavLink>
+                    </li>
+                  );
+                }
+
+                // Fallback to button for items without path
                 return (
                   <li key={index}>
                     <button
