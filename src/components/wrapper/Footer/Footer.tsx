@@ -1,4 +1,4 @@
-import { colors } from "../../../constants";
+import { COLORS } from "../../../constants";
 
 interface FooterProps {
   companyName?: string;
@@ -15,14 +15,14 @@ const Footer = ({
     <footer
       className="h-14 px-4 md:px-6 flex flex-col sm:flex-row items-center justify-center gap-2"
       style={{
-        backgroundColor: colors.surface,
-        borderTop: `1px solid ${colors.border}`,
+        backgroundColor: COLORS.surface,
+        borderTop: `1px solid ${COLORS.border}`,
       }}
     >
       {/* Copyright - Centered */}
       <div
         className="text-sm text-center"
-        style={{ color: colors.textMuted, fontFamily: "'Inter', sans-serif" }}
+        style={{ color: COLORS.textMuted, fontFamily: "'Inter', sans-serif" }}
       >
         © {year} {companyName}. All rights reserved.
       </div>
@@ -30,7 +30,7 @@ const Footer = ({
       {/* Links */}
       {links.length > 0 && (
         <div className="flex items-center gap-4 sm:gap-6">
-          <span className="hidden sm:inline" style={{ color: colors.border }}>
+          <span className="hidden sm:inline" style={{ color: COLORS.border }}>
             |
           </span>
           {links.map((link, index) => (
@@ -38,12 +38,12 @@ const Footer = ({
               key={index}
               href={link.href}
               className="text-sm transition-colors"
-              style={{ color: colors.textMuted }}
+              style={{ color: COLORS.textMuted }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.color = colors.primary;
+                e.currentTarget.style.color = COLORS.primary;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.color = colors.textMuted;
+                e.currentTarget.style.color = COLORS.textMuted;
               }}
             >
               {link.label}

@@ -12,6 +12,7 @@ import ManageTeam from "./pages/ManageTeam";
 import ReportAnalysis from "./pages/ReportAnalysis";
 import Settings from "./pages/Settings";
 import Pricing from "./pages/Pricing";
+import TermsAndConditions from "./pages/TermsAndConditions";
 
 // Auth Pages
 import Login from "./pages/Auth/Login";
@@ -26,6 +27,7 @@ function App() {
         {/* Public routes */}
         <Route path={ROUTES.HOME} element={<Home />} />
         <Route path={ROUTES.PRICING} element={<Pricing />} />
+        <Route path={ROUTES.TERMS_AND_CONDITIONS} element={<TermsAndConditions />} />
 
         {/* Auth routes */}
         <Route path={ROUTES.LOGIN} element={<Login />} />

@@ -1,6 +1,6 @@
 import { forwardRef, useState } from "react";
 import type { InputHTMLAttributes, ReactNode } from "react";
-import { colors, componentSpecs } from "../../constants";
+import { COLORS, componentSpecs } from "../../constants";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -47,7 +47,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           <label
             htmlFor={inputId}
             className="block text-sm font-medium mb-1.5"
-            style={{ color: colors.textDark, fontFamily: "'Inter', sans-serif" }}
+            style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
           >
             {label}
           </label>
@@ -56,7 +56,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           {leftIcon && (
             <div
               className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-              style={{ color: colors.textMuted }}
+              style={{ color: COLORS.textMuted }}
             >
               {leftIcon}
             </div>
@@ -78,31 +78,31 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             `}
             style={{
               borderRadius: componentSpecs.input.borderRadius,
-              border: `1px solid ${error ? colors.error : isFocused ? colors.borderFocus : colors.border}`,
-              backgroundColor: colors.surface,
-              color: colors.textDark,
+              border: `1px solid ${error ? COLORS.error : isFocused ? COLORS.borderFocus : COLORS.border}`,
+              backgroundColor: COLORS.surface,
+              color: COLORS.textDark,
               fontFamily: "'Inter', sans-serif",
               fontSize: "14px",
-              boxShadow: isFocused ? `0 0 0 3px ${colors.primary}20` : "none",
+              boxShadow: isFocused ? `0 0 0 3px ${COLORS.primary}20` : "none",
             }}
             {...props}
           />
           {rightIcon && (
             <div
               className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
-              style={{ color: colors.textMuted }}
+              style={{ color: COLORS.textMuted }}
             >
               {rightIcon}
             </div>
           )}
         </div>
         {error && (
-          <p className="mt-1.5 text-sm" style={{ color: colors.error }}>
+          <p className="mt-1.5 text-sm" style={{ color: COLORS.error }}>
             {error}
           </p>
         )}
         {helperText && !error && (
-          <p className="mt-1.5 text-sm" style={{ color: colors.textMuted }}>
+          <p className="mt-1.5 text-sm" style={{ color: COLORS.textMuted }}>
             {helperText}
           </p>
         )}

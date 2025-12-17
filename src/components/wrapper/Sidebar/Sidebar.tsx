@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Close } from "../../../assets";
-import { colors, componentSpecs } from "../../../constants";
+import { COLORS, componentSpecs } from "../../../constants";
 
 interface SidebarItem {
   label: string;
@@ -60,28 +60,28 @@ const Sidebar = ({
           style={{
             width: collapsed ? componentSpecs.sidebar.collapsedWidth : componentSpecs.sidebar.width,
             minWidth: collapsed ? componentSpecs.sidebar.collapsedWidth : componentSpecs.sidebar.width,
-            backgroundColor: colors.surface,
-            borderRight: `1px solid ${colors.border}`,
+            backgroundColor: COLORS.surface,
+            borderRight: `1px solid ${COLORS.border}`,
           }}
         >
           {/* Logo */}
           <div
             className="h-16 flex items-center px-4"
-            style={{ borderBottom: `1px solid ${colors.border}` }}
+            style={{ borderBottom: `1px solid ${COLORS.border}` }}
           >
             <div className="flex items-center gap-3">
               {logo || (
                 <>
                   <div
                     className="h-9 w-9 rounded-lg flex items-center justify-center font-bold text-sm shrink-0"
-                    style={{ backgroundColor: colors.accent, color: colors.textWhite }}
+                    style={{ backgroundColor: COLORS.accent, color: COLORS.textWhite }}
                   >
                     E
                   </div>
                   {!collapsed && (
                     <span
                       className="text-lg font-bold whitespace-nowrap"
-                      style={{ color: colors.textDark, fontFamily: "'Inter', sans-serif" }}
+                      style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
                     >
                       {logoText}
                     </span>
@@ -94,7 +94,7 @@ const Sidebar = ({
             <button
               onClick={onMobileClose}
               className="p-1.5 rounded-lg transition-colors lg:hidden ml-auto"
-              style={{ color: colors.textMuted }}
+              style={{ color: COLORS.textMuted }}
             >
               <Close className="h-5 w-5" />
             </button>
@@ -125,11 +125,11 @@ const Sidebar = ({
                         `}
                         style={{
                           backgroundColor: isActive
-                            ? colors.accent
+                            ? COLORS.accent
                             : isHovered
-                            ? colors.surfaceHover
+                            ? COLORS.surfaceHover
                             : "transparent",
-                          color: isActive ? colors.textWhite : colors.textDark,
+                          color: isActive ? COLORS.textWhite : COLORS.textDark,
                           fontFamily: "'Inter', sans-serif",
                           textDecoration: "none",
                         }}
@@ -138,7 +138,7 @@ const Sidebar = ({
                           <span
                             className="shrink-0"
                             style={{
-                              color: isActive ? colors.textWhite : colors.accent,
+                              color: isActive ? COLORS.textWhite : COLORS.accent,
                             }}
                           >
                             {item.icon}
@@ -166,11 +166,11 @@ const Sidebar = ({
                       `}
                       style={{
                         backgroundColor: isActive
-                          ? colors.accent
+                          ? COLORS.accent
                           : isHovered
-                          ? colors.surfaceHover
+                          ? COLORS.surfaceHover
                           : "transparent",
-                        color: isActive ? colors.textWhite : colors.textDark,
+                        color: isActive ? COLORS.textWhite : COLORS.textDark,
                         fontFamily: "'Inter', sans-serif",
                       }}
                     >
@@ -178,7 +178,7 @@ const Sidebar = ({
                         <span
                           className="shrink-0"
                           style={{
-                            color: isActive ? colors.textWhite : colors.accent,
+                            color: isActive ? COLORS.textWhite : COLORS.accent,
                           }}
                         >
                           {item.icon}
@@ -194,7 +194,7 @@ const Sidebar = ({
 
           {/* Footer */}
           {footer && !collapsed && (
-            <div className="p-4" style={{ borderTop: `1px solid ${colors.border}` }}>
+            <div className="p-4" style={{ borderTop: `1px solid ${COLORS.border}` }}>
               {footer}
             </div>
           )}
@@ -207,9 +207,9 @@ const Sidebar = ({
             className="hidden lg:flex items-center justify-center absolute -right-3 h-6 w-6 rounded-full transition-all duration-200 shadow-md z-10"
             style={{
               top: "20px",
-              backgroundColor: collapseHovered ? colors.accent : colors.surface,
-              border: `1px solid ${colors.border}`,
-              color: collapseHovered ? colors.textWhite : colors.accent,
+              backgroundColor: collapseHovered ? COLORS.accent : COLORS.surface,
+              border: `1px solid ${COLORS.border}`,
+              color: collapseHovered ? COLORS.textWhite : COLORS.accent,
             }}
           >
             {collapsed ? (

@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { Spinner } from "../../assets";
-import { colors, componentSpecs } from "../../constants";
+import { COLORS, componentSpecs } from "../../constants";
 
 type ButtonVariant = "primary" | "secondary" | "outline" | "danger" | "ghost" | "accent";
 type ButtonSize = "sm" | "md" | "lg";
@@ -13,6 +13,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
   fullWidth?: boolean;
+  rounded?: boolean;
 }
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -23,35 +24,35 @@ const sizeStyles: Record<ButtonSize, string> = {
 
 const variantColors: Record<ButtonVariant, { bg: string; hover: string; text: string; border?: string }> = {
   primary: {
-    bg: colors.primary,
-    hover: colors.primaryHover,
-    text: colors.textWhite,
+    bg: COLORS.primary,
+    hover: COLORS.primaryHover,
+    text: COLORS.textWhite,
   },
   secondary: {
-    bg: colors.secondary,
-    hover: colors.secondaryHover,
-    text: colors.textWhite,
+    bg: COLORS.secondary,
+    hover: COLORS.secondaryHover,
+    text: COLORS.textWhite,
   },
   accent: {
-    bg: colors.accent,
-    hover: colors.accentHover,
-    text: colors.textWhite,
+    bg: COLORS.accent,
+    hover: COLORS.accentHover,
+    text: COLORS.textWhite,
   },
   outline: {
     bg: "transparent",
-    hover: colors.surfaceHover,
-    text: colors.primary,
-    border: colors.primary,
+    hover: COLORS.surfaceHover,
+    text: COLORS.primary,
+    border: COLORS.primary,
   },
   danger: {
-    bg: colors.error,
-    hover: colors.errorHover,
-    text: colors.textWhite,
+    bg: COLORS.error,
+    hover: COLORS.errorHover,
+    text: COLORS.textWhite,
   },
   ghost: {
     bg: "transparent",
-    hover: colors.surfaceHover,
-    text: colors.textMuted,
+    hover: COLORS.surfaceHover,
+    text: COLORS.textMuted,
   },
 };
 
@@ -63,6 +64,7 @@ const Button = ({
   leftIcon,
   rightIcon,
   fullWidth = false,
+  rounded = false,
   disabled,
   className = "",
   style,
@@ -95,7 +97,7 @@ const Button = ({
       `}
       style={{
         padding: sizeStyles[size],
-        borderRadius: componentSpecs.button.borderRadius,
+        borderRadius: rounded ? "9999px" : componentSpecs.button.borderRadius,
         backgroundColor: variantStyle.bg,
         color: variantStyle.text,
         border: variantStyle.border ? `2px solid ${variantStyle.border}` : "none",

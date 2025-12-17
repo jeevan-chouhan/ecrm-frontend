@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { colors, componentSpecs, shadows } from "../../constants";
+import { COLORS, componentSpecs, shadows } from "../../constants";
 
 interface CardProps {
   children: ReactNode;
@@ -44,7 +44,7 @@ const Card = ({
         backgroundColor: componentSpecs.card.background,
         borderRadius: componentSpecs.card.borderRadius,
         boxShadow: shadow !== "none" ? shadows[shadow] : "none",
-        border: bordered ? `1px solid ${colors.border}` : "none",
+        border: bordered ? `1px solid ${COLORS.border}` : "none",
       }}
     >
       {/* Header */}
@@ -53,14 +53,14 @@ const Card = ({
           className="flex items-center justify-between"
           style={{
             padding: padding !== "none" ? "16px 20px" : "0",
-            borderBottom: children || footer ? `1px solid ${colors.border}` : "none",
+            borderBottom: children || footer ? `1px solid ${COLORS.border}` : "none",
           }}
         >
           <div>
             {title && (
               <h3
                 className="text-lg font-semibold"
-                style={{ color: colors.textDark, fontFamily: "'Inter', sans-serif" }}
+                style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
               >
                 {title}
               </h3>
@@ -68,7 +68,7 @@ const Card = ({
             {subtitle && (
               <p
                 className="mt-0.5 text-sm"
-                style={{ color: colors.textMuted }}
+                style={{ color: COLORS.textMuted }}
               >
                 {subtitle}
               </p>
@@ -86,8 +86,8 @@ const Card = ({
         <div
           style={{
             padding: padding !== "none" ? "16px 20px" : "0",
-            borderTop: `1px solid ${colors.border}`,
-            backgroundColor: colors.background,
+            borderTop: `1px solid ${COLORS.border}`,
+            backgroundColor: COLORS.background,
             borderBottomLeftRadius: componentSpecs.card.borderRadius,
             borderBottomRightRadius: componentSpecs.card.borderRadius,
           }}

@@ -7,6 +7,7 @@ export { default as DatePicker } from "./DatePicker/DatePicker";
 export { default as Popup } from "./Popup/Popup";
 export { default as Card } from "./Card/Card";
 export { default as Checkbox } from "./Checkbox/Checkbox";
+export { default as PhoneInput } from "./PhoneInput/PhoneInput";
 
 // Wrapper components
 export { Header, Sidebar, Footer, Layout } from "./wrapper";

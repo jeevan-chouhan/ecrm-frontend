@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { languages, changeLanguage } from "./index";
 import { ChevronDown } from "../assets";
-import { colors } from "../constants";
+import { COLORS } from "../constants";
 
 interface LanguageSwitcherProps {
   variant?: "dropdown" | "buttons";
@@ -48,11 +48,11 @@ const LanguageSwitcher = ({
             className="px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200"
             style={{
               backgroundColor:
-                i18n.language === lang.code ? colors.accent : "transparent",
+                i18n.language === lang.code ? COLORS.accent : "transparent",
               color:
                 i18n.language === lang.code
-                  ? colors.textWhite
-                  : colors.textMuted,
+                  ? COLORS.textWhite
+                  : COLORS.textMuted,
             }}
           >
             {lang.code.toUpperCase()}
@@ -68,8 +68,8 @@ const LanguageSwitcher = ({
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200"
         style={{
-          backgroundColor: isOpen ? colors.surfaceHover : "transparent",
-          color: colors.textDark,
+          backgroundColor: isOpen ? COLORS.surfaceHover : "transparent",
+          color: COLORS.textDark,
         }}
       >
         <span className="text-sm font-medium">
@@ -86,8 +86,8 @@ const LanguageSwitcher = ({
         <div
           className="absolute right-0 mt-1 w-40 rounded-lg py-1 z-50"
           style={{
-            backgroundColor: colors.surface,
-            border: `1px solid ${colors.border}`,
+            backgroundColor: COLORS.surface,
+            border: `1px solid ${COLORS.border}`,
             boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
           }}
         >
@@ -99,13 +99,13 @@ const LanguageSwitcher = ({
               style={{
                 backgroundColor:
                   i18n.language === lang.code
-                    ? colors.surfaceHover
+                    ? COLORS.surfaceHover
                     : "transparent",
-                color: colors.textDark,
+                color: COLORS.textDark,
               }}
               onMouseEnter={(e) => {
                 if (i18n.language !== lang.code) {
-                  e.currentTarget.style.backgroundColor = colors.surfaceHover;
+                  e.currentTarget.style.backgroundColor = COLORS.surfaceHover;
                 }
               }}
               onMouseLeave={(e) => {
@@ -118,7 +118,7 @@ const LanguageSwitcher = ({
               {i18n.language === lang.code && (
                 <span
                   className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: colors.accent }}
+                  style={{ backgroundColor: COLORS.accent }}
                 />
               )}
             </button>
