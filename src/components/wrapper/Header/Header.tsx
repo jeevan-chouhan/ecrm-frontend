@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, User, Logout, Notification, Menu, Settings } from "../../../assets";
+import { colors } from "../../../constants";
 
 interface ProfileDropdownItem {
   label: string;
@@ -66,13 +67,20 @@ const Header = ({
   ];
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200 px-4 md:px-6 flex items-center justify-between">
+    <header
+      className="h-16 px-4 md:px-6 flex items-center justify-between"
+      style={{
+        backgroundColor: colors.surface,
+        borderBottom: `1px solid ${colors.border}`,
+      }}
+    >
       {/* Left side - Menu button for mobile */}
       <div className="flex items-center">
         {showMenuButton && (
           <button
             onClick={onMenuClick}
-            className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors lg:hidden"
+            className="p-2 rounded-lg transition-colors lg:hidden"
+            style={{ color: colors.textMuted }}
           >
             <Menu className="h-6 w-6" />
           </button>
@@ -84,11 +92,15 @@ const Header = ({
         {/* Notification Icon */}
         <button
           onClick={onNotificationClick}
-          className="relative p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+          className="relative p-2 rounded-lg transition-colors"
+          style={{ color: colors.textMuted }}
         >
           <Notification className="h-5 w-5" />
           {notificationCount > 0 && (
-            <span className="absolute top-1 right-1 h-4 w-4 bg-red-500 text-white text-xs font-medium rounded-full flex items-center justify-center">
+            <span
+              className="absolute top-1 right-1 h-4 w-4 text-xs font-medium rounded-full flex items-center justify-center"
+              style={{ backgroundColor: colors.error, color: colors.textWhite }}
+            >
               {notificationCount > 9 ? "9+" : notificationCount}
             </span>
           )}
@@ -98,10 +110,17 @@ const Header = ({
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center gap-2 md:gap-3 hover:bg-slate-50 rounded-lg px-2 py-1.5 transition-colors"
+            className="flex items-center gap-2 md:gap-3 rounded-lg px-2 py-1.5 transition-colors"
+            style={{ backgroundColor: isDropdownOpen ? colors.surfaceHover : "transparent" }}
           >
             {/* Avatar */}
-            <div className="h-9 w-9 md:h-10 md:w-10 rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center border-2 border-indigo-200">
+            <div
+              className="h-9 w-9 md:h-10 md:w-10 rounded-full overflow-hidden flex items-center justify-center"
+              style={{
+                backgroundColor: `${colors.accent}20`,
+                border: `2px solid ${colors.accent}40`,
+              }}
+            >
               {userAvatar ? (
                 <img
                   src={userAvatar}
@@ -109,42 +128,64 @@ const Header = ({
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <User className="h-5 w-5 text-indigo-600" />
+                <User className="h-5 w-5" style={{ color: colors.accent }} />
               )}
             </div>
 
             {/* Name and Role - Hidden on small screens */}
             <div className="hidden sm:block text-left">
               <div className="flex items-center gap-1">
-                <span className="text-sm font-medium text-slate-700">
+                <span
+                  className="text-sm font-medium"
+                  style={{ color: colors.textDark, fontFamily: "'Inter', sans-serif" }}
+                >
                   {userName}
                 </span>
                 <ChevronDown
-                  className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${
+                  className={`h-4 w-4 transition-transform duration-200 ${
                     isDropdownOpen ? "rotate-180" : ""
                   }`}
+                  style={{ color: colors.textMuted }}
                 />
               </div>
-              <span className="text-xs text-indigo-600 font-medium">
+              <span
+                className="text-xs font-medium"
+                style={{ color: colors.accent }}
+              >
                 {userRole}
               </span>
             </div>
 
             {/* Chevron for mobile */}
             <ChevronDown
-              className={`h-4 w-4 text-slate-400 transition-transform duration-200 sm:hidden ${
+              className={`h-4 w-4 transition-transform duration-200 sm:hidden ${
                 isDropdownOpen ? "rotate-180" : ""
               }`}
+              style={{ color: colors.textMuted }}
             />
           </button>
 
           {/* Dropdown Menu */}
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg border border-slate-200 shadow-lg py-1 z-50">
+            <div
+              className="absolute right-0 mt-2 w-48 rounded-lg py-1 z-50"
+              style={{
+                backgroundColor: colors.surface,
+                border: `1px solid ${colors.border}`,
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+              }}
+            >
               {/* Mobile: Show user info */}
-              <div className="sm:hidden px-4 py-2 border-b border-slate-100">
-                <p className="text-sm font-medium text-slate-700">{userName}</p>
-                <p className="text-xs text-indigo-600">{userRole}</p>
+              <div
+                className="sm:hidden px-4 py-2"
+                style={{ borderBottom: `1px solid ${colors.border}` }}
+              >
+                <p className="text-sm font-medium" style={{ color: colors.textDark }}>
+                  {userName}
+                </p>
+                <p className="text-xs" style={{ color: colors.accent }}>
+                  {userRole}
+                </p>
               </div>
               {dropdownItems.map((item, index) => (
                 <button
@@ -153,14 +194,20 @@ const Header = ({
                     item.onClick?.();
                     setIsDropdownOpen(false);
                   }}
-                  className={`
-                    w-full px-4 py-2.5 flex items-center gap-3
-                    text-sm text-slate-700 hover:bg-slate-50
-                    transition-colors
-                    ${item.label === "Logout" ? "text-red-600 hover:bg-red-50" : ""}
-                  `}
+                  className="w-full px-4 py-2.5 flex items-center gap-3 text-sm transition-colors"
+                  style={{
+                    color: item.label === "Logout" ? colors.error : colors.textDark,
+                    fontFamily: "'Inter', sans-serif",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor =
+                      item.label === "Logout" ? `${colors.error}10` : colors.surfaceHover;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }}
                 >
-                  <span className={item.label === "Logout" ? "text-red-500" : "text-slate-400"}>
+                  <span style={{ color: item.label === "Logout" ? colors.error : colors.textMuted }}>
                     {item.icon}
                   </span>
                   {item.label}

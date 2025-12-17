@@ -4,6 +4,7 @@ import Header from "../Header/Header";
 import Sidebar from "../Sidebar/Sidebar";
 import Footer from "../Footer/Footer";
 import { User, Settings, Dashboard } from "../../../assets";
+import { colors } from "../../../constants";
 
 interface LayoutProps {
   children: ReactNode;
@@ -46,7 +47,10 @@ const Layout = ({
   ];
 
   return (
-    <div className="flex h-screen bg-slate-100">
+    <div
+      className="flex h-screen"
+      style={{ backgroundColor: colors.background }}
+    >
       {/* Sidebar */}
       <Sidebar
         logoText="E-CRM"
@@ -85,4 +89,3 @@ const Layout = ({
 };
 
 export default Layout;
-

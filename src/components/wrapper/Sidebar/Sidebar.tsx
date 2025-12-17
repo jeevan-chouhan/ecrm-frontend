@@ -1,5 +1,7 @@
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { ChevronLeft, ChevronRight, Close } from "../../../assets";
+import { colors, componentSpecs } from "../../../constants";
 
 interface SidebarItem {
   label: string;
@@ -30,6 +32,9 @@ const Sidebar = ({
   mobileOpen = false,
   onMobileClose,
 }: SidebarProps) => {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [collapseHovered, setCollapseHovered] = useState(false);
+
   return (
     <>
       {/* Mobile Overlay */}
@@ -40,90 +45,136 @@ const Sidebar = ({
         />
       )}
 
-      {/* Sidebar */}
-      <aside
-        className={`
-          fixed lg:static inset-y-0 left-0 z-50
-          h-screen bg-slate-900 text-white
-          flex flex-col
-          transition-all duration-300
-          ${collapsed ? "lg:w-20" : "lg:w-64"}
-          ${mobileOpen ? "translate-x-0 w-64" : "-translate-x-full lg:translate-x-0"}
-        `}
-      >
-        {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-700">
-          <div className="flex items-center gap-3">
-            {logo || (
-              <>
-                <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-sm shrink-0">
-                  E
-                </div>
-                {!collapsed && (
-                  <span className="text-lg font-semibold whitespace-nowrap">
-                    {logoText}
-                  </span>
-                )}
-              </>
-            )}
+      {/* Sidebar Container */}
+      <div className="relative">
+        {/* Sidebar */}
+        <aside
+          className={`
+            fixed lg:static inset-y-0 left-0 z-50
+            h-screen
+            flex flex-col
+            transition-all duration-300
+            ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+          `}
+          style={{
+            width: collapsed ? componentSpecs.sidebar.collapsedWidth : componentSpecs.sidebar.width,
+            minWidth: collapsed ? componentSpecs.sidebar.collapsedWidth : componentSpecs.sidebar.width,
+            backgroundColor: colors.surface,
+            borderRight: `1px solid ${colors.border}`,
+          }}
+        >
+          {/* Logo */}
+          <div
+            className="h-16 flex items-center px-4"
+            style={{ borderBottom: `1px solid ${colors.border}` }}
+          >
+            <div className="flex items-center gap-3">
+              {logo || (
+                <>
+                  <div
+                    className="h-9 w-9 rounded-lg flex items-center justify-center font-bold text-sm shrink-0"
+                    style={{ backgroundColor: colors.accent, color: colors.textWhite }}
+                  >
+                    E
+                  </div>
+                  {!collapsed && (
+                    <span
+                      className="text-lg font-bold whitespace-nowrap"
+                      style={{ color: colors.textDark, fontFamily: "'Inter', sans-serif" }}
+                    >
+                      {logoText}
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Mobile Close Button */}
+            <button
+              onClick={onMobileClose}
+              className="p-1.5 rounded-lg transition-colors lg:hidden ml-auto"
+              style={{ color: colors.textMuted }}
+            >
+              <Close className="h-5 w-5" />
+            </button>
           </div>
 
-          {/* Mobile Close Button */}
-          <button
-            onClick={onMobileClose}
-            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors lg:hidden"
-          >
-            <Close className="h-5 w-5" />
-          </button>
+          {/* Navigation Items */}
+          <nav className="flex-1 py-4 px-3 overflow-y-auto">
+            <ul className="space-y-1">
+              {items.map((item, index) => {
+                const isHovered = hoveredIndex === index;
+                const isActive = item.isActive;
 
-          {/* Desktop Collapse Button */}
+                return (
+                  <li key={index}>
+                    <button
+                      onClick={item.onClick}
+                      onMouseEnter={() => setHoveredIndex(index)}
+                      onMouseLeave={() => setHoveredIndex(null)}
+                      title={collapsed ? item.label : undefined}
+                      className={`
+                        w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
+                        text-sm font-medium
+                        transition-all duration-150
+                        ${collapsed ? "justify-center" : ""}
+                      `}
+                      style={{
+                        backgroundColor: isActive
+                          ? colors.accent
+                          : isHovered
+                          ? colors.surfaceHover
+                          : "transparent",
+                        color: isActive ? colors.textWhite : colors.textDark,
+                        fontFamily: "'Inter', sans-serif",
+                      }}
+                    >
+                      {item.icon && (
+                        <span
+                          className="shrink-0"
+                          style={{
+                            color: isActive ? colors.textWhite : colors.accent,
+                          }}
+                        >
+                          {item.icon}
+                        </span>
+                      )}
+                      {!collapsed && <span>{item.label}</span>}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+
+          {/* Footer */}
+          {footer && !collapsed && (
+            <div className="p-4" style={{ borderTop: `1px solid ${colors.border}` }}>
+              {footer}
+            </div>
+          )}
+
+          {/* Desktop Collapse Button - Positioned at right edge, centered with header */}
           <button
             onClick={onToggleCollapse}
-            className="hidden lg:flex p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+            onMouseEnter={() => setCollapseHovered(true)}
+            onMouseLeave={() => setCollapseHovered(false)}
+            className="hidden lg:flex items-center justify-center absolute -right-3 h-6 w-6 rounded-full transition-all duration-200 shadow-md z-10"
+            style={{
+              top: "20px",
+              backgroundColor: collapseHovered ? colors.accent : colors.surface,
+              border: `1px solid ${colors.border}`,
+              color: collapseHovered ? colors.textWhite : colors.accent,
+            }}
           >
             {collapsed ? (
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-4 w-4" />
             ) : (
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-4 w-4" />
             )}
           </button>
-        </div>
-
-        {/* Navigation Items */}
-        <nav className="flex-1 py-4 px-3 overflow-y-auto">
-          <ul className="space-y-1">
-            {items.map((item, index) => (
-              <li key={index}>
-                <button
-                  onClick={item.onClick}
-                  title={collapsed ? item.label : undefined}
-                  className={`
-                    w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
-                    text-sm font-medium
-                    transition-colors duration-150
-                    ${collapsed ? "justify-center" : ""}
-                    ${
-                      item.isActive
-                        ? "bg-indigo-600 text-white"
-                        : "text-slate-300 hover:bg-slate-800 hover:text-white"
-                    }
-                  `}
-                >
-                  {item.icon && (
-                    <span className="shrink-0">{item.icon}</span>
-                  )}
-                  {!collapsed && <span>{item.label}</span>}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        {/* Footer */}
-        {footer && !collapsed && (
-          <div className="p-4 border-t border-slate-700">{footer}</div>
-        )}
-      </aside>
+        </aside>
+      </div>
     </>
   );
 };
