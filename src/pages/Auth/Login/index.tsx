@@ -144,7 +144,7 @@ const Login = () => {
                 rounded
                 disabled={!isFormValid()}
               >
-                Login in
+                Log In
               </Button>
             </form>
           </div>
@@ -158,7 +158,7 @@ const Login = () => {
             <Link
               to={ROUTES.REGISTER}
               className="font-medium hover:underline"
-              style={{ color: COLORS.textDark }}
+              style={{ color: COLORS.primary }}
             >
               Register
             </Link>

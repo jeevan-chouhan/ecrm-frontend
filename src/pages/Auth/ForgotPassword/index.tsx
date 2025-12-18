@@ -96,7 +96,7 @@ const ForgotPassword = () => {
                 <Link
                   to={ROUTES.LOGIN}
                   className="text-sm font-medium hover:underline inline-flex items-center gap-1"
-                  style={{ color: COLORS.textMuted, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.primary, fontFamily: "'Inter', sans-serif" }}
                 >
                   ← Back to login
                 </Link>
