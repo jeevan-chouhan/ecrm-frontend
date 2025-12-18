@@ -52,13 +52,6 @@
     "loginError": "Invalid credentials",
     "logoutSuccess": "Logged out successfully"
   },
-  "validation": {
-    "required": "This field is required",
-    "email": "Please enter a valid email",
-    "minLength": "Minimum {{count}} characters required",
-    "maxLength": "Maximum {{count}} characters allowed",
-    "passwordMatch": "Passwords do not match"
-  },
   "dashboard": {
     "title": "Dashboard",
     "welcomeMessage": "Welcome to E-CRM",
@@ -100,6 +93,61 @@
     "selected": "Selected",
     "enrolled": "Enrolled",
     "rejected": "Rejected"
+  },
+  "applicant": {
+    "addApplicant": "Add Applicant",
+    "personalDetails": "Personal Details",
+    "uploadProfilePhoto": "Upload profile photo",
+    "enrollmentType": "Enrollment Type",
+    "name": "Name",
+    "dateOfBirth": "Date of Birth",
+    "gender": "Gender",
+    "contactNumber": "Contact Number",
+    "emailId": "Email ID",
+    "permanentAddress": "Permanent/Postal Address",
+    "notes": "Notes",
+    "save": "SAVE",
+    "saveAndNext": "SAVE & NEXT",
+    "applicationPreferences": "Application Preferences",
+    "educationalDetails": "Educational Details",
+    "workExperience": "Work Experience",
+    "achievements": "Achievements",
+    "selectEnrollmentType": "Select enrollment type",
+    "enterName": "Enter name",
+    "selectDateOfBirth": "Select date of birth",
+    "selectGender": "Select gender",
+    "enterPhoneNumber": "Enter phone number",
+    "enterEmail": "Enter email",
+    "enterAddress": "Enter address",
+    "enterNotes": "Enter notes"
+  },
+  "validation": {
+    "required": "This field is required",
+    "email": "Please enter a valid email",
+    "minLength": "Minimum {{count}} characters required",
+    "maxLength": "Maximum {{count}} characters allowed",
+    "passwordMatch": "Passwords do not match",
+    "enrollmentTypeRequired": "Enrollment Type is required",
+    "nameRequired": "Name is required",
+    "dateOfBirthRequired": "Date of Birth is required",
+    "genderRequired": "Gender is required",
+    "countryCodeRequired": "Country Code is required",
+    "contactNumberRequired": "Contact Number is required",
+    "invalidEmail": "Please enter a valid email address"
+  },
+  "fileUpload": {
+    "dropFileHere": "Drop file here",
+    "dropFilesHere": "Drop files here",
+    "browseFiles": "Browse files",
+          "preview": "Preview",
+          "previewAll": "Preview all ({{count}})",
+          "changeFile": "Change file",
+          "deleteFile": "Delete file",
+          "size": "Size",
+          "type": "Type",
+    "invalidFormat": "{{fileName}}: Invalid format. Supported: {{formats}}",
+    "fileSizeExceeded": "{{fileName}}: Size exceeds {{maxSize}}MB limit",
+    "previewNotAvailable": "Preview not available"
   }
 }
 

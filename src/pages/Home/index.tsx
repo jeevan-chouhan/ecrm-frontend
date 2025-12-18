@@ -1,105 +1,8 @@
 import { Link } from "react-router-dom";
 import { COLORS } from "../../constants";
 import { Button } from "../../components";
-import { images } from "../../assets";
+import { images, Chart, Pipeline, Customize, UserPlus, Admin, Form } from "../../assets";
 import PublicHeader from "../../components/wrapper/Header/PublicHeader";
-
-// Feature icons as inline SVG components
-const ChartIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-    />
-  </svg>
-);
-
-const PipelineIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M4 6h16M4 10h16M4 14h16M4 18h16"
-    />
-  </svg>
-);
-
-const CustomizeIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
-    />
-  </svg>
-);
-
-const UserPlusIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-    />
-  </svg>
-);
-
-const AdminIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-    />
-  </svg>
-);
-
-const FormIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-    />
-  </svg>
-);
 
 interface FeatureItemProps {
   icon: React.ReactNode;
@@ -239,18 +142,18 @@ const Home = () => {
 
               <div className="space-y-6">
                 <FeatureItem
-                  icon={<ChartIcon />}
+                  icon={<Chart className="w-5 h-5" />}
                   title="Real-time Insights"
                   description="Monitor application statuses, deadlines, and key metrics at a glance."
                 />
                 <FeatureItem
-                  icon={<PipelineIcon />}
+                  icon={<Pipeline className="w-5 h-5" />}
                   title="Pipeline Management"
                   description="Visualize and move applications through custom stages effortlessly."
                   iconBg={COLORS.secondary}
                 />
                 <FeatureItem
-                  icon={<CustomizeIcon />}
+                  icon={<Customize className="w-5 h-5" />}
                   title="Customizable Views"
                   description="Filter and sort data to focus on what matters most to you."
                   iconBg={COLORS.primary}
@@ -320,19 +223,19 @@ const Home = () => {
 
               <div className="space-y-6">
                 <FeatureItem
-                  icon={<UserPlusIcon />}
+                  icon={<UserPlus className="w-5 h-5" />}
                   title="Add Candidates Instantly"
                   description="Quickly create new candidate profiles with essential details."
                   iconBg={COLORS.primary}
                 />
                 <FeatureItem
-                  icon={<AdminIcon />}
+                  icon={<Admin className="w-5 h-5" />}
                   title="Manage Administrators"
                   description="Onboard new team members and define their roles and permissions."
                   iconBg={COLORS.secondary}
                 />
                 <FeatureItem
-                  icon={<FormIcon />}
+                  icon={<Form className="w-5 h-5" />}
                   title="Structured Data Entry"
                   description="Intuitive forms guide you through adding all necessary information."
                   iconBg={COLORS.accent}

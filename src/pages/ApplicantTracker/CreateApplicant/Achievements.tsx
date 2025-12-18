@@ -25,10 +25,10 @@ const Achievements = () => {
 
       {/* Action Buttons */}
       <div className="flex justify-end gap-3 mt-6 pt-6 border-t" style={{ borderColor: COLORS.border }}>
-        <Button variant="primary" onClick={handleSave}>
+        <Button variant="accent" onClick={handleSave}>
           SAVE
         </Button>
-        <Button variant="primary" onClick={handleSaveAndNext}>
+        <Button variant="accent" onClick={handleSaveAndNext}>
           SAVE & NEXT
         </Button>
       </div>

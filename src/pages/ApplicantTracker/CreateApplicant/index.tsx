@@ -66,9 +66,9 @@ const CreateApplicant = () => {
                   ${isActive ? "" : "hover:bg-slate-50"}
                 `}
                 style={{
-                  color: isActive ? COLORS.primary : COLORS.textMuted,
+                  color: isActive ? COLORS.accent : COLORS.textMuted,
                   backgroundColor: isActive ? "transparent" : "transparent",
-                  borderBottom: isActive ? `2px solid ${COLORS.primary}` : "2px solid transparent",
+                  borderBottom: isActive ? `2px solid ${COLORS.accent}` : "2px solid transparent",
                 }}
               >
                 {tab.label}

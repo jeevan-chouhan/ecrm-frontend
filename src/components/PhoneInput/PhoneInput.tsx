@@ -1,11 +1,12 @@
 import PhoneInput2 from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import type { ReactNode } from "react";
 import { COLORS } from "../../constants";
 
 interface PhoneInputProps {
-  label?: string;
+  label?: string | ReactNode;
   value?: string;
-  onChange?: (value: string, country: any) => void;
+  onChange?: (value: string, country?: any) => void;
   error?: string;
   placeholder?: string;
   fullWidth?: boolean;
