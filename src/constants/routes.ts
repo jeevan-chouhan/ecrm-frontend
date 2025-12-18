@@ -13,6 +13,7 @@ export const ROUTES = {
   // Protected routes (logged-in users)
   DASHBOARD: "/dashboard",
   APPLICANT_TRACKER: "/applicant-tracker",
+  CREATE_APPLICANT: "/applicant-tracker/create",
   COUNTRY_UNIVERSITY: "/country-university-directory",
   DOCUMENT_VAULT: "/document-vault",
   AGENCY_PARTNER: "/agency-partner",
