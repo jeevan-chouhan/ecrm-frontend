@@ -1,6 +1,6 @@
-import { ReactNode } from "react";
 import PublicHeader from "../Header/PublicHeader";
 import { COLORS } from "../../../constants";
+import type { ReactNode } from "react";
 
 interface PublicLayoutProps {
   children: ReactNode;

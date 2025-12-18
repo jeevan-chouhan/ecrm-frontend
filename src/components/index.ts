@@ -8,6 +8,8 @@ export { default as Popup } from "./Popup/Popup";
 export { default as Card } from "./Card/Card";
 export { default as Checkbox } from "./Checkbox/Checkbox";
 export { default as PhoneInput } from "./PhoneInput/PhoneInput";
+export { default as FileUpload } from "./FileUpload/FileUpload";
+export { default as CountryCodeSelect } from "./CountryCodeSelect/CountryCodeSelect";
 
 // Wrapper components
 export { Header, Sidebar, Footer, Layout } from "./wrapper";

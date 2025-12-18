@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Input, Button, PhoneInput, Checkbox } from "../../../components";
 import PublicLayout from "../../../components/wrapper/PublicLayout";
-import { COLORS } from "../../../constants/COLORS";
-import { ROUTES } from "../../../constants/ROUTES";
+import { COLORS } from "../../../constants";
+import { ROUTES } from "../../../constants";
 import { isValidEmail, isValidPassword, isValidPhone } from "../../../utils";
 
 interface RegisterFormData {

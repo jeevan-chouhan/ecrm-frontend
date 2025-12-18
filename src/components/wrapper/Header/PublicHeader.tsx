@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ROUTES } from "../../../constants/ROUTES";
-import { COLORS } from "../../../constants/COLORS";
+import { ROUTES } from "../../../constants";
+import { COLORS } from "../../../constants";
 import { Menu, Close } from "../../../assets";
 
 interface PublicHeaderProps {

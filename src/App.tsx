@@ -5,6 +5,7 @@ import { ROUTES } from "./constants";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import ApplicantTracker from "./pages/ApplicantTracker";
+import CreateApplicant from "./pages/ApplicantTracker/CreateApplicant";
 import CountryUniversity from "./pages/CountryUniversity";
 import DocumentVault from "./pages/DocumentVault";
 import AgencyPartner from "./pages/AgencyPartner";
@@ -38,6 +39,7 @@ function App() {
         {/* Protected routes (for logged-in users) */}
         <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
         <Route path={ROUTES.APPLICANT_TRACKER} element={<ApplicantTracker />} />
+        <Route path={ROUTES.CREATE_APPLICANT} element={<CreateApplicant />} />
         <Route path={ROUTES.COUNTRY_UNIVERSITY} element={<CountryUniversity />} />
         <Route path={ROUTES.DOCUMENT_VAULT} element={<DocumentVault />} />
         <Route path={ROUTES.AGENCY_PARTNER} element={<AgencyPartner />} />

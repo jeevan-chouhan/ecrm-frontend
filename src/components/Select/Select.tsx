@@ -92,7 +92,7 @@ const Select = ({
           onClick={() => setIsOpen(!isOpen)}
           className={`
             relative w-full rounded-lg border
-            px-4 py-2.5 text-left
+            px-3 py-2.5 text-left
             transition-all duration-200
             focus:outline-none focus:ring-2 focus:ring-offset-0
             disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed
@@ -105,6 +105,9 @@ const Select = ({
               ? COLORS.primary
               : COLORS.border,
             boxShadow: isOpen ? `0 0 0 3px ${COLORS.primary}20` : "none",
+            backgroundColor: COLORS.surface,
+            fontFamily: "'Inter', sans-serif",
+            fontSize: "14px",
           }}
         >
           {leftIcon && (
@@ -115,12 +118,15 @@ const Select = ({
               {leftIcon}
             </div>
           )}
-          <span style={{ color: selectedOption ? COLORS.textDark : COLORS.textMuted }}>
+          <span 
+            className="block truncate pr-6"
+            style={{ color: selectedOption ? COLORS.textDark : COLORS.textMuted }}
+          >
             {selectedOption?.label || placeholder}
           </span>
-          <span className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+          <span className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
             <ChevronDown
-              className={`h-5 w-5 transition-transform duration-200 ${
+              className={`h-4 w-4 transition-transform duration-200 ${
                 isOpen ? "rotate-180" : ""
               }`}
               style={{ color: COLORS.textMuted }}
@@ -172,7 +178,7 @@ const Select = ({
                   <li
                     key={option.value}
                     onClick={() => handleSelect(option.value)}
-                    className="px-4 py-2.5 cursor-pointer transition-colors duration-150"
+                    className="px-4 py-2.5 cursor-pointer transition-COLORS duration-150"
                     style={{
                       backgroundColor:
                         option.value === value ? COLORS.surfaceHover : "transparent",
