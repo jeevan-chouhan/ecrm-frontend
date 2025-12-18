@@ -23,6 +23,14 @@ import DocumentIcon from "./Document.svg?react";
 import AgencyIcon from "./Agency.svg?react";
 import TeamIcon from "./Team.svg?react";
 import ReportIcon from "./Report.svg?react";
+import CloudUploadIcon from "./CloudUpload.svg?react";
+import ChartIcon from "./Chart.svg?react";
+import PipelineIcon from "./Pipeline.svg?react";
+import CustomizeIcon from "./Customize.svg?react";
+import UserPlusIcon from "./UserPlus.svg?react";
+import AdminIcon from "./Admin.svg?react";
+import FormIcon from "./Form.svg?react";
+import PlusIcon from "./Plus.svg?react";
 
 // Export icons as named exports (same names as before)
 export const Dashboard = DashboardIcon;
@@ -46,6 +54,14 @@ export const Document = DocumentIcon;
 export const Agency = AgencyIcon;
 export const Team = TeamIcon;
 export const Report = ReportIcon;
+export const CloudUpload = CloudUploadIcon;
+export const Chart = ChartIcon;
+export const Pipeline = PipelineIcon;
+export const Customize = CustomizeIcon;
+export const UserPlus = UserPlusIcon;
+export const Admin = AdminIcon;
+export const Form = FormIcon;
+export const Plus = PlusIcon;
 
 // Also export as icons object for alternative usage
 export const icons = {
@@ -70,6 +86,14 @@ export const icons = {
   Agency: AgencyIcon,
   Team: TeamIcon,
   Report: ReportIcon,
+  CloudUpload: CloudUploadIcon,
+  Chart: ChartIcon,
+  Pipeline: PipelineIcon,
+  Customize: CustomizeIcon,
+  UserPlus: UserPlusIcon,
+  Admin: AdminIcon,
+  Form: FormIcon,
+  Plus: PlusIcon,
 };
 
 // Images

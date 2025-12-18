@@ -52,13 +52,6 @@
     "loginError": "अमान्य क्रेडेंशियल",
     "logoutSuccess": "सफलतापूर्वक लॉग आउट"
   },
-  "validation": {
-    "required": "यह फ़ील्ड आवश्यक है",
-    "email": "कृपया वैध ईमेल दर्ज करें",
-    "minLength": "न्यूनतम {{count}} अक्षर आवश्यक हैं",
-    "maxLength": "अधिकतम {{count}} अक्षर अनुमत हैं",
-    "passwordMatch": "पासवर्ड मेल नहीं खाते"
-  },
   "dashboard": {
     "title": "डैशबोर्ड",
     "welcomeMessage": "E-CRM में आपका स्वागत है",
@@ -100,6 +93,61 @@
     "selected": "चयनित",
     "enrolled": "नामांकित",
     "rejected": "अस्वीकृत"
+  },
+  "applicant": {
+    "addApplicant": "आवेदक जोड़ें",
+    "personalDetails": "व्यक्तिगत विवरण",
+    "uploadProfilePhoto": "प्रोफ़ाइल फोटो अपलोड करें",
+    "enrollmentType": "नामांकन प्रकार",
+    "name": "नाम",
+    "dateOfBirth": "जन्म तिथि",
+    "gender": "लिंग",
+    "contactNumber": "संपर्क नंबर",
+    "emailId": "ईमेल आईडी",
+    "permanentAddress": "स्थायी/डाक पता",
+    "notes": "नोट्स",
+    "save": "सहेजें",
+    "saveAndNext": "सहेजें और आगे",
+    "applicationPreferences": "आवेदन प्राथमिकताएं",
+    "educationalDetails": "शैक्षिक विवरण",
+    "workExperience": "काम का अनुभव",
+    "achievements": "उपलब्धियां",
+    "selectEnrollmentType": "नामांकन प्रकार चुनें",
+    "enterName": "नाम दर्ज करें",
+    "selectDateOfBirth": "जन्म तिथि चुनें",
+    "selectGender": "लिंग चुनें",
+    "enterPhoneNumber": "फ़ोन नंबर दर्ज करें",
+    "enterEmail": "ईमेल दर्ज करें",
+    "enterAddress": "पता दर्ज करें",
+    "enterNotes": "नोट्स दर्ज करें"
+  },
+  "validation": {
+    "required": "यह फ़ील्ड आवश्यक है",
+    "email": "कृपया वैध ईमेल दर्ज करें",
+    "minLength": "न्यूनतम {{count}} अक्षर आवश्यक हैं",
+    "maxLength": "अधिकतम {{count}} अक्षर अनुमत हैं",
+    "passwordMatch": "पासवर्ड मेल नहीं खाते",
+    "enrollmentTypeRequired": "नामांकन प्रकार आवश्यक है",
+    "nameRequired": "नाम आवश्यक है",
+    "dateOfBirthRequired": "जन्म तिथि आवश्यक है",
+    "genderRequired": "लिंग आवश्यक है",
+    "countryCodeRequired": "देश कोड आवश्यक है",
+    "contactNumberRequired": "संपर्क नंबर आवश्यक है",
+    "invalidEmail": "कृपया वैध ईमेल पता दर्ज करें"
+  },
+  "fileUpload": {
+    "dropFileHere": "फ़ाइल यहाँ छोड़ें",
+    "dropFilesHere": "फ़ाइलें यहाँ छोड़ें",
+    "browseFiles": "फ़ाइलें ब्राउज़ करें",
+    "preview": "पूर्वावलोकन",
+    "previewAll": "सभी पूर्वावलोकन ({{count}})",
+    "changeFile": "फ़ाइल बदलें",
+    "deleteFile": "फ़ाइल हटाएं",
+    "size": "आकार",
+    "type": "प्रकार",
+    "invalidFormat": "{{fileName}}: अमान्य प्रारूप। समर्थित: {{formats}}",
+    "fileSizeExceeded": "{{fileName}}: आकार {{maxSize}}MB सीमा से अधिक है",
+    "previewNotAvailable": "पूर्वावलोकन उपलब्ध नहीं है"
   }
 }
 
