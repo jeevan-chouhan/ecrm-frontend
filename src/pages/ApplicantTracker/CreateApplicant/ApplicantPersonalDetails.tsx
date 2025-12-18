@@ -159,13 +159,8 @@ const ApplicantPersonalDetails = () => {
             {/* Enrollment Type, Name, and Date of Birth Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="w-full">
-                <label
-                  className="block text-sm font-medium mb-1.5"
-                  style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
-                >
-                  {t("applicant.enrollmentType")} <span style={{ color: COLORS.error }}>*</span>
-                </label>
                 <Select
+                  label={`${t("applicant.enrollmentType")} *`}
                   options={enrollmentTypeOptions}
                   value={formik.values.enrollmentType}
                   onChange={(value) => formik.setFieldValue("enrollmentType", value)}
@@ -213,13 +208,8 @@ const ApplicantPersonalDetails = () => {
             {/* Gender, Contact Number, Email Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="w-full">
-                <label
-                  className="block text-sm font-medium mb-1.5"
-                  style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
-                >
-                  {t("applicant.gender")} <span style={{ color: COLORS.error }}>*</span>
-                </label>
                 <Select
+                  label={`${t("applicant.gender")} *`}
                   options={genderOptions}
                   value={formik.values.gender}
                   onChange={(value) => formik.setFieldValue("gender", value)}
@@ -275,40 +265,17 @@ const ApplicantPersonalDetails = () => {
             />
 
             {/* Notes */}
-            <div className="w-full">
-              <label
-                className="block text-sm font-medium mb-1.5"
-                style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
-              >
-                {t("applicant.notes")}
-              </label>
-              <textarea
-                name="notes"
-                value={formik.values.notes}
-                onChange={formik.handleChange}
-                placeholder={t("applicant.enterNotes")}
-                rows={4}
-                className="block w-full px-4 py-2.5 transition-all duration-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  borderRadius: "8px",
-                  border: `1px solid ${COLORS.border}`,
-                  backgroundColor: COLORS.surface,
-                  color: COLORS.textDark,
-                  fontFamily: "'Inter', sans-serif",
-                  fontSize: "14px",
-                  resize: "vertical",
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = COLORS.borderFocus;
-                  e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primary}20`;
-                }}
-                onBlur={(e) => {
-                  formik.handleBlur(e);
-                  e.currentTarget.style.borderColor = COLORS.border;
-                  e.currentTarget.style.boxShadow = "none";
-                }}
-              />
-            </div>
+            <Input
+              label={t("applicant.notes")}
+              inputType="textarea"
+              name="notes"
+              value={formik.values.notes}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              placeholder={t("applicant.enterNotes")}
+              rows={4}
+              fullWidth
+            />
           </div>
 
           {/* Action Buttons */}
