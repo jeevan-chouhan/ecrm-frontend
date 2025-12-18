@@ -1,14 +1,16 @@
 import { forwardRef } from "react";
 import type { InputHTMLAttributes, ReactNode } from "react";
 import { Check } from "../../assets";
+import { COLORS } from "../../constants";
 
 interface CheckboxProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {
+  extends Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "onChange" | "size"> {
   label?: ReactNode;
   description?: string;
   error?: string;
   size?: "sm" | "md" | "lg";
   indeterminate?: boolean;
+  onChange?: (checked: boolean) => void;
 }
 
 const sizeStyles = {
@@ -43,11 +45,16 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
       className = "",
       disabled,
       checked,
+      onChange,
       ...props
     },
     ref
   ) => {
     const styles = sizeStyles[size];
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      onChange?.(e.target.checked);
+    };
 
     return (
       <div className={className}>
@@ -63,6 +70,7 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
             type="checkbox"
             checked={checked}
             disabled={disabled}
+            onChange={handleChange}
             className="sr-only peer"
             {...props}
           />
@@ -73,19 +81,17 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
               ${styles.box}
               flex items-center justify-center shrink-0
               rounded border-2 transition-all duration-150
-              ${
-                checked || indeterminate
-                  ? "bg-indigo-600 border-indigo-600"
-                  : "bg-white border-slate-300"
-              }
-              ${
-                !disabled && !checked && !indeterminate
-                  ? "hover:border-indigo-400"
-                  : ""
-              }
-              ${error ? "border-red-500" : ""}
-              peer-focus-visible:ring-2 peer-focus-visible:ring-indigo-500/20 peer-focus-visible:ring-offset-1
+              peer-focus-visible:ring-2 peer-focus-visible:ring-offset-1
             `}
+            style={{
+              backgroundColor: checked || indeterminate ? COLORS.accent : COLORS.surface,
+              borderColor: error
+                ? COLORS.error
+                : checked || indeterminate
+                ? COLORS.accent
+                : COLORS.border,
+              boxShadow: checked ? `0 0 0 3px ${COLORS.accent}20` : "none",
+            }}
           >
             {checked && <Check className={`${styles.icon} text-white`} />}
             {indeterminate && !checked && (
@@ -98,13 +104,17 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
             <div className="flex flex-col">
               {label && (
                 <span
-                  className={`${styles.label} font-medium text-slate-700 leading-tight`}
+                  className={`${styles.label} font-medium leading-tight`}
+                  style={{ color: COLORS.textDark }}
                 >
                   {label}
                 </span>
               )}
               {description && (
-                <span className={`${styles.description} text-slate-500 mt-0.5`}>
+                <span
+                  className={`${styles.description} mt-0.5`}
+                  style={{ color: COLORS.textMuted }}
+                >
                   {description}
                 </span>
               )}
@@ -113,7 +123,11 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
         </label>
 
         {/* Error message */}
-        {error && <p className="mt-1.5 text-sm text-red-600">{error}</p>}
+        {error && (
+          <p className="mt-1.5 text-sm" style={{ color: COLORS.error }}>
+            {error}
+          </p>
+        )}
       </div>
     );
   }
@@ -122,4 +136,3 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
 Checkbox.displayName = "Checkbox";
 
 export default Checkbox;
-

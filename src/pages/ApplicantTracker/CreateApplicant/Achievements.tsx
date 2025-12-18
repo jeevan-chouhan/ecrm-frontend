@@ -1,5 +1,5 @@
 import { Button } from "../../../components";
-import { colors } from "../../../constants";
+import { COLORS } from "../../../constants";
 
 const Achievements = () => {
   const handleSave = () => {
@@ -15,16 +15,16 @@ const Achievements = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold mb-4" style={{ color: colors.textDark }}>
+        <h2 className="text-lg font-bold mb-4" style={{ color: COLORS.textDark }}>
           Achievements
         </h2>
-        <p className="text-sm" style={{ color: colors.textMuted }}>
+        <p className="text-sm" style={{ color: COLORS.textMuted }}>
           Achievements form will be implemented here.
         </p>
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-end gap-3 mt-6 pt-6 border-t" style={{ borderColor: colors.border }}>
+      <div className="flex justify-end gap-3 mt-6 pt-6 border-t" style={{ borderColor: COLORS.border }}>
         <Button variant="primary" onClick={handleSave}>
           SAVE
         </Button>

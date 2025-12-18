@@ -1,7 +1,7 @@
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Input, Select, DatePicker, Button, FileUpload, CountryCodeSelect } from "../../../components";
-import { colors } from "../../../constants";
+import { COLORS } from "../../../constants";
 import type { SelectOption } from "../../../components";
 
 interface PersonalDetailsFormData {
@@ -89,7 +89,7 @@ const ApplicantPersonalDetails = () => {
 
       {/* Personal Details Form */}
       <div>
-        <h2 className="text-lg font-bold mb-4" style={{ color: colors.textDark }}>
+        <h2 className="text-lg font-bold mb-4" style={{ color: COLORS.textDark }}>
           Personal Details
         </h2>
 
@@ -100,9 +100,9 @@ const ApplicantPersonalDetails = () => {
               <div className="w-full">
                 <label
                   className="block text-sm font-medium mb-1.5"
-                  style={{ color: colors.textDark, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
                 >
-                  Enrollment Type <span style={{ color: colors.error }}>*</span>
+                  Enrollment Type <span style={{ color: COLORS.error }}>*</span>
                 </label>
                 <Select
                   options={enrollmentTypeOptions}
@@ -117,9 +117,9 @@ const ApplicantPersonalDetails = () => {
               <div className="w-full">
                 <label
                   className="block text-sm font-medium mb-1.5"
-                  style={{ color: colors.textDark, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
                 >
-                  Name <span style={{ color: colors.error }}>*</span>
+                  Name <span style={{ color: COLORS.error }}>*</span>
                 </label>
                 <Input
                   value={formik.values.name}
@@ -135,9 +135,9 @@ const ApplicantPersonalDetails = () => {
               <div className="w-full">
                 <label
                   className="block text-sm font-medium mb-1.5"
-                  style={{ color: colors.textDark, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
                 >
-                  Date of Birth <span style={{ color: colors.error }}>*</span>
+                  Date of Birth <span style={{ color: COLORS.error }}>*</span>
                 </label>
                 <DatePicker
                   value={formik.values.dateOfBirth}
@@ -154,9 +154,9 @@ const ApplicantPersonalDetails = () => {
               <div className="w-full">
                 <label
                   className="block text-sm font-medium mb-1.5"
-                  style={{ color: colors.textDark, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
                 >
-                  Gender <span style={{ color: colors.error }}>*</span>
+                  Gender <span style={{ color: COLORS.error }}>*</span>
                 </label>
                 <Select
                   options={genderOptions}
@@ -171,9 +171,9 @@ const ApplicantPersonalDetails = () => {
               <div className="w-full">
                 <label
                   className="block text-sm font-medium mb-1.5"
-                  style={{ color: colors.textDark, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
                 >
-                  Contact Number <span style={{ color: colors.error }}>*</span>
+                  Contact Number <span style={{ color: COLORS.error }}>*</span>
                 </label>
                 <div className="flex gap-2">
                   <div style={{ width: "140px", flexShrink: 0 }}>
@@ -227,7 +227,7 @@ const ApplicantPersonalDetails = () => {
             <div className="w-full">
               <label
                 className="block text-sm font-medium mb-1.5"
-                style={{ color: colors.textDark, fontFamily: "'Inter', sans-serif" }}
+                style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
               >
                 Notes
               </label>
@@ -241,23 +241,23 @@ const ApplicantPersonalDetails = () => {
                 className="block w-full px-4 py-2.5 transition-all duration-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   borderRadius: "8px",
-                  border: `1px solid ${colors.border}`,
-                  backgroundColor: colors.surface,
-                  color: colors.textDark,
+                  border: `1px solid ${COLORS.border}`,
+                  backgroundColor: COLORS.surface,
+                  color: COLORS.textDark,
                   fontFamily: "'Inter', sans-serif",
                   fontSize: "14px",
                   resize: "vertical",
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.borderColor = colors.borderFocus;
-                  e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.primary}20`;
+                  e.currentTarget.style.borderColor = COLORS.borderFocus;
+                  e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.primary}20`;
                 }}
               />
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end gap-3 mt-6 pt-6 border-t" style={{ borderColor: colors.border }}>
+          <div className="flex justify-end gap-3 mt-6 pt-6 border-t" style={{ borderColor: COLORS.border }}>
             <Button type="button" variant="primary" onClick={handleSave}>
               SAVE
             </Button>

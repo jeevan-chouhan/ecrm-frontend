@@ -14,7 +14,7 @@ import {
   Report,
   Settings,
 } from "../../../assets";
-import { colors, ROUTES } from "../../../constants";
+import { COLORS, ROUTES } from "../../../constants";
 
 interface LayoutProps {
   children: ReactNode;
@@ -95,7 +95,7 @@ const Layout = ({
   return (
     <div
       className="flex h-screen"
-      style={{ backgroundColor: colors.background }}
+      style={{ backgroundColor: COLORS.background }}
     >
       {/* Sidebar */}
       <Sidebar

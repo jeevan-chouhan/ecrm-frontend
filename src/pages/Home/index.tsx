@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { colors } from "../../constants";
+import { COLORS } from "../../constants";
 import { Button } from "../../components";
 import { images } from "../../assets";
 import PublicHeader from "../../components/wrapper/Header/PublicHeader";
@@ -113,8 +113,8 @@ const FeatureItem = ({
   icon,
   title,
   description,
-  iconBg = colors.accent,
-  iconColor = colors.textWhite,
+  iconBg = COLORS.accent,
+  iconColor = COLORS.textWhite,
 }: FeatureItemProps) => (
   <div className="flex items-start gap-4">
     <div
@@ -126,13 +126,13 @@ const FeatureItem = ({
     <div>
       <h4
         className="font-semibold text-base mb-1"
-        style={{ color: colors.textDark, fontFamily: "'Inter', sans-serif" }}
+        style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
       >
         {title}
       </h4>
       <p
         className="text-sm leading-relaxed"
-        style={{ color: colors.textMuted, fontFamily: "'Inter', sans-serif" }}
+        style={{ color: COLORS.textMuted, fontFamily: "'Inter', sans-serif" }}
       >
         {description}
       </p>
@@ -144,7 +144,7 @@ const Home = () => {
   return (
     <div
       className="min-h-screen"
-      style={{ backgroundColor: colors.background }}
+      style={{ backgroundColor: COLORS.background }}
     >
       {/* Public Header */}
       <PublicHeader />
@@ -152,7 +152,7 @@ const Home = () => {
       {/* Hero Section */}
       <section
         className="pt-24 pb-16 md:pt-32 md:pb-24 px-4 md:px-8 lg:px-12"
-        style={{ backgroundColor: colors.surface }}
+        style={{ backgroundColor: COLORS.surface }}
       >
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
@@ -161,17 +161,17 @@ const Home = () => {
               <h1
                 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-6"
                 style={{
-                  color: colors.textDark,
+                  color: COLORS.textDark,
                   fontFamily: "'Inter', sans-serif",
                 }}
               >
                 Streamline Student Applications with Edu
-                <span style={{ color: colors.accent }}>_Immigration_</span>CRM
+                <span style={{ color: COLORS.accent }}>_Immigration_</span>CRM
               </h1>
               <p
                 className="text-base md:text-lg mb-8 leading-relaxed"
                 style={{
-                  color: colors.textMuted,
+                  color: COLORS.textMuted,
                   fontFamily: "'Inter', sans-serif",
                 }}
               >
@@ -220,7 +220,7 @@ const Home = () => {
               <h2
                 className="text-2xl md:text-3xl font-bold mb-4"
                 style={{
-                  color: colors.textDark,
+                  color: COLORS.textDark,
                   fontFamily: "'Inter', sans-serif",
                 }}
               >
@@ -229,7 +229,7 @@ const Home = () => {
               <p
                 className="text-base mb-8 leading-relaxed"
                 style={{
-                  color: colors.textMuted,
+                  color: COLORS.textMuted,
                   fontFamily: "'Inter', sans-serif",
                 }}
               >
@@ -247,13 +247,13 @@ const Home = () => {
                   icon={<PipelineIcon />}
                   title="Pipeline Management"
                   description="Visualize and move applications through custom stages effortlessly."
-                  iconBg={colors.secondary}
+                  iconBg={COLORS.secondary}
                 />
                 <FeatureItem
                   icon={<CustomizeIcon />}
                   title="Customizable Views"
                   description="Filter and sort data to focus on what matters most to you."
-                  iconBg={colors.primary}
+                  iconBg={COLORS.primary}
                 />
               </div>
             </div>
@@ -278,7 +278,7 @@ const Home = () => {
       {/* Feature Section 2 - Easy Candidate & Admin Management */}
       <section
         className="py-16 md:py-24 px-4 md:px-8 lg:px-12"
-        style={{ backgroundColor: colors.surface }}
+        style={{ backgroundColor: COLORS.surface }}
       >
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
@@ -301,7 +301,7 @@ const Home = () => {
               <h2
                 className="text-2xl md:text-3xl font-bold mb-4"
                 style={{
-                  color: colors.textDark,
+                  color: COLORS.textDark,
                   fontFamily: "'Inter', sans-serif",
                 }}
               >
@@ -310,7 +310,7 @@ const Home = () => {
               <p
                 className="text-base mb-8 leading-relaxed"
                 style={{
-                  color: colors.textMuted,
+                  color: COLORS.textMuted,
                   fontFamily: "'Inter', sans-serif",
                 }}
               >
@@ -323,19 +323,19 @@ const Home = () => {
                   icon={<UserPlusIcon />}
                   title="Add Candidates Instantly"
                   description="Quickly create new candidate profiles with essential details."
-                  iconBg={colors.primary}
+                  iconBg={COLORS.primary}
                 />
                 <FeatureItem
                   icon={<AdminIcon />}
                   title="Manage Administrators"
                   description="Onboard new team members and define their roles and permissions."
-                  iconBg={colors.secondary}
+                  iconBg={COLORS.secondary}
                 />
                 <FeatureItem
                   icon={<FormIcon />}
                   title="Structured Data Entry"
                   description="Intuitive forms guide you through adding all necessary information."
-                  iconBg={colors.accent}
+                  iconBg={COLORS.accent}
                 />
               </div>
             </div>
@@ -347,15 +347,15 @@ const Home = () => {
       <footer
         className="py-8 px-4 md:px-8 lg:px-12 border-t"
         style={{
-          backgroundColor: colors.surface,
-          borderColor: colors.border,
+          backgroundColor: COLORS.surface,
+          borderColor: COLORS.border,
         }}
       >
         <div className="max-w-7xl mx-auto text-center">
           <p
             className="text-sm"
             style={{
-              color: colors.textMuted,
+              color: COLORS.textMuted,
               fontFamily: "'Inter', sans-serif",
             }}
           >

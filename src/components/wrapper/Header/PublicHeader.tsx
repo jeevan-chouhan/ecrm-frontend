@@ -1,33 +1,40 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { colors, ROUTES } from "../../../constants";
+import { Link, useLocation } from "react-router-dom";
+import { ROUTES } from "../../../constants";
+import { COLORS } from "../../../constants";
 import { Menu, Close } from "../../../assets";
 
 interface PublicHeaderProps {
+  onHomeClick?: () => void;
   onRegisterClick?: () => void;
   onLoginClick?: () => void;
   onPricingClick?: () => void;
 }
 
 const PublicHeader = ({
+  onHomeClick,
   onRegisterClick,
   onLoginClick,
   onPricingClick,
 }: PublicHeaderProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
 
   const navItems = [
-    { label: "Register Agency", onClick: onRegisterClick, href: ROUTES.REGISTER },
+    { label: "Home", onClick: onHomeClick, href: ROUTES.HOME },
     { label: "Login", onClick: onLoginClick, href: ROUTES.LOGIN },
     { label: "Pricing", onClick: onPricingClick, href: ROUTES.PRICING },
+    { label: "Register Agency", onClick: onRegisterClick, href: ROUTES.REGISTER },
   ];
+
+  const isActive = (href: string) => location.pathname === href;
 
   return (
     <header
       className="h-16 px-4 md:px-8 lg:px-12 flex items-center justify-between fixed top-0 left-0 right-0 z-50"
       style={{
-        backgroundColor: colors.surface,
-        borderBottom: `1px solid ${colors.border}`,
+        backgroundColor: COLORS.surface,
+        borderBottom: `1px solid ${COLORS.border}`,
       }}
     >
       {/* Logo */}
@@ -35,7 +42,7 @@ const PublicHeader = ({
         <span
           className="text-lg md:text-xl font-bold tracking-tight"
           style={{
-            color: colors.textDark,
+            color: COLORS.textDark,
             fontFamily: "'Inter', sans-serif",
           }}
         >
@@ -52,7 +59,7 @@ const PublicHeader = ({
             onClick={item.onClick}
             className="text-sm font-medium transition-colors hover:opacity-80"
             style={{
-              color: colors.textDark,
+              color: isActive(item.href) ? COLORS.accent : COLORS.textDark,
               fontFamily: "'Inter', sans-serif",
             }}
           >
@@ -65,7 +72,7 @@ const PublicHeader = ({
       <button
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         className="md:hidden p-2 rounded-lg transition-colors"
-        style={{ color: colors.textDark }}
+        style={{ color: COLORS.textDark }}
       >
         {mobileMenuOpen ? (
           <Close className="h-6 w-6" />
@@ -79,8 +86,8 @@ const PublicHeader = ({
         <div
           className="absolute top-16 left-0 right-0 md:hidden py-4 px-4"
           style={{
-            backgroundColor: colors.surface,
-            borderBottom: `1px solid ${colors.border}`,
+            backgroundColor: COLORS.surface,
+            borderBottom: `1px solid ${COLORS.border}`,
             boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
           }}
         >
@@ -95,14 +102,19 @@ const PublicHeader = ({
                 }}
                 className="py-3 px-4 text-sm font-medium rounded-lg transition-colors"
                 style={{
-                  color: colors.textDark,
+                  color: isActive(item.href) ? COLORS.accent : COLORS.textDark,
+                  backgroundColor: isActive(item.href) ? `${COLORS.accent}10` : "transparent",
                   fontFamily: "'Inter', sans-serif",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = colors.surfaceHover;
+                  if (!isActive(item.href)) {
+                    e.currentTarget.style.backgroundColor = COLORS.surfaceHover;
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
+                  if (!isActive(item.href)) {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }
                 }}
               >
                 {item.label}
@@ -116,4 +128,3 @@ const PublicHeader = ({
 };
 
 export default PublicHeader;
-

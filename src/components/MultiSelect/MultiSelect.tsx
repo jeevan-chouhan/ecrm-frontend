@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import type { ReactNode } from "react";
 import { ChevronDown, Close, Check, Search } from "../../assets";
-import { colors } from "../../constants";
+import { COLORS } from "../../constants";
 
 export interface MultiSelectOption {
   value: string;
@@ -86,7 +86,7 @@ const MultiSelect = ({
       {label && (
         <label
           className="block text-sm font-medium mb-1.5"
-          style={{ color: colors.textDark }}
+          style={{ color: COLORS.textDark }}
         >
           {label}
         </label>
@@ -106,17 +106,17 @@ const MultiSelect = ({
           `}
           style={{
             borderColor: error
-              ? colors.error
+              ? COLORS.error
               : isOpen
-              ? colors.primary
-              : colors.border,
-            boxShadow: isOpen ? `0 0 0 3px ${colors.primary}20` : "none",
+              ? COLORS.primary
+              : COLORS.border,
+            boxShadow: isOpen ? `0 0 0 3px ${COLORS.primary}20` : "none",
           }}
         >
           {leftIcon && (
             <div
               className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-              style={{ color: colors.textMuted }}
+              style={{ color: COLORS.textMuted }}
             >
               {leftIcon}
             </div>
@@ -128,22 +128,22 @@ const MultiSelect = ({
                   key={option.value}
                   className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-sm"
                   style={{
-                    backgroundColor: `${colors.accent}20`,
-                    color: colors.accent,
+                    backgroundColor: `${COLORS.accent}20`,
+                    color: COLORS.accent,
                   }}
                 >
                   {option.label}
                   <span
                     onClick={(e) => handleRemove(option.value, e)}
                     className="cursor-pointer"
-                    style={{ color: colors.accent }}
+                    style={{ color: COLORS.accent }}
                   >
                     <Close className="h-4 w-4" />
                   </span>
                 </span>
               ))
             ) : (
-              <span style={{ color: colors.textMuted }}>{placeholder}</span>
+              <span style={{ color: COLORS.textMuted }}>{placeholder}</span>
             )}
           </div>
           <span className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -151,7 +151,7 @@ const MultiSelect = ({
               className={`h-5 w-5 transition-transform duration-200 ${
                 isOpen ? "rotate-180" : ""
               }`}
-              style={{ color: colors.textMuted }}
+              style={{ color: COLORS.textMuted }}
             />
           </span>
         </button>
@@ -160,8 +160,8 @@ const MultiSelect = ({
           <div
             className="absolute z-10 mt-1 w-full rounded-lg overflow-hidden"
             style={{
-              backgroundColor: colors.surface,
-              border: `1px solid ${colors.border}`,
+              backgroundColor: COLORS.surface,
+              border: `1px solid ${COLORS.border}`,
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
             }}
           >
@@ -169,12 +169,12 @@ const MultiSelect = ({
             {searchable && (
               <div
                 className="p-2"
-                style={{ borderBottom: `1px solid ${colors.border}` }}
+                style={{ borderBottom: `1px solid ${COLORS.border}` }}
               >
                 <div className="relative">
                   <Search
                     className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
-                    style={{ color: colors.textMuted }}
+                    style={{ color: COLORS.textMuted }}
                   />
                   <input
                     ref={searchInputRef}
@@ -184,8 +184,8 @@ const MultiSelect = ({
                     placeholder={searchPlaceholder}
                     className="w-full pl-9 pr-3 py-2 text-sm rounded-md outline-none"
                     style={{
-                      border: `1px solid ${colors.border}`,
-                      color: colors.textDark,
+                      border: `1px solid ${COLORS.border}`,
+                      color: COLORS.textDark,
                     }}
                     onClick={(e) => e.stopPropagation()}
                   />
@@ -205,14 +205,14 @@ const MultiSelect = ({
                       className="px-4 py-2.5 cursor-pointer flex items-center gap-3 transition-colors duration-150"
                       style={{
                         backgroundColor: isSelected
-                          ? colors.surfaceHover
+                          ? COLORS.surfaceHover
                           : "transparent",
-                        color: isSelected ? colors.accent : colors.textDark,
+                        color: isSelected ? COLORS.accent : COLORS.textDark,
                       }}
                       onMouseEnter={(e) => {
                         if (!isSelected) {
                           e.currentTarget.style.backgroundColor =
-                            colors.surfaceHover;
+                            COLORS.surfaceHover;
                         }
                       }}
                       onMouseLeave={(e) => {
@@ -225,17 +225,17 @@ const MultiSelect = ({
                         className="flex items-center justify-center w-5 h-5 rounded border-2 transition-colors duration-150"
                         style={{
                           backgroundColor: isSelected
-                            ? colors.accent
+                            ? COLORS.accent
                             : "transparent",
                           borderColor: isSelected
-                            ? colors.accent
-                            : colors.border,
+                            ? COLORS.accent
+                            : COLORS.border,
                         }}
                       >
                         {isSelected && (
                           <Check
                             className="h-3.5 w-3.5"
-                            style={{ color: colors.textWhite }}
+                            style={{ color: COLORS.textWhite }}
                           />
                         )}
                       </span>
@@ -246,7 +246,7 @@ const MultiSelect = ({
               ) : (
                 <li
                   className="px-4 py-2.5 text-center"
-                  style={{ color: colors.textMuted }}
+                  style={{ color: COLORS.textMuted }}
                 >
                   No options found
                 </li>
@@ -256,7 +256,7 @@ const MultiSelect = ({
         )}
       </div>
       {error && (
-        <p className="mt-1.5 text-sm" style={{ color: colors.error }}>
+        <p className="mt-1.5 text-sm" style={{ color: COLORS.error }}>
           {error}
         </p>
       )}

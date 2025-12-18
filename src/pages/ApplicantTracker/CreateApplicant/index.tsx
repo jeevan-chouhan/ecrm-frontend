@@ -5,7 +5,7 @@ import ApplicationPreferences from "./ApplicationPreferences";
 import EducationalDetails from "./EducationalDetails";
 import WorkExperience from "./WorkExperience";
 import Achievements from "./Achievements";
-import { colors } from "../../../constants";
+import { COLORS } from "../../../constants";
 
 type TabType = "personal" | "preferences" | "educational" | "work" | "achievements";
 
@@ -46,14 +46,14 @@ const CreateApplicant = () => {
     <Layout userName="Admin" userRole="Abroad Agency">
       <div className="bg-white rounded-lg shadow-sm">
         {/* Header */}
-        <div className="p-4 md:p-6 border-b" style={{ borderColor: colors.border }}>
-          <h1 className="text-xl md:text-2xl font-semibold" style={{ color: colors.textDark }}>
+        <div className="p-4 md:p-6 border-b" style={{ borderColor: COLORS.border }}>
+          <h1 className="text-xl md:text-2xl font-semibold" style={{ color: COLORS.textDark }}>
             ADD APPLICANT
           </h1>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b overflow-x-auto" style={{ borderColor: colors.border }}>
+        <div className="flex border-b overflow-x-auto" style={{ borderColor: COLORS.border }}>
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -62,13 +62,13 @@ const CreateApplicant = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`
                   px-4 md:px-6 py-3 md:py-4 text-sm font-medium whitespace-nowrap
-                  transition-colors duration-200 relative
+                  transition-COLORS duration-200 relative
                   ${isActive ? "" : "hover:bg-slate-50"}
                 `}
                 style={{
-                  color: isActive ? colors.primary : colors.textMuted,
+                  color: isActive ? COLORS.primary : COLORS.textMuted,
                   backgroundColor: isActive ? "transparent" : "transparent",
-                  borderBottom: isActive ? `2px solid ${colors.primary}` : "2px solid transparent",
+                  borderBottom: isActive ? `2px solid ${COLORS.primary}` : "2px solid transparent",
                 }}
               >
                 {tab.label}

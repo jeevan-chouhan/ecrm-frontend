@@ -3,7 +3,8 @@ export const ROUTES = {
   // Public routes
   HOME: "/",
   PRICING: "/pricing",
-
+  TERMS_AND_CONDITIONS: "/terms-and-conditions",
+  
   // Auth routes
   LOGIN: "/login",
   REGISTER: "/register",

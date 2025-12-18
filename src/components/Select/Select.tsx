@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import type { ReactNode } from "react";
 import { ChevronDown, Search } from "../../assets";
-import { colors } from "../../constants";
+import { COLORS } from "../../constants";
 
 export interface SelectOption {
   value: string;
@@ -80,7 +80,7 @@ const Select = ({
       {label && (
         <label
           className="block text-sm font-medium mb-1.5"
-          style={{ color: colors.textDark }}
+          style={{ color: COLORS.textDark }}
         >
           {label}
         </label>
@@ -100,12 +100,12 @@ const Select = ({
           `}
           style={{
             borderColor: error
-              ? colors.error
+              ? COLORS.error
               : isOpen
-              ? colors.primary
-              : colors.border,
-            boxShadow: isOpen ? `0 0 0 3px ${colors.primary}20` : "none",
-            backgroundColor: colors.surface,
+              ? COLORS.primary
+              : COLORS.border,
+            boxShadow: isOpen ? `0 0 0 3px ${COLORS.primary}20` : "none",
+            backgroundColor: COLORS.surface,
             fontFamily: "'Inter', sans-serif",
             fontSize: "14px",
           }}
@@ -113,14 +113,14 @@ const Select = ({
           {leftIcon && (
             <div
               className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-              style={{ color: colors.textMuted }}
+              style={{ color: COLORS.textMuted }}
             >
               {leftIcon}
             </div>
           )}
           <span 
             className="block truncate pr-6"
-            style={{ color: selectedOption ? colors.textDark : colors.textMuted }}
+            style={{ color: selectedOption ? COLORS.textDark : COLORS.textMuted }}
           >
             {selectedOption?.label || placeholder}
           </span>
@@ -129,7 +129,7 @@ const Select = ({
               className={`h-4 w-4 transition-transform duration-200 ${
                 isOpen ? "rotate-180" : ""
               }`}
-              style={{ color: colors.textMuted }}
+              style={{ color: COLORS.textMuted }}
             />
           </span>
         </button>
@@ -138,8 +138,8 @@ const Select = ({
           <div
             className="absolute z-10 mt-1 w-full rounded-lg overflow-hidden"
             style={{
-              backgroundColor: colors.surface,
-              border: `1px solid ${colors.border}`,
+              backgroundColor: COLORS.surface,
+              border: `1px solid ${COLORS.border}`,
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
             }}
           >
@@ -147,12 +147,12 @@ const Select = ({
             {searchable && (
               <div
                 className="p-2"
-                style={{ borderBottom: `1px solid ${colors.border}` }}
+                style={{ borderBottom: `1px solid ${COLORS.border}` }}
               >
                 <div className="relative">
                   <Search
                     className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
-                    style={{ color: colors.textMuted }}
+                    style={{ color: COLORS.textMuted }}
                   />
                   <input
                     ref={searchInputRef}
@@ -162,8 +162,8 @@ const Select = ({
                     placeholder={searchPlaceholder}
                     className="w-full pl-9 pr-3 py-2 text-sm rounded-md outline-none"
                     style={{
-                      border: `1px solid ${colors.border}`,
-                      color: colors.textDark,
+                      border: `1px solid ${COLORS.border}`,
+                      color: COLORS.textDark,
                     }}
                     onClick={(e) => e.stopPropagation()}
                   />
@@ -178,16 +178,16 @@ const Select = ({
                   <li
                     key={option.value}
                     onClick={() => handleSelect(option.value)}
-                    className="px-4 py-2.5 cursor-pointer transition-colors duration-150"
+                    className="px-4 py-2.5 cursor-pointer transition-COLORS duration-150"
                     style={{
                       backgroundColor:
-                        option.value === value ? colors.surfaceHover : "transparent",
+                        option.value === value ? COLORS.surfaceHover : "transparent",
                       color:
-                        option.value === value ? colors.primary : colors.textDark,
+                        option.value === value ? COLORS.primary : COLORS.textDark,
                     }}
                     onMouseEnter={(e) => {
                       if (option.value !== value) {
-                        e.currentTarget.style.backgroundColor = colors.surfaceHover;
+                        e.currentTarget.style.backgroundColor = COLORS.surfaceHover;
                       }
                     }}
                     onMouseLeave={(e) => {
@@ -202,7 +202,7 @@ const Select = ({
               ) : (
                 <li
                   className="px-4 py-2.5 text-center"
-                  style={{ color: colors.textMuted }}
+                  style={{ color: COLORS.textMuted }}
                 >
                   No options found
                 </li>
@@ -212,7 +212,7 @@ const Select = ({
         )}
       </div>
       {error && (
-        <p className="mt-1.5 text-sm" style={{ color: colors.error }}>
+        <p className="mt-1.5 text-sm" style={{ color: COLORS.error }}>
           {error}
         </p>
       )}

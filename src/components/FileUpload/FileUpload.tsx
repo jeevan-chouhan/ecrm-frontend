@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Close } from "../../assets";
-import { colors } from "../../constants";
+import { COLORS } from "../../constants";
 
 interface FileUploadProps {
   label?: string;
@@ -135,12 +135,12 @@ const FileUpload = ({
       className="relative p-4 rounded-lg"
       style={{
         backgroundColor: "#F9FAFB",
-        border: `1px solid ${error ? colors.error : colors.border}`,
+        border: `1px solid ${error ? COLORS.error : COLORS.border}`,
         boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
       }}
     >
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold" style={{ color: colors.textDark }}>
+        <h3 className="text-sm font-semibold" style={{ color: COLORS.textDark }}>
           {label}
         </h3>
         {dismissible && (
@@ -153,8 +153,8 @@ const FileUpload = ({
               }
               setShowSection(false);
             }}
-            className="p-1 hover:bg-slate-200 rounded transition-colors"
-            style={{ color: colors.textMuted }}
+            className="p-1 hover:bg-slate-200 rounded transition-COLORS"
+            style={{ color: COLORS.textMuted }}
           >
             <Close className="h-5 w-5" />
           </button>
@@ -168,29 +168,29 @@ const FileUpload = ({
               src={previewUrl}
               alt="Preview"
               className={`${previewSizes[previewSize]} object-cover rounded-lg border`}
-              style={{ borderColor: colors.border }}
+              style={{ borderColor: COLORS.border }}
             />
             <button
               type="button"
               onClick={handleRemove}
-              className="absolute -top-2 -right-2 p-1 bg-white rounded-full shadow-md hover:bg-slate-100 transition-colors"
-              style={{ color: colors.error }}
+              className="absolute -top-2 -right-2 p-1 bg-white rounded-full shadow-md hover:bg-slate-100 transition-COLORS"
+              style={{ color: COLORS.error }}
             >
               <Close className="h-4 w-4" />
             </button>
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium" style={{ color: colors.textDark }}>
+            <p className="text-sm font-medium" style={{ color: COLORS.textDark }}>
               {value.name}
             </p>
-            <p className="text-xs mt-1" style={{ color: colors.textMuted }}>
+            <p className="text-xs mt-1" style={{ color: COLORS.textMuted }}>
               {(value.size / (1024 * 1024)).toFixed(2)} MB
             </p>
             <button
               type="button"
               onClick={handleBrowseClick}
               className="mt-2 text-sm underline hover:no-underline"
-              style={{ color: colors.primary }}
+              style={{ color: COLORS.primary }}
             >
               Change file
             </button>
@@ -204,7 +204,7 @@ const FileUpload = ({
           onClick={handleBrowseClick}
           className={`
             border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
-            transition-colors duration-200
+            transition-COLORS duration-200
             ${disabled ? "opacity-50 cursor-not-allowed" : ""}
             ${isDragging ? "border-indigo-500 bg-indigo-50" : "border-slate-300"}
             ${error ? "border-red-500" : ""}
@@ -226,7 +226,7 @@ const FileUpload = ({
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
-              style={{ color: colors.textMuted }}
+              style={{ color: COLORS.textMuted }}
             >
               <path
                 strokeLinecap="round"
@@ -237,14 +237,14 @@ const FileUpload = ({
             </svg>
 
             <div>
-              <p className="text-sm font-medium mb-1" style={{ color: colors.textDark }}>
+              <p className="text-sm font-medium mb-1" style={{ color: COLORS.textDark }}>
                 Drop files here
               </p>
-              <p className="text-sm mb-1" style={{ color: colors.textMuted }}>
+              <p className="text-sm mb-1" style={{ color: COLORS.textMuted }}>
                 <button
                   type="button"
                   className="underline font-medium hover:no-underline"
-                  style={{ color: colors.primary }}
+                  style={{ color: COLORS.primary }}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleBrowseClick();
@@ -253,7 +253,7 @@ const FileUpload = ({
                   Browse files
                 </button>
               </p>
-              <p className="text-xs" style={{ color: colors.textMuted }}>
+              <p className="text-xs" style={{ color: COLORS.textMuted }}>
                 Supported format: {supportedFormats}
               </p>
             </div>
@@ -262,7 +262,7 @@ const FileUpload = ({
       )}
 
       {error && (
-        <p className="mt-2 text-sm" style={{ color: colors.error }}>
+        <p className="mt-2 text-sm" style={{ color: COLORS.error }}>
           {error}
         </p>
       )}

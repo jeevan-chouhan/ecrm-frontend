@@ -2,7 +2,7 @@
 // Final Colour Palette
 // ==========================================
 
-export const colors = {
+export const COLORS = {
   // Primary Colors
   primary: "#1E90FF",
   primaryHover: "#1C86EE",
@@ -135,13 +135,13 @@ export const componentSpecs = {
   },
   input: {
     borderRadius: "8px",
-    borderColor: colors.border,
-    focusBorderColor: colors.borderFocus,
+    borderColor: COLORS.border,
+    focusBorderColor: COLORS.borderFocus,
   },
   card: {
     borderRadius: "12px",
     boxShadow: "0 1px 4px rgba(0, 0, 0, 0.05)",
-    background: colors.surface,
+    background: COLORS.surface,
   },
   sidebar: {
     width: "240px",
@@ -164,7 +164,7 @@ export const shadows = {
 // Export Types
 // ==========================================
 
-export type ColorKey = keyof typeof colors;
+export type ColorKey = keyof typeof COLORS;
 export type StageKey = keyof typeof stageColors;
 export type FontSizeKey = keyof typeof typography.fontSize;
 export type FontWeightKey = keyof typeof typography.fontWeight;
