@@ -21,6 +21,7 @@ export const ROUTES = {
   DOCUMENT_VAULT_DETAIL: "/document-vault/:applicantId",
   AGENCY_PARTNER: "/agency-partner",
   MANAGE_TEAM: "/manage-team",
+  MANAGE_TEAM_VIEW: "/manage-team/:memberId",
   REPORT_ANALYSIS: "/report-analysis",
   SETTINGS: "/settings",
   PROFILE: "/profile",

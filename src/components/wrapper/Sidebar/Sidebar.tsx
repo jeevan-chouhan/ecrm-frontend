@@ -207,7 +207,7 @@ const Sidebar = ({
               <ChevronLeft className="h-4 w-4" />
             )}
             onClick={onToggleCollapse}
-            className="hidden lg:flex absolute -right-3 h-6 w-6 shadow-md z-10"
+            className="!hidden lg:!flex absolute -right-3 h-6 w-6 shadow-md z-10"
             style={{
               top: "20px",
               border: `1px solid ${COLORS.border}`,

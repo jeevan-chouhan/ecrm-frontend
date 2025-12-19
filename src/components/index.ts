@@ -10,6 +10,12 @@ export { default as Checkbox } from "./Checkbox/Checkbox";
 export { default as PhoneInput } from "./PhoneInput/PhoneInput";
 export { default as FileUpload } from "./FileUpload/FileUpload";
 export { default as DataTable } from "./DataTable/DataTable";
+export {
+  Accordion,
+  AccordionGroup,
+  AccordionItem,
+  AccordionLabel,
+} from "./Accordion/Accordion";
 
 // Wrapper components
 export { Header, Sidebar, Footer, Layout } from "./wrapper";
