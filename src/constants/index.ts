@@ -2,6 +2,7 @@ import type { SelectOption } from "../components";
 
 export * from "./colors";
 export * from "./routes";
+export * from "./mockData";
 
 export const enrollmentTypes: SelectOption[] = [
     { value: "walk-in", label: "Walk-in" },
