@@ -21,7 +21,8 @@
     "success": "Success",
     "error": "Error",
     "warning": "Warning",
-    "info": "Info"
+    "info": "Info",
+    "continue": "Continue"
   },
   "sidebar": {
     "dashboard": "Dashboard",
@@ -35,22 +36,57 @@
     "profile": "Profile",
     "logout": "Logout",
     "notifications": "Notifications",
-    "settings": "Settings"
+    "settings": "Settings",
+    "home": "Home",
+    "login": "Login",
+    "pricing": "Pricing",
+    "registerAgency": "Register Agency"
   },
   "footer": {
     "copyright": "© {{year}} {{company}}. All rights reserved."
   },
   "auth": {
     "login": "Login",
+    "loginIn": "Log In",
     "register": "Register",
-    "forgotPassword": "Forgot Password?",
+    "registerAgency": "Register Agency",
+    "forgotPassword": "Forgot Password",
+    "forgotPasswordLink": "Forgot password?",
+    "resetPassword": "Reset Password",
+    "requestPasswordReset": "Request Password Reset",
+    "backToLogin": "← Back to Login",
+    "verificationCodeSent": "verification code will be sent on your email",
     "email": "Email",
+    "emailPlaceholder": "example.email@gmail.com",
     "password": "Password",
+    "passwordPlaceholder": "Enter at least 8+ characters",
     "confirmPassword": "Confirm Password",
-    "rememberMe": "Remember Me",
+    "confirmPasswordPlaceholder": "Enter at least 8+ characters",
+    "rememberMe": "Remember me",
+    "agencyName": "Agency Name",
+    "agencyNamePlaceholder": "Enter Agency Name",
+    "fullName": "Full Name",
+    "fullNamePlaceholder": "Enter Full Name",
+    "contactNumber": "Contact Number",
+    "contactNumberPlaceholder": "Enter phone number",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Does't have an account?",
+    "agreeToTerms": "Agree to Terms and Conditions",
+    "readTerms": "To read terms and conditions",
+    "clickHere": "Click Here",
     "loginSuccess": "Login successful!",
     "loginError": "Invalid credentials",
-    "logoutSuccess": "Logged out successfully"
+    "logoutSuccess": "Logged out successfully",
+    "registerSuccess": "Registration successful!",
+    "registerError": "Registration failed",
+    "otpVerification": "OTP Verification",
+    "enterVerificationCode": "Enter verification code to reset password",
+    "otpSentMessage": "We have sent an OTP to your registered email. It will be valid for 5 minutes.",
+    "verificationCode": "Verification Code",
+    "verify": "VERIFY",
+    "resendOtpIn": "Resend OTP in",
+    "resendOtp": "Resend OTP",
+    "save": "Save"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -133,7 +169,19 @@
     "genderRequired": "Gender is required",
     "countryCodeRequired": "Country Code is required",
     "contactNumberRequired": "Contact Number is required",
-    "invalidEmail": "Please enter a valid email address"
+    "invalidEmail": "Please enter a valid email address",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Invalid email format",
+    "passwordRequired": "Password is required",
+    "passwordMin": "Password must be at least 8 characters",
+    "confirmPasswordRequired": "Confirm password is required",
+    "agencyNameRequired": "Agency name is required",
+    "fullNameRequired": "Full name is required",
+    "phoneRequired": "Phone number is required",
+    "phoneInvalid": "Invalid phone number",
+    "agreeToTermsRequired": "You must agree to terms and conditions",
+    "otpRequired": "Please enter the verification code",
+    "otpInvalid": "Please enter a valid 6-digit code"
   },
   "fileUpload": {
     "dropFileHere": "Drop file here",
@@ -148,6 +196,16 @@
     "invalidFormat": "{{fileName}}: Invalid format. Supported: {{formats}}",
     "fileSizeExceeded": "{{fileName}}: Size exceeds {{maxSize}}MB limit",
     "previewNotAvailable": "Preview not available"
+  },
+  "profile": {
+    "title": "Profile setting",
+    "uploadImage": "Upload Image",
+    "name": "Name",
+    "email": "Email",
+    "contactNumber": "Contact Number",
+    "password": "Password",
+    "role": "Role",
+    "profileSettings": "Profile Settings",
+    "logout": "Log out"
   }
 }
-

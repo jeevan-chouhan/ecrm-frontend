@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Calendar, ChevronLeft, ChevronRight } from "../../assets";
+import { COLORS } from "../../constants";
 
 interface DatePickerProps {
   label?: string;
@@ -68,7 +69,7 @@ const DatePicker = ({
     const day = date.getDate().toString().padStart(2, "0");
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+    return `${month}/${day}/${year}`;
   };
 
   const getDaysInMonth = (month: number, year: number): number => {
@@ -141,19 +142,31 @@ const DatePicker = ({
     // Days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const isDisabled = isDateDisabled(day);
+      const selected = isSelected(day);
+      const today = isToday(day);
       days.push(
         <button
           key={day}
           type="button"
           disabled={isDisabled}
           onClick={() => handleDateSelect(day)}
-          className={`
-            h-9 w-9 rounded-lg text-sm font-medium
-            transition-colors duration-150
-            ${isDisabled ? "text-slate-300 cursor-not-allowed" : "hover:bg-indigo-50"}
-            ${isToday(day) && !isSelected(day) ? "border border-indigo-500 text-indigo-600" : ""}
-            ${isSelected(day) ? "bg-indigo-600 text-white hover:bg-indigo-700" : "text-slate-700"}
-          `}
+          className="h-9 w-9 rounded-lg text-sm font-medium transition-colors duration-150"
+          style={{
+            backgroundColor: selected ? COLORS.accent : "transparent",
+            color: selected ? COLORS.textWhite : isDisabled ? COLORS.border : COLORS.textDark,
+            border: today && !selected ? `1px solid ${COLORS.accent}` : "none",
+            cursor: isDisabled ? "not-allowed" : "pointer",
+          }}
+          onMouseEnter={(e) => {
+            if (!isDisabled && !selected) {
+              e.currentTarget.style.backgroundColor = COLORS.surfaceHover;
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isDisabled && !selected) {
+              e.currentTarget.style.backgroundColor = "transparent";
+            }
+          }}
         >
           {day}
         </button>
@@ -166,7 +179,10 @@ const DatePicker = ({
   return (
     <div className={`${fullWidth ? "w-full" : ""}`} ref={pickerRef}>
       {label && (
-        <label className="block text-sm font-medium text-slate-700 mb-1.5">
+        <label
+          className="block text-sm font-medium mb-1.5"
+          style={{ color: COLORS.textDark }}
+        >
           {label}
         </label>
       )}
@@ -176,48 +192,70 @@ const DatePicker = ({
           disabled={disabled}
           onClick={() => setIsOpen(!isOpen)}
           className={`
-            relative w-full rounded-lg border
+            relative w-full rounded-lg
             px-4 py-2.5 text-left
             transition-all duration-200
-            focus:outline-none focus:ring-2 focus:ring-offset-0
+            focus:outline-none
             disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed
-            ${
-              error
-                ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
-                : "border-slate-300 focus:border-indigo-500 focus:ring-indigo-500/20"
-            }
-            ${isOpen ? "ring-2 ring-indigo-500/20 border-indigo-500" : ""}
           `}
+          style={{
+            border: `1px solid ${error ? COLORS.error : isOpen ? COLORS.accent : COLORS.border}`,
+            boxShadow: isOpen ? `0 0 0 3px ${COLORS.accent}20` : "none",
+            backgroundColor: COLORS.surface,
+            fontFamily: "'Inter', sans-serif",
+            fontSize: "14px",
+          }}
         >
-          <span className={value ? "text-slate-900" : "text-slate-400"}>
+          <span style={{ color: value ? COLORS.textDark : COLORS.textDark, opacity: value ? 1 : 0.7 }}>
             {value ? formatDate(value) : placeholder}
           </span>
           <span className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-            <Calendar className="h-5 w-5 text-slate-400" />
+            <Calendar className="h-5 w-5" style={{ color: COLORS.textMuted }} />
           </span>
         </button>
 
         {/* Calendar Dropdown */}
         {isOpen && (
-          <div className="absolute z-50 mt-1 w-72 bg-white rounded-lg border border-slate-200 shadow-lg p-4">
+          <div
+            className="absolute z-50 mt-1 w-72 rounded-lg p-4"
+            style={{
+              backgroundColor: COLORS.surface,
+              border: `1px solid ${COLORS.border}`,
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+            }}
+          >
             {/* Month/Year Navigation */}
             <div className="flex items-center justify-between mb-4">
               <button
                 type="button"
                 onClick={handlePrevMonth}
-                className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+                className="p-1.5 rounded-lg transition-colors"
+                style={{ color: COLORS.textMuted }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = COLORS.surfaceHover;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }}
               >
-                <ChevronLeft className="h-5 w-5 text-slate-600" />
+                <ChevronLeft className="h-5 w-5" />
               </button>
-              <span className="text-sm font-semibold text-slate-800">
+              <span className="text-sm font-semibold" style={{ color: COLORS.textDark }}>
                 {MONTHS[currentMonth]} {currentYear}
               </span>
               <button
                 type="button"
                 onClick={handleNextMonth}
-                className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+                className="p-1.5 rounded-lg transition-colors"
+                style={{ color: COLORS.textMuted }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = COLORS.surfaceHover;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }}
               >
-                <ChevronRight className="h-5 w-5 text-slate-600" />
+                <ChevronRight className="h-5 w-5" />
               </button>
             </div>
 
@@ -226,7 +264,8 @@ const DatePicker = ({
               {DAYS.map((day) => (
                 <div
                   key={day}
-                  className="h-9 w-9 flex items-center justify-center text-xs font-medium text-slate-500"
+                  className="h-9 w-9 flex items-center justify-center text-xs font-medium"
+                  style={{ color: COLORS.textMuted }}
                 >
                   {day}
                 </div>
@@ -237,7 +276,7 @@ const DatePicker = ({
             <div className="grid grid-cols-7 gap-1">{renderCalendarDays()}</div>
 
             {/* Today Button */}
-            <div className="mt-3 pt-3 border-t border-slate-100">
+            <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${COLORS.border}` }}>
               <button
                 type="button"
                 onClick={() => {
@@ -247,7 +286,14 @@ const DatePicker = ({
                   onChange?.(today);
                   setIsOpen(false);
                 }}
-                className="w-full py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                className="w-full py-2 text-sm font-medium rounded-lg transition-colors"
+                style={{ color: COLORS.accent }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = COLORS.surfaceHover;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }}
               >
                 Today
               </button>
@@ -255,7 +301,11 @@ const DatePicker = ({
           </div>
         )}
       </div>
-      {error && <p className="mt-1.5 text-sm text-red-600">{error}</p>}
+      {error && (
+        <p className="mt-1.5 text-sm" style={{ color: COLORS.error }}>
+          {error}
+        </p>
+      )}
     </div>
   );
 };

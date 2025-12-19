@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Close } from "../../../assets";
 import { COLORS, componentSpecs } from "../../../constants";
+import Button from "../../Button/Button";
 
 interface SidebarItem {
   label: string;
@@ -34,7 +35,6 @@ const Sidebar = ({
   onMobileClose,
 }: SidebarProps) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [collapseHovered, setCollapseHovered] = useState(false);
 
   return (
     <>
@@ -91,13 +91,13 @@ const Sidebar = ({
             </div>
 
             {/* Mobile Close Button */}
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={<Close className="h-5 w-5" style={{ color: COLORS.textMuted }} />}
               onClick={onMobileClose}
-              className="p-1.5 rounded-lg transition-colors lg:hidden ml-auto"
-              style={{ color: COLORS.textMuted }}
-            >
-              <Close className="h-5 w-5" />
-            </button>
+              className="lg:hidden ml-auto"
+            />
           </div>
 
           {/* Navigation Items */}
@@ -153,28 +153,11 @@ const Sidebar = ({
                 // Fallback to button for items without path
                 return (
                   <li key={index}>
-                    <button
-                      onClick={item.onClick}
-                      onMouseEnter={() => setHoveredIndex(index)}
-                      onMouseLeave={() => setHoveredIndex(null)}
-                      title={collapsed ? item.label : undefined}
-                      className={`
-                        w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
-                        text-sm font-medium
-                        transition-all duration-150
-                        ${collapsed ? "justify-center" : ""}
-                      `}
-                      style={{
-                        backgroundColor: isActive
-                          ? COLORS.accent
-                          : isHovered
-                          ? COLORS.surfaceHover
-                          : "transparent",
-                        color: isActive ? COLORS.textWhite : COLORS.textDark,
-                        fontFamily: "'Inter', sans-serif",
-                      }}
-                    >
-                      {item.icon && (
+                    <Button
+                      variant={isActive ? "accent" : "ghost"}
+                      size="sm"
+                      fullWidth
+                      leftIcon={item.icon ? (
                         <span
                           className="shrink-0"
                           style={{
@@ -183,9 +166,23 @@ const Sidebar = ({
                         >
                           {item.icon}
                         </span>
-                      )}
-                      {!collapsed && <span>{item.label}</span>}
-                    </button>
+                      ) : undefined}
+                      onClick={item.onClick}
+                      title={collapsed ? item.label : undefined}
+                      className={collapsed ? "justify-center" : "justify-start"}
+                      style={{
+                        backgroundColor: isActive
+                          ? COLORS.accent
+                          : isHovered
+                          ? COLORS.surfaceHover
+                          : "transparent",
+                        color: isActive ? COLORS.textWhite : COLORS.textDark,
+                      }}
+                      onMouseEnter={() => setHoveredIndex(index)}
+                      onMouseLeave={() => setHoveredIndex(null)}
+                    >
+                      {!collapsed && item.label}
+                    </Button>
                   </li>
                 );
               })}
@@ -200,24 +197,25 @@ const Sidebar = ({
           )}
 
           {/* Desktop Collapse Button - Positioned at right edge, centered with header */}
-          <button
-            onClick={onToggleCollapse}
-            onMouseEnter={() => setCollapseHovered(true)}
-            onMouseLeave={() => setCollapseHovered(false)}
-            className="hidden lg:flex items-center justify-center absolute -right-3 h-6 w-6 rounded-full transition-all duration-200 shadow-md z-10"
-            style={{
-              top: "20px",
-              backgroundColor: collapseHovered ? COLORS.accent : COLORS.surface,
-              border: `1px solid ${COLORS.border}`,
-              color: collapseHovered ? COLORS.textWhite : COLORS.accent,
-            }}
-          >
-            {collapsed ? (
+          <Button
+            variant="outline"
+            size="sm"
+            rounded
+            icon={collapsed ? (
               <ChevronRight className="h-4 w-4" />
             ) : (
               <ChevronLeft className="h-4 w-4" />
             )}
-          </button>
+            onClick={onToggleCollapse}
+            className="hidden lg:flex absolute -right-3 h-6 w-6 shadow-md z-10"
+            style={{
+              top: "20px",
+              border: `1px solid ${COLORS.border}`,
+              backgroundColor: COLORS.surface,
+              color: COLORS.accent,
+              padding: "2px",
+            }}
+          />
         </aside>
       </div>
     </>

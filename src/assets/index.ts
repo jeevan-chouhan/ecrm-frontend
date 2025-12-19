@@ -30,7 +30,15 @@ import CustomizeIcon from "./Customize.svg?react";
 import UserPlusIcon from "./UserPlus.svg?react";
 import AdminIcon from "./Admin.svg?react";
 import FormIcon from "./Form.svg?react";
+import EditIcon from "./Edit.svg?react";
+import TrashIcon from "./Trash.svg?react";
+import DownloadIcon from "./Download.svg?react";
 import PlusIcon from "./Plus.svg?react";
+import EyeIcon from "./Eye.svg?react";
+import FileIcon from "./File.svg?react";
+import UploadIcon from "./Upload.svg?react";
+import ArrowLeftIcon from "./ArrowLeft.svg?react";
+import MinusIcon from "./Minus.svg?react";
 
 // Export icons as named exports (same names as before)
 export const Dashboard = DashboardIcon;
@@ -61,7 +69,15 @@ export const Customize = CustomizeIcon;
 export const UserPlus = UserPlusIcon;
 export const Admin = AdminIcon;
 export const Form = FormIcon;
+export const Edit = EditIcon;
+export const Trash = TrashIcon;
+export const Download = DownloadIcon;
 export const Plus = PlusIcon;
+export const Eye = EyeIcon;
+export const File = FileIcon;
+export const Upload = UploadIcon;
+export const ArrowLeft = ArrowLeftIcon;
+export const Minus = MinusIcon;
 
 // Also export as icons object for alternative usage
 export const icons = {
@@ -94,6 +110,14 @@ export const icons = {
   Admin: AdminIcon,
   Form: FormIcon,
   Plus: PlusIcon,
+  Edit: EditIcon,
+  Trash: TrashIcon,
+  Download: DownloadIcon,
+  Eye: EyeIcon,
+  File: FileIcon,
+  Upload: UploadIcon,
+  ArrowLeft: ArrowLeftIcon,
+  Minus: MinusIcon,
 };
 
 // Images

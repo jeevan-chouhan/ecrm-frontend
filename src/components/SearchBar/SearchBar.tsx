@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import type { InputHTMLAttributes } from "react";
 import { Search, CloseCircle } from "../../assets";
+import { COLORS } from "../../constants";
 
 interface SearchBarProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, "onChange"> {
@@ -22,6 +23,7 @@ const SearchBar = ({
   ...props
 }: SearchBarProps) => {
   const [value, setValue] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
   const [debounceTimer, setDebounceTimer] = useState<ReturnType<
     typeof setTimeout
   > | null>(null);
@@ -62,32 +64,50 @@ const SearchBar = ({
 
   return (
     <div className={`relative ${fullWidth ? "w-full" : ""}`}>
-      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-        <Search className="h-5 w-5 text-slate-400" />
+      <div
+        className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none"
+        style={{ color: COLORS.textMuted }}
+      >
+        <Search className="h-5 w-5" />
       </div>
       <input
         type="text"
         value={value}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         placeholder={placeholder}
         className={`
-          block w-full rounded-lg border border-slate-300
+          block w-full rounded-lg
           pl-10 pr-10 py-2.5
-          text-slate-900 placeholder:text-slate-400
           transition-all duration-200
-          focus:outline-none focus:ring-2 focus:ring-offset-0
-          focus:border-indigo-500 focus:ring-indigo-500/20
+          focus:outline-none
           disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed
           ${className}
         `}
+        style={{
+          border: `1px solid ${isFocused ? COLORS.accent : COLORS.border}`,
+          boxShadow: isFocused ? `0 0 0 3px ${COLORS.accent}20` : "none",
+          color: COLORS.textDark,
+          backgroundColor: COLORS.surface,
+          fontFamily: "'Inter', sans-serif",
+          fontSize: "14px",
+        }}
         {...props}
       />
+      <style>{`
+        input::placeholder {
+          color: ${COLORS.textDark} !important;
+          opacity: 0.7;
+        }
+      `}</style>
       {showClearButton && value && (
         <button
           type="button"
           onClick={handleClear}
-          className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+          className="absolute inset-y-0 right-0 pr-3.5 flex items-center transition-colors"
+          style={{ color: COLORS.textMuted }}
         >
           <CloseCircle className="h-5 w-5" />
         </button>
