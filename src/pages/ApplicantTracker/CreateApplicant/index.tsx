@@ -25,12 +25,19 @@ const tabs: Tab[] = [
 const CreateApplicant = () => {
   const [activeTab, setActiveTab] = useState<TabType>("personal");
 
+  const handleNextTab = () => {
+    const currentIndex = tabs.findIndex((tab) => tab.id === activeTab);
+    if (currentIndex < tabs.length - 1) {
+      setActiveTab(tabs[currentIndex + 1].id);
+    }
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case "personal":
         return <ApplicantPersonalDetails />;
       case "preferences":
-        return <ApplicationPreferences />;
+        return <ApplicationPreferences onSaveAndNext={handleNextTab} />;
       case "educational":
         return <EducationalDetails />;
       case "work":
