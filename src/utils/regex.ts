@@ -21,6 +21,9 @@ export const REGEX = {
 
   // URL validation
   URL: /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/,
+
+  // Score validation: supports decimal numbers (for percentage, CGPA, GPA)
+  SCORE: /^\d+(\.\d{1,2})?$/,
 } as const;
 
 // Validation helper functions

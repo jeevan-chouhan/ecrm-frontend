@@ -78,3 +78,18 @@ export const campuses: SelectOption[] = [
   { value: "other", label: "Other" },
 ];
 
+// Educational qualifications
+export const highestQualifications: SelectOption[] = [
+  { value: "high-school", label: "High School" },
+  { value: "diploma", label: "Diploma" },
+  { value: "ug", label: "UG (Undergraduate)" },
+  { value: "pg", label: "PG (Post Graduate)" },
+];
+
+// Score types
+export const scoreTypes: SelectOption[] = [
+  { value: "percentage", label: "Percentage" },
+  { value: "cgpa", label: "CGPA" },
+  { value: "gpa", label: "GPA" },
+];
+

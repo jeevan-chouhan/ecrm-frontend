@@ -176,7 +176,24 @@
     "selectAgencyPartner": "Select agency partner",
     "add": "Add",
     "addedUniversityPreferences": "Added University Preferences",
-    "noPreferencesAdded": "No preferences added yet"
+    "noPreferencesAdded": "No preferences added yet",
+    "highestQualification": "Select Highest Qualification",
+    "institutionName": "Institution Name",
+    "boardUniversity": "Board/University",
+    "major": "Major (field of study) - Computer Science, Mathematics - Keep it Input Filed [If highest education is graduation]",
+    "scoreType": "Score type",
+    "score": "Score",
+    "passingYear": "Passing year",
+    "selectHighestQualification": "High School/diploma/ug/pg",
+    "enterInstitutionName": "Enter institution name",
+    "enterBoardUniversity": "Enter board/university",
+    "enterProgram": "PCM/B.Tech/B.Arch",
+    "enterMajor": "Enter major/field of study",
+    "selectScoreType": "Select score type",
+    "enterScore": "Enter score",
+    "selectPassingYear": "Select passing year",
+    "addedEducationalDetails": "Added Educational Details",
+    "noEducationalDetailsAdded": "No educational details added yet"
   },
   "validation": {
     "required": "This field is required",
@@ -211,7 +228,16 @@
     "intakeRequired": "Intake is required",
     "counselorRequired": "Counselor is required",
     "agencyPartnerRequired": "Agency partner is required",
-    "atLeastOnePreferenceRequired": "At least one preference is required"
+    "atLeastOnePreferenceRequired": "At least one preference is required",
+    "highestQualificationRequired": "Highest qualification is required",
+    "institutionNameRequired": "Institution name is required",
+    "boardUniversityRequired": "Board/University is required",
+    "scoreTypeRequired": "Score type is required",
+    "scoreRequired": "Score is required",
+    "passingYearRequired": "Passing year is required",
+    "majorRequired": "Major is required",
+    "invalidScore": "Please enter a valid score",
+    "atLeastOneEducationalDetailRequired": "At least one educational detail is required"
   },
   "fileUpload": {
     "dropFileHere": "Drop file here",
