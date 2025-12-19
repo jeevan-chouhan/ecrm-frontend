@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, User, Logout, Notification, Menu, Settings } from "../../../assets";
-import { COLORS } from "../../../constants";
+import { useNavigate } from "react-router-dom";
+import { ChevronDown, User, Logout, Notification, Menu } from "../../../assets";
+import { COLORS, ROUTES } from "../../../constants";
 import { LanguageSwitcher } from "../../../language";
 import PublicHeader from "./PublicHeader";
+import Button from "../../Button/Button";
 
 interface ProfileDropdownItem {
   label: string;
@@ -58,6 +60,8 @@ const Header = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const navigate = useNavigate();
+
   // Render public header for non-logged in users
   if (!isLoggedIn) {
     return (
@@ -69,21 +73,27 @@ const Header = ({
     );
   }
 
+  const handleProfileClick = () => {
+    navigate(ROUTES.PROFILE);
+    onProfileClick?.();
+  };
+
+  const handleLogoutClick = () => {
+    // Clear any auth state here if needed
+    onLogoutClick?.();
+    navigate(ROUTES.LOGIN);
+  };
+
   const dropdownItems: ProfileDropdownItem[] = [
     {
       label: "Profile",
       icon: <User className="h-4 w-4" />,
-      onClick: onProfileClick,
-    },
-    {
-      label: "Settings",
-      icon: <Settings className="h-4 w-4" />,
-      onClick: onProfileClick,
+      onClick: handleProfileClick,
     },
     {
       label: "Logout",
       icon: <Logout className="h-4 w-4" />,
-      onClick: onLogoutClick,
+      onClick: handleLogoutClick,
     },
   ];
 
@@ -98,13 +108,13 @@ const Header = ({
       {/* Left side - Menu button for mobile */}
       <div className="flex items-center">
         {showMenuButton && (
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={<Menu className="h-6 w-6" style={{ color: COLORS.textMuted }} />}
             onClick={onMenuClick}
-            className="p-2 rounded-lg transition-colors lg:hidden"
-            style={{ color: COLORS.textMuted }}
-          >
-            <Menu className="h-6 w-6" />
-          </button>
+            className="lg:hidden"
+          />
         )}
       </div>
 
@@ -114,21 +124,22 @@ const Header = ({
         <LanguageSwitcher variant="dropdown" showLabel={false} />
 
         {/* Notification Icon */}
-        <button
-          onClick={onNotificationClick}
-          className="relative p-2 rounded-lg transition-colors"
-          style={{ color: COLORS.textMuted }}
-        >
-          <Notification className="h-5 w-5" />
+        <div className="relative">
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={<Notification className="h-5 w-5" style={{ color: COLORS.textMuted }} />}
+            onClick={onNotificationClick}
+          />
           {notificationCount > 0 && (
             <span
-              className="absolute top-1 right-1 h-4 w-4 text-xs font-medium rounded-full flex items-center justify-center"
+              className="absolute top-0 right-0 h-4 w-4 text-xs font-medium rounded-full flex items-center justify-center"
               style={{ backgroundColor: COLORS.error, color: COLORS.textWhite }}
             >
               {notificationCount > 9 ? "9+" : notificationCount}
             </span>
           )}
-        </button>
+        </div>
 
         {/* Profile Dropdown */}
         <div className="relative" ref={dropdownRef}>
@@ -220,18 +231,17 @@ const Header = ({
                   }}
                   className="w-full px-4 py-2.5 flex items-center gap-3 text-sm transition-colors"
                   style={{
-                    color: item.label === "Logout" ? COLORS.error : COLORS.textDark,
+                    color: COLORS.textDark,
                     fontFamily: "'Inter', sans-serif",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor =
-                      item.label === "Logout" ? `${COLORS.error}10` : COLORS.surfaceHover;
+                    e.currentTarget.style.backgroundColor = COLORS.surfaceHover;
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = "transparent";
                   }}
                 >
-                  <span style={{ color: item.label === "Logout" ? COLORS.error : COLORS.textMuted }}>
+                  <span style={{ color: COLORS.textMuted }}>
                     {item.icon}
                   </span>
                   {item.label}

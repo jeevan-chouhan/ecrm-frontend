@@ -1,39 +1,30 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { useFormik } from "formik";
 import { Input, Button } from "../../../components";
 import PublicLayout from "../../../components/wrapper/PublicLayout";
 import { COLORS, ROUTES } from "../../../constants";
-import { isValidEmail } from "../../../utils";
+import { getForgotPasswordSchema } from "../../../utils";
+
+interface ForgotPasswordFormValues {
+  email: string;
+}
 
 const ForgotPassword = () => {
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
+  const { t } = useTranslation();
+  const navigate = useNavigate();
 
-  const isFormValid = (): boolean => {
-    return email.trim() !== "" && isValidEmail(email);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!email.trim()) {
-      setError("Email is required");
-      return;
-    }
-
-    if (!isValidEmail(email)) {
-      setError("Invalid email format");
-      return;
-    }
-
-    console.log("Password reset requested for:", email);
-    // Handle forgot password logic here
-  };
-
-  const handleEmailChange = (value: string) => {
-    setEmail(value);
-    if (error) setError("");
-  };
+  const formik = useFormik<ForgotPasswordFormValues>({
+    initialValues: {
+      email: "",
+    },
+    validationSchema: getForgotPasswordSchema(t),
+    onSubmit: (values) => {
+      console.log("Password reset requested for:", values.email);
+      // Handle forgot password logic here
+      navigate(ROUTES.OTP_VERIFICATION);
+    },
+  });
 
   return (
     <PublicLayout>
@@ -45,17 +36,14 @@ const ForgotPassword = () => {
           {/* Title */}
           <h1
             className="text-2xl md:text-3xl font-bold text-center mb-3"
-            style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+            style={{ color: COLORS.textDark }}
           >
-            Forgot Password
+            {t("auth.forgotPassword")}
           </h1>
 
           {/* Subtitle */}
-          <p
-            className="text-center mb-8"
-            style={{ color: COLORS.textMuted, fontFamily: "'Inter', sans-serif" }}
-          >
-            verification code will be sent on your email
+          <p className="text-center mb-8" style={{ color: COLORS.textMuted }}>
+            {t("auth.verificationCodeSent")}
           </p>
 
           {/* Form Card */}
@@ -66,14 +54,16 @@ const ForgotPassword = () => {
               boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
             }}
           >
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={formik.handleSubmit}>
               <Input
-                label="Email"
+                label={t("auth.email")}
                 type="email"
-                placeholder="example.email@gmail.com"
-                value={email}
-                onChange={(e) => handleEmailChange(e.target.value)}
-                error={error}
+                placeholder={t("auth.emailPlaceholder")}
+                name="email"
+                value={formik.values.email}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.email ? formik.errors.email : undefined}
                 fullWidth
               />
 
@@ -85,9 +75,9 @@ const ForgotPassword = () => {
                   size="lg"
                   fullWidth
                   rounded
-                  disabled={!isFormValid()}
+                  disabled={!formik.values.email || !!formik.errors.email}
                 >
-                  Request Password Reset
+                  {t("auth.requestPasswordReset")}
                 </Button>
               </div>
 
@@ -96,9 +86,9 @@ const ForgotPassword = () => {
                 <Link
                   to={ROUTES.LOGIN}
                   className="text-sm font-medium hover:underline inline-flex items-center gap-1"
-                  style={{ color: COLORS.primary, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.primary }}
                 >
-                  ← Back to login
+                  {t("auth.backToLogin")}
                 </Link>
               </div>
             </form>

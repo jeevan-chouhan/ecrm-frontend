@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { languages, changeLanguage } from "./index";
 import { ChevronDown } from "../assets";
 import { COLORS } from "../constants";
+import Button from "../components/Button/Button";
 
 interface LanguageSwitcherProps {
   variant?: "dropdown" | "buttons";
@@ -42,21 +43,14 @@ const LanguageSwitcher = ({
     return (
       <div className="flex items-center gap-1">
         {languages.map((lang) => (
-          <button
+          <Button
             key={lang.code}
+            variant={i18n.language === lang.code ? "accent" : "ghost"}
+            size="sm"
             onClick={() => handleLanguageChange(lang.code)}
-            className="px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200"
-            style={{
-              backgroundColor:
-                i18n.language === lang.code ? COLORS.accent : "transparent",
-              color:
-                i18n.language === lang.code
-                  ? COLORS.textWhite
-                  : COLORS.textMuted,
-            }}
           >
             {lang.code.toUpperCase()}
-          </button>
+          </Button>
         ))}
       </div>
     );
@@ -64,23 +58,24 @@ const LanguageSwitcher = ({
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
+        rightIcon={
+          <ChevronDown
+            className={`h-4 w-4 transition-transform duration-200 ${
+              isOpen ? "rotate-180" : ""
+            }`}
+          />
+        }
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200"
         style={{
           backgroundColor: isOpen ? COLORS.surfaceHover : "transparent",
           color: COLORS.textDark,
         }}
       >
-        <span className="text-sm font-medium">
-          {showLabel ? currentLanguage?.nativeName : currentLanguage?.code.toUpperCase()}
-        </span>
-        <ChevronDown
-          className={`h-4 w-4 transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
-      </button>
+        {showLabel ? currentLanguage?.nativeName : currentLanguage?.code.toUpperCase()}
+      </Button>
 
       {isOpen && (
         <div
@@ -92,36 +87,30 @@ const LanguageSwitcher = ({
           }}
         >
           {languages.map((lang) => (
-            <button
+            <Button
               key={lang.code}
+              variant="ghost"
+              size="sm"
+              fullWidth
+              rightIcon={i18n.language === lang.code ? (
+                <span
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: COLORS.accent }}
+                />
+              ) : undefined}
               onClick={() => handleLanguageChange(lang.code)}
-              className="w-full px-4 py-2.5 text-left text-sm transition-colors duration-150 flex items-center justify-between"
+              className="justify-between"
               style={{
                 backgroundColor:
                   i18n.language === lang.code
                     ? COLORS.surfaceHover
                     : "transparent",
                 color: COLORS.textDark,
-              }}
-              onMouseEnter={(e) => {
-                if (i18n.language !== lang.code) {
-                  e.currentTarget.style.backgroundColor = COLORS.surfaceHover;
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (i18n.language !== lang.code) {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                }
+                borderRadius: 0,
               }}
             >
-              <span>{lang.nativeName}</span>
-              {i18n.language === lang.code && (
-                <span
-                  className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: COLORS.accent }}
-                />
-              )}
-            </button>
+              {lang.nativeName}
+            </Button>
           ))}
         </div>
       )}

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* Import Inter font from Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* @import url('https://fon/ts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'); */
 
 /* Global styles */
 
@@ -9,10 +9,13 @@ html,
 body,
 #root {
   height: 100%;
+  overflow: hidden;
 }
 
 body {
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
 }

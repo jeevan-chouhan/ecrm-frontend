@@ -52,7 +52,7 @@ const Layout = ({
       label: "Applicant Tracker",
       path: ROUTES.APPLICANT_TRACKER,
       icon: <Applicant className="h-5 w-5" />,
-      isActive: location.pathname === ROUTES.APPLICANT_TRACKER,
+      isActive: location.pathname.startsWith(ROUTES.APPLICANT_TRACKER),
     },
     {
       label: "Country & University Directory",
@@ -64,7 +64,7 @@ const Layout = ({
       label: "Document vault",
       path: ROUTES.DOCUMENT_VAULT,
       icon: <Document className="h-5 w-5" />,
-      isActive: location.pathname === ROUTES.DOCUMENT_VAULT,
+      isActive: location.pathname.startsWith(ROUTES.DOCUMENT_VAULT),
     },
     {
       label: "Agency Partner",

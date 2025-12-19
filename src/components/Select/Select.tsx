@@ -102,9 +102,9 @@ const Select = ({
             borderColor: error
               ? COLORS.error
               : isOpen
-              ? COLORS.primary
+              ? COLORS.accent
               : COLORS.border,
-            boxShadow: isOpen ? `0 0 0 3px ${COLORS.primary}20` : "none",
+            boxShadow: isOpen ? `0 0 0 3px ${COLORS.accent}20` : "none",
             backgroundColor: COLORS.surface,
             fontFamily: "'Inter', sans-serif",
             fontSize: "14px",
@@ -183,7 +183,7 @@ const Select = ({
                       backgroundColor:
                         option.value === value ? COLORS.surfaceHover : "transparent",
                       color:
-                        option.value === value ? COLORS.primary : COLORS.textDark,
+                        option.value === value ? COLORS.accent : COLORS.textDark,
                     }}
                     onMouseEnter={(e) => {
                       if (option.value !== value) {

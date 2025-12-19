@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { ROUTES } from "../../../constants";
 import { COLORS } from "../../../constants";
 import { Menu, Close } from "../../../assets";
+import Button from "../../Button/Button";
 
 interface PublicHeaderProps {
   onHomeClick?: () => void;
@@ -69,17 +70,17 @@ const PublicHeader = ({
       </nav>
 
       {/* Mobile Menu Button */}
-      <button
-        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        className="md:hidden p-2 rounded-lg transition-colors"
-        style={{ color: COLORS.textDark }}
-      >
-        {mobileMenuOpen ? (
-          <Close className="h-6 w-6" />
+      <Button
+        variant="ghost"
+        size="sm"
+        icon={mobileMenuOpen ? (
+          <Close className="h-6 w-6" style={{ color: COLORS.textDark }} />
         ) : (
-          <Menu className="h-6 w-6" />
+          <Menu className="h-6 w-6" style={{ color: COLORS.textDark }} />
         )}
-      </button>
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        className="md:hidden"
+      />
 
       {/* Mobile Navigation */}
       {mobileMenuOpen && (

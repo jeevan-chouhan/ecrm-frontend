@@ -1,70 +1,34 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { useFormik } from "formik";
 import { Input, Button, Checkbox } from "../../../components";
 import PublicLayout from "../../../components/wrapper/PublicLayout";
-import { COLORS } from "../../../constants";
-import { ROUTES } from "../../../constants";
-import { isValidEmail, isValidPassword } from "../../../utils";
+import { COLORS, ROUTES } from "../../../constants";
+import { getLoginSchema } from "../../../utils";
 
-interface LoginFormData {
+interface LoginFormValues {
   email: string;
   password: string;
   rememberMe: boolean;
 }
 
 const Login = () => {
-  const [formData, setFormData] = useState<LoginFormData>({
-    email: "",
-    password: "",
-    rememberMe: false,
-  });
+  const { t } = useTranslation();
+  const navigate = useNavigate();
 
-  const [errors, setErrors] = useState<Partial<Record<keyof LoginFormData, string>>>({});
-
-  // Check if form is valid
-  const isFormValid = (): boolean => {
-    const { email, password } = formData;
-
-    if (!email.trim() || !isValidEmail(email)) return false;
-    if (!password || !isValidPassword(password)) return false;
-
-    return true;
-  };
-
-  const handleInputChange = (field: keyof LoginFormData, value: string | boolean) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error when user types
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: Partial<Record<keyof LoginFormData, string>> = {};
-
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!isValidEmail(formData.email)) {
-      newErrors.email = "Invalid email format";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (!isValidPassword(formData.password)) {
-      newErrors.password = "Password must be at least 8 characters";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (validateForm()) {
-      console.log("Login submitted:", formData);
+  const formik = useFormik<LoginFormValues>({
+    initialValues: {
+      email: "",
+      password: "",
+      rememberMe: false,
+    },
+    validationSchema: getLoginSchema(t),
+    onSubmit: (values) => {
+      console.log("Login submitted:", values);
       // Handle login logic here
-    }
-  };
+      navigate(ROUTES.DASHBOARD);
+    },
+  });
 
   return (
     <PublicLayout>
@@ -76,9 +40,9 @@ const Login = () => {
           {/* Title */}
           <h1
             className="text-2xl md:text-3xl font-bold text-center mb-8"
-            style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+            style={{ color: COLORS.textDark }}
           >
-            Login
+            {t("auth.login")}
           </h1>
 
           {/* Form Card */}
@@ -89,25 +53,29 @@ const Login = () => {
               boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
             }}
           >
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={formik.handleSubmit}>
               <div className="space-y-5">
                 <Input
-                  label="Email"
+                  label={t("auth.email")}
                   type="email"
-                  placeholder="example.email@gmail.com"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                  error={errors.email}
+                  placeholder={t("auth.emailPlaceholder")}
+                  name="email"
+                  value={formik.values.email}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.email ? formik.errors.email : undefined}
                   fullWidth
                 />
 
                 <Input
-                  label="Password"
+                  label={t("auth.password")}
                   type="password"
-                  placeholder="Enter at least 8+ characters"
-                  value={formData.password}
-                  onChange={(e) => handleInputChange("password", e.target.value)}
-                  error={errors.password}
+                  placeholder={t("auth.passwordPlaceholder")}
+                  name="password"
+                  value={formik.values.password}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.password ? formik.errors.password : undefined}
                   fullWidth
                 />
               </div>
@@ -116,22 +84,19 @@ const Login = () => {
               <div className="flex items-center justify-between mt-5 mb-6">
                 <div className="flex items-center gap-2">
                   <Checkbox
-                    checked={formData.rememberMe}
-                    onChange={(checked) => handleInputChange("rememberMe", checked)}
+                    checked={formik.values.rememberMe}
+                    onChange={(checked) => formik.setFieldValue("rememberMe", checked)}
                   />
-                  <span
-                    className="text-sm"
-                    style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
-                  >
-                    Remember me
+                  <span className="text-sm" style={{ color: COLORS.textDark }}>
+                    {t("auth.rememberMe")}
                   </span>
                 </div>
                 <Link
                   to={ROUTES.FORGOT_PASSWORD}
                   className="text-sm font-medium hover:underline"
-                  style={{ color: COLORS.primary, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.primary }}
                 >
-                  Forgot password?
+                  {t("auth.forgotPasswordLink")}
                 </Link>
               </div>
 
@@ -142,9 +107,9 @@ const Login = () => {
                 size="lg"
                 fullWidth
                 rounded
-                disabled={!isFormValid()}
+                disabled={!formik.values.email || !formik.values.password || Object.keys(formik.errors).length > 0}
               >
-                Log In
+                {t("auth.loginIn")}
               </Button>
             </form>
           </div>
@@ -152,15 +117,15 @@ const Login = () => {
           {/* Register Link */}
           <p
             className="text-center mt-6 text-sm"
-            style={{ color: COLORS.textMuted, fontFamily: "'Inter', sans-serif" }}
+            style={{ color: COLORS.textMuted }}
           >
-            Does't have an account?{" "}
+            {t("auth.dontHaveAccount")}{" "}
             <Link
               to={ROUTES.REGISTER}
               className="font-medium hover:underline"
               style={{ color: COLORS.primary }}
             >
-              Register
+              {t("auth.register")}
             </Link>
           </p>
         </div>

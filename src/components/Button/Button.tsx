@@ -2,16 +2,18 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { Spinner } from "../../assets";
 import { COLORS, componentSpecs } from "../../constants";
 
-type ButtonVariant = "primary" | "secondary" | "outline" | "danger" | "ghost" | "accent";
+type ButtonVariant = "primary" | "secondary" | "outline" | "danger" | "ghost" | "accent" | "cancel";
 type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  children: ReactNode;
+  children?: ReactNode;
   variant?: ButtonVariant;
   size?: ButtonSize;
   isLoading?: boolean;
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
+  icon?: ReactNode;
+  iconOnly?: boolean;
   fullWidth?: boolean;
   rounded?: boolean;
 }
@@ -20,6 +22,13 @@ const sizeStyles: Record<ButtonSize, string> = {
   sm: componentSpecs.button.padding.sm,
   md: componentSpecs.button.padding.md,
   lg: componentSpecs.button.padding.lg,
+};
+
+// Square padding for icon-only buttons
+const iconOnlySizeStyles: Record<ButtonSize, string> = {
+  sm: "6px",
+  md: "8px",
+  lg: "10px",
 };
 
 const variantColors: Record<ButtonVariant, { bg: string; hover: string; text: string; border?: string }> = {
@@ -54,6 +63,12 @@ const variantColors: Record<ButtonVariant, { bg: string; hover: string; text: st
     hover: COLORS.surfaceHover,
     text: COLORS.textMuted,
   },
+  cancel: {
+    bg: COLORS.surface,
+    hover: "#F0F0FF",
+    text: COLORS.accent,
+    border: COLORS.accent,
+  },
 };
 
 const Button = ({
@@ -63,6 +78,8 @@ const Button = ({
   isLoading = false,
   leftIcon,
   rightIcon,
+  icon,
+  iconOnly = false,
   fullWidth = false,
   rounded = false,
   disabled,
@@ -71,6 +88,7 @@ const Button = ({
   ...props
 }: ButtonProps) => {
   const variantStyle = variantColors[variant];
+  const isIconButton = iconOnly || (icon && !children);
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (disabled || isLoading) return;
@@ -79,6 +97,13 @@ const Button = ({
 
   const handleMouseLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.currentTarget.style.backgroundColor = variantStyle.bg;
+  };
+
+  // Determine what to render as icon
+  const renderIcon = () => {
+    if (isLoading) return <Spinner className="h-5 w-5" />;
+    if (icon) return icon;
+    return null;
   };
 
   return (
@@ -96,7 +121,7 @@ const Button = ({
         ${className}
       `}
       style={{
-        padding: sizeStyles[size],
+        padding: isIconButton ? iconOnlySizeStyles[size] : sizeStyles[size],
         borderRadius: rounded ? "9999px" : componentSpecs.button.borderRadius,
         backgroundColor: variantStyle.bg,
         color: variantStyle.text,
@@ -106,9 +131,15 @@ const Button = ({
       }}
       {...props}
     >
-      {isLoading ? <Spinner className="h-5 w-5" /> : leftIcon}
-      {children}
-      {!isLoading && rightIcon}
+      {isIconButton ? (
+        renderIcon()
+      ) : (
+        <>
+          {isLoading ? <Spinner className="h-5 w-5" /> : leftIcon}
+          {children}
+          {!isLoading && rightIcon}
+        </>
+      )}
     </button>
   );
 };

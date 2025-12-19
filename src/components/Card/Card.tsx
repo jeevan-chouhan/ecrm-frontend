@@ -29,7 +29,6 @@ const Card = ({
   footer,
   padding = "md",
   shadow = "md",
-  bordered = false,
   hoverable = false,
   className = "",
 }: CardProps) => {
@@ -44,7 +43,7 @@ const Card = ({
         backgroundColor: componentSpecs.card.background,
         borderRadius: componentSpecs.card.borderRadius,
         boxShadow: shadow !== "none" ? shadows[shadow] : "none",
-        border: bordered ? `1px solid ${COLORS.border}` : "none",
+        border: `1px solid ${COLORS.border}`,
       }}
     >
       {/* Header */}
