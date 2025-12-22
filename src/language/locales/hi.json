@@ -192,7 +192,25 @@
     "enterScore": "स्कोर दर्ज करें",
     "selectPassingYear": "उत्तीर्ण वर्ष चुनें",
     "addedEducationalDetails": "जोड़े गए शैक्षिक विवरण",
-    "noEducationalDetailsAdded": "अभी तक कोई शैक्षिक विवरण नहीं जोड़ा गया है"
+    "noEducationalDetailsAdded": "अभी तक कोई शैक्षिक विवरण नहीं जोड़ा गया है",
+    "deletePreference": "प्राथमिकता हटाएं",
+    "deleteWorkExperience": "काम का अनुभव हटाएं",
+    "deleteConfirmation": "क्या आप वाकई इस प्राथमिकता को हटाना चाहते हैं?",
+    "deleteWorkExperienceConfirmation": "क्या आप वाकई इस काम के अनुभव को हटाना चाहते हैं?",
+    "deleteWarning": "यह कार्रवाई पूर्ववत नहीं की जा सकती।",
+    "doYouHaveWorkExperience": "क्या आपके पास काम का अनुभव है?",
+    "workExperienceDetails": "विवरण (यदि हाँ, तो ये फ़ील्ड दिखाएं)",
+    "companyName": "कंपनी का नाम",
+    "jobTitle": "नौकरी का शीर्षक",
+    "startDate": "शुरुआती तिथि (दिनांक चयनकर्ता)",
+    "endDate": "समाप्ति तिथि (दिनांक चयनकर्ता)",
+    "currentlyWorking": "वर्तमान में काम कर रहे हैं",
+    "enterCompanyName": "कंपनी का नाम दर्ज करें",
+    "enterJobTitle": "नौकरी का शीर्षक दर्ज करें",
+    "selectStartDate": "शुरुआती तिथि चुनें",
+    "selectEndDate": "समाप्ति तिथि चुनें",
+    "addedWorkExperiences": "जोड़े गए काम के अनुभव",
+    "noWorkExperiencesAdded": "अभी तक कोई काम का अनुभव नहीं जोड़ा गया है"
   },
   "validation": {
     "required": "यह फ़ील्ड आवश्यक है",
@@ -236,7 +254,14 @@
     "passingYearRequired": "उत्तीर्ण वर्ष आवश्यक है",
     "majorRequired": "प्रमुख आवश्यक है",
     "invalidScore": "कृपया वैध स्कोर दर्ज करें",
-    "atLeastOneEducationalDetailRequired": "कम से कम एक शैक्षिक विवरण आवश्यक है"
+    "atLeastOneEducationalDetailRequired": "कम से कम एक शैक्षिक विवरण आवश्यक है",
+    "workExperienceRequired": "काम के अनुभव का चयन आवश्यक है",
+    "companyNameRequired": "कंपनी का नाम आवश्यक है",
+    "jobTitleRequired": "नौकरी का शीर्षक आवश्यक है",
+    "startDateRequired": "शुरुआती तिथि आवश्यक है",
+    "endDateRequired": "समाप्ति तिथि आवश्यक है",
+    "endDateBeforeStartDate": "समाप्ति तिथि शुरुआती तिथि के बाद होनी चाहिए",
+    "atLeastOneWorkExperienceRequired": "कम से कम एक काम का अनुभव आवश्यक है"
   },
   "fileUpload": {
     "dropFileHere": "फ़ाइल यहाँ छोड़ें",

@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useTranslation } from "react-i18next";
-import { Button } from "../../../components";
+import { Button, Popup } from "../../../components";
 import { COLORS } from "../../../constants";
 import PreferenceForm from "./PreferenceForm";
 import PreferenceCard from "./PreferenceCard";
@@ -11,27 +11,32 @@ import type { PreferenceItem, ApplicationPreferencesFormData } from "./types";
 const ApplicationPreferences = ({ onSaveAndNext }: { onSaveAndNext?: () => void }) => {
   const { t, i18n } = useTranslation();
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
+  const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
+
+  // Reusable preference validation schema
+  const getPreferenceSchema = useCallback(() => {
+    return Yup.object().shape({
+      desiredCountry: Yup.string().required(t("validation.countryRequired")),
+      program: Yup.string().required(t("validation.programRequired")),
+      desiredUniversity: Yup.string().required(t("validation.universityRequired")),
+      desiredCampus: Yup.string().required(t("validation.campusRequired")),
+      course: Yup.string().required(t("validation.courseRequired")),
+      desiredIntake: Yup.string().required(t("validation.intakeRequired")),
+      assignCounselor: Yup.string().required(t("validation.counselorRequired")),
+      agencyPartnerName: Yup.string().required(t("validation.agencyPartnerRequired")),
+    });
+  }, [t, i18n.language]);
 
   // Validation schema using Yup with i18n messages
   const validationSchema = useMemo(
     () =>
       Yup.object().shape({
         preferences: Yup.array()
-          .of(
-            Yup.object().shape({
-              desiredCountry: Yup.string().required(t("validation.countryRequired")),
-              program: Yup.string().required(t("validation.programRequired")),
-              desiredUniversity: Yup.string().required(t("validation.universityRequired")),
-              desiredCampus: Yup.string().required(t("validation.campusRequired")),
-              course: Yup.string().required(t("validation.courseRequired")),
-              desiredIntake: Yup.string().required(t("validation.intakeRequired")),
-              assignCounselor: Yup.string().required(t("validation.counselorRequired")),
-              agencyPartnerName: Yup.string().required(t("validation.agencyPartnerRequired")),
-            })
-          )
+          .of(getPreferenceSchema())
           .min(1, t("validation.atLeastOnePreferenceRequired")),
       }),
-    [t, i18n.language]
+    [getPreferenceSchema, t]
   );
 
   const getEmptyPreference = (): PreferenceItem => ({
@@ -46,6 +51,19 @@ const ApplicationPreferences = ({ onSaveAndNext }: { onSaveAndNext?: () => void 
     agencyPartnerName: "",
     saved: false,
   });
+
+  const isPreferenceComplete = (pref: PreferenceItem): boolean => {
+    return !!(
+      pref.desiredCountry &&
+      pref.program &&
+      pref.desiredUniversity &&
+      pref.desiredCampus &&
+      pref.course &&
+      pref.desiredIntake &&
+      pref.assignCounselor &&
+      pref.agencyPartnerName
+    );
+  };
 
   const formik = useFormik<ApplicationPreferencesFormData>({
     initialValues: {
@@ -86,27 +104,107 @@ const ApplicationPreferences = ({ onSaveAndNext }: { onSaveAndNext?: () => void 
     },
   });
 
-  const handleAddPreference = () => {
-    // Only allow adding if all existing preferences are complete
-    const incomplete = getIncompletePreferences();
-    if (incomplete.length > 0) {
-      return; // Don't add if there's already an incomplete preference
-    }
-    const emptyPref = getEmptyPreference();
-    formik.setFieldValue("preferences", [...formik.values.preferences, emptyPref]);
-  };
+  // Reusable helper functions (defined after formik)
+  const markPreferenceAsSaved = useCallback((index: number) => {
+    const updatedPreferences = [...formik.values.preferences];
+    updatedPreferences[index] = {
+      ...updatedPreferences[index],
+      saved: true,
+    };
+    formik.setFieldValue("preferences", updatedPreferences);
+  }, [formik]);
 
-  const isPreferenceComplete = (pref: PreferenceItem): boolean => {
-    return !!(
-      pref.desiredCountry &&
-      pref.program &&
-      pref.desiredUniversity &&
-      pref.desiredCampus &&
-      pref.course &&
-      pref.desiredIntake &&
-      pref.assignCounselor &&
-      pref.agencyPartnerName
-    );
+  const removePreference = useCallback((index: number) => {
+    const updatedPreferences = formik.values.preferences.filter((_, i) => i !== index);
+    formik.setFieldValue("preferences", updatedPreferences);
+    
+    if (editingIndex === index) {
+      setEditingIndex(null);
+    } else if (editingIndex !== null && editingIndex > index) {
+      setEditingIndex(editingIndex - 1);
+    }
+  }, [formik, editingIndex]);
+
+  const markAllFieldsAsTouched = useCallback(() => {
+    return {
+      desiredCountry: true,
+      program: true,
+      desiredUniversity: true,
+      desiredCampus: true,
+      course: true,
+      desiredIntake: true,
+      assignCounselor: true,
+      agencyPartnerName: true,
+    };
+  }, []);
+
+  const handleValidationErrors = useCallback((error: unknown, index: number) => {
+    if (error instanceof Yup.ValidationError) {
+      error.inner.forEach((err) => {
+        if (err.path) {
+          formik.setFieldTouched(`preferences[${index}].${err.path}`, true);
+        }
+      });
+    }
+  }, [formik]);
+
+  const clearPreferenceErrors = useCallback((index: number) => {
+    // Clear errors
+    if (formik.errors.preferences?.[index]) {
+      const updatedErrors: any[] = [...(formik.errors.preferences || [])];
+      updatedErrors[index] = undefined;
+      formik.setErrors({
+        ...formik.errors,
+        preferences: updatedErrors as any,
+      });
+    }
+    
+    // Clear touched state
+    if (formik.touched.preferences?.[index]) {
+      const updatedTouched = [...(formik.touched.preferences || [])];
+      updatedTouched[index] = {};
+      formik.setTouched({
+        ...formik.touched,
+        preferences: updatedTouched as any,
+      });
+    }
+  }, [formik]);
+
+  const handleAddPreference = async () => {
+    const incomplete = getIncompletePreferences();
+    
+    // If there's an incomplete preference, save it first
+    if (incomplete.length > 0) {
+      const firstIncomplete = incomplete[0];
+      const index = formik.values.preferences.findIndex((p) => p.id === firstIncomplete.id);
+      
+      // Validate and save the current incomplete preference
+      const preferenceSchema = getPreferenceSchema();
+
+      try {
+        await preferenceSchema.validate(firstIncomplete, { abortEarly: false });
+        
+        // Save the current preference
+        markPreferenceAsSaved(index);
+        
+        // Now add a new empty preference
+        const emptyPref = getEmptyPreference();
+        const currentPreferences = formik.values.preferences;
+        const updatedPreferences = currentPreferences.map((p, i) => 
+          i === index ? { ...p, saved: true } : p
+        );
+        formik.setFieldValue("preferences", [...updatedPreferences, emptyPref]);
+      } catch (error) {
+        // If validation fails, mark fields as touched to show errors
+        handleValidationErrors(error, index);
+        // Don't add new form if validation fails
+        return;
+      }
+    } else {
+      // No incomplete preferences, just add a new one
+      const emptyPref = getEmptyPreference();
+      formik.setFieldValue("preferences", [...formik.values.preferences, emptyPref]);
+    }
   };
 
   const getIncompletePreferences = (): PreferenceItem[] => {
@@ -139,13 +237,35 @@ const ApplicationPreferences = ({ onSaveAndNext }: { onSaveAndNext?: () => void 
   };
 
   const handleDeletePreference = (index: number) => {
-    const updatedPreferences = formik.values.preferences.filter((_, i) => i !== index);
-    formik.setFieldValue("preferences", updatedPreferences);
-    if (editingIndex === index) {
-      setEditingIndex(null);
-    } else if (editingIndex !== null && editingIndex > index) {
-      setEditingIndex(editingIndex - 1);
-    }
+    // Show confirmation popup instead of deleting directly
+    setDeletingIndex(index);
+    setIsDeletePopupOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deletingIndex === null) return;
+
+    const indexToDelete = deletingIndex;
+    const preferenceToDelete = formik.values.preferences[indexToDelete];
+
+    // Remove the preference
+    removePreference(indexToDelete);
+
+    // Close popup and reset state
+    setIsDeletePopupOpen(false);
+    setDeletingIndex(null);
+
+    // TODO: Replace with actual API endpoint
+    // const response = await fetch(`/api/applicant/preferences/${preferenceToDelete.id}`, {
+    //   method: "DELETE",
+    // });
+    // const result = await response.json();
+    console.log("Delete API call for preference:", preferenceToDelete);
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeletePopupOpen(false);
+    setDeletingIndex(null);
   };
 
   const handleCancelIncompletePreference = (index: number) => {
@@ -161,28 +281,12 @@ const ApplicationPreferences = ({ onSaveAndNext }: { onSaveAndNext?: () => void 
       updatedPreferences[index] = emptyPref;
       formik.setFieldValue("preferences", updatedPreferences);
       
-      // Clear all errors for this preference
-      if (formik.errors.preferences?.[index]) {
-        const updatedErrors: any[] = [...(formik.errors.preferences || [])];
-        updatedErrors[index] = undefined;
-        formik.setErrors({
-          ...formik.errors,
-          preferences: updatedErrors as any,
-        });
-      }
-      
-      // Clear touched state
-      if (formik.touched.preferences?.[index]) {
-        const updatedTouched = [...(formik.touched.preferences || [])];
-        updatedTouched[index] = {};
-        formik.setTouched({
-          ...formik.touched,
-          preferences: updatedTouched as any,
-        });
-      }
+      // Clear all errors and touched state for this preference
+      clearPreferenceErrors(index);
     } else {
-      // Remove the incomplete preference
-      handleDeletePreference(index);
+      // Remove the incomplete preference directly without showing confirmation popup
+      // (Only saved preferences should show delete confirmation)
+      removePreference(index);
     }
   };
 
@@ -190,27 +294,13 @@ const ApplicationPreferences = ({ onSaveAndNext }: { onSaveAndNext?: () => void 
     const preference = formik.values.preferences[index];
     
     // Validate preference using the schema for a single preference item
-    const preferenceSchema = Yup.object().shape({
-      desiredCountry: Yup.string().required(t("validation.countryRequired")),
-      program: Yup.string().required(t("validation.programRequired")),
-      desiredUniversity: Yup.string().required(t("validation.universityRequired")),
-      desiredCampus: Yup.string().required(t("validation.campusRequired")),
-      course: Yup.string().required(t("validation.courseRequired")),
-      desiredIntake: Yup.string().required(t("validation.intakeRequired")),
-      assignCounselor: Yup.string().required(t("validation.counselorRequired")),
-      agencyPartnerName: Yup.string().required(t("validation.agencyPartnerRequired")),
-    });
+    const preferenceSchema = getPreferenceSchema();
 
     try {
       await preferenceSchema.validate(preference, { abortEarly: false });
       
       // Mark preference as saved
-      const updatedPreferences = [...formik.values.preferences];
-      updatedPreferences[index] = {
-        ...updatedPreferences[index],
-        saved: true,
-      };
-      formik.setFieldValue("preferences", updatedPreferences);
+      markPreferenceAsSaved(index);
       
       // If editing, close edit mode
       if (editingIndex === index) {
@@ -218,13 +308,7 @@ const ApplicationPreferences = ({ onSaveAndNext }: { onSaveAndNext?: () => void 
       }
     } catch (error) {
       // Mark fields as touched to show errors
-      if (error instanceof Yup.ValidationError) {
-        error.inner.forEach((err) => {
-          if (err.path) {
-            formik.setFieldTouched(`preferences[${index}].${err.path}`, true);
-          }
-        });
-      }
+      handleValidationErrors(error, index);
     }
   };
 
@@ -240,16 +324,7 @@ const ApplicationPreferences = ({ onSaveAndNext }: { onSaveAndNext?: () => void 
     
     if (unsavedPreferences.length > 0) {
       // Validate and save each unsaved preference
-      const preferenceSchema = Yup.object().shape({
-        desiredCountry: Yup.string().required(t("validation.countryRequired")),
-        program: Yup.string().required(t("validation.programRequired")),
-        desiredUniversity: Yup.string().required(t("validation.universityRequired")),
-        desiredCampus: Yup.string().required(t("validation.campusRequired")),
-        course: Yup.string().required(t("validation.courseRequired")),
-        desiredIntake: Yup.string().required(t("validation.intakeRequired")),
-        assignCounselor: Yup.string().required(t("validation.counselorRequired")),
-        agencyPartnerName: Yup.string().required(t("validation.agencyPartnerRequired")),
-      });
+      const preferenceSchema = getPreferenceSchema();
 
       let hasErrors = false;
       const updatedPreferences = [...formik.values.preferences];
@@ -267,26 +342,8 @@ const ApplicationPreferences = ({ onSaveAndNext }: { onSaveAndNext?: () => void 
         } catch (error) {
           hasErrors = true;
           // Mark all fields as touched to show errors
-          if (error instanceof Yup.ValidationError) {
-            touchedPreferences[index] = {
-              desiredCountry: true,
-              program: true,
-              desiredUniversity: true,
-              desiredCampus: true,
-              course: true,
-              desiredIntake: true,
-              assignCounselor: true,
-              agencyPartnerName: true,
-            };
-            error.inner.forEach((err) => {
-              if (err.path) {
-                touchedPreferences[index] = {
-                  ...touchedPreferences[index],
-                  [err.path]: true,
-                };
-              }
-            });
-          }
+          touchedPreferences[index] = markAllFieldsAsTouched();
+          handleValidationErrors(error, index);
         }
       }
 
@@ -319,16 +376,7 @@ const ApplicationPreferences = ({ onSaveAndNext }: { onSaveAndNext?: () => void 
       // Mark all unsaved preference fields as touched to show errors
       const touchedPreferences = formik.values.preferences.map((pref, index) => {
         if (!pref.saved) {
-          return {
-            desiredCountry: true,
-            program: true,
-            desiredUniversity: true,
-            desiredCampus: true,
-            course: true,
-            desiredIntake: true,
-            assignCounselor: true,
-            agencyPartnerName: true,
-          };
+          return markAllFieldsAsTouched();
         }
         return formik.touched.preferences?.[index] || {};
       });
@@ -414,7 +462,7 @@ const ApplicationPreferences = ({ onSaveAndNext }: { onSaveAndNext?: () => void 
             onCancel={() => handleCancelIncompletePreference(firstIncompleteIndex)}
             onAddMore={handleAddPreference}
             showCancel={incomplete.length > 1 || complete.length > 0}
-            showAddMore={isPreferenceComplete(firstIncomplete)}
+            showAddMore={true}
           />
         )}
 
@@ -481,6 +529,38 @@ const ApplicationPreferences = ({ onSaveAndNext }: { onSaveAndNext?: () => void 
           {t("applicant.saveAndNext")}
         </Button>
       </div>
+
+      {/* Delete Confirmation Popup */}
+      <Popup
+        isOpen={isDeletePopupOpen}
+        onClose={handleCancelDelete}
+        title={t("applicant.deletePreference", "Delete Preference")}
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p style={{ color: COLORS.textMuted }}>
+            {t("applicant.deleteConfirmation", "Are you sure you want to delete this preference?")} {t("applicant.deleteWarning", "This action cannot be undone.")}
+          </p>
+          
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-3 pt-4">
+            <Button
+              variant="cancel"
+              size="md"
+              onClick={handleCancelDelete}
+            >
+              {t("common.cancel")}
+            </Button>
+            <Button
+              variant="danger"
+              size="md"
+              onClick={handleConfirmDelete}
+            >
+              {t("common.delete")}
+            </Button>
+          </div>
+        </div>
+      </Popup>
     </div>
   );
 };

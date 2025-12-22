@@ -16,6 +16,12 @@ export const genderTypes: SelectOption[] = [
   { value: "other", label: "Other" },
 ];
 
+// Yes/No options
+export const yesNoOptions: SelectOption[] = [
+  { value: "yes", label: "Yes" },
+  { value: "no", label: "No" },
+];
+
 // ==========================================
 // Manage Team - Types & Mock Data
 // ==========================================

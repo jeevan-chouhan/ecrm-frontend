@@ -15,3 +15,18 @@ export interface ApplicationPreferencesFormData {
   preferences: PreferenceItem[];
 }
 
+export interface WorkExperienceItem {
+  id: string;
+  companyName: string;
+  jobTitle: string;
+  startDate: Date | null;
+  endDate: Date | null;
+  currentlyWorking: boolean;
+  saved?: boolean;
+}
+
+export interface WorkExperienceFormData {
+  hasWorkExperience: string;
+  workExperiences: WorkExperienceItem[];
+}
+
