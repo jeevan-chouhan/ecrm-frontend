@@ -211,7 +211,18 @@
     "selectStartDate": "Select start date",
     "selectEndDate": "Select end date",
     "addedWorkExperiences": "Added Work Experiences",
-    "noWorkExperiencesAdded": "No work experiences added yet"
+    "noWorkExperiencesAdded": "No work experiences added yet",
+    "doYouHaveAchievements": "Do You Have Any Achievements?",
+    "achievementDetails": "Achievement Details",
+    "selectCategory": "Select Category",
+    "description": "Description",
+    "enterDescription": "Enter description",
+    "uploadDocuments": "Upload Documents",
+    "addedAchievements": "Added Achievements",
+    "noAchievementsAdded": "No achievements added yet",
+    "deleteAchievement": "Delete Achievement",
+    "deleteAchievementConfirmation": "Are you sure you want to delete this achievement?",
+    "documentAttached": "Document attached"
   },
   "validation": {
     "required": "This field is required",
@@ -262,7 +273,11 @@
     "startDateRequired": "Start date is required",
     "endDateRequired": "End date is required",
     "endDateBeforeStartDate": "End date must be after start date",
-    "atLeastOneWorkExperienceRequired": "At least one work experience is required"
+    "atLeastOneWorkExperienceRequired": "At least one work experience is required",
+    "achievementsRequired": "Achievements selection is required",
+    "categoryRequired": "Category is required",
+    "descriptionRequired": "Description is required",
+    "atLeastOneAchievementRequired": "At least one achievement is required"
   },
   "fileUpload": {
     "dropFileHere": "Drop file here",

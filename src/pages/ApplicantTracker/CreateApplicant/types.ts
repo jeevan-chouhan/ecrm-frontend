@@ -30,3 +30,16 @@ export interface WorkExperienceFormData {
   workExperiences: WorkExperienceItem[];
 }
 
+export interface AchievementItem {
+  id: string;
+  category: string;
+  description: string;
+  documents: File | null;
+  saved?: boolean;
+}
+
+export interface AchievementFormData {
+  hasAchievements: string;
+  achievements: AchievementItem[];
+}
+
