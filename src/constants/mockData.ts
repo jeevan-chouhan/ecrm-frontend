@@ -93,3 +93,15 @@ export const scoreTypes: SelectOption[] = [
   { value: "gpa", label: "GPA" },
 ];
 
+// Achievement categories
+export const achievementCategories: SelectOption[] = [
+  { value: "academic", label: "Academic" },
+  { value: "sports", label: "Sports" },
+  { value: "volunteer", label: "Volunteer" },
+  { value: "certification", label: "Certification" },
+  { value: "internship", label: "Internship" },
+  { value: "technical-project", label: "Technical Project" },
+  { value: "leadership", label: "Leadership" },
+  { value: "creative", label: "Creative" },
+];
+

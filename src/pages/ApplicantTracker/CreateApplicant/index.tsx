@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Layout } from "../../../components";
 import ApplicantPersonalDetails from "./ApplicantPersonalDetails";
 import ApplicationPreferences from "./ApplicationPreferences";
@@ -11,19 +12,20 @@ type TabType = "personal" | "preferences" | "educational" | "work" | "achievemen
 
 interface Tab {
   id: TabType;
-  label: string;
+  labelKey: string;
 }
 
-const tabs: Tab[] = [
-  { id: "personal", label: "Personal Details" },
-  { id: "preferences", label: "Application Preferences" },
-  { id: "educational", label: "Educational Details" },
-  { id: "work", label: "Work Experience" },
-  { id: "achievements", label: "Achievements" },
-];
-
 const CreateApplicant = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>("personal");
+
+  const tabs: Tab[] = [
+    { id: "personal", labelKey: "applicant.personalDetails" },
+    { id: "preferences", labelKey: "applicant.applicationPreferences" },
+    { id: "educational", labelKey: "applicant.educationalDetails" },
+    { id: "work", labelKey: "applicant.workExperience" },
+    { id: "achievements", labelKey: "applicant.achievements" },
+  ];
 
   const handleNextTab = () => {
     const currentIndex = tabs.findIndex((tab) => tab.id === activeTab);
@@ -54,8 +56,8 @@ const CreateApplicant = () => {
       <div className="bg-white rounded-lg shadow-sm">
         {/* Header */}
         <div className="p-4 md:p-6 border-b" style={{ borderColor: COLORS.border }}>
-          <h1 className="text-xl md:text-2xl font-semibold" style={{ color: COLORS.textDark }}>
-            ADD APPLICANT
+          <h1 className="text-xl md:text-2xl font-semibold uppercase" style={{ color: COLORS.textDark }}>
+            {t("applicant.addApplicant")}
           </h1>
         </div>
 
@@ -78,7 +80,7 @@ const CreateApplicant = () => {
                   borderBottom: isActive ? `2px solid ${COLORS.accent}` : "2px solid transparent",
                 }}
               >
-                {tab.label}
+                {t(tab.labelKey)}
               </button>
             );
           })}

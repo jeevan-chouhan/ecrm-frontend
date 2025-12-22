@@ -210,7 +210,18 @@
     "selectStartDate": "शुरुआती तिथि चुनें",
     "selectEndDate": "समाप्ति तिथि चुनें",
     "addedWorkExperiences": "जोड़े गए काम के अनुभव",
-    "noWorkExperiencesAdded": "अभी तक कोई काम का अनुभव नहीं जोड़ा गया है"
+    "noWorkExperiencesAdded": "अभी तक कोई काम का अनुभव नहीं जोड़ा गया है",
+    "doYouHaveAchievements": "क्या आपके पास कोई उपलब्धियां हैं?",
+    "achievementDetails": "उपलब्धि विवरण",
+    "selectCategory": "श्रेणी चुनें",
+    "description": "विवरण",
+    "enterDescription": "विवरण दर्ज करें",
+    "uploadDocuments": "दस्तावेज़ अपलोड करें",
+    "addedAchievements": "जोड़ी गई उपलब्धियां",
+    "noAchievementsAdded": "अभी तक कोई उपलब्धि नहीं जोड़ी गई है",
+    "deleteAchievement": "उपलब्धि हटाएं",
+    "deleteAchievementConfirmation": "क्या आप वाकई इस उपलब्धि को हटाना चाहते हैं?",
+    "documentAttached": "दस्तावेज़ संलग्न"
   },
   "validation": {
     "required": "यह फ़ील्ड आवश्यक है",
@@ -261,7 +272,11 @@
     "startDateRequired": "शुरुआती तिथि आवश्यक है",
     "endDateRequired": "समाप्ति तिथि आवश्यक है",
     "endDateBeforeStartDate": "समाप्ति तिथि शुरुआती तिथि के बाद होनी चाहिए",
-    "atLeastOneWorkExperienceRequired": "कम से कम एक काम का अनुभव आवश्यक है"
+    "atLeastOneWorkExperienceRequired": "कम से कम एक काम का अनुभव आवश्यक है",
+    "achievementsRequired": "उपलब्धियों का चयन आवश्यक है",
+    "categoryRequired": "श्रेणी आवश्यक है",
+    "descriptionRequired": "विवरण आवश्यक है",
+    "atLeastOneAchievementRequired": "कम से कम एक उपलब्धि आवश्यक है"
   },
   "fileUpload": {
     "dropFileHere": "फ़ाइल यहाँ छोड़ें",
