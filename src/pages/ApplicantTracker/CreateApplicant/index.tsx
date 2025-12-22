@@ -39,7 +39,7 @@ const CreateApplicant = () => {
       case "preferences":
         return <ApplicationPreferences onSaveAndNext={handleNextTab} />;
       case "educational":
-        return <EducationalDetails />;
+        return <EducationalDetails onSaveAndNext={handleNextTab} />;
       case "work":
         return <WorkExperience />;
       case "achievements":

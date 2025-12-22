@@ -175,7 +175,24 @@
     "selectAgencyPartner": "एजेंसी पार्टनर चुनें",
     "addedUniversityPreferences": "जोड़े गए विश्वविद्यालय प्राथमिकताएं",
     "noPreferencesAdded": "अभी तक कोई प्राथमिकता नहीं जोड़ी गई है",
-    "selectUniversity": "विश्वविद्यालय चुनें"
+    "selectUniversity": "विश्वविद्यालय चुनें",
+    "highestQualification": "उच्चतम योग्यता चुनें",
+    "institutionName": "संस्थान का नाम",
+    "boardUniversity": "बोर्ड/विश्वविद्यालय",
+    "major": "प्रमुख (अध्ययन का क्षेत्र) - कंप्यूटर विज्ञान, गणित - इनपुट फ़ील्ड रखें [यदि उच्चतम शिक्षा स्नातक है]",
+    "scoreType": "स्कोर प्रकार",
+    "score": "स्कोर",
+    "passingYear": "उत्तीर्ण वर्ष",
+    "selectHighestQualification": "हाई स्कूल/डिप्लोमा/यूजी/पीजी",
+    "enterInstitutionName": "संस्थान का नाम दर्ज करें",
+    "enterBoardUniversity": "बोर्ड/विश्वविद्यालय दर्ज करें",
+    "enterProgram": "पीसीएम/बी.टेक/बी.आर्क",
+    "enterMajor": "प्रमुख/अध्ययन का क्षेत्र दर्ज करें",
+    "selectScoreType": "स्कोर प्रकार चुनें",
+    "enterScore": "स्कोर दर्ज करें",
+    "selectPassingYear": "उत्तीर्ण वर्ष चुनें",
+    "addedEducationalDetails": "जोड़े गए शैक्षिक विवरण",
+    "noEducationalDetailsAdded": "अभी तक कोई शैक्षिक विवरण नहीं जोड़ा गया है"
   },
   "validation": {
     "required": "यह फ़ील्ड आवश्यक है",
@@ -210,7 +227,16 @@
     "intakeRequired": "सेवन आवश्यक है",
     "counselorRequired": "काउंसलर आवश्यक है",
     "agencyPartnerRequired": "एजेंसी पार्टनर आवश्यक है",
-    "atLeastOnePreferenceRequired": "कम से कम एक प्राथमिकता आवश्यक है"
+    "atLeastOnePreferenceRequired": "कम से कम एक प्राथमिकता आवश्यक है",
+    "highestQualificationRequired": "उच्चतम योग्यता आवश्यक है",
+    "institutionNameRequired": "संस्थान का नाम आवश्यक है",
+    "boardUniversityRequired": "बोर्ड/विश्वविद्यालय आवश्यक है",
+    "scoreTypeRequired": "स्कोर प्रकार आवश्यक है",
+    "scoreRequired": "स्कोर आवश्यक है",
+    "passingYearRequired": "उत्तीर्ण वर्ष आवश्यक है",
+    "majorRequired": "प्रमुख आवश्यक है",
+    "invalidScore": "कृपया वैध स्कोर दर्ज करें",
+    "atLeastOneEducationalDetailRequired": "कम से कम एक शैक्षिक विवरण आवश्यक है"
   },
   "fileUpload": {
     "dropFileHere": "फ़ाइल यहाँ छोड़ें",
