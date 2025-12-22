@@ -335,9 +335,10 @@ const DocumentDetail = () => {
 
         {/* Documents Table */}
         <div
-          className="rounded-lg overflow-hidden"
+          className="rounded-lg overflow-hidden overflow-x-auto"
           style={{ border: `1px solid ${COLORS.border}`, display: "flex", flexDirection: "column" }}
         >
+          <div className="min-w-[600px]">
           {/* Table Header */}
           <div
             className="grid grid-cols-12 gap-4 px-4 py-3 items-center shrink-0"
@@ -521,6 +522,7 @@ const DocumentDetail = () => {
               title={selectedDocs.length > 0 ? t("common.deleteSelected", "Delete Selected") : t("common.addDocument", "Add Document")}
               className="shadow-md hover:scale-110 transition-transform"
             />
+          </div>
           </div>
         </div>
       </div>
