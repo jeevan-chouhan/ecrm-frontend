@@ -56,7 +56,7 @@ const Login = () => {
             <form onSubmit={formik.handleSubmit}>
               <div className="space-y-5">
                 <Input
-                  label={t("auth.email")}
+                  label={<>{t("auth.email")} <span style={{ color: COLORS.error }}>*</span></>}
                   type="email"
                   placeholder={t("auth.emailPlaceholder")}
                   name="email"
@@ -68,7 +68,7 @@ const Login = () => {
                 />
 
                 <Input
-                  label={t("auth.password")}
+                  label={<>{t("auth.password")} <span style={{ color: COLORS.error }}>*</span></>}
                   type="password"
                   placeholder={t("auth.passwordPlaceholder")}
                   name="password"

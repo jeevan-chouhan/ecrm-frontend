@@ -95,7 +95,7 @@ const Profile = () => {
             <div className="space-y-5">
               {/* Name */}
               <Input
-                label={t("profile.name", "Name")}
+                label={<>{t("profile.name", "Name")} <span style={{ color: COLORS.error }}>*</span></>}
                 value={profileData.name}
                 onChange={(e) => handleFieldChange("name", e.target.value)}
                 fullWidth
@@ -103,7 +103,7 @@ const Profile = () => {
 
               {/* Email */}
               <Input
-                label={t("profile.email", "Email")}
+                label={<>{t("profile.email", "Email")} <span style={{ color: COLORS.error }}>*</span></>}
                 type="email"
                 value={profileData.email}
                 onChange={(e) => handleFieldChange("email", e.target.value)}
@@ -112,7 +112,7 @@ const Profile = () => {
 
               {/* Contact Number */}
               <PhoneInput
-                label={t("profile.contactNumber", "Contact Number")}
+                label={<>{t("profile.contactNumber", "Contact Number")} <span style={{ color: COLORS.error }}>*</span></>}
                 value={profileData.contactNumber}
                 onChange={(phone) => handleFieldChange("contactNumber", phone)}
                 country="in"
@@ -121,7 +121,7 @@ const Profile = () => {
 
               {/* Password */}
               <Input
-                label={t("profile.password", "Password")}
+                label={<>{t("profile.password", "Password")} <span style={{ color: COLORS.error }}>*</span></>}
                 type="password"
                 value={profileData.password}
                 onChange={(e) => handleFieldChange("password", e.target.value)}

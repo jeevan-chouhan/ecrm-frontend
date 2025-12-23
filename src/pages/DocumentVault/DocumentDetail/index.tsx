@@ -20,7 +20,7 @@ const documentIcons: Record<string, string> = {
   transcript: "#3B82F6",
   letter: "#10B981",
   statement: "#F59E0B",
-  resume: "#EF4444",
+  resume: COLORS.error,
   financial: "#6366F1",
   default: "#64748B",
 };
