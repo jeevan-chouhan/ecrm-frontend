@@ -76,7 +76,7 @@ const Layout = ({
       label: "Manage Team",
       path: ROUTES.MANAGE_TEAM,
       icon: <Team className="h-5 w-5" />,
-      isActive: location.pathname === ROUTES.MANAGE_TEAM,
+      isActive: location.pathname.startsWith(ROUTES.MANAGE_TEAM),
     },
     {
       label: "Report & Analysis",

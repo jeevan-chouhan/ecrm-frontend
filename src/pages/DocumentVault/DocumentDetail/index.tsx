@@ -433,6 +433,7 @@ const DocumentDetail = () => {
                     <Button
                       variant="accent"
                       size="sm"
+                      rounded
                       leftIcon={<Eye className="h-4 w-4" />}
                       onClick={() => handleViewDocument(doc)}
                     >
@@ -600,6 +601,7 @@ const DocumentDetail = () => {
                   </p>
                   <Button
                     variant="accent"
+                    rounded
                     leftIcon={<Download className="h-4 w-4" />}
                     onClick={() => handleDownload(viewerFile.url, viewerFile.name)}
                   >
@@ -615,6 +617,7 @@ const DocumentDetail = () => {
                   </p>
                   <Button
                     variant="accent"
+                    rounded
                     leftIcon={<Download className="h-4 w-4" />}
                     onClick={() => handleDownload(viewerFile.url, viewerFile.name)}
                   >

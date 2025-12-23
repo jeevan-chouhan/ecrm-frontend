@@ -290,26 +290,18 @@ const AgencyPartner = () => {
         className="bg-white rounded-lg shadow-sm p-4 md:p-6"
         style={{ backgroundColor: COLORS.surface }}
       >
-        {/* Header */}
-        <h1
-          className="text-xl md:text-2xl font-bold mb-6"
-          style={{ color: COLORS.textDark }}
-        >
-          {t("agencyPartner.title", "Agency Partner")}
-        </h1>
-
-        {/* Search and Add Button Row */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div className="w-full md:w-96">
-            <SearchBar
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder={t("agencyPartner.searchPlaceholder", "Search agency by name, contact person...")}
-            />
-          </div>
+        {/* Header with Add Button */}
+        <div className="flex items-center justify-between mb-6">
+          <h1
+            className="text-xl md:text-2xl font-bold"
+            style={{ color: COLORS.textDark }}
+          >
+            {t("agencyPartner.title", "Agency Partner")}
+          </h1>
           <Button
             variant="accent"
             size="md"
+            rounded
             onClick={handleOpenAddPopup}
           >
             {t("agencyPartner.addAgencyPartner", "Add Agency Partner")}
@@ -318,12 +310,22 @@ const AgencyPartner = () => {
 
         {/* Agency Partner List Section */}
         <div>
-          <h2
-            className="text-lg font-semibold mb-4"
-            style={{ color: COLORS.textDark }}
-          >
-            {t("agencyPartner.agencyPartnerList", "Agency Partner List")}
-          </h2>
+          {/* Table Heading with Search */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+            <h2
+              className="text-lg font-semibold"
+              style={{ color: COLORS.textDark }}
+            >
+              {t("agencyPartner.agencyPartnerList", "Agency Partner List")}
+            </h2>
+            <div className="w-full md:w-96">
+              <SearchBar
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder={t("agencyPartner.searchPlaceholder", "Search agency by name, contact person...")}
+              />
+            </div>
+          </div>
 
           {/* DataTable */}
           <DataTable
@@ -343,100 +345,95 @@ const AgencyPartner = () => {
           ? t("agencyPartner.editAgency", "Edit Agency")
           : t("agencyPartner.addAgency", "Add Agency")
         }
-        size="md"
+        size="full"
       >
         <div className="space-y-4">
-          {/* Agency Name */}
-          <Input
-            label={t("agencyPartner.agencyName", "Agency Name")}
-            placeholder={t("agencyPartner.enterAgencyName", "Enter agency name")}
-            value={formData.name}
-            onChange={(e) => handleInputChange("name", e.target.value)}
-            error={formErrors.name}
-          />
-
-          {/* Contact Person */}
-          <Input
-            label={t("agencyPartner.contactPerson", "Contact Person")}
-            placeholder={t("agencyPartner.enterContactPerson", "Enter contact person name (country code + number)")}
-            value={formData.contactPerson}
-            onChange={(e) => handleInputChange("contactPerson", e.target.value)}
-            error={formErrors.contactPerson}
-          />
-
-          {/* Email */}
-          <Input
-            label={t("agencyPartner.email", "Email")}
-            type="email"
-            placeholder={t("agencyPartner.enterEmail", "Enter email address")}
-            value={formData.email}
-            onChange={(e) => handleInputChange("email", e.target.value)}
-            error={formErrors.email}
-          />
-
-          {/* Contact Number with Country Code */}
-          <PhoneInput
-            label={t("agencyPartner.contactNumber", "Contact Number")}
-            placeholder={t("agencyPartner.enterPhoneNumber", "Enter phone number")}
-            value={formData.contactNo}
-            onChange={(value) => handleInputChange("contactNo", value)}
-            error={formErrors.contactNo}
-            country="in"
-            fullWidth
-          />
-
-          {/* Commission Percentage */}
-          <div>
-            <label
-              className="block text-sm font-medium mb-1.5"
-              style={{ color: COLORS.textDark }}
-            >
-              {t("agencyPartner.commissionPercentage", "Commission Percentage")}
-            </label>
-            <div className="flex items-center gap-2">
-              <div className="flex-1">
-                <Input
-                  type="number"
-                  placeholder={t("agencyPartner.enterCommission", "Enter commission")}
-                  value={formData.commissionPercentage}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    // Allow empty, numbers, and decimal numbers only
-                    if (value === "" || /^\d*\.?\d*$/.test(value)) {
-                      handleInputChange("commissionPercentage", value);
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    // Prevent e, E, +, - characters
-                    if (["e", "E", "+", "-"].includes(e.key)) {
-                      e.preventDefault();
-                    }
-                  }}
-                  min="0"
-                  max="100"
-                  step="0.01"
-                  error={formErrors.commissionPercentage}
-                />
-              </div>
-              <span style={{ color: COLORS.textMuted }}>%</span>
-            </div>
+          {/* Row 1: Agency Name, Contact Person */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label={t("agencyPartner.agencyName", "Agency Name")}
+              placeholder={t("agencyPartner.enterAgencyName", "Enter agency name")}
+              value={formData.name}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+              error={formErrors.name}
+              fullWidth
+            />
+            <Input
+              label={t("agencyPartner.contactPerson", "Contact Person")}
+              placeholder={t("agencyPartner.enterContactPerson", "Enter contact person name")}
+              value={formData.contactPerson}
+              onChange={(e) => handleInputChange("contactPerson", e.target.value)}
+              error={formErrors.contactPerson}
+              fullWidth
+            />
           </div>
 
-          {/* Description - Textarea */}
-          <Input
-            inputType="textarea"
-            label={t("agencyPartner.description", "Description")}
-            placeholder={t("agencyPartner.descriptionPlaceholder", "Description of agency")}
-            value={formData.description}
-            onChange={(e) => handleInputChange("description", e.target.value)}
-            rows={3}
-          />
+          {/* Row 2: Email, Contact Number */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label={t("agencyPartner.email", "Email")}
+              type="email"
+              placeholder={t("agencyPartner.enterEmail", "Enter email address")}
+              value={formData.email}
+              onChange={(e) => handleInputChange("email", e.target.value)}
+              error={formErrors.email}
+              fullWidth
+            />
+            <PhoneInput
+              label={t("agencyPartner.contactNumber", "Contact Number")}
+              placeholder={t("agencyPartner.enterPhoneNumber", "Enter phone number")}
+              value={formData.contactNo}
+              onChange={(value) => handleInputChange("contactNo", value)}
+              error={formErrors.contactNo}
+              country="in"
+              fullWidth
+            />
+          </div>
+
+          {/* Row 3: Commission Percentage, Description */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label={t("agencyPartner.commissionPercentage", "Commission Percentage")}
+              type="number"
+              placeholder={t("agencyPartner.enterCommission", "Enter commission")}
+              value={formData.commissionPercentage}
+              onChange={(e) => {
+                const value = e.target.value;
+                // Allow empty, numbers, and decimal numbers only
+                if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                  handleInputChange("commissionPercentage", value);
+                }
+              }}
+              onKeyDown={(e) => {
+                // Prevent e, E, +, - characters
+                if (["e", "E", "+", "-"].includes(e.key)) {
+                  e.preventDefault();
+                }
+              }}
+              min="0"
+              max="100"
+              step="0.01"
+              error={formErrors.commissionPercentage}
+              rightIcon={<span style={{ color: COLORS.textMuted, fontWeight: 500 }}>%</span>}
+              fullWidth
+            />
+            <Input
+              inputType="textarea"
+              label={t("agencyPartner.description", "Description")}
+              placeholder={t("agencyPartner.descriptionPlaceholder", "Description of agency")}
+              value={formData.description}
+              onChange={(e) => handleInputChange("description", e.target.value)}
+              rows={3}
+              fullWidth
+            />
+          </div>
           
           {/* Action Buttons */}
           <div className="flex justify-end gap-3 pt-4">
             <Button
               variant="cancel"
               size="md"
+              rounded
               onClick={handleClosePopup}
             >
               {t("common.cancel", "Cancel")}
@@ -444,6 +441,7 @@ const AgencyPartner = () => {
             <Button
               variant="accent"
               size="md"
+              rounded
               onClick={handleSubmit}
             >
               {editingPartner 
@@ -472,13 +470,15 @@ const AgencyPartner = () => {
             <Button
               variant="cancel"
               size="md"
+              rounded
               onClick={handleCloseDeletePopup}
             >
               {t("common.cancel", "Cancel")}
             </Button>
             <Button
-              variant="danger"
+              variant="accent"
               size="md"
+              rounded
               onClick={handleDelete}
             >
               {t("common.delete", "Delete")}
