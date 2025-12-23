@@ -7,6 +7,7 @@ interface PhoneInputProps {
   label?: string | ReactNode;
   value?: string;
   onChange?: (value: string, country?: any) => void;
+  onBlur?: () => void;
   error?: string;
   placeholder?: string;
   fullWidth?: boolean;
@@ -18,6 +19,7 @@ const PhoneInput = ({
   label,
   value = "",
   onChange,
+  onBlur,
   error,
   placeholder = "Enter phone number",
   fullWidth = false,
@@ -46,6 +48,9 @@ const PhoneInput = ({
         placeholder={placeholder}
         enableSearch
         searchPlaceholder="Search country..."
+        inputProps={{
+          onBlur: onBlur,
+        }}
         inputStyle={{
           width: "100%",
           height: "42px",

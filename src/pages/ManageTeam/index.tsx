@@ -7,48 +7,16 @@ import {
   DataTable,
   Select,
   Popup,
-  Input,
-  PhoneInput,
 } from "../../components";
-import { Eye, Plus, Search, CloseCircle, UserMinus, Close } from "../../assets";
+import { Eye, Plus, Search, CloseCircle, UserMinus } from "../../assets";
 import {
   COLORS,
   ROUTES,
   statusFilterOptions,
   mockTeamMembers,
-  roleOptions,
-  adminOptions,
-  countryOptions,
   type TeamMember,
 } from "../../constants";
-import { isValidEmail, isValidPhone } from "../../utils/regex";
-
-interface AddMemberForm {
-  name: string;
-  email: string;
-  contactNumber: string;
-  role: string;
-  adminId: string;
-  assignedCountry: string;
-}
-
-interface FormErrors {
-  name?: string;
-  email?: string;
-  contactNumber?: string;
-  role?: string;
-  adminId?: string;
-  assignedCountry?: string;
-}
-
-const initialFormState: AddMemberForm = {
-  name: "",
-  email: "",
-  contactNumber: "",
-  role: "counselor",
-  adminId: "",
-  assignedCountry: "",
-};
+import AddMember, { type AddMemberFormValues } from "./AddMember";
 
 const ManageTeam = () => {
   const navigate = useNavigate();
@@ -59,9 +27,6 @@ const ManageTeam = () => {
     member: TeamMember | null;
   }>({ isOpen: false, member: null });
   const [addMemberPopup, setAddMemberPopup] = useState(false);
-  const [addMemberForm, setAddMemberForm] =
-    useState<AddMemberForm>(initialFormState);
-  const [formErrors, setFormErrors] = useState<FormErrors>({});
 
   // Filter logic
   const filteredMembers = useMemo(() => {
@@ -96,68 +61,17 @@ const ManageTeam = () => {
     setDeactivatePopup({ isOpen: false, member: null });
   };
 
-  const handleAddMember = () => {
-    setAddMemberForm(initialFormState);
-    setFormErrors({});
+  const handleAddMemberOpen = () => {
     setAddMemberPopup(true);
   };
 
   const handleAddMemberClose = () => {
     setAddMemberPopup(false);
-    setAddMemberForm(initialFormState);
-    setFormErrors({});
   };
 
-  // Validation function
-  const validateForm = (): boolean => {
-    const errors: FormErrors = {};
-
-    // Name validation
-    if (!addMemberForm.name.trim()) {
-      errors.name = "Name is required";
-    } else if (addMemberForm.name.trim().length < 2) {
-      errors.name = "Name must be at least 2 characters";
-    }
-
-    // Email validation
-    if (!addMemberForm.email.trim()) {
-      errors.email = "Email is required";
-    } else if (!isValidEmail(addMemberForm.email)) {
-      errors.email = "Please enter a valid email";
-    }
-
-    // Contact number validation
-    if (!addMemberForm.contactNumber || addMemberForm.contactNumber.length < 5) {
-      errors.contactNumber = "Contact number is required";
-    } else if (!isValidPhone(addMemberForm.contactNumber)) {
-      errors.contactNumber = "Please enter a valid contact number";
-    }
-
-    // Role validation
-    if (!addMemberForm.role) {
-      errors.role = "Role is required";
-    }
-
-    // Admin validation
-    if (!addMemberForm.adminId) {
-      errors.adminId = "Admin is required";
-    }
-
-    // Country validation
-    if (!addMemberForm.assignedCountry) {
-      errors.assignedCountry = "Assigned country is required";
-    }
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleAddMemberSubmit = () => {
-    if (validateForm()) {
-      console.log("Add member:", addMemberForm);
-      // Add member creation logic here
-      handleAddMemberClose();
-    }
+  const handleAddMemberSubmit = (values: AddMemberFormValues) => {
+    console.log("Add member:", values);
+    // Add member creation logic here (API call, etc.)
   };
 
   // DataTable columns
@@ -232,12 +146,6 @@ const ManageTeam = () => {
     },
   ];
 
-  // Role options for add member (default to Counselor)
-  const addMemberRoleOptions = roleOptions.map((opt) => ({
-    ...opt,
-    label: opt.value === "counselor" ? `Role - ${opt.label}` : opt.label,
-  }));
-
   return (
     <Layout userName="Admin" userRole="Abroad Agency">
       <div className="bg-white rounded-lg shadow-sm p-6 md:p-8 min-h-[calc(100vh-140px)]">
@@ -253,7 +161,7 @@ const ManageTeam = () => {
             variant="accent"
             rounded
             leftIcon={<Plus className="h-4 w-4" />}
-            onClick={handleAddMember}
+            onClick={handleAddMemberOpen}
           >
             Add member
           </Button>
@@ -339,124 +247,11 @@ const ManageTeam = () => {
       </Popup>
 
       {/* Add Member Popup */}
-      <Popup
+      <AddMember
         isOpen={addMemberPopup}
         onClose={handleAddMemberClose}
-        size="full"
-        showCloseButton={false}
-      >
-        <div>
-          {/* Header with title and close button */}
-          <div className="flex items-center justify-between mb-6">
-            <h2
-              className="text-xl font-semibold"
-              style={{ color: COLORS.textDark }}
-            >
-              Add new member
-            </h2>
-            <button
-              onClick={handleAddMemberClose}
-              className="p-1.5 rounded-lg transition-colors hover:bg-slate-100"
-              style={{ color: COLORS.textMuted }}
-            >
-              <Close className="h-5 w-5" />
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            {/* Row 1: Name, Email */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                placeholder="Name"
-                value={addMemberForm.name}
-                onChange={(e) =>
-                  setAddMemberForm({ ...addMemberForm, name: e.target.value })
-                }
-                error={formErrors.name}
-                fullWidth
-              />
-              <Input
-                placeholder="Email"
-                type="email"
-                value={addMemberForm.email}
-                onChange={(e) =>
-                  setAddMemberForm({ ...addMemberForm, email: e.target.value })
-                }
-                error={formErrors.email}
-                fullWidth
-              />
-            </div>
-
-            {/* Row 2: Contact Number, Password */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <PhoneInput
-                placeholder="Contact Number"
-                value={addMemberForm.contactNumber}
-                onChange={(value) =>
-                  setAddMemberForm({
-                    ...addMemberForm,
-                    contactNumber: value,
-                  })
-                }
-                error={formErrors.contactNumber}
-                fullWidth
-              />
-              <Input
-                placeholder="System Generated Password"
-                disabled
-                fullWidth
-              />
-            </div>
-
-            {/* Row 3: Role, Admin */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Select
-                options={addMemberRoleOptions}
-                value={addMemberForm.role}
-                onChange={(value) =>
-                  setAddMemberForm({ ...addMemberForm, role: value })
-                }
-                placeholder="Role - Counselor"
-                error={formErrors.role}
-                fullWidth
-              />
-              <Select
-                options={adminOptions}
-                value={addMemberForm.adminId}
-                onChange={(value) =>
-                  setAddMemberForm({ ...addMemberForm, adminId: value })
-                }
-                placeholder="Select Admin"
-                error={formErrors.adminId}
-                fullWidth
-              />
-            </div>
-
-            {/* Row 4: Assigned Country */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Select
-                options={countryOptions}
-                value={addMemberForm.assignedCountry}
-                onChange={(value) =>
-                  setAddMemberForm({ ...addMemberForm, assignedCountry: value })
-                }
-                placeholder="Select Assigned Country"
-                error={formErrors.assignedCountry}
-                fullWidth
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 mt-8">
-            <Button variant="cancel" rounded onClick={handleAddMemberClose}>
-              Cancel
-            </Button>
-            <Button variant="accent" rounded onClick={handleAddMemberSubmit}>
-              Add
-            </Button>
-          </div>
-        </div>
-      </Popup>
+        onSubmit={handleAddMemberSubmit}
+      />
     </Layout>
   );
 };
