@@ -8,8 +8,9 @@ import {
   Select,
   MultiSelect,
   DataTable,
+  Popup,
 } from "../../../components";
-import { ArrowLeft } from "../../../assets";
+import { ArrowLeft, UserMinus } from "../../../assets";
 import {
   COLORS,
   ROUTES,
@@ -63,6 +64,7 @@ const universityColumns: GridColDef[] = [
 const ViewMember = () => {
   const navigate = useNavigate();
   const { memberId } = useParams<{ memberId: string }>();
+  const [isDeactivatePopupOpen, setIsDeactivatePopupOpen] = useState(false);
 
   // Find member from mock data (in real app, fetch from API)
   const findMemberInfo = () => {
@@ -102,10 +104,19 @@ const ViewMember = () => {
     navigate(ROUTES.MANAGE_TEAM);
   };
 
-  const handleDeactivate = () => {
+  const handleDeactivateClick = () => {
+    setIsDeactivatePopupOpen(true);
+  };
+
+  const handleDeactivateConfirm = () => {
     console.log("Deactivate member:", member.id);
     // Add deactivation logic here
+    setIsDeactivatePopupOpen(false);
     navigate(ROUTES.MANAGE_TEAM);
+  };
+
+  const handleDeactivateCancel = () => {
+    setIsDeactivatePopupOpen(false);
   };
 
   const handleSave = () => {
@@ -118,27 +129,38 @@ const ViewMember = () => {
     <Layout userName="Admin" userRole="Abroad Agency">
       <div className="bg-white rounded-lg shadow-sm p-6 md:p-8 min-h-[calc(100vh-140px)]">
         {/* Back Button & Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <Button
-            variant="accent"
-            icon={<ArrowLeft className="h-5 w-5" />}
-            onClick={handleBack}
-            rounded
-          />
-          <div>
-            <h1
-              className="text-2xl font-semibold"
-              style={{ color: COLORS.textDark }}
-            >
-              {member.name}
-            </h1>
-            <p className="text-sm" style={{ color: COLORS.textMuted }}>
-              ID: {member.memberId}
-            </p>
-            <p className="text-sm" style={{ color: COLORS.textMuted }}>
-              Role: {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
-            </p>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="accent"
+              icon={<ArrowLeft className="h-5 w-5" />}
+              onClick={handleBack}
+              rounded
+            />
+            <div>
+              <h1
+                className="text-2xl font-semibold"
+                style={{ color: COLORS.textDark }}
+              >
+                {member.name}
+              </h1>
+              <p className="text-sm" style={{ color: COLORS.textMuted }}>
+                ID: {member.memberId}
+              </p>
+              <p className="text-sm" style={{ color: COLORS.textMuted }}>
+                Role: {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
+              </p>
+            </div>
           </div>
+          {/* Deactivate Icon Button */}
+          <Button
+            variant="ghost"
+            icon={<UserMinus className="h-5 w-5" />}
+            onClick={handleDeactivateClick}
+            title="Deactivate Member"
+            rounded
+            style={{ color: COLORS.error }}
+          />
         </div>
 
         {/* Stats Cards */}
@@ -168,8 +190,8 @@ const ViewMember = () => {
           />
         </div>
 
-        {/* Contact Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {/* Email, Contact Number & Role */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Input
             label="Email"
             type="text"
@@ -184,10 +206,6 @@ const ViewMember = () => {
             disabled
             fullWidth
           />
-        </div>
-
-        {/* Role Selection */}
-        <div className="mb-6">
           <Select
             label="Role"
             options={roleOptions}
@@ -197,8 +215,8 @@ const ViewMember = () => {
           />
         </div>
 
-        {/* Admin & Manager Selection */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {/* Admin, Manager & Assigned Country */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Select
             label="Admin"
             options={adminOptions}
@@ -213,10 +231,6 @@ const ViewMember = () => {
             onChange={(value) => setFormData({ ...formData, managerId: value })}
             fullWidth
           />
-        </div>
-
-        {/* Country & University Selection */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <Select
             label="Assigned Country"
             options={countryOptions}
@@ -226,6 +240,10 @@ const ViewMember = () => {
             }
             fullWidth
           />
+        </div>
+
+        {/* Assigned University */}
+        <div className="mb-6">
           <MultiSelect
             label="Assigned University"
             options={universityOptions}
@@ -237,16 +255,36 @@ const ViewMember = () => {
           />
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex justify-between pt-4">
-          <Button variant="danger" onClick={handleDeactivate}>
-            Deactivate Member
-          </Button>
-          <Button variant="accent" onClick={handleSave}>
+        {/* Action Buttons - Only Save Changes */}
+        <div className="flex justify-end pt-4">
+          <Button variant="accent" rounded onClick={handleSave}>
             Save Changes
           </Button>
         </div>
       </div>
+
+      {/* Deactivate Confirmation Popup */}
+      <Popup
+        isOpen={isDeactivatePopupOpen}
+        onClose={handleDeactivateCancel}
+        size="sm"
+        showCloseButton={false}
+      >
+        <div className="text-center">
+          <p className="text-base mb-6" style={{ color: COLORS.textDark }}>
+            Are you sure you want to deactivate the account of{" "}
+            <strong>{member.name}</strong>?
+          </p>
+          <div className="flex justify-center gap-3">
+            <Button variant="cancel" rounded onClick={handleDeactivateCancel}>
+              No
+            </Button>
+            <Button variant="accent" rounded onClick={handleDeactivateConfirm}>
+              Yes
+            </Button>
+          </div>
+        </div>
+      </Popup>
     </Layout>
   );
 };

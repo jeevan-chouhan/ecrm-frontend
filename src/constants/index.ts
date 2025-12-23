@@ -32,6 +32,9 @@ export interface TeamMember {
   id: string;
   name: string;
   memberId: string;
+  role: string;
+  email: string;
+  mobileNo: string;
   status: MemberStatus;
 }
 
@@ -47,34 +50,35 @@ export const statusFilterOptions: SelectOption[] = [
   { value: "inactive", label: "Inactive" },
 ];
 
-// Mock data for team members
+// Mock data for team members (flat list for table)
+export const mockTeamMembers: TeamMember[] = [
+  { id: "1", name: "John Smith", memberId: "A#45", role: "Admin", email: "john.smith@example.com", mobileNo: "+91 9876543210", status: "active" },
+  { id: "2", name: "Emily Johnson", memberId: "A#52", role: "Admin", email: "emily.johnson@example.com", mobileNo: "+91 9876543211", status: "active" },
+  { id: "3", name: "Michael Brown", memberId: "A#61", role: "Admin", email: "michael.brown@example.com", mobileNo: "+91 9876543212", status: "inactive" },
+  { id: "4", name: "Sarah Davis", memberId: "A#23", role: "Manager", email: "sarah.davis@example.com", mobileNo: "+91 9876543213", status: "active" },
+  { id: "5", name: "David Wilson", memberId: "A#34", role: "Manager", email: "david.wilson@example.com", mobileNo: "+91 9876543214", status: "active" },
+  { id: "6", name: "Jessica Taylor", memberId: "A#41", role: "Manager", email: "jessica.taylor@example.com", mobileNo: "+91 9876543215", status: "inactive" },
+  { id: "7", name: "Bob Williams", memberId: "A#77", role: "Counselor", email: "bob.williams@example.com", mobileNo: "+91 9876543216", status: "active" },
+  { id: "8", name: "Sara Williams", memberId: "A#88", role: "Counselor", email: "sara.williams@example.com", mobileNo: "+91 9876543217", status: "active" },
+  { id: "9", name: "Jon Doe", memberId: "A#66", role: "Counselor", email: "jon.doe@example.com", mobileNo: "+91 9876543218", status: "active" },
+  { id: "10", name: "Alice Martin", memberId: "A#91", role: "Counselor", email: "alice.martin@example.com", mobileNo: "+91 9876543219", status: "active" },
+  { id: "11", name: "Robert Garcia", memberId: "A#94", role: "Counselor", email: "robert.garcia@example.com", mobileNo: "+91 9876543220", status: "inactive" },
+  { id: "12", name: "Linda Martinez", memberId: "A#99", role: "Counselor", email: "linda.martinez@example.com", mobileNo: "+91 9876543221", status: "active" },
+];
+
+// Mock data for team members (grouped by role - kept for backward compatibility)
 export const mockTeamData: RoleGroup[] = [
   {
     role: "Admin",
-    members: [
-      { id: "1", name: "John Smith", memberId: "A#45", status: "active" },
-      { id: "2", name: "Emily Johnson", memberId: "A#52", status: "active" },
-      { id: "3", name: "Michael Brown", memberId: "A#61", status: "inactive" },
-    ],
+    members: mockTeamMembers.filter(m => m.role === "Admin"),
   },
   {
     role: "Manager",
-    members: [
-      { id: "4", name: "Sarah Davis", memberId: "A#23", status: "active" },
-      { id: "5", name: "David Wilson", memberId: "A#34", status: "active" },
-      { id: "6", name: "Jessica Taylor", memberId: "A#41", status: "inactive" },
-    ],
+    members: mockTeamMembers.filter(m => m.role === "Manager"),
   },
   {
     role: "Counselor",
-    members: [
-      { id: "7", name: "Bob Williams", memberId: "A#77", status: "active" },
-      { id: "8", name: "Sara Williams", memberId: "A#88", status: "active" },
-      { id: "9", name: "Jon Doe", memberId: "A#66", status: "active" },
-      { id: "10", name: "Alice Martin", memberId: "A#91", status: "active" },
-      { id: "11", name: "Robert Garcia", memberId: "A#94", status: "inactive" },
-      { id: "12", name: "Linda Martinez", memberId: "A#99", status: "active" },
-    ],
+    members: mockTeamMembers.filter(m => m.role === "Counselor"),
   },
 ];
 
@@ -107,7 +111,7 @@ export interface TeamMemberDetail {
 
 // Role options for dropdown
 export const roleOptions: SelectOption[] = [
-  { value: "admin-primary", label: "Admin+Primary" },
+  { value: "admin-primary", label: "Primary Admin" },
   { value: "admin", label: "Admin" },
   { value: "manager", label: "Manager" },
   { value: "counselor", label: "Counselor" },

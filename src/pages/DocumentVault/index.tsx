@@ -179,31 +179,32 @@ const DocumentVault = () => {
         className="bg-white rounded-lg shadow-sm p-4 md:p-6"
         style={{ backgroundColor: COLORS.surface }}
       >
-        {/* Header Row */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-          <h1
-            className="text-xl md:text-2xl font-bold"
-            style={{ color: COLORS.textDark }}
-          >
-            {t("documentVault.title", "Document Vault")}
-          </h1>
-          <div className="w-full md:w-72">
-            <SearchBar
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder={t("documentVault.searchApplicants", "Search applicants ID, name...")}
-            />
-          </div>
-        </div>
+        {/* Header */}
+        <h1
+          className="text-xl md:text-2xl font-bold mb-6"
+          style={{ color: COLORS.textDark }}
+        >
+          {t("documentVault.title", "Document Vault")}
+        </h1>
 
         {/* Applicants Section */}
         <div>
-          <h2
-            className="text-lg font-semibold mb-4"
-            style={{ color: COLORS.textDark }}
-          >
-            {t("documentVault.applicants", "Applicants")}
-          </h2>
+          {/* Section Heading with Search */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+            <h2
+              className="text-lg font-semibold"
+              style={{ color: COLORS.textDark }}
+            >
+              {t("documentVault.applicants", "Applicants")}
+            </h2>
+            <div className="w-full md:w-72">
+              <SearchBar
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder={t("documentVault.searchApplicants", "Search applicants ID, name...")}
+              />
+            </div>
+          </div>
 
           {/* DataTable with Pagination and Sorting */}
           <DataTable

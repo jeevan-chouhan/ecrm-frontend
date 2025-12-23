@@ -1,74 +1,266 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import type { GridColDef } from "@mui/x-data-grid";
 import {
   Layout,
   Button,
-  Accordion,
-  AccordionGroup,
-  AccordionItem,
-  AccordionLabel,
+  DataTable,
+  Select,
+  Popup,
+  Input,
+  PhoneInput,
 } from "../../components";
-import {
-  Eye,
-  Plus,
-  ChevronDown,
-  Search,
-  CloseCircle,
-  UserMinus,
-} from "../../assets";
+import { Eye, Plus, Search, CloseCircle, UserMinus, Close } from "../../assets";
 import {
   COLORS,
   ROUTES,
   statusFilterOptions,
-  mockTeamData,
+  mockTeamMembers,
+  roleOptions,
+  adminOptions,
+  countryOptions,
   type TeamMember,
 } from "../../constants";
+import { isValidEmail, isValidPhone } from "../../utils/regex";
+
+interface AddMemberForm {
+  name: string;
+  email: string;
+  contactNumber: string;
+  role: string;
+  adminId: string;
+  assignedCountry: string;
+}
+
+interface FormErrors {
+  name?: string;
+  email?: string;
+  contactNumber?: string;
+  role?: string;
+  adminId?: string;
+  assignedCountry?: string;
+}
+
+const initialFormState: AddMemberForm = {
+  name: "",
+  email: "",
+  contactNumber: "",
+  role: "counselor",
+  adminId: "",
+  assignedCountry: "",
+};
 
 const ManageTeam = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+  const [deactivatePopup, setDeactivatePopup] = useState<{
+    isOpen: boolean;
+    member: TeamMember | null;
+  }>({ isOpen: false, member: null });
+  const [addMemberPopup, setAddMemberPopup] = useState(false);
+  const [addMemberForm, setAddMemberForm] =
+    useState<AddMemberForm>(initialFormState);
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
 
   // Filter logic
-  const getFilteredMembers = (members: TeamMember[]) => {
-    return members.filter((member) => {
-      const matchesSearch = member.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
+  const filteredMembers = useMemo(() => {
+    return mockTeamMembers.filter((member) => {
+      const matchesSearch =
+        member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        member.mobileNo.includes(searchTerm);
       const matchesStatus =
         statusFilter === "all" || member.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  };
+  }, [searchTerm, statusFilter]);
 
   const handleView = (member: TeamMember) => {
     navigate(`${ROUTES.MANAGE_TEAM}/${member.id}`);
   };
 
-  const handleDeactivate = (member: TeamMember) => {
-    console.log("Deactivate member:", member);
-    // Add deactivation logic here
+  const handleDeactivateClick = (member: TeamMember) => {
+    setDeactivatePopup({ isOpen: true, member });
+  };
+
+  const handleDeactivateConfirm = () => {
+    if (deactivatePopup.member) {
+      console.log("Deactivate member:", deactivatePopup.member);
+      // Add deactivation logic here
+    }
+    setDeactivatePopup({ isOpen: false, member: null });
+  };
+
+  const handleDeactivateCancel = () => {
+    setDeactivatePopup({ isOpen: false, member: null });
   };
 
   const handleAddMember = () => {
-    console.log("Add new member");
-    // Add new member modal logic here
+    setAddMemberForm(initialFormState);
+    setFormErrors({});
+    setAddMemberPopup(true);
   };
+
+  const handleAddMemberClose = () => {
+    setAddMemberPopup(false);
+    setAddMemberForm(initialFormState);
+    setFormErrors({});
+  };
+
+  // Validation function
+  const validateForm = (): boolean => {
+    const errors: FormErrors = {};
+
+    // Name validation
+    if (!addMemberForm.name.trim()) {
+      errors.name = "Name is required";
+    } else if (addMemberForm.name.trim().length < 2) {
+      errors.name = "Name must be at least 2 characters";
+    }
+
+    // Email validation
+    if (!addMemberForm.email.trim()) {
+      errors.email = "Email is required";
+    } else if (!isValidEmail(addMemberForm.email)) {
+      errors.email = "Please enter a valid email";
+    }
+
+    // Contact number validation
+    if (!addMemberForm.contactNumber || addMemberForm.contactNumber.length < 5) {
+      errors.contactNumber = "Contact number is required";
+    } else if (!isValidPhone(addMemberForm.contactNumber)) {
+      errors.contactNumber = "Please enter a valid contact number";
+    }
+
+    // Role validation
+    if (!addMemberForm.role) {
+      errors.role = "Role is required";
+    }
+
+    // Admin validation
+    if (!addMemberForm.adminId) {
+      errors.adminId = "Admin is required";
+    }
+
+    // Country validation
+    if (!addMemberForm.assignedCountry) {
+      errors.assignedCountry = "Assigned country is required";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleAddMemberSubmit = () => {
+    if (validateForm()) {
+      console.log("Add member:", addMemberForm);
+      // Add member creation logic here
+      handleAddMemberClose();
+    }
+  };
+
+  // DataTable columns
+  const columns: GridColDef[] = [
+    {
+      field: "name",
+      headerName: "Name",
+      flex: 1,
+      minWidth: 180,
+      renderCell: (params) => (
+        <div className="flex flex-col">
+          <span style={{ color: COLORS.textDark, fontWeight: 500 }}>
+            {params.row.name}
+          </span>
+          <span className="text-xs" style={{ color: COLORS.textMuted }}>
+            {params.row.memberId}
+          </span>
+        </div>
+      ),
+    },
+    {
+      field: "role",
+      headerName: "Role",
+      flex: 0.8,
+      minWidth: 120,
+    },
+    {
+      field: "email",
+      headerName: "Email",
+      flex: 1.2,
+      minWidth: 200,
+    },
+    {
+      field: "mobileNo",
+      headerName: "Mobile No",
+      flex: 1,
+      minWidth: 150,
+    },
+    {
+      field: "actions",
+      headerName: "Action",
+      flex: 0.6,
+      minWidth: 100,
+      sortable: false,
+      renderCell: (params) => (
+        <div className="flex items-center gap-1 mt-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={<Eye className="h-4 w-4" />}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleView(params.row);
+            }}
+            title="View"
+            rounded
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={<UserMinus className="h-4 w-4" />}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeactivateClick(params.row);
+            }}
+            title="Deactivate"
+            rounded
+            style={{ color: COLORS.error }}
+          />
+        </div>
+      ),
+    },
+  ];
+
+  // Role options for add member (default to Counselor)
+  const addMemberRoleOptions = roleOptions.map((opt) => ({
+    ...opt,
+    label: opt.value === "counselor" ? `Role - ${opt.label}` : opt.label,
+  }));
 
   return (
     <Layout userName="Admin" userRole="Abroad Agency">
       <div className="bg-white rounded-lg shadow-sm p-6 md:p-8 min-h-[calc(100vh-140px)]">
-        {/* Header */}
-        <h1
-          className="text-2xl font-semibold mb-6"
-          style={{ color: COLORS.textDark }}
-        >
-          Manage Team
-        </h1>
+        {/* Header with Add Member Button */}
+        <div className="flex items-center justify-between mb-6">
+          <h1
+            className="text-2xl font-semibold"
+            style={{ color: COLORS.textDark }}
+          >
+            Manage Team
+          </h1>
+          <Button
+            variant="accent"
+            rounded
+            leftIcon={<Plus className="h-4 w-4" />}
+            onClick={handleAddMember}
+          >
+            Add member
+          </Button>
+        </div>
 
         {/* Filters Section */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
           {/* Search Bar */}
           <div className="relative flex-1 max-w-md">
             <div
@@ -81,7 +273,7 @@ const ManageTeam = () => {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search team member name..."
+              placeholder="Search by name, email or mobile..."
               className="block w-full rounded-lg pl-10 pr-4 py-2.5 text-sm transition-all duration-200 focus:outline-none"
               style={{
                 border: `1px solid ${COLORS.border}`,
@@ -103,168 +295,168 @@ const ManageTeam = () => {
           </div>
 
           {/* Status Filter Dropdown */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-              className="flex items-center justify-between gap-2 px-4 py-2.5 rounded-lg text-sm min-w-[200px] transition-all duration-200"
-              style={{
-                border: `1px solid ${COLORS.border}`,
-                backgroundColor: COLORS.surface,
-                color: COLORS.textDark,
-                fontFamily: "'Inter', sans-serif",
-              }}
-            >
-              <span>
-                {
-                  statusFilterOptions.find((opt) => opt.value === statusFilter)
-                    ?.label
-                }
-              </span>
-              <ChevronDown
-                className={`h-4 w-4 transition-transform duration-200 ${
-                  isStatusDropdownOpen ? "rotate-180" : ""
-                }`}
-                style={{ color: COLORS.textMuted }}
-              />
-            </button>
-
-            {isStatusDropdownOpen && (
-              <div
-                className="absolute mt-1 w-full rounded-lg overflow-hidden"
-                style={{
-                  zIndex: 10,
-                  backgroundColor: COLORS.surface,
-                  border: `1px solid ${COLORS.border}`,
-                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                }}
-              >
-                {statusFilterOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => {
-                      setStatusFilter(option.value);
-                      setIsStatusDropdownOpen(false);
-                    }}
-                    className="w-full px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-slate-50"
-                    style={{
-                      color:
-                        statusFilter === option.value
-                          ? COLORS.accent
-                          : COLORS.textDark,
-                      backgroundColor:
-                        statusFilter === option.value
-                          ? COLORS.surfaceHover
-                          : "transparent",
-                    }}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            )}
+          <div className="w-full sm:w-[200px]">
+            <Select
+              options={statusFilterOptions}
+              value={statusFilter}
+              onChange={(value) => setStatusFilter(value)}
+              fullWidth
+            />
           </div>
         </div>
 
-        {/* Roles Section */}
-        <div className="mb-6">
-          <h2
-            className="text-base font-medium mb-4"
-            style={{ color: COLORS.textDark }}
-          >
-            Roles
-          </h2>
-
-          <AccordionGroup>
-            {mockTeamData.map((roleGroup, index) => {
-              const filteredMembers = getFilteredMembers(roleGroup.members);
-              const activeMembers = filteredMembers.filter(
-                (m) => m.status === "active"
-              );
-
-              return (
-                <Accordion
-                  key={roleGroup.role}
-                  title={roleGroup.role}
-                  count={roleGroup.members.length}
-                  defaultExpanded={index === mockTeamData.length - 1}
-                >
-                  <AccordionLabel>Active {roleGroup.role}s</AccordionLabel>
-
-                  {activeMembers.length > 0 ? (
-                    <div className="space-y-1">
-                      {activeMembers.map((member) => (
-                        <AccordionItem
-                          key={member.id}
-                          actions={
-                            <>
-                              {/* View Button */}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                icon={<Eye className="h-4 w-4" />}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleView(member);
-                                }}
-                                title="View"
-                                rounded
-                              />
-
-                              {/* Deactivate Button */}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                icon={<UserMinus className="h-4 w-4" />}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeactivate(member);
-                                }}
-                                title="Deactivate"
-                                rounded
-                                style={{ color: COLORS.error }}
-                              />
-                            </>
-                          }
-                        >
-                          {member.memberId} {member.name}
-                        </AccordionItem>
-                      ))}
-                    </div>
-                  ) : (
-                    <p
-                      className="text-sm py-2"
-                      style={{ color: COLORS.textMuted }}
-                    >
-                      No active members found
-                    </p>
-                  )}
-                </Accordion>
-              );
-            })}
-          </AccordionGroup>
-        </div>
-
-        {/* Add Member Button */}
-        <div className="flex justify-end">
-          <Button
-            variant="accent"
-            leftIcon={<Plus className="h-4 w-4" />}
-            onClick={handleAddMember}
-          >
-            Add member
-          </Button>
-        </div>
+        {/* Team Members Table */}
+        <DataTable
+          rows={filteredMembers}
+          columns={columns}
+          pageSize={10}
+          pageSizeOptions={[5, 10, 25, 50]}
+          disableRowSelectionOnClick
+        />
       </div>
 
-      {/* Close dropdown when clicking outside */}
-      {isStatusDropdownOpen && (
-        <div
-          className="fixed inset-0"
-          style={{ zIndex: 5 }}
-          onClick={() => setIsStatusDropdownOpen(false)}
-        />
-      )}
+      {/* Deactivate Confirmation Popup */}
+      <Popup
+        isOpen={deactivatePopup.isOpen}
+        onClose={handleDeactivateCancel}
+        size="sm"
+        showCloseButton={false}
+      >
+        <div className="text-center">
+          <p className="text-base mb-6" style={{ color: COLORS.textDark }}>
+            Are you sure you want to deactivate the account of{" "}
+            <strong>{deactivatePopup.member?.name}</strong>?
+          </p>
+          <div className="flex justify-center gap-3">
+            <Button variant="cancel" rounded onClick={handleDeactivateCancel}>
+              No
+            </Button>
+            <Button variant="accent" rounded onClick={handleDeactivateConfirm}>
+              Yes
+            </Button>
+          </div>
+        </div>
+      </Popup>
+
+      {/* Add Member Popup */}
+      <Popup
+        isOpen={addMemberPopup}
+        onClose={handleAddMemberClose}
+        size="full"
+        showCloseButton={false}
+      >
+        <div>
+          {/* Header with title and close button */}
+          <div className="flex items-center justify-between mb-6">
+            <h2
+              className="text-xl font-semibold"
+              style={{ color: COLORS.textDark }}
+            >
+              Add new member
+            </h2>
+            <button
+              onClick={handleAddMemberClose}
+              className="p-1.5 rounded-lg transition-colors hover:bg-slate-100"
+              style={{ color: COLORS.textMuted }}
+            >
+              <Close className="h-5 w-5" />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {/* Row 1: Name, Email */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                placeholder="Name"
+                value={addMemberForm.name}
+                onChange={(e) =>
+                  setAddMemberForm({ ...addMemberForm, name: e.target.value })
+                }
+                error={formErrors.name}
+                fullWidth
+              />
+              <Input
+                placeholder="Email"
+                type="email"
+                value={addMemberForm.email}
+                onChange={(e) =>
+                  setAddMemberForm({ ...addMemberForm, email: e.target.value })
+                }
+                error={formErrors.email}
+                fullWidth
+              />
+            </div>
+
+            {/* Row 2: Contact Number, Password */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <PhoneInput
+                placeholder="Contact Number"
+                value={addMemberForm.contactNumber}
+                onChange={(value) =>
+                  setAddMemberForm({
+                    ...addMemberForm,
+                    contactNumber: value,
+                  })
+                }
+                error={formErrors.contactNumber}
+                fullWidth
+              />
+              <Input
+                placeholder="System Generated Password"
+                disabled
+                fullWidth
+              />
+            </div>
+
+            {/* Row 3: Role, Admin */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Select
+                options={addMemberRoleOptions}
+                value={addMemberForm.role}
+                onChange={(value) =>
+                  setAddMemberForm({ ...addMemberForm, role: value })
+                }
+                placeholder="Role - Counselor"
+                error={formErrors.role}
+                fullWidth
+              />
+              <Select
+                options={adminOptions}
+                value={addMemberForm.adminId}
+                onChange={(value) =>
+                  setAddMemberForm({ ...addMemberForm, adminId: value })
+                }
+                placeholder="Select Admin"
+                error={formErrors.adminId}
+                fullWidth
+              />
+            </div>
+
+            {/* Row 4: Assigned Country */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Select
+                options={countryOptions}
+                value={addMemberForm.assignedCountry}
+                onChange={(value) =>
+                  setAddMemberForm({ ...addMemberForm, assignedCountry: value })
+                }
+                placeholder="Select Assigned Country"
+                error={formErrors.assignedCountry}
+                fullWidth
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 mt-8">
+            <Button variant="cancel" rounded onClick={handleAddMemberClose}>
+              Cancel
+            </Button>
+            <Button variant="accent" rounded onClick={handleAddMemberSubmit}>
+              Add
+            </Button>
+          </div>
+        </div>
+      </Popup>
     </Layout>
   );
 };
