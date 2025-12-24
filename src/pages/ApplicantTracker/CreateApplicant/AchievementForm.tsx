@@ -1,3 +1,4 @@
+import React from "react";
 import { Input, Select, Button, FileUpload } from "../../../components";
 import { useTranslation } from "react-i18next";
 import { COLORS, achievementCategories } from "../../../constants";
@@ -91,6 +92,7 @@ const AchievementForm = ({
                 type="button"
                 variant="cancel"
                 onClick={onCancel}
+                rounded
               >
                 {t("common.cancel")}
               </Button>
@@ -100,6 +102,7 @@ const AchievementForm = ({
                 type="button"
                 variant="accent"
                 onClick={onAddMore}
+                rounded
               >
                 {t("common.addMore")}
               </Button>
@@ -111,5 +114,6 @@ const AchievementForm = ({
   );
 };
 
-export default AchievementForm;
+// Memoize component to prevent unnecessary re-renders when props haven't changed
+export default React.memo(AchievementForm);
 

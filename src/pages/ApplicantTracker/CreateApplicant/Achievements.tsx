@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useTranslation } from "react-i18next";
@@ -7,12 +7,23 @@ import { COLORS, yesNoOptions } from "../../../constants";
 import { Edit, Trash } from "../../../assets";
 import AchievementForm from "./AchievementForm";
 import type { AchievementItem, AchievementFormData } from "./types";
+import { fileToBase64 } from "./utils/fileUtils";
 
-const Achievements = () => {
+interface AchievementsProps {
+  initialValues: AchievementFormData;
+  onUpdate: (data: AchievementFormData) => void;
+  onBack?: () => void;
+  onSubmit?: () => void;
+}
+
+const Achievements = ({ initialValues, onUpdate, onBack, onSubmit }: AchievementsProps) => {
   const { t, i18n } = useTranslation();
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
+  const [isFormValid, setIsFormValid] = useState(false);
+  const [lastSavedData, setLastSavedData] = useState<AchievementFormData | null>(null);
+  const [hasDataChanged, setHasDataChanged] = useState(false);
 
   const getEmptyAchievement = (): AchievementItem => ({
     id: `achievement-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
@@ -48,10 +59,8 @@ const Achievements = () => {
   );
 
   const formik = useFormik<AchievementFormData>({
-    initialValues: {
-      hasAchievements: "",
-      achievements: [],
-    },
+    initialValues,
+    enableReinitialize: true,
     validationSchema,
     onSubmit: async (values) => {
       try {
@@ -83,31 +92,142 @@ const Achievements = () => {
         // });
         // const result = await response.json();
 
-        console.log("Payload ready for API:", payload);
+        // Only call API if data has changed since last save
+        if (hasDataChanged) {
+          console.log("Payload ready for API:", payload);
+          console.log("API endpoint: POST /api/applicant/achievements");
+          
+          // Mark data as saved
+          setLastSavedData({ 
+            hasAchievements: values.hasAchievements,
+            achievements: [...values.achievements]
+          });
+          setHasDataChanged(false);
+        } else {
+          console.log("No changes detected. Skipping API call.");
+        }
       } catch (error) {
         console.error("Error saving achievements:", error);
       }
     },
   });
 
-  // Helper function to convert File to base64
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
+
+  // Check form validity - hasAchievements must be selected, and if yes, at least one complete achievement required
+  useEffect(() => {
+    const isValid = 
+      formik.values.hasAchievements !== "" &&
+      (formik.values.hasAchievements === "no" || 
+       formik.values.achievements.filter((a) => a.saved && isAchievementComplete(a)).length > 0);
+    setIsFormValid(isValid);
+  }, [formik.values.hasAchievements, formik.values.achievements]);
+
+  // Check if data has changed since last save
+  useEffect(() => {
+    if (lastSavedData === null) {
+      setHasDataChanged(true);
+      return;
+    }
+    
+    if (lastSavedData.hasAchievements !== formik.values.hasAchievements) {
+      setHasDataChanged(true);
+      return;
+    }
+    
+    if (formik.values.hasAchievements === "no") {
+      setHasDataChanged(false);
+      return;
+    }
+    
+    const currentSaved = formik.values.achievements.filter((a) => a.saved && isAchievementComplete(a));
+    const lastSaved = lastSavedData.achievements.filter((a) => a.saved && isAchievementComplete(a));
+    
+    if (currentSaved.length !== lastSaved.length) {
+      setHasDataChanged(true);
+      return;
+    }
+    
+    const hasChanged = currentSaved.some((current, index) => {
+      const last = lastSaved[index];
+      if (!last) return true;
+      
+      // Compare documents by name and size instead of reference
+      const documentsChanged = 
+        (current.documents === null && last.documents !== null) ||
+        (current.documents !== null && last.documents === null) ||
+        (current.documents !== null && last.documents !== null && 
+         (current.documents.name !== last.documents.name || 
+          current.documents.size !== last.documents.size));
+      
+      return (
+        current.category !== last.category ||
+        current.description !== last.description ||
+        documentsChanged
+      );
     });
-  };
+    
+    setHasDataChanged(hasChanged);
+  }, [formik.values, lastSavedData]);
+
+  // Sync formik values to parent state - optimized with ref-based comparison
+  // Only update parent when values actually change (prevents excessive re-renders)
+  const prevValuesRef = useRef<AchievementFormData>(formik.values);
+  useEffect(() => {
+    // Quick check for hasAchievements change
+    if (prevValuesRef.current.hasAchievements !== formik.values.hasAchievements) {
+      prevValuesRef.current = formik.values;
+      onUpdate(formik.values);
+      return;
+    }
+    
+    // Deep comparison for achievements array
+    const currentAchievements = formik.values.achievements;
+    const prevAchievements = prevValuesRef.current.achievements;
+    
+    if (currentAchievements.length !== prevAchievements.length) {
+      prevValuesRef.current = formik.values;
+      onUpdate(formik.values);
+      return;
+    }
+    
+    // Deep comparison only if lengths match
+    const hasChanged = currentAchievements.some((current, index) => {
+      const prev = prevAchievements[index];
+      if (!prev) return true;
+      
+      // Compare documents by name and size instead of reference
+      const documentsChanged = 
+        (current.documents === null && prev.documents !== null) ||
+        (current.documents !== null && prev.documents === null) ||
+        (current.documents !== null && prev.documents !== null && 
+         (current.documents.name !== prev.documents.name || 
+          current.documents.size !== prev.documents.size));
+      
+      return (
+        current.id !== prev.id ||
+        current.category !== prev.category ||
+        current.description !== prev.description ||
+        documentsChanged ||
+        current.saved !== prev.saved
+      );
+    });
+    
+    if (hasChanged) {
+      prevValuesRef.current = formik.values;
+      onUpdate(formik.values);
+    }
+  }, [formik.values, onUpdate]);
 
   // Reusable helper functions (defined after formik)
   const markAchievementAsSaved = useCallback((index: number) => {
-    const updatedAchievements = [...formik.values.achievements];
-    updatedAchievements[index] = {
-      ...updatedAchievements[index],
-      saved: true,
-    };
-    formik.setFieldValue("achievements", updatedAchievements);
+    formik.setFieldValue("achievements", (currentAchievements: AchievementItem[]) => {
+      const updatedAchievements = [...currentAchievements];
+      updatedAchievements[index] = {
+        ...updatedAchievements[index],
+        saved: true,
+      };
+      return updatedAchievements;
+    });
   }, [formik]);
 
   const removeAchievement = useCallback((index: number) => {
@@ -205,6 +325,35 @@ const Achievements = () => {
     }
   }, [getAchievementSchema, markAchievementAsSaved, handleValidationErrors]);
 
+  // Reusable helper to validate and save all unsaved achievements
+  const validateAndSaveAllUnsavedAchievements = useCallback(async (): Promise<boolean> => {
+    const unsavedAchievements = formik.values.achievements.filter((a) => !a.saved);
+
+    if (unsavedAchievements.length === 0 || formik.values.hasAchievements !== "yes") {
+      return true;
+    }
+
+    let hasErrors = false;
+    const touchedAchievements = [...(formik.touched.achievements || [])];
+
+    for (const a of unsavedAchievements) {
+      const index = findAchievementIndex(a.id);
+      const isValid = await validateAndSaveAchievement(a, index);
+      
+      if (!isValid) {
+        hasErrors = true;
+        touchedAchievements[index] = markAllFieldsAsTouched();
+      }
+    }
+
+    formik.setTouched({
+      ...formik.touched,
+      achievements: touchedAchievements as any,
+    });
+
+    return !hasErrors;
+  }, [formik.values.achievements, formik.values.hasAchievements, formik.touched.achievements, formik.setTouched, findAchievementIndex, validateAndSaveAchievement, markAllFieldsAsTouched]);
+
   const handleAddAchievement = async () => {
     if (formik.values.hasAchievements !== "yes") {
       return;
@@ -212,26 +361,36 @@ const Achievements = () => {
     
     const incomplete = getIncompleteAchievements();
     
-    // If there's an incomplete achievement, save it first
+    // If there's an incomplete achievement, validate it first
     if (incomplete.length > 0) {
       const firstIncomplete = incomplete[0];
       const index = findAchievementIndex(firstIncomplete.id);
       
-      const isValid = await validateAndSaveAchievement(firstIncomplete, index);
-      if (!isValid) {
+      // Validate the achievement first
+      const achievementSchema = getAchievementSchema();
+      try {
+        await achievementSchema.validate(firstIncomplete, { abortEarly: false });
+      } catch (error) {
+        // If validation fails, mark fields as touched to show errors
+        handleValidationErrors(error, index);
         return; // Don't add new form if validation fails
       }
       
-      // Now add a new empty achievement
-      const emptyAchievement = getEmptyAchievement();
-      const updatedAchievements = formik.values.achievements.map((a, i) => 
-        i === index ? { ...a, saved: true } : a
-      );
-      formik.setFieldValue("achievements", [...updatedAchievements, emptyAchievement]);
+      // If validation passes, mark as saved and add new achievement in a single update
+      formik.setFieldValue("achievements", (currentAchievements: AchievementItem[]) => {
+        const updatedAchievements = currentAchievements.map((a, i) => 
+          i === index ? { ...a, saved: true } : a
+        );
+        const emptyAchievement = getEmptyAchievement();
+        return [...updatedAchievements, emptyAchievement];
+      });
     } else {
       // No incomplete achievements, just add a new one
       const emptyAchievement = getEmptyAchievement();
-      formik.setFieldValue("achievements", [...formik.values.achievements, emptyAchievement]);
+      formik.setFieldValue("achievements", (currentAchievements: AchievementItem[]) => [
+        ...currentAchievements,
+        emptyAchievement
+      ]);
     }
   };
 
@@ -302,30 +461,9 @@ const Achievements = () => {
   };
 
   const handleSave = async () => {
-    const unsavedAchievements = formik.values.achievements.filter((a) => !a.saved);
-
-    if (unsavedAchievements.length > 0 && formik.values.hasAchievements === "yes") {
-      let hasErrors = false;
-      const touchedAchievements = [...(formik.touched.achievements || [])];
-
-      for (const a of unsavedAchievements) {
-        const index = findAchievementIndex(a.id);
-        const isValid = await validateAndSaveAchievement(a, index);
-        
-        if (!isValid) {
-          hasErrors = true;
-          touchedAchievements[index] = markAllFieldsAsTouched();
-        }
-      }
-
-      formik.setTouched({
-        ...formik.touched,
-        achievements: touchedAchievements as any,
-      });
-
-      if (hasErrors) {
-        return;
-      }
+    const isValid = await validateAndSaveAllUnsavedAchievements();
+    if (!isValid) {
+      return;
     }
 
     if (editingIndex !== null) {
@@ -333,6 +471,41 @@ const Achievements = () => {
     }
 
     formik.handleSubmit();
+  };
+
+  const handleSubmit = async () => {
+    // First, ensure all unsaved achievements are saved
+    const isValid = await validateAndSaveAllUnsavedAchievements();
+    if (!isValid) {
+      console.log("Form validation failed. Please fill all required fields.");
+      return;
+    }
+
+    // Validate the form
+    const errors = await formik.validateForm();
+    if (Object.keys(errors).length > 0) {
+      // Mark all fields as touched to show errors
+      const touchedFields: Record<string, boolean> = {};
+      Object.keys(formik.values).forEach((key) => {
+        touchedFields[key] = true;
+      });
+      formik.setTouched(touchedFields);
+      console.log("Form validation failed. Please fill all required fields.");
+      return;
+    }
+
+    // Close any open editing
+    if (editingIndex !== null) {
+      setEditingIndex(null);
+    }
+
+    // Save the current form data first
+    await formik.handleSubmit();
+
+    // Then call the final submit handler from parent
+    if (onSubmit) {
+      onSubmit();
+    }
   };
 
   const getFieldError = (index: number, fieldName: keyof AchievementItem): string | undefined => {
@@ -366,9 +539,8 @@ const Achievements = () => {
       }
     }
 
-    setTimeout(() => {
-      formik.validateField(`achievements[${index}].${field}`);
-    }, 0);
+    // Validate field immediately without setTimeout to prevent race conditions
+    await formik.validateField(`achievements[${index}].${field}`);
   };
 
   const handleHasAchievementsChange = (value: string) => {
@@ -390,9 +562,6 @@ const Achievements = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold mb-4" style={{ color: COLORS.textDark }}>
-          {t("applicant.achievements")}
-        </h2>
 
         {/* Do You Have Any Achievements? */}
         <div className="mb-4">
@@ -439,6 +608,7 @@ const Achievements = () => {
                   type="button"
                   variant="accent"
                   onClick={handleAddAchievement}
+                  rounded
                 >
                   {t("common.addMore")}
                 </Button>
@@ -456,7 +626,7 @@ const Achievements = () => {
 
             <div className="space-y-4">
               {complete.map((achievement) => {
-                const index = formik.values.achievements.findIndex((a) => a.id === achievement.id);
+                const index = findAchievementIndex(achievement.id);
                 const isEditing = editingIndex === index;
 
                 return (
@@ -481,6 +651,7 @@ const Achievements = () => {
                             type="button"
                             variant="accent"
                             onClick={() => handleSaveAchievement(index)}
+                            rounded
                           >
                             {t("common.save")}
                           </Button>
@@ -488,6 +659,7 @@ const Achievements = () => {
                             type="button"
                             variant="cancel"
                             onClick={handleCancelEdit}
+                            rounded
                           >
                             {t("common.cancel")}
                           </Button>
@@ -515,6 +687,7 @@ const Achievements = () => {
                             iconOnly
                             onClick={() => handleEditAchievement(index)}
                             title={t("common.edit")}
+                            rounded
                           />
                           <Button
                             type="button"
@@ -524,6 +697,7 @@ const Achievements = () => {
                             iconOnly
                             onClick={() => handleDeleteAchievement(index)}
                             title={t("common.delete")}
+                            rounded
                           />
                         </div>
                       </div>
@@ -546,10 +720,30 @@ const Achievements = () => {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-end gap-3 mt-6 pt-6 border-t" style={{ borderColor: COLORS.border }}>
-        <Button type="button" variant="accent" onClick={handleSave}>
-          {t("applicant.save")}
-        </Button>
+      <div className="flex justify-between gap-3 mt-6 pt-6 border-t" style={{ borderColor: COLORS.border }}>
+        <div>
+          {onBack && (
+            <Button type="button" variant="cancel" onClick={onBack} rounded>
+              {t("common.back")}
+            </Button>
+          )}
+        </div>
+        <div className="flex gap-3">
+          <Button type="button" variant="accent" onClick={handleSave} disabled={!hasDataChanged} rounded>
+            {t("applicant.save")}
+          </Button>
+          {onSubmit && (
+            <Button 
+              type="button" 
+              variant="accent" 
+              onClick={handleSubmit} 
+              disabled={!isFormValid}
+              rounded
+            >
+              {t("applicant.submit")}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Delete Confirmation Popup */}
@@ -570,6 +764,7 @@ const Achievements = () => {
               variant="cancel"
               size="md"
               onClick={handleCancelDelete}
+              rounded
             >
               {t("common.cancel")}
             </Button>
@@ -577,6 +772,7 @@ const Achievements = () => {
               variant="danger"
               size="md"
               onClick={handleConfirmDelete}
+              rounded
             >
               {t("common.delete")}
             </Button>

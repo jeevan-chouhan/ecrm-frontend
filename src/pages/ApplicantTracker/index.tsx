@@ -546,7 +546,7 @@ const ApplicantTracker = () => {
               />
             </div>
             <Link to={ROUTES.CREATE_APPLICANT}>
-              <Button variant="accent" leftIcon={<Plus className="w-5 h-5" />}>
+              <Button variant="accent" leftIcon={<Plus className="w-5 h-5" />} rounded>
                 {t("applicantTracker.addApplicant", "Add Applicant")}
               </Button>
             </Link>
@@ -606,6 +606,7 @@ const ApplicantTracker = () => {
                 size="sm"
                 onClick={handleCancelStatusChange}
                 disabled={isChangingStatus}
+                rounded
               >
                 {t("common.cancel", "Cancel")}
               </Button>
@@ -614,6 +615,7 @@ const ApplicantTracker = () => {
                 size="sm"
                 onClick={handleConfirmStatusChange}
                 isLoading={isChangingStatus}
+                rounded
               >
                 {t("common.confirm", "Confirm")}
               </Button>

@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useTranslation } from "react-i18next";
@@ -7,12 +7,21 @@ import { COLORS } from "../../../constants";
 import PreferenceForm from "./PreferenceForm";
 import PreferenceCard from "./PreferenceCard";
 import type { PreferenceItem, ApplicationPreferencesFormData } from "./types";
+import { useDataChangeTracking, useFormSync } from "./hooks";
 
-const ApplicationPreferences = ({ onSaveAndNext }: { onSaveAndNext?: () => void }) => {
+interface ApplicationPreferencesProps {
+  initialValues: ApplicationPreferencesFormData;
+  onUpdate: (data: ApplicationPreferencesFormData) => void;
+  onSaveAndNext?: () => void;
+  onBack?: () => void;
+}
+
+const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack }: ApplicationPreferencesProps) => {
   const { t, i18n } = useTranslation();
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
+  const [isFormValid, setIsFormValid] = useState(false);
 
   // Reusable preference validation schema
   const getPreferenceSchema = useCallback(() => {
@@ -23,8 +32,8 @@ const ApplicationPreferences = ({ onSaveAndNext }: { onSaveAndNext?: () => void 
       desiredCampus: Yup.string().required(t("validation.campusRequired")),
       course: Yup.string().required(t("validation.courseRequired")),
       desiredIntake: Yup.string().required(t("validation.intakeRequired")),
-      assignCounselor: Yup.string().required(t("validation.counselorRequired")),
-      agencyPartnerName: Yup.string().required(t("validation.agencyPartnerRequired")),
+      assignCounselor: Yup.string().nullable(),
+      agencyPartnerName: Yup.string().nullable(),
     });
   }, [t, i18n.language]);
 
@@ -59,16 +68,23 @@ const ApplicationPreferences = ({ onSaveAndNext }: { onSaveAndNext?: () => void 
       pref.desiredUniversity &&
       pref.desiredCampus &&
       pref.course &&
-      pref.desiredIntake &&
-      pref.assignCounselor &&
-      pref.agencyPartnerName
+      pref.desiredIntake
     );
   };
 
+  // Ensure we have at least one preference (empty if none exist)
+  const initialPreferences = useMemo(() => {
+    if (initialValues.preferences && initialValues.preferences.length > 0) {
+      return initialValues.preferences;
+    }
+    return [getEmptyPreference()];
+  }, [initialValues.preferences]);
+
   const formik = useFormik<ApplicationPreferencesFormData>({
     initialValues: {
-      preferences: [getEmptyPreference()], // Initialize with one empty preference form open
+      preferences: initialPreferences,
     },
+    enableReinitialize: true,
     validationSchema,
     onSubmit: async (values) => {
       try {
@@ -97,21 +113,101 @@ const ApplicationPreferences = ({ onSaveAndNext }: { onSaveAndNext?: () => void 
         // });
         // const result = await response.json();
 
-        console.log("Payload ready for API:", payload);
+        // Only call API if data has changed since last save
+        if (hasDataChanged) {
+          console.log("Payload ready for API:", payload);
+          console.log("API endpoint: POST /api/applicant/preferences");
+          
+          // Mark data as saved
+          markAsSaved({ preferences: [...values.preferences] });
+        } else {
+          console.log("No changes detected. Skipping API call.");
+        }
       } catch (error) {
         console.error("Error saving application preferences:", error);
       }
     },
   });
 
+  // Use reusable hook for data change tracking with custom comparison for arrays
+  const { hasDataChanged, markAsSaved } = useDataChangeTracking<ApplicationPreferencesFormData>(
+    formik.values,
+    (lastSavedData, current) => {
+      if (!lastSavedData) return true;
+      // Compare saved preferences
+      const currentSaved = current.preferences.filter((pref) => pref.saved && isPreferenceComplete(pref));
+      const lastSaved = lastSavedData.preferences.filter((pref) => pref.saved && isPreferenceComplete(pref));
+      
+      if (currentSaved.length !== lastSaved.length) {
+        return true;
+      }
+      
+      // Deep compare each preference
+      return currentSaved.some((currentItem, index) => {
+        const lastItem = lastSaved[index];
+        if (!lastItem) return true;
+        return (
+          currentItem.desiredCountry !== lastItem.desiredCountry ||
+          currentItem.program !== lastItem.program ||
+          currentItem.desiredUniversity !== lastItem.desiredUniversity ||
+          currentItem.desiredCampus !== lastItem.desiredCampus ||
+          currentItem.course !== lastItem.course ||
+          currentItem.desiredIntake !== lastItem.desiredIntake ||
+          currentItem.assignCounselor !== lastItem.assignCounselor ||
+          currentItem.agencyPartnerName !== lastItem.agencyPartnerName
+        );
+      });
+    }
+  );
+
+  // Check form validity - at least one complete preference required
+  useEffect(() => {
+    const completePreferences = formik.values.preferences.filter((pref) => 
+      pref.saved && isPreferenceComplete(pref)
+    );
+    setIsFormValid(completePreferences.length > 0);
+  }, [formik.values.preferences]);
+
+  // Sync formik values to parent state with optimized comparison
+  useFormSync<ApplicationPreferencesFormData>(
+    formik.values,
+    onUpdate,
+    (prev, current) => {
+      // Quick length check first
+      if (current.preferences.length !== prev.preferences.length) {
+        return true;
+      }
+      
+      // Deep comparison only if lengths match
+      return current.preferences.some((currentItem, index) => {
+        const prevItem = prev.preferences[index];
+        if (!prevItem) return true;
+        return (
+          currentItem.id !== prevItem.id ||
+          currentItem.desiredCountry !== prevItem.desiredCountry ||
+          currentItem.program !== prevItem.program ||
+          currentItem.desiredUniversity !== prevItem.desiredUniversity ||
+          currentItem.desiredCampus !== prevItem.desiredCampus ||
+          currentItem.course !== prevItem.course ||
+          currentItem.desiredIntake !== prevItem.desiredIntake ||
+          currentItem.assignCounselor !== prevItem.assignCounselor ||
+          currentItem.agencyPartnerName !== prevItem.agencyPartnerName ||
+          currentItem.saved !== prevItem.saved
+        );
+      });
+    }
+  );
+
   // Reusable helper functions (defined after formik)
   const markPreferenceAsSaved = useCallback((index: number) => {
-    const updatedPreferences = [...formik.values.preferences];
-    updatedPreferences[index] = {
-      ...updatedPreferences[index],
-      saved: true,
-    };
-    formik.setFieldValue("preferences", updatedPreferences);
+    formik.setFieldValue("preferences", (currentPreferences: PreferenceItem[]) => {
+      const updatedPreferences = [...currentPreferences];
+      updatedPreferences[index] = {
+        ...updatedPreferences[index],
+        saved: true,
+      };
+      return updatedPreferences;
+    });
   }, [formik]);
 
   const removePreference = useCallback((index: number) => {
@@ -173,37 +269,37 @@ const ApplicationPreferences = ({ onSaveAndNext }: { onSaveAndNext?: () => void 
   const handleAddPreference = async () => {
     const incomplete = getIncompletePreferences();
     
-    // If there's an incomplete preference, save it first
+    // If there's an incomplete preference, validate it first
     if (incomplete.length > 0) {
       const firstIncomplete = incomplete[0];
       const index = formik.values.preferences.findIndex((p) => p.id === firstIncomplete.id);
       
-      // Validate and save the current incomplete preference
+      // Validate the preference first
       const preferenceSchema = getPreferenceSchema();
 
       try {
         await preferenceSchema.validate(firstIncomplete, { abortEarly: false });
-        
-        // Save the current preference
-        markPreferenceAsSaved(index);
-        
-        // Now add a new empty preference
-        const emptyPref = getEmptyPreference();
-        const currentPreferences = formik.values.preferences;
-        const updatedPreferences = currentPreferences.map((p, i) => 
-          i === index ? { ...p, saved: true } : p
-        );
-        formik.setFieldValue("preferences", [...updatedPreferences, emptyPref]);
       } catch (error) {
         // If validation fails, mark fields as touched to show errors
         handleValidationErrors(error, index);
-        // Don't add new form if validation fails
-        return;
+        return; // Don't add new form if validation fails
       }
+      
+      // If validation passes, mark as saved and add new preference in a single update
+      formik.setFieldValue("preferences", (currentPreferences: PreferenceItem[]) => {
+        const updatedPreferences = currentPreferences.map((p, i) => 
+          i === index ? { ...p, saved: true } : p
+        );
+        const emptyPref = getEmptyPreference();
+        return [...updatedPreferences, emptyPref];
+      });
     } else {
       // No incomplete preferences, just add a new one
       const emptyPref = getEmptyPreference();
-      formik.setFieldValue("preferences", [...formik.values.preferences, emptyPref]);
+      formik.setFieldValue("preferences", (currentPreferences: PreferenceItem[]) => [
+        ...currentPreferences,
+        emptyPref
+      ]);
     }
   };
 
@@ -431,10 +527,8 @@ const ApplicationPreferences = ({ onSaveAndNext }: { onSaveAndNext?: () => void 
       }
     }
     
-    // Validate the specific field to ensure errors are updated
-    setTimeout(() => {
-      formik.validateField(`preferences[${index}].${field}`);
-    }, 0);
+    // Validate field immediately without setTimeout to prevent race conditions
+    await formik.validateField(`preferences[${index}].${field}`);
   };
 
   const incomplete = getIncompletePreferences();
@@ -448,9 +542,6 @@ const ApplicationPreferences = ({ onSaveAndNext }: { onSaveAndNext?: () => void 
     <div className="space-y-6">
       {/* Application Preferences Form Section */}
       <div>
-        <h2 className="text-lg font-bold mb-4" style={{ color: COLORS.textDark }}>
-          {t("applicant.applicationPreferences")}
-        </h2>
 
         {/* Show form for only the first incomplete preference */}
         {firstIncomplete && firstIncompleteIndex >= 0 && (
@@ -473,6 +564,7 @@ const ApplicationPreferences = ({ onSaveAndNext }: { onSaveAndNext?: () => void 
               type="button"
               variant="accent"
               onClick={handleAddPreference}
+              rounded
             >
               {t("common.addMore")}
             </Button>
@@ -521,13 +613,28 @@ const ApplicationPreferences = ({ onSaveAndNext }: { onSaveAndNext?: () => void 
       )}
 
       {/* Action Buttons */}
-      <div className="flex justify-end gap-3 mt-6 pt-6 border-t" style={{ borderColor: COLORS.border }}>
-        <Button type="button" variant="accent" onClick={handleSave}>
-          {t("applicant.save")}
-        </Button>
-        <Button type="button" variant="accent" onClick={handleSaveAndNextClick}>
-          {t("applicant.saveAndNext")}
-        </Button>
+      <div className="flex justify-between gap-3 mt-6 pt-6 border-t" style={{ borderColor: COLORS.border }}>
+        <div>
+          {onBack && (
+            <Button type="button" variant="cancel" onClick={onBack} rounded>
+              {t("common.back")}
+            </Button>
+          )}
+        </div>
+        <div className="flex gap-3">
+          <Button type="button" variant="accent" onClick={handleSave} rounded>
+            {t("applicant.save")}
+          </Button>
+          <Button 
+            type="button" 
+            variant="accent" 
+            onClick={handleSaveAndNextClick}
+            disabled={!isFormValid}
+            rounded
+          >
+            {t("applicant.saveAndNext")}
+          </Button>
+        </div>
       </div>
 
       {/* Delete Confirmation Popup */}

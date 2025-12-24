@@ -43,12 +43,28 @@ const DatePicker = ({
   maxDate,
 }: DatePickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState(
-    value ? value.getMonth() : new Date().getMonth()
-  );
-  const [currentYear, setCurrentYear] = useState(
-    value ? value.getFullYear() : new Date().getFullYear()
-  );
+  
+  // Initialize current month/year - respect maxDate if set
+  const getInitialMonth = (): number => {
+    if (value) return value.getMonth();
+    if (maxDate) {
+      const today = new Date();
+      return today > maxDate ? maxDate.getMonth() : today.getMonth();
+    }
+    return new Date().getMonth();
+  };
+  
+  const getInitialYear = (): number => {
+    if (value) return value.getFullYear();
+    if (maxDate) {
+      const today = new Date();
+      return today > maxDate ? maxDate.getFullYear() : today.getFullYear();
+    }
+    return new Date().getFullYear();
+  };
+  
+  const [currentMonth, setCurrentMonth] = useState(getInitialMonth());
+  const [currentYear, setCurrentYear] = useState(getInitialYear());
   const pickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -64,6 +80,17 @@ const DatePicker = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Update current month/year when opening calendar to respect maxDate
+  useEffect(() => {
+    if (isOpen && maxDate) {
+      const currentViewDate = new Date(currentYear, currentMonth, 1);
+      if (currentViewDate > maxDate) {
+        setCurrentMonth(maxDate.getMonth());
+        setCurrentYear(maxDate.getFullYear());
+      }
+    }
+  }, [isOpen, maxDate, currentMonth, currentYear]);
 
   const formatDate = (date: Date): string => {
     const day = date.getDate().toString().padStart(2, "0");
@@ -98,8 +125,21 @@ const DatePicker = ({
     }
   };
 
+  // Check if next month navigation should be disabled (when maxDate is set)
+  const canNavigateNext = (): boolean => {
+    if (!maxDate) return true;
+    const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
+    const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
+    const nextMonthDate = new Date(nextYear, nextMonth, 1);
+    return nextMonthDate <= maxDate;
+  };
+
   const handleDateSelect = (day: number) => {
     const selectedDate = new Date(currentYear, currentMonth, day);
+    // Ensure selected date doesn't exceed maxDate
+    if (maxDate && selectedDate > maxDate) {
+      return; // Don't allow selection of future dates
+    }
     onChange?.(selectedDate);
     setIsOpen(false);
   };
@@ -246,10 +286,17 @@ const DatePicker = ({
               <button
                 type="button"
                 onClick={handleNextMonth}
+                disabled={!canNavigateNext()}
                 className="p-1.5 rounded-lg transition-colors"
-                style={{ color: COLORS.textMuted }}
+                style={{ 
+                  color: canNavigateNext() ? COLORS.textMuted : COLORS.border,
+                  cursor: canNavigateNext() ? "pointer" : "not-allowed",
+                  opacity: canNavigateNext() ? 1 : 0.5,
+                }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = COLORS.surfaceHover;
+                  if (canNavigateNext()) {
+                    e.currentTarget.style.backgroundColor = COLORS.surfaceHover;
+                  }
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = "transparent";
@@ -281,9 +328,11 @@ const DatePicker = ({
                 type="button"
                 onClick={() => {
                   const today = new Date();
-                  setCurrentMonth(today.getMonth());
-                  setCurrentYear(today.getFullYear());
-                  onChange?.(today);
+                  // If maxDate is set and today is after maxDate, use maxDate instead
+                  const dateToSelect = maxDate && today > maxDate ? maxDate : today;
+                  setCurrentMonth(dateToSelect.getMonth());
+                  setCurrentYear(dateToSelect.getFullYear());
+                  onChange?.(dateToSelect);
                   setIsOpen(false);
                 }}
                 className="w-full py-2 text-sm font-medium rounded-lg transition-colors"
