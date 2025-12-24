@@ -40,6 +40,7 @@ import UploadIcon from "./Upload.svg?react";
 import ArrowLeftIcon from "./ArrowLeft.svg?react";
 import MinusIcon from "./Minus.svg?react";
 import UserMinusIcon from "./UserMinus.svg?react";
+import ToggleStatusIcon from "./ToggleStatus.svg?react";
 
 // Export icons as named exports (same names as before)
 export const Dashboard = DashboardIcon;
@@ -80,6 +81,7 @@ export const Upload = UploadIcon;
 export const ArrowLeft = ArrowLeftIcon;
 export const Minus = MinusIcon;
 export const UserMinus = UserMinusIcon;
+export const ToggleStatus = ToggleStatusIcon;
 
 // Also export as icons object for alternative usage
 export const icons = {
@@ -121,6 +123,7 @@ export const icons = {
   ArrowLeft: ArrowLeftIcon,
   Minus: MinusIcon,
   UserMinus: UserMinusIcon,
+  ToggleStatus: ToggleStatusIcon,
 };
 
 // Images
