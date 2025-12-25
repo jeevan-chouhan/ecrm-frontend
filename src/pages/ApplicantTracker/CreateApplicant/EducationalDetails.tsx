@@ -78,16 +78,22 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack }: 
 
         // Only call API if data has changed since last save
         if (hasDataChanged) {
-          console.log("Payload ready for API:", payload);
-          console.log("API endpoint: POST /api/applicant/educational-details");
+          if (import.meta.env.DEV) {
+            console.log("Payload ready for API:", payload);
+            console.log("API endpoint: POST /api/applicant/educational-details");
+          }
           
           // Mark data as saved
           markAsSaved(values);
         } else {
-          console.log("No changes detected. Skipping API call.");
+          if (import.meta.env.DEV) {
+            console.log("No changes detected. Skipping API call.");
+          }
         }
       } catch (error) {
-        console.error("Error saving educational details:", error);
+        if (import.meta.env.DEV) {
+          console.error("Error saving educational details:", error);
+        }
       }
     },
   });

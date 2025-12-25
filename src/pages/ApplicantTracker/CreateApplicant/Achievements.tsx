@@ -2,12 +2,13 @@ import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useTranslation } from "react-i18next";
-import { Select, Button, Popup } from "../../../components";
+import { Select, Button, ConfirmationPopup } from "../../../components";
 import { COLORS, yesNoOptions } from "../../../constants";
-import { Edit, Trash } from "../../../assets";
 import AchievementForm from "./AchievementForm";
 import type { AchievementItem, AchievementFormData } from "./types";
 import { fileToBase64 } from "./utils/fileUtils";
+import { useAchievementLogic } from "./hooks";
+import AchievementList from "./components/AchievementList";
 
 interface AchievementsProps {
   initialValues: AchievementFormData;
@@ -94,8 +95,10 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit }: Achievement
 
         // Only call API if data has changed since last save
         if (hasDataChanged) {
-          console.log("Payload ready for API:", payload);
-          console.log("API endpoint: POST /api/applicant/achievements");
+          if (import.meta.env.DEV) {
+            console.log("Payload ready for API:", payload);
+            console.log("API endpoint: POST /api/applicant/achievements");
+          }
           
           // Mark data as saved
           setLastSavedData({ 
@@ -104,10 +107,14 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit }: Achievement
           });
           setHasDataChanged(false);
         } else {
-          console.log("No changes detected. Skipping API call.");
+          if (import.meta.env.DEV) {
+            console.log("No changes detected. Skipping API call.");
+          }
         }
       } catch (error) {
-        console.error("Error saving achievements:", error);
+        if (import.meta.env.DEV) {
+          console.error("Error saving achievements:", error);
+        }
       }
     },
   });
@@ -218,36 +225,7 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit }: Achievement
     }
   }, [formik.values, onUpdate]);
 
-  // Reusable helper functions (defined after formik)
-  const markAchievementAsSaved = useCallback((index: number) => {
-    formik.setFieldValue("achievements", (currentAchievements: AchievementItem[]) => {
-      const updatedAchievements = [...currentAchievements];
-      updatedAchievements[index] = {
-        ...updatedAchievements[index],
-        saved: true,
-      };
-      return updatedAchievements;
-    });
-  }, [formik]);
-
-  const removeAchievement = useCallback((index: number) => {
-    const updatedAchievements = formik.values.achievements.filter((_, i) => i !== index);
-    formik.setFieldValue("achievements", updatedAchievements);
-    if (editingIndex === index) {
-      setEditingIndex(null);
-    } else if (editingIndex !== null && editingIndex > index) {
-      setEditingIndex(editingIndex - 1);
-    }
-  }, [formik, editingIndex]);
-
-  const markAllFieldsAsTouched = useCallback(() => {
-    return {
-      category: true,
-      description: true,
-      documents: true,
-    };
-  }, []);
-
+  // Helper functions
   const handleValidationErrors = useCallback((error: unknown, index: number) => {
     if (error instanceof Yup.ValidationError) {
       error.inner.forEach((err) => {
@@ -258,156 +236,49 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit }: Achievement
     }
   }, [formik]);
 
-  const clearAchievementErrors = useCallback((index: number) => {
-    // Clear errors
-    if (formik.errors.achievements?.[index]) {
-      const updatedErrors: any[] = [...(formik.errors.achievements || [])];
-      updatedErrors[index] = undefined;
-      formik.setErrors({
-        ...formik.errors,
-        achievements: updatedErrors as any,
-      });
-    }
-    
-    // Clear touched state
-    if (formik.touched.achievements?.[index]) {
-      const updatedTouched = [...(formik.touched.achievements || [])];
-      updatedTouched[index] = {};
-      formik.setTouched({
-        ...formik.touched,
-        achievements: updatedTouched as any,
-      });
-    }
-  }, [formik]);
+  // Use extracted logic hook
+  const {
+    isAchievementComplete,
+    findAchievementIndex,
+    getIncompleteAchievements,
+    getCompleteAchievements,
+    validateAndSaveAllUnsavedAchievements,
+    handleAddAchievement,
+    handleCancelIncompleteAchievement,
+    handleSaveAchievement,
+    handleEditAchievement,
+    handleCancelEdit,
+    getFieldError,
+    updateAchievementField,
+  } = useAchievementLogic({
+    formik,
+    editingIndex,
+    setEditingIndex,
+    getAchievementSchema,
+    getEmptyAchievement,
+    handleValidationErrors,
+  });
 
-  const isAchievementComplete = (a: AchievementItem): boolean => {
-    return !!(a.category && a.description);
-  };
-
-  // Reusable helper to find achievement index by ID
-  const findAchievementIndex = useCallback((id: string): number => {
-    return formik.values.achievements.findIndex((a) => a.id === id);
-  }, [formik.values.achievements]);
-
-  const getIncompleteAchievements = useCallback((): AchievementItem[] => {
-    return formik.values.achievements.filter((a, index) => {
-      // Exclude items being edited from incomplete list
-      if (editingIndex === index) {
-        return false;
-      }
-      return !a.saved;
-    });
-  }, [formik.values.achievements, editingIndex]);
-
-  const getCompleteAchievements = useCallback((): AchievementItem[] => {
-    return formik.values.achievements.filter((a, index) => {
-      // Include items being edited in complete list
-      if (editingIndex === index) {
-        return true;
-      }
-      return isAchievementComplete(a) && a.saved;
-    });
-  }, [formik.values.achievements, editingIndex]);
-
-  // Reusable validation and save helper
-  const validateAndSaveAchievement = useCallback(async (
-    achievement: AchievementItem,
-    index: number
-  ): Promise<boolean> => {
-    const achievementSchema = getAchievementSchema();
-    try {
-      await achievementSchema.validate(achievement, { abortEarly: false });
-      markAchievementAsSaved(index);
-      return true;
-    } catch (error) {
-      handleValidationErrors(error, index);
-      return false;
-    }
-  }, [getAchievementSchema, markAchievementAsSaved, handleValidationErrors]);
-
-  // Reusable helper to validate and save all unsaved achievements
-  const validateAndSaveAllUnsavedAchievements = useCallback(async (): Promise<boolean> => {
-    const unsavedAchievements = formik.values.achievements.filter((a) => !a.saved);
-
-    if (unsavedAchievements.length === 0 || formik.values.hasAchievements !== "yes") {
-      return true;
-    }
-
-    let hasErrors = false;
-    const touchedAchievements = [...(formik.touched.achievements || [])];
-
-    for (const a of unsavedAchievements) {
-      const index = findAchievementIndex(a.id);
-      const isValid = await validateAndSaveAchievement(a, index);
-      
-      if (!isValid) {
-        hasErrors = true;
-        touchedAchievements[index] = markAllFieldsAsTouched();
-      }
-    }
-
-    formik.setTouched({
-      ...formik.touched,
-      achievements: touchedAchievements as any,
-    });
-
-    return !hasErrors;
-  }, [formik.values.achievements, formik.values.hasAchievements, formik.touched.achievements, formik.setTouched, findAchievementIndex, validateAndSaveAchievement, markAllFieldsAsTouched]);
-
-  const handleAddAchievement = async () => {
-    if (formik.values.hasAchievements !== "yes") {
-      return;
-    }
-    
-    const incomplete = getIncompleteAchievements();
-    
-    // If there's an incomplete achievement, validate it first
-    if (incomplete.length > 0) {
-      const firstIncomplete = incomplete[0];
-      const index = findAchievementIndex(firstIncomplete.id);
-      
-      // Validate the achievement first
-      const achievementSchema = getAchievementSchema();
-      try {
-        await achievementSchema.validate(firstIncomplete, { abortEarly: false });
-      } catch (error) {
-        // If validation fails, mark fields as touched to show errors
-        handleValidationErrors(error, index);
-        return; // Don't add new form if validation fails
-      }
-      
-      // If validation passes, mark as saved and add new achievement in a single update
-      formik.setFieldValue("achievements", (currentAchievements: AchievementItem[]) => {
-        const updatedAchievements = currentAchievements.map((a, i) => 
-          i === index ? { ...a, saved: true } : a
-        );
-        const emptyAchievement = getEmptyAchievement();
-        return [...updatedAchievements, emptyAchievement];
-      });
-    } else {
-      // No incomplete achievements, just add a new one
-      const emptyAchievement = getEmptyAchievement();
-      formik.setFieldValue("achievements", (currentAchievements: AchievementItem[]) => [
-        ...currentAchievements,
-        emptyAchievement
-      ]);
-    }
-  };
-
-  const handleDeleteAchievement = (index: number) => {
+  const handleDeleteAchievement = useCallback((index: number) => {
     // Show confirmation popup instead of deleting directly
     setDeletingIndex(index);
     setIsDeletePopupOpen(true);
-  };
+  }, []);
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = useCallback(() => {
     if (deletingIndex === null) return;
 
     const indexToDelete = deletingIndex;
     const achievementToDelete = formik.values.achievements[indexToDelete];
 
     // Remove the achievement
-    removeAchievement(indexToDelete);
+    const updatedAchievements = formik.values.achievements.filter((_, i) => i !== indexToDelete);
+    formik.setFieldValue("achievements", updatedAchievements);
+    if (editingIndex === indexToDelete) {
+      setEditingIndex(null);
+    } else if (editingIndex !== null && editingIndex > indexToDelete) {
+      setEditingIndex(editingIndex - 1);
+    }
 
     // Close popup and reset state
     setIsDeletePopupOpen(false);
@@ -418,47 +289,15 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit }: Achievement
     //   method: "DELETE",
     // });
     // const result = await response.json();
-    console.log("Delete API call for achievement:", achievementToDelete);
-  };
+    if (import.meta.env.DEV) {
+      console.log("Delete API call for achievement:", achievementToDelete);
+    }
+  }, [deletingIndex, formik, editingIndex, setEditingIndex]);
 
-  const handleCancelDelete = () => {
+  const handleCancelDelete = useCallback(() => {
     setIsDeletePopupOpen(false);
     setDeletingIndex(null);
-  };
-
-  const handleCancelIncompleteAchievement = (index: number) => {
-    const incomplete = getIncompleteAchievements();
-    const complete = getCompleteAchievements();
-
-    if (incomplete.length === 1 && complete.length === 0) {
-      const emptyAchievement = getEmptyAchievement();
-      const updatedAchievements = [...formik.values.achievements];
-      updatedAchievements[index] = emptyAchievement;
-      formik.setFieldValue("achievements", updatedAchievements);
-
-      // Clear all errors and touched state for this achievement
-      clearAchievementErrors(index);
-    } else {
-      removeAchievement(index);
-    }
-  };
-
-  const handleSaveAchievement = async (index: number) => {
-    const achievement = formik.values.achievements[index];
-    const isValid = await validateAndSaveAchievement(achievement, index);
-    
-    if (isValid && editingIndex === index) {
-      setEditingIndex(null);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingIndex(null);
-  };
-
-  const handleEditAchievement = (index: number) => {
-    setEditingIndex(index);
-  };
+  }, []);
 
   const handleSave = async () => {
     const isValid = await validateAndSaveAllUnsavedAchievements();
@@ -477,7 +316,9 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit }: Achievement
     // First, ensure all unsaved achievements are saved
     const isValid = await validateAndSaveAllUnsavedAchievements();
     if (!isValid) {
-      console.log("Form validation failed. Please fill all required fields.");
+      if (import.meta.env.DEV) {
+        console.log("Form validation failed. Please fill all required fields.");
+      }
       return;
     }
 
@@ -490,7 +331,9 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit }: Achievement
         touchedFields[key] = true;
       });
       formik.setTouched(touchedFields);
-      console.log("Form validation failed. Please fill all required fields.");
+      if (import.meta.env.DEV) {
+        console.log("Form validation failed. Please fill all required fields.");
+      }
       return;
     }
 
@@ -508,40 +351,10 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit }: Achievement
     }
   };
 
-  const getFieldError = (index: number, fieldName: keyof AchievementItem): string | undefined => {
-    const touched = formik.touched.achievements?.[index]?.[fieldName];
-    const error = formik.errors.achievements?.[index];
-    if (touched && error && typeof error === "object" && fieldName in error) {
-      const fieldError = error[fieldName];
-      return typeof fieldError === "string" ? fieldError : undefined;
-    }
-    return undefined;
-  };
-
-  const updateAchievementField = async (
-    index: number,
-    field: keyof AchievementItem,
-    value: string | File | null
-  ) => {
-    await formik.setFieldValue(`achievements[${index}].${field}`, value);
-    formik.setFieldTouched(`achievements[${index}].${field}`, true);
-
-    if (value && formik.errors.achievements?.[index] && typeof formik.errors.achievements[index] === "object") {
-      const currentErrors = { ...(formik.errors.achievements[index] as any) };
-      if (currentErrors[field]) {
-        delete currentErrors[field];
-        const updatedErrors: any[] = [...(formik.errors.achievements || [])];
-        updatedErrors[index] = Object.keys(currentErrors).length > 0 ? currentErrors : undefined;
-        formik.setErrors({
-          ...formik.errors,
-          achievements: updatedErrors as any,
-        });
-      }
-    }
-
-    // Validate field immediately without setTimeout to prevent race conditions
-    await formik.validateField(`achievements[${index}].${field}`);
-  };
+  // Find index by ID helper
+  const findAchievementIndexById = useCallback((id: string): number => {
+    return formik.values.achievements.findIndex((a) => a.id === id);
+  }, [formik.values.achievements]);
 
   const handleHasAchievementsChange = (value: string) => {
     formik.setFieldValue("hasAchievements", value);
@@ -618,96 +431,17 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit }: Achievement
         )}
 
         {/* Added Achievements Section */}
-        {complete.length > 0 && (
-          <div className="mt-6">
-            <h2 className="text-lg font-bold mb-4" style={{ color: COLORS.textDark }}>
-              {t("applicant.addedAchievements")}
-            </h2>
-
-            <div className="space-y-4">
-              {complete.map((achievement) => {
-                const index = findAchievementIndex(achievement.id);
-                const isEditing = editingIndex === index;
-
-                return (
-                  <div
-                    key={achievement.id}
-                    className="p-4 rounded-lg border"
-                    style={{ borderColor: COLORS.border, backgroundColor: COLORS.surface }}
-                  >
-                    {isEditing ? (
-                      <>
-                        <AchievementForm
-                          achievement={achievement}
-                          index={index}
-                          onFieldChange={updateAchievementField}
-                          getFieldError={getFieldError}
-                          showCancel={false}
-                          showAddMore={false}
-                          dismissibleFileUpload={false}
-                        />
-                        <div className="flex gap-2 mt-4 justify-end">
-                          <Button
-                            type="button"
-                            variant="accent"
-                            onClick={() => handleSaveAchievement(index)}
-                            rounded
-                          >
-                            {t("common.save")}
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="cancel"
-                            onClick={handleCancelEdit}
-                            rounded
-                          >
-                            {t("common.cancel")}
-                          </Button>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <p className="text-sm font-medium" style={{ color: COLORS.textDark }}>
-                            {achievement.category} - {achievement.description.substring(0, 50)}
-                            {achievement.description.length > 50 ? "..." : ""}
-                          </p>
-                          {achievement.documents && (
-                            <p className="text-xs mt-1" style={{ color: COLORS.textMuted }}>
-                              {t("applicant.documentAttached")}: {achievement.documents.name}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex items-end justify-end gap-2">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            icon={<Edit className="h-5 w-5" style={{ color: COLORS.accent }} />}
-                            iconOnly
-                            onClick={() => handleEditAchievement(index)}
-                            title={t("common.edit")}
-                            rounded
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            icon={<Trash className="h-5 w-5" style={{ color: COLORS.error }} />}
-                            iconOnly
-                            onClick={() => handleDeleteAchievement(index)}
-                            title={t("common.delete")}
-                            rounded
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        <AchievementList
+          achievements={complete}
+          editingIndex={editingIndex}
+          getFieldError={getFieldError}
+          updateAchievementField={updateAchievementField}
+          onEdit={handleEditAchievement}
+          onDelete={handleDeleteAchievement}
+          onSave={handleSaveAchievement}
+          onCancelEdit={handleCancelEdit}
+          findIndexById={findAchievementIndexById}
+        />
 
         {/* Show message if no achievements added */}
         {showAchievementForm && complete.length === 0 && incomplete.length === 0 && (
@@ -747,38 +481,15 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit }: Achievement
       </div>
 
       {/* Delete Confirmation Popup */}
-      <Popup
+      <ConfirmationPopup
         isOpen={isDeletePopupOpen}
-        onClose={handleCancelDelete}
         title={t("applicant.deleteAchievement", "Delete Achievement")}
-        size="sm"
-      >
-        <div className="space-y-4">
-          <p style={{ color: COLORS.textMuted }}>
-            {t("applicant.deleteAchievementConfirmation", "Are you sure you want to delete this achievement?")} {t("applicant.deleteWarning", "This action cannot be undone.")}
-          </p>
-          
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-4">
-            <Button
-              variant="cancel"
-              size="md"
-              onClick={handleCancelDelete}
-              rounded
-            >
-              {t("common.cancel")}
-            </Button>
-            <Button
-              variant="danger"
-              size="md"
-              onClick={handleConfirmDelete}
-              rounded
-            >
-              {t("common.delete")}
-            </Button>
-          </div>
-        </div>
-      </Popup>
+        message={`${t("applicant.deleteAchievementConfirmation", "Are you sure you want to delete this achievement?")} ${t("applicant.deleteWarning", "This action cannot be undone.")}`}
+        confirmLabel={t("common.delete", "Delete")}
+        variant="danger"
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 };

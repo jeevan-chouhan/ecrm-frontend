@@ -8,6 +8,7 @@ const Home = lazy(() => import("./pages/Home"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const ApplicantTracker = lazy(() => import("./pages/ApplicantTracker"));
 const CreateApplicant = lazy(() => import("./pages/ApplicantTracker/CreateApplicant"));
+const ApplicantDetailView = lazy(() => import("./pages/ApplicantTracker/ApplicantDetail"));
 const CountryUniversity = lazy(() => import("./pages/CountryUniversity"));
 const DocumentVault = lazy(() => import("./pages/DocumentVault"));
 const DocumentDetail = lazy(() => import("./pages/DocumentVault/DocumentDetail/index"));
@@ -55,6 +56,7 @@ function App() {
         <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
         <Route path={ROUTES.APPLICANT_TRACKER} element={<ApplicantTracker />} />
         <Route path={ROUTES.CREATE_APPLICANT} element={<CreateApplicant />} />
+        <Route path={ROUTES.APPLICANT_DETAIL} element={<ApplicantDetailView />} />
         <Route path={ROUTES.COUNTRY_UNIVERSITY} element={<CountryUniversity />} />
         <Route path={ROUTES.DOCUMENT_VAULT} element={<DocumentVault />} />
         <Route path={ROUTES.DOCUMENT_VAULT_DETAIL} element={<DocumentDetail />} />

@@ -137,14 +137,20 @@ const CreateApplicant = () => {
       // }
       // const result = await response.json();
 
-      console.log("Final submit payload ready for API:", payload);
-      console.log("API endpoint: POST /api/applicant/submit");
+      // Log payload in development only
+      if (import.meta.env.DEV) {
+        console.log("Final submit payload ready for API:", payload);
+        console.log("API endpoint: POST /api/applicant/submit");
+      }
 
       // Simulate API call success
       // After successful API response, redirect to applicant tracker list
       navigate(ROUTES.APPLICANT_TRACKER);
     } catch (error) {
-      console.error("Error submitting applicant:", error);
+      // TODO: Show error message to user
+      if (import.meta.env.DEV) {
+        console.error("Error submitting applicant:", error);
+      }
       // TODO: Show error message to user
     }
   }, [formState, navigate]);
@@ -219,8 +225,8 @@ const CreateApplicant = () => {
     [formState.achievements, updateAchievements, handlePreviousTab, handleFinalSubmit]
   );
 
-  // Render only the active tab content
-  const renderTabContent = (() => {
+  // Render only the active tab content - memoized to prevent unnecessary re-renders
+  const renderTabContent = useMemo(() => {
     switch (activeTab) {
       case "personal":
         return personalTabContent;
@@ -235,7 +241,7 @@ const CreateApplicant = () => {
       default:
         return personalTabContent;
     }
-  })();
+  }, [activeTab, personalTabContent, preferencesTabContent, educationalTabContent, workTabContent, achievementsTabContent]);
 
   return (
     <Layout userName="Admin" userRole="Abroad Agency">

@@ -1,3 +1,4 @@
+import { useMemo, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Select, MultiSelect, DatePicker } from "../../components";
 import {
@@ -62,41 +63,41 @@ const ApplicantTrackerFilters = ({
 }: ApplicantTrackerFiltersProps) => {
   const { t } = useTranslation();
 
-  // Prepare options with empty placeholder
-  const adminOptionsWithPlaceholder = [
+  // Memoize options with placeholders to prevent recreation on every render
+  const adminOptionsWithPlaceholder = useMemo(() => [
     { value: "", label: t("applicantTracker.selectAdmin", "Select Admin") },
     ...adminOptions,
-  ];
+  ], [t]);
 
-  const managerOptionsWithPlaceholder = [
+  const managerOptionsWithPlaceholder = useMemo(() => [
     { value: "", label: t("applicantTracker.selectManager", "Select Manager") },
     ...managerOptions,
-  ];
+  ], [t]);
 
-  const counselorOptionsWithPlaceholder = [
+  const counselorOptionsWithPlaceholder = useMemo(() => [
     { value: "", label: t("applicantTracker.selectCounselor", "Select Counselor") },
     ...counselors,
-  ];
+  ], [t]);
 
-  const statusOptionsWithPlaceholder = [
+  const statusOptionsWithPlaceholder = useMemo(() => [
     { value: "", label: t("applicantTracker.selectStatus", "Select Status") },
     ...applicantStatusOptions,
-  ];
+  ], [t]);
 
-  const intakeOptionsWithPlaceholder = [
+  const intakeOptionsWithPlaceholder = useMemo(() => [
     { value: "", label: t("applicantTracker.selectIntake", "Select Intake") },
     ...intakeOptions,
-  ];
+  ], [t]);
 
-  const enrollmentTypeOptionsWithPlaceholder = [
+  const enrollmentTypeOptionsWithPlaceholder = useMemo(() => [
     { value: "", label: t("applicantTracker.selectEnrollmentType", "Select Enrollment type") },
     ...enrollmentTypes,
-  ];
+  ], [t]);
 
-  const agencyPartnerOptionsWithPlaceholder = [
+  const agencyPartnerOptionsWithPlaceholder = useMemo(() => [
     { value: "", label: t("applicantTracker.selectAgencyPartner", "Agency Partner") },
     ...agencyPartnerOptions,
-  ];
+  ], [t]);
 
   return (
     <div className="space-y-3">
@@ -230,5 +231,5 @@ const ApplicantTrackerFilters = ({
   );
 };
 
-export default ApplicantTrackerFilters;
+export default memo(ApplicantTrackerFilters);
 

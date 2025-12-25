@@ -2,12 +2,12 @@ import { useMemo, useState, useCallback, useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useTranslation } from "react-i18next";
-import { Select, Button, Popup } from "../../../components";
+import { Select, Button, ConfirmationPopup } from "../../../components";
 import { COLORS, yesNoOptions } from "../../../constants";
-import { Edit, Trash } from "../../../assets";
 import WorkExperienceForm from "./WorkExperienceForm";
 import type { WorkExperienceItem, WorkExperienceFormData } from "./types";
-import { useDataChangeTracking, useFormSync } from "./hooks";
+import { useDataChangeTracking, useFormSync, useWorkExperienceLogic } from "./hooks";
+import WorkExperienceList from "./components/WorkExperienceList";
 
 interface WorkExperienceProps {
   initialValues: WorkExperienceFormData;
@@ -116,8 +116,10 @@ const WorkExperience = ({ initialValues, onUpdate, onSaveAndNext, onBack }: Work
 
         // Only call API if data has changed since last save
         if (hasDataChanged) {
-          console.log("Payload ready for API:", payload);
-          console.log("API endpoint: POST /api/applicant/work-experience");
+          if (import.meta.env.DEV) {
+            console.log("Payload ready for API:", payload);
+            console.log("API endpoint: POST /api/applicant/work-experience");
+          }
           
           // Mark data as saved
           markAsSaved({ 
@@ -125,10 +127,14 @@ const WorkExperience = ({ initialValues, onUpdate, onSaveAndNext, onBack }: Work
             workExperiences: [...values.workExperiences]
           });
         } else {
-          console.log("No changes detected. Skipping API call.");
+          if (import.meta.env.DEV) {
+            console.log("No changes detected. Skipping API call.");
+          }
         }
       } catch (error) {
-        console.error("Error saving work experience:", error);
+        if (import.meta.env.DEV) {
+          console.error("Error saving work experience:", error);
+        }
       }
     },
   });
@@ -236,28 +242,7 @@ const WorkExperience = ({ initialValues, onUpdate, onSaveAndNext, onBack }: Work
     }
   );
 
-  // Reusable helper functions (defined after formik)
-  const markWorkExperienceAsSaved = useCallback((index: number) => {
-    formik.setFieldValue("workExperiences", (currentWorkExperiences: WorkExperienceItem[]) => {
-      const updatedWorkExperiences = [...currentWorkExperiences];
-      updatedWorkExperiences[index] = {
-        ...updatedWorkExperiences[index],
-        saved: true,
-      };
-      return updatedWorkExperiences;
-    });
-  }, [formik]);
-
-  const removeWorkExperience = useCallback((index: number) => {
-    const updatedWorkExperiences = formik.values.workExperiences.filter((_, i) => i !== index);
-    formik.setFieldValue("workExperiences", updatedWorkExperiences);
-    if (editingIndex === index) {
-      setEditingIndex(null);
-    } else if (editingIndex !== null && editingIndex > index) {
-      setEditingIndex(editingIndex - 1);
-    }
-  }, [formik, editingIndex]);
-
+  // Helper functions
   const markAllFieldsAsTouched = useCallback(() => {
     return {
       companyName: true,
@@ -278,110 +263,47 @@ const WorkExperience = ({ initialValues, onUpdate, onSaveAndNext, onBack }: Work
     }
   }, [formik]);
 
-  const clearWorkExperienceErrors = useCallback((index: number) => {
-    // Clear errors
-    if (formik.errors.workExperiences?.[index]) {
-      const updatedErrors: any[] = [...(formik.errors.workExperiences || [])];
-      updatedErrors[index] = undefined;
-      formik.setErrors({
-        ...formik.errors,
-        workExperiences: updatedErrors as any,
-      });
-    }
-    
-    // Clear touched state
-    if (formik.touched.workExperiences?.[index]) {
-      const updatedTouched = [...(formik.touched.workExperiences || [])];
-      updatedTouched[index] = {};
-      formik.setTouched({
-        ...formik.touched,
-        workExperiences: updatedTouched as any,
-      });
-    }
-  }, [formik]);
+  // Use extracted logic hook
+  const {
+    isWorkExperienceComplete,
+    getIncompleteWorkExperiences,
+    getCompleteWorkExperiences,
+    handleAddWorkExperience,
+    handleCancelIncompleteWorkExperience,
+    handleSaveWorkExperience,
+    handleEditWorkExperience,
+    handleCancelEdit,
+    getFieldError,
+    updateWorkExperienceField,
+  } = useWorkExperienceLogic({
+    formik,
+    editingIndex,
+    setEditingIndex,
+    getWorkExperienceSchema,
+    getEmptyWorkExperience,
+    handleValidationErrors,
+  });
 
-  const isWorkExperienceComplete = (we: WorkExperienceItem): boolean => {
-    return !!(
-      we.companyName &&
-      we.jobTitle &&
-      we.startDate &&
-      (we.currentlyWorking || we.endDate)
-    );
-  };
-
-  const getIncompleteWorkExperiences = (): WorkExperienceItem[] => {
-    return formik.values.workExperiences.filter((we, index) => {
-      if (editingIndex === index) {
-        return false;
-      }
-      return !we.saved;
-    });
-  };
-
-  const getCompleteWorkExperiences = (): WorkExperienceItem[] => {
-    return formik.values.workExperiences.filter((we, index) => {
-      if (editingIndex === index) {
-        return true;
-      }
-      return isWorkExperienceComplete(we) && we.saved;
-    });
-  };
-
-  const handleAddWorkExperience = async () => {
-    if (formik.values.hasWorkExperience !== "yes") {
-      return;
-    }
-    
-    const incomplete = getIncompleteWorkExperiences();
-    
-    // If there's an incomplete work experience, validate it first
-    if (incomplete.length > 0) {
-      const firstIncomplete = incomplete[0];
-      const index = formik.values.workExperiences.findIndex((w) => w.id === firstIncomplete.id);
-      
-      // Validate the work experience first
-      const workExperienceSchema = getWorkExperienceSchema();
-
-      try {
-        await workExperienceSchema.validate(firstIncomplete, { abortEarly: false });
-      } catch (error) {
-        // If validation fails, mark fields as touched to show errors
-        handleValidationErrors(error, index);
-        return; // Don't add new form if validation fails
-      }
-      
-      // If validation passes, mark as saved and add new work experience in a single update
-      formik.setFieldValue("workExperiences", (currentWorkExperiences: WorkExperienceItem[]) => {
-        const updatedWorkExperiences = currentWorkExperiences.map((w, i) => 
-          i === index ? { ...w, saved: true } : w
-        );
-        const emptyWorkExp = getEmptyWorkExperience();
-        return [...updatedWorkExperiences, emptyWorkExp];
-      });
-    } else {
-      // No incomplete work experiences, just add a new one
-      const emptyWorkExp = getEmptyWorkExperience();
-      formik.setFieldValue("workExperiences", (currentWorkExperiences: WorkExperienceItem[]) => [
-        ...currentWorkExperiences,
-        emptyWorkExp
-      ]);
-    }
-  };
-
-  const handleDeleteWorkExperience = (index: number) => {
+  const handleDeleteWorkExperience = useCallback((index: number) => {
     // Show confirmation popup instead of deleting directly
     setDeletingIndex(index);
     setIsDeletePopupOpen(true);
-  };
+  }, []);
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = useCallback(() => {
     if (deletingIndex === null) return;
 
     const indexToDelete = deletingIndex;
     const workExperienceToDelete = formik.values.workExperiences[indexToDelete];
 
-    // Remove the work experience
-    removeWorkExperience(indexToDelete);
+    // Remove the work experience using the hook's remove function
+    const updatedWorkExperiences = formik.values.workExperiences.filter((_, i) => i !== indexToDelete);
+    formik.setFieldValue("workExperiences", updatedWorkExperiences);
+    if (editingIndex === indexToDelete) {
+      setEditingIndex(null);
+    } else if (editingIndex !== null && editingIndex > indexToDelete) {
+      setEditingIndex(editingIndex - 1);
+    }
 
     // Close popup and reset state
     setIsDeletePopupOpen(false);
@@ -392,57 +314,15 @@ const WorkExperience = ({ initialValues, onUpdate, onSaveAndNext, onBack }: Work
     //   method: "DELETE",
     // });
     // const result = await response.json();
-    console.log("Delete API call for work experience:", workExperienceToDelete);
-  };
+    if (import.meta.env.DEV) {
+      console.log("Delete API call for work experience:", workExperienceToDelete);
+    }
+  }, [deletingIndex, formik, editingIndex, setEditingIndex]);
 
-  const handleCancelDelete = () => {
+  const handleCancelDelete = useCallback(() => {
     setIsDeletePopupOpen(false);
     setDeletingIndex(null);
-  };
-
-  const handleCancelIncompleteWorkExperience = (index: number) => {
-    const incomplete = getIncompleteWorkExperiences();
-    const complete = getCompleteWorkExperiences();
-
-    if (incomplete.length === 1 && complete.length === 0) {
-      const emptyWorkExp = getEmptyWorkExperience();
-      const updatedWorkExperiences = [...formik.values.workExperiences];
-      updatedWorkExperiences[index] = emptyWorkExp;
-      formik.setFieldValue("workExperiences", updatedWorkExperiences);
-
-      // Clear all errors and touched state for this work experience
-      clearWorkExperienceErrors(index);
-    } else {
-      removeWorkExperience(index);
-    }
-  };
-
-  const handleSaveWorkExperience = async (index: number) => {
-    const workExperience = formik.values.workExperiences[index];
-
-    const workExperienceSchema = getWorkExperienceSchema();
-
-    try {
-      await workExperienceSchema.validate(workExperience, { abortEarly: false });
-
-      // Mark work experience as saved
-      markWorkExperienceAsSaved(index);
-
-      if (editingIndex === index) {
-        setEditingIndex(null);
-      }
-    } catch (error) {
-      handleValidationErrors(error, index);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingIndex(null);
-  };
-
-  const handleEditWorkExperience = (index: number) => {
-    setEditingIndex(index);
-  };
+  }, []);
 
   const handleSave = async () => {
     const unsavedWorkExperiences = formik.values.workExperiences.filter((we) => !we.saved);
@@ -516,40 +396,10 @@ const WorkExperience = ({ initialValues, onUpdate, onSaveAndNext, onBack }: Work
     }
   };
 
-  const getFieldError = (index: number, fieldName: keyof WorkExperienceItem): string | undefined => {
-    const touched = formik.touched.workExperiences?.[index]?.[fieldName];
-    const error = formik.errors.workExperiences?.[index];
-    if (touched && error && typeof error === "object" && fieldName in error) {
-      const fieldError = error[fieldName];
-      return typeof fieldError === "string" ? fieldError : undefined;
-    }
-    return undefined;
-  };
-
-  const updateWorkExperienceField = async (
-    index: number,
-    field: keyof WorkExperienceItem,
-    value: string | Date | null | boolean
-  ) => {
-    await formik.setFieldValue(`workExperiences[${index}].${field}`, value);
-    formik.setFieldTouched(`workExperiences[${index}].${field}`, true);
-
-    if (value && formik.errors.workExperiences?.[index] && typeof formik.errors.workExperiences[index] === "object") {
-      const currentErrors = { ...(formik.errors.workExperiences[index] as any) };
-      if (currentErrors[field]) {
-        delete currentErrors[field];
-        const updatedErrors: any[] = [...(formik.errors.workExperiences || [])];
-        updatedErrors[index] = Object.keys(currentErrors).length > 0 ? currentErrors : undefined;
-        formik.setErrors({
-          ...formik.errors,
-          workExperiences: updatedErrors as any,
-        });
-      }
-    }
-
-    // Validate field immediately without setTimeout to prevent race conditions
-    await formik.validateField(`workExperiences[${index}].${field}`);
-  };
+  // Find index by ID helper
+  const findWorkExperienceIndexById = useCallback((id: string): number => {
+    return formik.values.workExperiences.findIndex((w) => w.id === id);
+  }, [formik.values.workExperiences]);
 
   const handleHasWorkExperienceChange = (value: string) => {
     formik.setFieldValue("hasWorkExperience", value);
@@ -628,100 +478,17 @@ const WorkExperience = ({ initialValues, onUpdate, onSaveAndNext, onBack }: Work
         )}
 
         {/* Added Work Experiences Section */}
-        {complete.length > 0 && (
-          <div className="mt-6">
-            <h2 className="text-lg font-bold mb-4" style={{ color: COLORS.textDark }}>
-              {t("applicant.addedWorkExperiences")}
-            </h2>
-
-            <div className="space-y-4">
-              {complete.map((workExperience) => {
-                const index = formik.values.workExperiences.findIndex((w) => w.id === workExperience.id);
-                const isEditing = editingIndex === index;
-
-                return (
-                  <div
-                    key={workExperience.id}
-                    className="p-4 rounded-lg border"
-                    style={{ borderColor: COLORS.border, backgroundColor: COLORS.surface }}
-                  >
-                    {isEditing ? (
-                      <>
-                        <WorkExperienceForm
-                          workExperience={workExperience}
-                          index={index}
-                          onFieldChange={updateWorkExperienceField}
-                          getFieldError={getFieldError}
-                          showCancel={false}
-                          showAddMore={false}
-                        />
-                        <div className="flex gap-2 mt-4 justify-end">
-                          <Button
-                            type="button"
-                            variant="accent"
-                            onClick={() => handleSaveWorkExperience(index)}
-                            rounded
-                          >
-                            {t("common.save")}
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="cancel"
-                            onClick={handleCancelEdit}
-                            rounded
-                          >
-                            {t("common.cancel")}
-                          </Button>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <p className="text-sm font-medium" style={{ color: COLORS.textDark }}>
-                            {workExperience.companyName} - {workExperience.jobTitle}
-                          </p>
-                          <p className="text-xs mt-1" style={{ color: COLORS.textMuted }}>
-                            {workExperience.startDate
-                              ? new Date(workExperience.startDate).toLocaleDateString()
-                              : ""}
-                            {" - "}
-                            {workExperience.currentlyWorking
-                              ? t("applicant.currentlyWorking")
-                              : workExperience.endDate
-                              ? new Date(workExperience.endDate).toLocaleDateString()
-                              : ""}
-                          </p>
-                        </div>
-                        <div className="flex items-end justify-end gap-2">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            icon={<Edit className="h-5 w-5" style={{ color: COLORS.accent }} />}
-                            iconOnly
-                            onClick={() => handleEditWorkExperience(index)}
-                            title={t("common.edit")}
-                            rounded
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            icon={<Trash className="h-5 w-5" style={{ color: COLORS.error }} />}
-                            iconOnly
-                            onClick={() => handleDeleteWorkExperience(index)}
-                            title={t("common.delete")}
-                            rounded
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        <WorkExperienceList
+          workExperiences={complete}
+          editingIndex={editingIndex}
+          getFieldError={getFieldError}
+          updateWorkExperienceField={updateWorkExperienceField}
+          onEdit={handleEditWorkExperience}
+          onDelete={handleDeleteWorkExperience}
+          onSave={handleSaveWorkExperience}
+          onCancelEdit={handleCancelEdit}
+          findIndexById={findWorkExperienceIndexById}
+        />
 
         {/* Show message if no work experiences added */}
         {showWorkExperienceForm && complete.length === 0 && incomplete.length === 0 && (
@@ -759,38 +526,15 @@ const WorkExperience = ({ initialValues, onUpdate, onSaveAndNext, onBack }: Work
       </div>
 
       {/* Delete Confirmation Popup */}
-      <Popup
+      <ConfirmationPopup
         isOpen={isDeletePopupOpen}
-        onClose={handleCancelDelete}
         title={t("applicant.deleteWorkExperience", "Delete Work Experience")}
-        size="sm"
-      >
-        <div className="space-y-4">
-          <p style={{ color: COLORS.textMuted }}>
-            {t("applicant.deleteWorkExperienceConfirmation", "Are you sure you want to delete this work experience?")} {t("applicant.deleteWarning", "This action cannot be undone.")}
-          </p>
-          
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-4">
-            <Button
-              variant="cancel"
-              size="md"
-              onClick={handleCancelDelete}
-              rounded
-            >
-              {t("common.cancel")}
-            </Button>
-            <Button
-              variant="danger"
-              size="md"
-              onClick={handleConfirmDelete}
-              rounded
-            >
-              {t("common.delete")}
-            </Button>
-          </div>
-        </div>
-      </Popup>
+        message={`${t("applicant.deleteWorkExperienceConfirmation", "Are you sure you want to delete this work experience?")} ${t("applicant.deleteWarning", "This action cannot be undone.")}`}
+        confirmLabel={t("common.delete", "Delete")}
+        variant="danger"
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 };

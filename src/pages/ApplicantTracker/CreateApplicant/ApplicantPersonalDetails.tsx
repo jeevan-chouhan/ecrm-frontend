@@ -84,14 +84,18 @@ const ApplicantPersonalDetails = ({ initialValues, onUpdate, onSaveAndNext }: Ap
 
         // Only call API if data has changed since last save
         if (hasDataChanged) {
-          // For now, just log the payload
-          console.log("Personal details payload ready for API:", payload);
-          console.log("API endpoint: POST /api/applicant/personal-details");
+          // Log payload in development only
+          if (import.meta.env.DEV) {
+            console.log("Personal details payload ready for API:", payload);
+            console.log("API endpoint: POST /api/applicant/personal-details");
+          }
           
           // Mark data as saved
           markAsSaved(values);
         } else {
-          console.log("No changes detected. Skipping API call.");
+          if (import.meta.env.DEV) {
+            console.log("No changes detected. Skipping API call.");
+          }
         }
 
         // Data is already synced to parent state via useEffect
@@ -102,10 +106,14 @@ const ApplicantPersonalDetails = ({ initialValues, onUpdate, onSaveAndNext }: Ap
           setShouldNavigateNext(false);
         } else {
           // For "Save" button, just log - form data remains
-          console.log("Form data saved and synced to state (form not reset)");
+          if (import.meta.env.DEV) {
+            console.log("Form data saved and synced to state (form not reset)");
+          }
         }
       } catch (error) {
-        console.error("Error saving personal details:", error);
+        if (import.meta.env.DEV) {
+          console.error("Error saving personal details:", error);
+        }
         // You might want to show an error message to the user here
       }
     },
@@ -217,6 +225,12 @@ const ApplicantPersonalDetails = ({ initialValues, onUpdate, onSaveAndNext }: Ap
     const isValid = await validateAndMarkTouched();
     if (isValid) {
       await formik.submitForm();
+    } else {
+      if (import.meta.env.DEV) {
+        if (import.meta.env.DEV) {
+          console.log("Form validation failed. Please fill all required fields.");
+        }
+      }
     }
   };
 
@@ -227,7 +241,11 @@ const ApplicantPersonalDetails = ({ initialValues, onUpdate, onSaveAndNext }: Ap
       setShouldNavigateNext(true);
       await formik.submitForm();
     } else {
-      console.log("Form validation failed. Please fill all required fields.");
+      if (import.meta.env.DEV) {
+        if (import.meta.env.DEV) {
+          console.log("Form validation failed. Please fill all required fields.");
+        }
+      }
     }
   };
 

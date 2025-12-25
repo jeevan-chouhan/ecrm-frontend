@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import type { ReactNode } from "react";
 import { ChevronDown, Search } from "../../assets";
 import { COLORS } from "../../constants";
@@ -74,6 +74,37 @@ const Select = ({
     setIsOpen(false);
     setSearchTerm("");
   };
+
+  // Custom scrollbar styles
+  const scrollbarStyles = useMemo(() => (
+    <style>{`
+      .select-options-list::-webkit-scrollbar {
+        width: 10px;
+      }
+      .select-options-list::-webkit-scrollbar-track {
+        background: ${COLORS.background};
+        border-radius: 10px;
+        margin: 4px 0;
+      }
+      .select-options-list::-webkit-scrollbar-thumb {
+        background: ${COLORS.accent};
+        border-radius: 10px;
+        border: 2px solid ${COLORS.background};
+        transition: background 0.2s ease;
+      }
+      .select-options-list::-webkit-scrollbar-thumb:hover {
+        background: ${COLORS.accentHover};
+      }
+      .select-options-list::-webkit-scrollbar-thumb:active {
+        background: ${COLORS.accentHover};
+      }
+      /* Firefox */
+      .select-options-list {
+        scrollbar-width: thin;
+        scrollbar-color: ${COLORS.accent} ${COLORS.background};
+      }
+    `}</style>
+  ), []);
 
   return (
     <div className={`${fullWidth ? "w-full" : ""}`} ref={selectRef}>
@@ -172,33 +203,41 @@ const Select = ({
             )}
 
             {/* Options List */}
-            <ul className="max-h-60 overflow-auto">
+            {scrollbarStyles}
+            <ul 
+              className="max-h-60 overflow-auto select-options-list"
+              style={{ 
+                scrollBehavior: "smooth",
+                WebkitOverflowScrolling: "touch",
+              }}
+            >
               {filteredOptions.length > 0 ? (
-                filteredOptions.map((option) => (
-                  <li
-                    key={option.value}
-                    onClick={() => handleSelect(option.value)}
-                    className="px-4 py-2.5 cursor-pointer transition-COLORS duration-150"
-                    style={{
-                      backgroundColor:
-                        option.value === value ? COLORS.surfaceHover : "transparent",
-                      color:
-                        option.value === value ? COLORS.accent : COLORS.textDark,
-                    }}
-                    onMouseEnter={(e) => {
-                      if (option.value !== value) {
-                        e.currentTarget.style.backgroundColor = COLORS.surfaceHover;
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (option.value !== value) {
-                        e.currentTarget.style.backgroundColor = "transparent";
-                      }
-                    }}
-                  >
-                    {option.label}
-                  </li>
-                ))
+                filteredOptions.map((option) => {
+                  const isSelected = option.value === value;
+                  return (
+                    <li
+                      key={option.value}
+                      onClick={() => handleSelect(option.value)}
+                      className="px-4 py-2.5 cursor-pointer transition-colors duration-150"
+                      style={{
+                        backgroundColor: isSelected ? COLORS.surfaceHover : "transparent",
+                        color: isSelected ? COLORS.accent : COLORS.textDark,
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isSelected) {
+                          e.currentTarget.style.backgroundColor = COLORS.surfaceHover;
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isSelected) {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                        }
+                      }}
+                    >
+                      {option.label}
+                    </li>
+                  );
+                })
               ) : (
                 <li
                   className="px-4 py-2.5 text-center"

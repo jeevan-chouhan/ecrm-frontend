@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { FormikValues } from "formik";
+import { efficientCompare } from "./useDeepCompare";
 
 /**
  * Hook to sync formik values to parent state with optimized deep comparison
@@ -14,16 +15,24 @@ export function useFormSync<T extends FormikValues>(
   compareFn?: (prev: T, current: T) => boolean
 ) {
   const prevValuesRef = useRef<T>(formValues);
+  const onUpdateRef = useRef(onUpdate);
+  const compareFnRef = useRef(compareFn);
+
+  // Keep refs updated
+  useEffect(() => {
+    onUpdateRef.current = onUpdate;
+    compareFnRef.current = compareFn;
+  }, [onUpdate, compareFn]);
 
   useEffect(() => {
-    const hasChanged = compareFn
-      ? compareFn(prevValuesRef.current, formValues)
-      : JSON.stringify(prevValuesRef.current) !== JSON.stringify(formValues);
+    const hasChanged = compareFnRef.current
+      ? compareFnRef.current(prevValuesRef.current, formValues)
+      : efficientCompare(prevValuesRef.current, formValues);
 
     if (hasChanged) {
       prevValuesRef.current = formValues;
-      onUpdate(formValues);
+      onUpdateRef.current(formValues);
     }
-  }, [formValues, onUpdate, compareFn]);
+  }, [formValues]);
 }
 

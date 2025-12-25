@@ -222,3 +222,28 @@ export const agencyPartnerOptions: SelectOption[] = [
   { value: "idp", label: "IDP" },
   { value: "study-abroad", label: "Study Abroad" },
 ];
+
+// Application status options for university applications
+export const applicationStatusOptions: SelectOption[] = [
+  { value: "application-submitted", label: "Application Submitted" },
+  { value: "document-pending", label: "Document Pending" },
+  { value: "application-applicant-declined", label: "Application/Applicant Declined" },
+  { value: "awaiting-conditional-offer", label: "Awaiting Conditional offer" },
+  { value: "awaiting-unconditional-offer", label: "Awaiting Unconditional offer" },
+  { value: "received-conditional-offer", label: "Received Conditional offer" },
+  { value: "offer-received", label: "Offer Received" },
+  { value: "offer-accepted", label: "Offer Accepted" },
+  { value: "offer-rejected", label: "Offer Rejected" },
+  { value: "awaiting-deposit", label: "Awaiting Deposit" },
+  { value: "deposit-paid", label: "Deposit Paid" },
+  { value: "application-rejected-not-paid", label: "Application Rejected Not Paid" },
+  { value: "application-rejected-paid", label: "Application Rejected Paid" },
+  { value: "application-accepted", label: "Application Accepted" },
+  { value: "applied-for-visa", label: "Applied for Visa" },
+  { value: "visa-approved", label: "Visa Approved" },
+  { value: "visa-rejected", label: "Visa Rejected" },
+  { value: "student-deferring", label: "Student Deferring" },
+  { value: "student-declining", label: "Student Declining" },
+  { value: "enrolled", label: "Enrolled" },
+  { value: "not-enrolled-rejected", label: "Not Enrolled / Rejected" },
+];

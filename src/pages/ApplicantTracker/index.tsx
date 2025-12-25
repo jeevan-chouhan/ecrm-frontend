@@ -1,14 +1,14 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import type { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import type { GridColDef, GridPaginationModel, GridRenderCellParams } from "@mui/x-data-grid";
 import { Tooltip } from "@mui/material";
 import {
   Layout,
   Button,
   SearchBar,
   DataTable,
-  Popup,
+  StatusChangePopup,
 } from "../../components";
 import { COLORS, ROUTES } from "../../constants";
 import { Plus, Eye, ToggleStatus } from "../../assets";
@@ -155,21 +155,44 @@ const ApplicantTracker = () => {
     pageSize: 10,
   });
 
-  // Total count from API response
+  // Total count will be calculated from filteredApplicants
   // TODO: Replace with actual API call - this should come from API response
-  const [totalCount, setTotalCount] = useState<number>(0);
 
   // Status change confirmation popup state
   const [isStatusPopupOpen, setIsStatusPopupOpen] = useState(false);
   const [selectedApplicantForStatusChange, setSelectedApplicantForStatusChange] = useState<Applicant | null>(null);
   const [isChangingStatus, setIsChangingStatus] = useState(false);
 
+  // Memoize enrollment type map to prevent recreation
+  const enrollmentTypeMap = useMemo<Record<string, string>>(() => ({
+    "walk-in": "Walk-in",
+    "referred-to-agency": "Referred to Agency Partner",
+    "referred-by-agency": "Referred by Agency Partner",
+  }), []);
+
+  // Memoize normalized dates to prevent recreation on every filter
+  const normalizedStartDate = useMemo(() => {
+    if (!appliedStartDate) return null;
+    const date = new Date(appliedStartDate);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }, [appliedStartDate]);
+
+  const normalizedEndDate = useMemo(() => {
+    if (!appliedEndDate) return null;
+    const date = new Date(appliedEndDate);
+    date.setHours(23, 59, 59, 999);
+    return date;
+  }, [appliedEndDate]);
+
+  // Memoize search query lowercase transformation
+  const searchLower = useMemo(() => searchQuery.toLowerCase(), [searchQuery]);
+
   // Filter applicants based on search and applied filters
   const filteredApplicants = useMemo(() => {
     return applicants.filter((applicant) => {
       // Search filter
       if (searchQuery) {
-        const searchLower = searchQuery.toLowerCase();
         const matchesSearch =
           applicant.applicantId.toLowerCase().includes(searchLower) ||
           applicant.applicantName.toLowerCase().includes(searchLower) ||
@@ -203,11 +226,6 @@ const ApplicantTracker = () => {
 
       // Enrollment Type filter
       if (appliedEnrollmentType) {
-        const enrollmentTypeMap: Record<string, string> = {
-          "walk-in": "Walk-in",
-          "referred-to-agency": "Referred to Agency Partner",
-          "referred-by-agency": "Referred by Agency Partner",
-        };
         if (applicant.enrollmentType !== enrollmentTypeMap[appliedEnrollmentType]) return false;
       }
 
@@ -216,36 +234,26 @@ const ApplicantTracker = () => {
         return false;
       }
 
-      // Date filters - filter by createdAt
-      if (appliedStartDate || appliedEndDate) {
+      // Date filters - filter by createdAt (using memoized normalized dates)
+      if (normalizedStartDate || normalizedEndDate) {
         if (!applicant.createdAt) return false;
         
-        const applicantDate = new Date(applicant.createdAt);
-        const startDate = appliedStartDate ? new Date(appliedStartDate) : null;
-        const endDate = appliedEndDate ? new Date(appliedEndDate) : null;
-        
-        // Set time to start of day for start date comparison
-        if (startDate) {
-          startDate.setHours(0, 0, 0, 0);
-        }
-        
-        // Set time to end of day for end date comparison
-        if (endDate) {
-          endDate.setHours(23, 59, 59, 999);
-        }
-        
         // Normalize applicant date to start of day for comparison
-        const applicantDateNormalized = new Date(applicantDate);
-        applicantDateNormalized.setHours(0, 0, 0, 0);
+        const applicantDate = new Date(applicant.createdAt);
+        applicantDate.setHours(0, 0, 0, 0);
         
-        if (startDate && applicantDateNormalized < startDate) return false;
-        if (endDate && applicantDateNormalized > endDate) return false;
+        if (normalizedStartDate && applicantDate < normalizedStartDate) return false;
+        if (normalizedEndDate && applicantDate > normalizedEndDate) return false;
       }
 
       return true;
     });
   }, [
     searchQuery,
+    searchLower,
+    enrollmentTypeMap,
+    normalizedStartDate,
+    normalizedEndDate,
     appliedAdmin,
     appliedManager,
     appliedCounselor,
@@ -254,20 +262,15 @@ const ApplicantTracker = () => {
     appliedIntake,
     appliedEnrollmentType,
     appliedAgencyPartner,
-    appliedStartDate,
-    appliedEndDate,
     applicants,
   ]);
 
-  // Update totalCount when filtered applicants change
+  // Total count - calculated from filtered applicants
   // TODO: In real implementation, totalCount should come from API response
-  // For now, using filteredApplicants.length as placeholder
-  useEffect(() => {
-    setTotalCount(filteredApplicants.length);
-  }, [filteredApplicants.length]);
+  const totalCount = useMemo(() => filteredApplicants.length, [filteredApplicants.length]);
 
   // Handle apply filters - triggers API call
-  const handleApplyFilters = () => {
+  const handleApplyFilters = useCallback(() => {
     // Apply the selected filters
     setAppliedAdmin(selectedAdmin);
     setAppliedManager(selectedManager);
@@ -302,10 +305,10 @@ const ApplicantTracker = () => {
     //   setTotalCount(response.totalCount);
     //   // Update applicants data
     // });
-  };
+  }, [selectedAdmin, selectedManager, selectedCounselor, selectedApplicantStages, selectedStatus, selectedIntake, selectedEnrollmentType, selectedAgencyPartner, startDate, endDate, paginationModel.pageSize]);
 
   // Handle clear filters
-  const handleClearFilters = () => {
+  const handleClearFilters = useCallback(() => {
     // Clear selected filters
     setSelectedAdmin("");
     setSelectedManager("");
@@ -338,29 +341,29 @@ const ApplicantTracker = () => {
     //   .then(response => {
     //     setTotalCount(response.totalCount);
     //   });
-  };
+  }, [paginationModel.pageSize]);
 
   // Handle search with debounce (SearchBar handles this internally)
-  const handleSearch = (value: string) => {
+  const handleSearch = useCallback((value: string) => {
     setSearchQuery(value);
-    setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
-  };
+    setPaginationModel((prev) => ({ page: 0, pageSize: prev.pageSize }));
+  }, []);
 
 
   // Handle view action
-  const handleView = (applicantId: string) => {
+  const handleView = useCallback((applicantId: string) => {
     // Navigate to applicant detail page or open modal
     navigate(`/applicant-tracker/${applicantId}`);
-  };
+  }, [navigate]);
 
   // Handle status toggle - open confirmation popup
-  const handleStatusToggle = (applicant: Applicant) => {
+  const handleStatusToggle = useCallback((applicant: Applicant) => {
     setSelectedApplicantForStatusChange(applicant);
     setIsStatusPopupOpen(true);
-  };
+  }, []);
 
   // Handle confirm status change
-  const handleConfirmStatusChange = async () => {
+  const handleConfirmStatusChange = useCallback(async () => {
     if (!selectedApplicantForStatusChange) return;
 
     setIsChangingStatus(true);
@@ -393,21 +396,77 @@ const ApplicantTracker = () => {
       setIsStatusPopupOpen(false);
       setSelectedApplicantForStatusChange(null);
     } catch (error) {
-      console.error("Error changing status:", error);
       // TODO: Show error toast notification
+      // Error handling: Log to error tracking service in production
+      if (import.meta.env.DEV) {
+        console.error("Error changing status:", error);
+      }
     } finally {
       setIsChangingStatus(false);
     }
-  };
+  }, [selectedApplicantForStatusChange]);
 
   // Handle cancel status change
-  const handleCancelStatusChange = () => {
+  const handleCancelStatusChange = useCallback(() => {
     setIsStatusPopupOpen(false);
     setSelectedApplicantForStatusChange(null);
-  };
+  }, []);
 
-  // Table columns
-  const columns: GridColDef[] = [
+  // Memoize renderCell functions to prevent recreation
+  const renderApplicantNameCell = useCallback((params: GridRenderCellParams<Applicant>) => (
+    <div className="flex flex-col gap-1">
+      <span className="font-medium text-sm" style={{ color: COLORS.textDark }}>
+        {params.row.applicantName}
+      </span>
+      <span className="text-xs" style={{ color: COLORS.textMuted }}>
+        {params.row.contactNo}
+      </span>
+    </div>
+  ), []);
+
+  const renderStatusCell = useCallback((params: GridRenderCellParams<Applicant>) => (
+    <span
+      style={{
+        color: params.value === "Active" ? COLORS.success : COLORS.textMuted,
+      }}
+    >
+      {params.value}
+    </span>
+  ), []);
+
+  const renderActionsCell = useCallback((params: GridRenderCellParams<Applicant>) => (
+    <div className="flex items-center gap-3">
+      <Tooltip title={t("applicantTracker.view", "View")} arrow>
+        <button
+          onClick={() => handleView(params.row.applicantId)}
+          className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
+          style={{ color: COLORS.accent }}
+          aria-label={t("applicantTracker.view", "View")}
+        >
+          <Eye className="w-5 h-5" />
+        </button>
+      </Tooltip>
+      <Tooltip title={t("applicantTracker.changeStatus", "Change Status")} arrow>
+        <button
+          onClick={() => handleStatusToggle(params.row)}
+          className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
+          style={{
+            color: params.row.status === "Active" ? COLORS.error : COLORS.success,
+          }}
+          aria-label={
+            params.row.status === "Active"
+              ? t("applicantTracker.deactivate", "Deactivate")
+              : t("applicantTracker.activate", "Activate")
+          }
+        >
+          <ToggleStatus className="w-5 h-5" />
+        </button>
+      </Tooltip>
+    </div>
+  ), [t, handleView, handleStatusToggle]);
+
+  // Table columns - memoized to prevent recreation
+  const columns: GridColDef[] = useMemo(() => [
     {
       field: "applicantId",
       headerName: t("applicantTracker.applicantId", "APPLICANT ID"),
@@ -421,16 +480,7 @@ const ApplicantTracker = () => {
       flex: 1.5,
       minWidth: 180,
       sortable: true,
-      renderCell: (params) => (
-        <div className="flex flex-col gap-1">
-          <span className="font-medium text-sm" style={{ color: COLORS.textDark }}>
-            {params.row.applicantName}
-          </span>
-          <span className="text-xs" style={{ color: COLORS.textMuted }}>
-            {params.row.contactNo}
-          </span>
-        </div>
-      ),
+      renderCell: renderApplicantNameCell,
     },
     {
       field: "course",
@@ -473,17 +523,7 @@ const ApplicantTracker = () => {
       flex: 0.8,
       minWidth: 100,
       sortable: true,
-      renderCell: (params) => {
-        return (
-          <span
-            style={{
-              color: params.value === "Active" ? COLORS.success : COLORS.textMuted,
-            }}
-          >
-            {params.value}
-          </span>
-        );
-      },
+      renderCell: renderStatusCell,
     },
     {
       field: "actions",
@@ -491,38 +531,9 @@ const ApplicantTracker = () => {
       flex: 1,
       minWidth: 120,
       sortable: false,
-      renderCell: (params) => (
-        <div className="flex items-center gap-3">
-          <Tooltip title={t("applicantTracker.view", "View")} arrow>
-            <button
-              onClick={() => handleView(params.row.applicantId)}
-              className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
-              style={{ color: COLORS.accent }}
-              aria-label={t("applicantTracker.view", "View")}
-            >
-              <Eye className="w-5 h-5" />
-            </button>
-          </Tooltip>
-          <Tooltip title={t("applicantTracker.changeStatus", "Change Status")} arrow>
-            <button
-              onClick={() => handleStatusToggle(params.row)}
-              className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
-              style={{
-                color: params.row.status === "Active" ? COLORS.error : COLORS.success,
-              }}
-              aria-label={
-                params.row.status === "Active"
-                  ? t("applicantTracker.deactivate", "Deactivate")
-                  : t("applicantTracker.activate", "Activate")
-              }
-            >
-              <ToggleStatus className="w-5 h-5" />
-            </button>
-          </Tooltip>
-        </div>
-      ),
+      renderCell: renderActionsCell,
     },
-  ];
+  ], [t, renderApplicantNameCell, renderStatusCell, renderActionsCell]);
 
   return (
     <Layout userName="Admin" userRole="Abroad Agency">
@@ -592,57 +603,14 @@ const ApplicantTracker = () => {
         />
 
         {/* Status Change Confirmation Popup */}
-        <Popup
+        <StatusChangePopup
           isOpen={isStatusPopupOpen}
+          item={selectedApplicantForStatusChange}
+          isChanging={isChangingStatus}
           onClose={handleCancelStatusChange}
-          title={t("applicantTracker.confirmStatusChange", "Confirm Status Change")}
-          size="sm"
-          closeOnOverlayClick={!isChangingStatus}
-          closeOnEscape={!isChangingStatus}
-          footer={
-            <div className="flex items-center justify-end gap-3">
-              <Button
-                variant="cancel"
-                size="sm"
-                onClick={handleCancelStatusChange}
-                disabled={isChangingStatus}
-                rounded
-              >
-                {t("common.cancel", "Cancel")}
-              </Button>
-              <Button
-                variant="accent"
-                size="sm"
-                onClick={handleConfirmStatusChange}
-                isLoading={isChangingStatus}
-                rounded
-              >
-                {t("common.confirm", "Confirm")}
-              </Button>
-            </div>
-          }
-        >
-          <div className="py-2">
-            <p className="text-sm text-slate-600 mb-2">
-              {selectedApplicantForStatusChange && (
-                <>
-                  {t(
-                    "applicantTracker.confirmStatusChangeMessage",
-                    "Are you sure you want to change the status of {{name}} from {{currentStatus}} to {{newStatus}}?",
-                    {
-                      name: selectedApplicantForStatusChange.applicantName,
-                      currentStatus: selectedApplicantForStatusChange.status,
-                      newStatus:
-                        selectedApplicantForStatusChange.status === "Active"
-                          ? "Inactive"
-                          : "Active",
-                    }
-                  )}
-                </>
-              )}
-            </p>
-          </div>
-        </Popup>
+          onConfirm={handleConfirmStatusChange}
+          nameKey="applicantName"
+        />
       </div>
     </Layout>
   );
