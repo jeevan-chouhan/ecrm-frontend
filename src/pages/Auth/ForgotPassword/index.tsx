@@ -56,7 +56,7 @@ const ForgotPassword = () => {
           >
             <form onSubmit={formik.handleSubmit}>
               <Input
-                label={t("auth.email")}
+                label={<>{t("auth.email")} <span style={{ color: COLORS.error }}>*</span></>}
                 type="email"
                 placeholder={t("auth.emailPlaceholder")}
                 name="email"

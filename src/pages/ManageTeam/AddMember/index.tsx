@@ -106,6 +106,7 @@ const AddMember = ({ isOpen, onClose, onSubmit }: AddMemberProps) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               name="name"
+              label={<>Name <span style={{ color: COLORS.error }}>*</span></>}
               placeholder="Name"
               value={formik.values.name}
               onChange={formik.handleChange}
@@ -115,6 +116,7 @@ const AddMember = ({ isOpen, onClose, onSubmit }: AddMemberProps) => {
             />
             <Input
               name="email"
+              label={<>Email <span style={{ color: COLORS.error }}>*</span></>}
               placeholder="Email"
               type="email"
               value={formik.values.email}
@@ -128,6 +130,7 @@ const AddMember = ({ isOpen, onClose, onSubmit }: AddMemberProps) => {
           {/* Row 2: Contact Number, Password */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <PhoneInput
+              label={<>Contact Number <span style={{ color: COLORS.error }}>*</span></>}
               placeholder="Contact Number"
               value={formik.values.contactNumber}
               onChange={(value) => formik.setFieldValue("contactNumber", value)}
@@ -140,6 +143,7 @@ const AddMember = ({ isOpen, onClose, onSubmit }: AddMemberProps) => {
               fullWidth
             />
             <Input
+              label="System Generated Password"
               placeholder="System Generated Password"
               disabled
               fullWidth
@@ -149,6 +153,7 @@ const AddMember = ({ isOpen, onClose, onSubmit }: AddMemberProps) => {
           {/* Row 3: Role, Admin */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Select
+              label={<>Role <span style={{ color: COLORS.error }}>*</span></>}
               options={addMemberRoleOptions}
               value={formik.values.role}
               onChange={(value) => formik.setFieldValue("role", value)}
@@ -157,6 +162,7 @@ const AddMember = ({ isOpen, onClose, onSubmit }: AddMemberProps) => {
               fullWidth
             />
             <Select
+              label={<>Admin <span style={{ color: COLORS.error }}>*</span></>}
               options={adminOptions}
               value={formik.values.adminId}
               onChange={(value) => formik.setFieldValue("adminId", value)}
@@ -169,6 +175,7 @@ const AddMember = ({ isOpen, onClose, onSubmit }: AddMemberProps) => {
           {/* Row 4: Assigned Country */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Select
+              label={<>Assigned Country <span style={{ color: COLORS.error }}>*</span></>}
               options={countryOptions}
               value={formik.values.assignedCountry}
               onChange={(value) => formik.setFieldValue("assignedCountry", value)}

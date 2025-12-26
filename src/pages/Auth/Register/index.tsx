@@ -66,7 +66,7 @@ const Register = () => {
                 {/* Left Column */}
                 <div className="space-y-5">
                   <Input
-                    label={t("auth.agencyName")}
+                    label={<>{t("auth.agencyName")} <span style={{ color: COLORS.error }}>*</span></>}
                     placeholder={t("auth.agencyNamePlaceholder")}
                     name="agencyName"
                     value={formik.values.agencyName}
@@ -77,7 +77,7 @@ const Register = () => {
                   />
 
                   <Input
-                    label={t("auth.email")}
+                    label={<>{t("auth.email")} <span style={{ color: COLORS.error }}>*</span></>}
                     type="email"
                     placeholder={t("auth.emailPlaceholder")}
                     name="email"
@@ -89,7 +89,7 @@ const Register = () => {
                   />
 
                   <PhoneInput
-                    label={t("auth.contactNumber")}
+                    label={<>{t("auth.contactNumber")} <span style={{ color: COLORS.error }}>*</span></>}
                     value={formik.values.phone}
                     onChange={(value) => formik.setFieldValue("phone", value)}
                     error={formik.touched.phone ? formik.errors.phone : undefined}
@@ -102,7 +102,7 @@ const Register = () => {
                 {/* Right Column */}
                 <div className="space-y-5">
                   <Input
-                    label={t("auth.fullName")}
+                    label={<>{t("auth.fullName")} <span style={{ color: COLORS.error }}>*</span></>}
                     placeholder={t("auth.fullNamePlaceholder")}
                     name="fullName"
                     value={formik.values.fullName}
@@ -113,7 +113,7 @@ const Register = () => {
                   />
 
                   <Input
-                    label={t("auth.password")}
+                    label={<>{t("auth.password")} <span style={{ color: COLORS.error }}>*</span></>}
                     type="password"
                     placeholder={t("auth.confirmPasswordPlaceholder")}
                     name="password"
@@ -125,7 +125,7 @@ const Register = () => {
                   />
 
                   <Input
-                    label={t("auth.confirmPassword")}
+                    label={<>{t("auth.confirmPassword")} <span style={{ color: COLORS.error }}>*</span></>}
                     type="password"
                     placeholder={t("auth.confirmPasswordPlaceholder")}
                     name="confirmPassword"

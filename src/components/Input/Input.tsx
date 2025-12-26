@@ -5,7 +5,7 @@ import { COLORS, componentSpecs } from "../../constants";
 type InputVariant = "input" | "textarea";
 
 interface BaseInputProps {
-  label?: string;
+  label?: ReactNode;
   error?: string;
   helperText?: string;
   leftIcon?: ReactNode;
