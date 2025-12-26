@@ -111,9 +111,9 @@ const MultiSelect = ({
             borderColor: error
               ? COLORS.error
               : isOpen
-              ? COLORS.primary
+              ? COLORS.accent
               : COLORS.border,
-            boxShadow: isOpen ? `0 0 0 3px ${COLORS.primary}20` : "none",
+            boxShadow: isOpen ? `0 0 0 3px ${COLORS.accent}20` : "none",
           }}
         >
           {leftIcon && (
