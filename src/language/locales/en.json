@@ -133,6 +133,7 @@
   },
   "applicant": {
     "addApplicant": "Add Applicant",
+    "editApplicant": "Edit Applicant",
     "personalDetails": "Personal Details",
     "uploadProfilePhoto": "Upload profile photo",
     "enrollmentType": "Enrollment Type",
@@ -383,6 +384,8 @@
     "verify": "Verify",
     "noDocuments": "No documents available.",
     "actions": "ACTIONS",
-    "pending": "Pending"
+    "pending": "Pending",
+    "applicationStatusHistory": "Application Status History",
+    "noStatusHistory": "No status history available."
   }
 }

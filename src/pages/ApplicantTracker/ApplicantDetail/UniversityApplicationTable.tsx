@@ -4,7 +4,7 @@ import type { GridColDef, GridPaginationModel, GridRenderCellParams } from "@mui
 import { Tooltip } from "@mui/material";
 import { DataTable, Button } from "../../../components";
 import { COLORS } from "../../../constants";
-import { Edit } from "../../../assets";
+import { Edit, Calendar } from "../../../assets";
 import type { UniversityApplication } from "./types";
 
 interface UniversityApplicationTableProps {
@@ -14,6 +14,7 @@ interface UniversityApplicationTableProps {
   onPaginationModelChange: (model: GridPaginationModel) => void;
   onUpdateStatus: (application: UniversityApplication) => void;
   onApply: (application: UniversityApplication) => void;
+  onViewStatusHistory: (application: UniversityApplication) => void;
 }
 
 const UniversityApplicationTable = ({
@@ -23,6 +24,7 @@ const UniversityApplicationTable = ({
   onPaginationModelChange,
   onUpdateStatus,
   onApply,
+  onViewStatusHistory,
 }: UniversityApplicationTableProps) => {
   const { t } = useTranslation();
 
@@ -89,17 +91,35 @@ const UniversityApplicationTable = ({
   ), []);
 
   const renderActionsCell = useCallback((params: GridRenderCellParams<UniversityApplication>) => (
-    <Tooltip title={t("applicantDetailView.updateApplicationStatus", "Update Application Status")} arrow>
-      <button
-        onClick={() => onUpdateStatus(params.row)}
-        className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
-        style={{ color: COLORS.accent }}
-        aria-label={t("applicantDetailView.updateApplicationStatus", "Update Application Status")}
-      >
-        <Edit className="w-5 h-5" />
-      </button>
-    </Tooltip>
-  ), [t, onUpdateStatus]);
+    <div className="flex items-center gap-2">
+      <Tooltip title={t("applicantDetailView.applicationStatusHistory", "Application Status History")} arrow>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewStatusHistory(params.row);
+          }}
+          className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
+          style={{ color: COLORS.accent }}
+          aria-label={t("applicantDetailView.applicationStatusHistory", "Application Status History")}
+        >
+          <Calendar className="w-5 h-5" />
+        </button>
+      </Tooltip>
+      <Tooltip title={t("applicantDetailView.updateApplicationStatus", "Update Application Status")} arrow>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onUpdateStatus(params.row);
+          }}
+          className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
+          style={{ color: COLORS.accent }}
+          aria-label={t("applicantDetailView.updateApplicationStatus", "Update Application Status")}
+        >
+          <Edit className="w-5 h-5" />
+        </button>
+      </Tooltip>
+    </div>
+  ), [t, onUpdateStatus, onViewStatusHistory]);
 
   const columns: GridColDef[] = useMemo(() => [
     {
@@ -181,7 +201,7 @@ const UniversityApplicationTable = ({
       field: "actions",
       headerName: t("applicantTracker.action", "ACTION"),
       flex: 1,
-      minWidth: 120,
+      minWidth: 150,
       sortable: false,
       renderCell: renderActionsCell,
     },
