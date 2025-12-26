@@ -14,6 +14,7 @@ const DocumentVault = lazy(() => import("./pages/DocumentVault"));
 const DocumentDetail = lazy(() => import("./pages/DocumentVault/DocumentDetail/index"));
 const AgencyPartner = lazy(() => import("./pages/AgencyPartner"));
 const ManageTeam = lazy(() => import("./pages/ManageTeam"));
+const ManageTeamAdd = lazy(() => import("./pages/ManageTeam/AddMember"));
 const ManageTeamView = lazy(() => import("./pages/ManageTeam/View"));
 const ReportAnalysis = lazy(() => import("./pages/ReportAnalysis"));
 const Settings = lazy(() => import("./pages/Settings"));
@@ -61,8 +62,10 @@ function App() {
         <Route path={ROUTES.DOCUMENT_VAULT} element={<DocumentVault />} />
         <Route path={ROUTES.DOCUMENT_VAULT_DETAIL} element={<DocumentDetail />} />
         <Route path={ROUTES.AGENCY_PARTNER} element={<AgencyPartner />} />
-        <Route path={ROUTES.MANAGE_TEAM} element={<ManageTeam />} />
+        <Route path={ROUTES.MANAGE_TEAM_ADD} element={<ManageTeamAdd />} />
+        <Route path={ROUTES.MANAGE_TEAM_EDIT} element={<ManageTeamAdd />} />
         <Route path={ROUTES.MANAGE_TEAM_VIEW} element={<ManageTeamView />} />
+        <Route path={ROUTES.MANAGE_TEAM} element={<ManageTeam />} />
         <Route path={ROUTES.REPORT_ANALYSIS} element={<ReportAnalysis />} />
         <Route path={ROUTES.SETTINGS} element={<Settings />} />
         <Route path={ROUTES.PROFILE} element={<Profile />} />

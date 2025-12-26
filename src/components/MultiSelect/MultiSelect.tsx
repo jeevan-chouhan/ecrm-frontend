@@ -9,10 +9,11 @@ export interface MultiSelectOption {
 }
 
 interface MultiSelectProps {
-  label?: string;
+  label?: string | ReactNode;
   options: MultiSelectOption[];
   value?: string[];
   onChange?: (values: string[]) => void;
+  onBlur?: () => void;
   placeholder?: string;
   error?: string;
   disabled?: boolean;
@@ -27,6 +28,7 @@ const MultiSelect = ({
   options,
   value = [],
   onChange,
+  onBlur,
   placeholder = "Select options",
   error,
   disabled = false,
@@ -56,12 +58,13 @@ const MultiSelect = ({
       ) {
         setIsOpen(false);
         setSearchTerm("");
+        onBlur?.();
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [onBlur]);
 
   useEffect(() => {
     if (isOpen && searchable && searchInputRef.current) {

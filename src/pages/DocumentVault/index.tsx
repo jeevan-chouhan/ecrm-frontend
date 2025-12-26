@@ -165,7 +165,7 @@ const DocumentVault = () => {
         <Button
           variant="ghost"
           size="sm"
-          icon={<Eye className="h-4 w-4" />}
+          icon={<Eye className="h-4 w-4" style={{color : COLORS.accent}}/>}
           onClick={() => handleViewDocuments(params.row.applicantId)}
           title={t("documentVault.view", "View")}
           rounded
@@ -180,38 +180,40 @@ const DocumentVault = () => {
         className="bg-white rounded-lg shadow-sm p-4 md:p-6"
         style={{ backgroundColor: COLORS.surface }}
       >
-        {/* Header */}
-        <h1
-          className="text-xl md:text-2xl font-bold mb-6"
-          style={{ color: COLORS.textDark }}
-        >
-          {t("documentVault.title", "Document Vault")}
-        </h1>
-
-        {/* Applicants Section */}
-        <div>
-          {/* Section Heading with Search */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-            <h2
-              className="text-lg font-semibold"
+        {/* Header with Search */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          {/* Title with Count */}
+          <div className="flex items-center gap-2 shrink-0">
+            <h1
+              className="text-xl md:text-2xl font-bold"
               style={{ color: COLORS.textDark }}
             >
-              {t("documentVault.applicants", "Applicants")}
-            </h2>
-            <div className="w-full md:w-72">
-              <SearchBar
-                value={searchQuery}
-                onChange={setSearchQuery}
-                placeholder={t("documentVault.searchApplicants", "Search applicants ID, name...")}
-              />
-            </div>
+              {t("documentVault.title", "Document Vault")}
+            </h1>
+            {searchQuery && (
+              <span
+                className="text-lg font-medium"
+                style={{ color: COLORS.textMuted }}
+              >
+                ({filteredApplicants.length})
+              </span>
+            )}
           </div>
+          <div className="w-full md:w-72">
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder={t("documentVault.searchApplicants", "Search applicants ID, name...")}
+            />
+          </div>
+        </div>
 
-          {/* DataTable with Pagination and Sorting */}
+        {/* DataTable with Pagination and Sorting */}
+        <div>
           <DataTable
             rows={filteredApplicants}
             columns={columns}
-            pageSize={5}
+            pageSize={10}
             pageSizeOptions={[5, 10, 25]}
           />
         </div>

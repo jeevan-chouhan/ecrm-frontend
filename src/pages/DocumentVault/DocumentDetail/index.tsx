@@ -237,33 +237,29 @@ const DocumentDetail = () => {
           accept=".pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,.jpg,.jpeg,.png"
         />
 
-        {/* Back Button */}
-        <Button
-          variant="accent"
-          size="sm"
-          rounded
-          icon={<ArrowLeft className="h-5 w-5" />}
-          onClick={handleBack}
-          className="mb-4"
-        />
-
-        {/* Applicant Info */}
-        <div className="mb-6">
-          <h1
-            className="text-xl md:text-2xl font-bold"
-            style={{ color: COLORS.textDark }}
-          >
-            {applicantData.name}
-          </h1>
-          <p className="text-sm mt-1" style={{ color: COLORS.textMuted }}>
-            Applicant ID - {applicantData.applicantId}
-          </p>
-          <p className="text-sm" style={{ color: COLORS.textMuted }}>
-            Applicant Stage - {applicantData.stage}
-          </p>
-          <p className="text-sm" style={{ color: COLORS.textMuted }}>
-            Enrollment Type - {applicantData.enrollmentType}
-          </p>
+        {/* Back Button with Applicant Info */}
+        <div className="flex items-center gap-4 mb-6">
+          <Button
+            variant="accent"
+            size="md"
+            rounded
+            icon={<ArrowLeft className="h-5 w-5" />}
+            onClick={handleBack}
+          />
+          <div>
+            <h1
+              className="text-xl md:text-2xl font-bold"
+              style={{ color: COLORS.textDark }}
+            >
+              {applicantData.name}
+            </h1>
+            <p className="text-sm" style={{ color: COLORS.textMuted }}>
+              ID: {applicantData.applicantId}
+            </p>
+            <p className="text-sm" style={{ color: COLORS.accent }}>
+              Enrollment Type - {applicantData.enrollmentType}
+            </p>
+          </div>
         </div>
 
         {/* Stats Cards */}
