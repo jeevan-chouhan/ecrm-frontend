@@ -43,3 +43,36 @@ export interface AchievementFormData {
   achievements: AchievementItem[];
 }
 
+export interface PersonalDetailsFormData {
+  profilePhoto: File | null;
+  enrollmentType: string;
+  name: string;
+  dateOfBirth: Date | null;
+  gender: string;
+  countryCode: string;
+  contactNumber: string;
+  emailId: string;
+  permanentAddress: string;
+  notes: string;
+}
+
+export interface EducationalDetailFormData {
+  highestQualification: string;
+  institutionName: string;
+  boardUniversity: string;
+  program: string;
+  major: string;
+  scoreType: string;
+  score: string;
+  passingYear: Date | null;
+}
+
+// Combined state for all applicant form data
+export interface ApplicantFormState {
+  personalDetails: PersonalDetailsFormData;
+  applicationPreferences: ApplicationPreferencesFormData;
+  educationalDetails: EducationalDetailFormData;
+  workExperience: WorkExperienceFormData;
+  achievements: AchievementFormData;
+}
+

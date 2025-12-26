@@ -64,7 +64,9 @@ const PhoneInput = ({
         }}
         buttonStyle={{
           borderRadius: "8px 0 0 8px",
-          border: `1px solid ${error ? COLORS.error : COLORS.border}`,
+          borderTop: `1px solid ${error ? COLORS.error : COLORS.border}`,
+          borderBottom: `1px solid ${error ? COLORS.error : COLORS.border}`,
+          borderLeft: `1px solid ${error ? COLORS.error : COLORS.border}`,
           borderRight: "none",
           backgroundColor: COLORS.surface,
         }}

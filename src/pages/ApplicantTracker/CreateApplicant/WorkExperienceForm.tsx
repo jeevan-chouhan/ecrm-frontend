@@ -1,3 +1,4 @@
+import React from "react";
 import { Input, DatePicker, Checkbox, Button } from "../../../components";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../../constants";
@@ -85,6 +86,7 @@ const WorkExperienceForm = ({
               onChange={(date) => onFieldChange(index, "startDate", date)}
               placeholder={t("applicant.selectStartDate")}
               error={getFieldError(index, "startDate")}
+              maxDate={new Date()} // Disable future dates
               fullWidth
             />
           </div>
@@ -102,6 +104,7 @@ const WorkExperienceForm = ({
               placeholder={t("applicant.selectEndDate")}
               error={getFieldError(index, "endDate")}
               disabled={workExperience.currentlyWorking}
+              maxDate={new Date()} // Disable future dates
               fullWidth
             />
           </div>
@@ -131,6 +134,7 @@ const WorkExperienceForm = ({
                 type="button"
                 variant="cancel"
                 onClick={onCancel}
+                rounded
               >
                 {t("common.cancel")}
               </Button>
@@ -140,6 +144,7 @@ const WorkExperienceForm = ({
                 type="button"
                 variant="accent"
                 onClick={onAddMore}
+                rounded
               >
                 {t("common.addMore")}
               </Button>
@@ -151,4 +156,5 @@ const WorkExperienceForm = ({
   );
 };
 
-export default WorkExperienceForm;
+// Memoize component to prevent unnecessary re-renders when props haven't changed
+export default React.memo(WorkExperienceForm);

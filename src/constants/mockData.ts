@@ -1,4 +1,5 @@
 import type { SelectOption } from "../components";
+import type { ApplicantDetail } from "../pages/ApplicantTracker/ApplicantDetail/types";
 
 // Mock data for application preferences dropdowns
 export const countries: SelectOption[] = [
@@ -104,4 +105,195 @@ export const achievementCategories: SelectOption[] = [
   { value: "leadership", label: "Leadership" },
   { value: "creative", label: "Creative" },
 ];
+
+// ==========================================
+// Applicant Detail - Mock Data
+// ==========================================
+
+// Mock data for applicant detail - will be replaced with API call
+export const mockApplicantDetail: ApplicantDetail = {
+  id: "1",
+  applicantId: "S223",
+  applicantName: "Jane Doe",
+  applicantStage: "Offer Status",
+  enrollmentType: "Referred to Agency Partner",
+  status: "Active",
+  personalDetails: {
+    profilePhoto: null,
+    enrollmentType: "Referred to Agency Partner",
+    name: "Jane Doe",
+    dateOfBirth: "1995-05-15",
+    gender: "Female",
+    countryCode: "+1",
+    contactNumber: "9876543210",
+    emailId: "jane.doe@example.com",
+    permanentAddress: "123 Main Street, New York, NY 10001, USA",
+    notes: "Interested in Computer Science programs. Prefers urban campuses.",
+  },
+  educationalDetails: {
+    highestQualification: "ug",
+    institutionName: "Massachusetts Institute of Technology",
+    boardUniversity: "MIT",
+    program: "B.Tech",
+    major: "Computer Science",
+    scoreType: "cgpa",
+    score: "8.5",
+    passingYear: "2023-05-15",
+  },
+  workExperience: {
+    experiences: [
+      {
+        id: "1",
+        companyName: "Google Inc.",
+        jobTitle: "Senior Software Engineer",
+        startDate: "2020-01-15",
+        endDate: "2023-06-30",
+        currentlyWorking: false,
+      },
+      {
+        id: "2",
+        companyName: "Microsoft Corporation",
+        jobTitle: "Software Engineer",
+        startDate: "2018-07-01",
+        endDate: "2019-12-31",
+        currentlyWorking: false,
+      },
+      {
+        id: "3",
+        companyName: "Amazon Web Services",
+        jobTitle: "Cloud Solutions Architect",
+        startDate: "2023-07-01",
+        endDate: null,
+        currentlyWorking: true,
+      },
+      {
+        id: "4",
+        companyName: "Facebook (Meta)",
+        jobTitle: "Frontend Developer",
+        startDate: "2016-06-01",
+        endDate: "2018-05-31",
+        currentlyWorking: false,
+      },
+      {
+        id: "5",
+        companyName: "Apple Inc.",
+        jobTitle: "iOS Developer Intern",
+        startDate: "2015-06-01",
+        endDate: "2015-08-31",
+        currentlyWorking: false,
+      },
+    ],
+  },
+  achievements: {
+    achievements: [
+      {
+        id: "1",
+        category: "academic",
+        description: "Dean's List for 3 consecutive semesters with GPA above 3.8",
+        documents: "dean_list_certificate.pdf",
+      },
+      {
+        id: "2",
+        category: "sports",
+        description: "Won first place in National Coding Competition 2022",
+        documents: "coding_competition_certificate.pdf",
+      },
+      {
+        id: "3",
+        category: "certification",
+        description: "AWS Certified Solutions Architect - Associate",
+        documents: "aws_certificate.pdf",
+      },
+      {
+        id: "4",
+        category: "technical-project",
+        description: "Developed a machine learning model for predicting student success rates with 85% accuracy",
+        documents: null,
+      },
+      {
+        id: "5",
+        category: "leadership",
+        description: "Led a team of 10 developers in building a university management system",
+        documents: "leadership_certificate.pdf",
+      },
+    ],
+  },
+  documents: {
+    documents: [
+      {
+        id: "1",
+        name: "Passport",
+        type: "passport",
+        uploaded: true,
+        verified: true,
+        fileUrl: "/sample.pdf",
+        fileName: "passport.pdf",
+      },
+      {
+        id: "2",
+        name: "Transcripts (UG)",
+        type: "transcript",
+        uploaded: false,
+        verified: false,
+      },
+      {
+        id: "3",
+        name: "Letters of Recommendation",
+        type: "letter",
+        uploaded: false,
+        verified: false,
+      },
+      {
+        id: "4",
+        name: "Statement of Purpose",
+        type: "statement",
+        uploaded: false,
+        verified: false,
+      },
+      {
+        id: "5",
+        name: "Resume",
+        type: "resume",
+        uploaded: false,
+        verified: false,
+      },
+      {
+        id: "6",
+        name: "Financial Statement",
+        type: "financial",
+        uploaded: false,
+        verified: false,
+      },
+    ],
+  },
+  applications: [
+    {
+      id: "1",
+      no: 1,
+      university: "MIT",
+      country: "USA",
+      course: "Masters - Computer Science",
+      intake: "Sept-2026",
+      counselor: "Roger",
+      agencyPartner: "-",
+      status: "Offer Received",
+      appliedDate: "06-05-2025",
+      lastUpdated: "02-07-2025",
+    },
+    {
+      id: "2",
+      no: 2,
+      university: "European School of Business",
+      country: "Germany",
+      course: "PG - Psychology",
+      intake: "Sept-2026",
+      counselor: "Roger",
+      agencyPartner: "Study Abroad",
+      status: "Apply",
+      appliedDate: "",
+      lastUpdated: "",
+    },
+  ],
+  notes: "",
+};
 

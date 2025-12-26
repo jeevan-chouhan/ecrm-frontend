@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useTranslation } from "react-i18next";
@@ -6,23 +6,22 @@ import { Input, Select, DatePicker, Button } from "../../../components";
 import { COLORS, highestQualifications, scoreTypes } from "../../../constants";
 import type { SelectOption } from "../../../components";
 import { REGEX } from "../../../utils/regex";
+import type { EducationalDetailFormData } from "./types";
+import { useDataChangeTracking, useFormSync, useFormValidation } from "./hooks";
 
-export interface EducationalDetailFormData {
-  highestQualification: string;
-  institutionName: string;
-  boardUniversity: string;
-  program: string;
-  major: string;
-  scoreType: string;
-  score: string;
-  passingYear: Date | null;
+interface EducationalDetailsProps {
+  initialValues: EducationalDetailFormData;
+  onUpdate: (data: EducationalDetailFormData) => void;
+  onSaveAndNext?: () => void;
+  onBack?: () => void;
 }
 
-const EducationalDetails = ({ onSaveAndNext }: { onSaveAndNext?: () => void }) => {
+const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack }: EducationalDetailsProps) => {
   const { t } = useTranslation();
 
   const qualificationOptions: SelectOption[] = highestQualifications;
   const scoreTypeOptions: SelectOption[] = scoreTypes;
+  const [isFormValid, setIsFormValid] = useState(false);
 
   // Helper function to create educational detail validation schema
   const getEducationalDetailSchema = useCallback(() => {
@@ -32,8 +31,8 @@ const EducationalDetails = ({ onSaveAndNext }: { onSaveAndNext?: () => void }) =
       boardUniversity: Yup.string().required(t("validation.boardUniversityRequired")).trim(),
       program: Yup.string(),
       major: Yup.string().when("highestQualification", {
-        is: (val: string) => val === "ug" || val === "pg",
-        then: (schema) => schema.required(t("validation.majorRequired")),
+        is: (val: string) => val === "ug",
+        then: (schema) => schema,
         otherwise: (schema) => schema,
       }),
       scoreType: Yup.string().required(t("validation.scoreTypeRequired")),
@@ -51,16 +50,8 @@ const EducationalDetails = ({ onSaveAndNext }: { onSaveAndNext?: () => void }) =
   );
 
   const formik = useFormik<EducationalDetailFormData>({
-    initialValues: {
-      highestQualification: "",
-      institutionName: "",
-      boardUniversity: "",
-      program: "",
-      major: "",
-      scoreType: "",
-      score: "",
-      passingYear: null,
-    },
+    initialValues,
+    enableReinitialize: true,
     validationSchema,
     onSubmit: async (values) => {
       try {
@@ -85,26 +76,102 @@ const EducationalDetails = ({ onSaveAndNext }: { onSaveAndNext?: () => void }) =
         // });
         // const result = await response.json();
 
-        console.log("Payload ready for API:", payload);
+        // Only call API if data has changed since last save
+        if (hasDataChanged) {
+          if (import.meta.env.DEV) {
+            console.log("Payload ready for API:", payload);
+            console.log("API endpoint: POST /api/applicant/educational-details");
+          }
+          
+          // Mark data as saved
+          markAsSaved(values);
+        } else {
+          if (import.meta.env.DEV) {
+            console.log("No changes detected. Skipping API call.");
+          }
+        }
       } catch (error) {
-        console.error("Error saving educational details:", error);
+        if (import.meta.env.DEV) {
+          console.error("Error saving educational details:", error);
+        }
       }
     },
   });
+
+  // Use reusable hook for data change tracking
+  const { hasDataChanged, markAsSaved } = useDataChangeTracking<EducationalDetailFormData>(
+    formik.values,
+    (lastSaved, current) => {
+      if (!lastSaved) return true;
+      
+      // Compare passingYear by timestamp instead of reference
+      const passingYearChanged = 
+        (lastSaved.passingYear === null && current.passingYear !== null) ||
+        (lastSaved.passingYear !== null && current.passingYear === null) ||
+        (lastSaved.passingYear !== null && current.passingYear !== null &&
+         lastSaved.passingYear.getTime() !== current.passingYear.getTime());
+      
+      return (
+        lastSaved.highestQualification !== current.highestQualification ||
+        lastSaved.institutionName !== current.institutionName ||
+        lastSaved.boardUniversity !== current.boardUniversity ||
+        lastSaved.program !== current.program ||
+        lastSaved.major !== current.major ||
+        lastSaved.scoreType !== current.scoreType ||
+        lastSaved.score !== current.score ||
+        passingYearChanged
+      );
+    }
+  );
+
+  // Use reusable hook for form validation
+  const { validateAndMarkTouched } = useFormValidation(formik);
+
+  // Check form validity
+  useEffect(() => {
+    const hasAllMandatoryFields = 
+      formik.values.highestQualification.trim() !== "" &&
+      formik.values.institutionName.trim() !== "" &&
+      formik.values.boardUniversity.trim() !== "" &&
+      formik.values.scoreType.trim() !== "" &&
+      formik.values.score.trim() !== "" &&
+      formik.values.passingYear !== null;
+    
+    setIsFormValid(hasAllMandatoryFields);
+  }, [formik.values.highestQualification, formik.values.institutionName, formik.values.boardUniversity, formik.values.scoreType, formik.values.score, formik.values.passingYear]);
+
+  // Sync formik values to parent state with optimized comparison
+  useFormSync<EducationalDetailFormData>(
+    formik.values,
+    onUpdate,
+    (prev, current) => {
+      // Compare passingYear by timestamp instead of reference
+      const passingYearChanged = 
+        (prev.passingYear === null && current.passingYear !== null) ||
+        (prev.passingYear !== null && current.passingYear === null) ||
+        (prev.passingYear !== null && current.passingYear !== null &&
+         prev.passingYear.getTime() !== current.passingYear.getTime());
+      
+      return (
+        prev.highestQualification !== current.highestQualification ||
+        prev.institutionName !== current.institutionName ||
+        prev.boardUniversity !== current.boardUniversity ||
+        prev.program !== current.program ||
+        prev.major !== current.major ||
+        prev.scoreType !== current.scoreType ||
+        prev.score !== current.score ||
+        passingYearChanged
+      );
+    }
+  );
 
   const handleSave = () => {
     formik.handleSubmit();
   };
 
   const handleSaveAndNextClick = async () => {
-    const isValid = await formik.validateForm();
-    if (!isValid || Object.keys(formik.errors).length > 0) {
-      // Mark all fields as touched to show errors
-      const touchedFields: any = {};
-      Object.keys(formik.values).forEach((key) => {
-        touchedFields[key] = true;
-      });
-      formik.setTouched(touchedFields);
+    const isValid = await validateAndMarkTouched();
+    if (!isValid) {
       return;
     }
 
@@ -114,21 +181,23 @@ const EducationalDetails = ({ onSaveAndNext }: { onSaveAndNext?: () => void }) =
     }
   };
 
-  const showMajor = formik.values.highestQualification === "ug" || formik.values.highestQualification === "pg";
+  const showMajor = formik.values.highestQualification === "ug";
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold mb-4" style={{ color: COLORS.textDark }}>
-          {t("applicant.educationalDetails")}
-        </h2>
 
         <form onSubmit={formik.handleSubmit}>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="w-full">
+                <label
+                  className="block text-sm font-medium mb-1.5"
+                  style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+                >
+                  {t("applicant.highestQualification")} <span style={{ color: COLORS.error }}>*</span>
+                </label>
                 <Select
-                  label={t("applicant.highestQualification")}
                   options={qualificationOptions}
                   value={formik.values.highestQualification}
                   onChange={(value) => formik.setFieldValue("highestQualification", value)}
@@ -194,7 +263,7 @@ const EducationalDetails = ({ onSaveAndNext }: { onSaveAndNext?: () => void }) =
                     className="block text-sm font-medium mb-1.5"
                     style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
                   >
-                    {t("applicant.major")} <span style={{ color: COLORS.error }}>*</span>
+                    {t("applicant.major")}
                   </label>
                   <Input
                     value={formik.values.major}
@@ -264,13 +333,28 @@ const EducationalDetails = ({ onSaveAndNext }: { onSaveAndNext?: () => void }) =
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 mt-6 pt-6 border-t" style={{ borderColor: COLORS.border }}>
-            <Button type="button" variant="accent" onClick={handleSave}>
-              {t("applicant.save")}
-            </Button>
-            <Button type="button" variant="accent" onClick={handleSaveAndNextClick}>
-              {t("applicant.saveAndNext")}
-            </Button>
+          <div className="flex justify-between gap-3 mt-6 pt-6 border-t" style={{ borderColor: COLORS.border }}>
+            <div>
+              {onBack && (
+                <Button type="button" variant="cancel" onClick={onBack} rounded>
+                  {t("common.back")}
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-3">
+              <Button type="button" variant="accent" onClick={handleSave} rounded>
+                {t("applicant.save")}
+              </Button>
+              <Button 
+                type="button" 
+                variant="accent" 
+                onClick={handleSaveAndNextClick}
+                disabled={!isFormValid}
+                rounded
+              >
+                {t("applicant.saveAndNext")}
+              </Button>
+            </div>
           </div>
         </form>
       </div>

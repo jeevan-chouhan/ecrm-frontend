@@ -6,6 +6,8 @@ export { default as SearchBar } from "./SearchBar/SearchBar";
 export { default as DatePicker } from "./DatePicker/DatePicker";
 export { default as Popup } from "./Popup/Popup";
 export { default as Card } from "./Card/Card";
+export { default as StatusChangePopup } from "./StatusChangePopup/StatusChangePopup";
+export { default as ConfirmationPopup } from "./ConfirmationPopup/ConfirmationPopup";
 export { default as Checkbox } from "./Checkbox/Checkbox";
 export { default as PhoneInput } from "./PhoneInput/PhoneInput";
 export { default as FileUpload } from "./FileUpload/FileUpload";

@@ -3,7 +3,7 @@ import { COLORS, componentSpecs, shadows } from "../../constants";
 
 interface CardProps {
   children: ReactNode;
-  title?: string;
+  title?: string | ReactNode;
   subtitle?: string;
   headerAction?: ReactNode;
   footer?: ReactNode;

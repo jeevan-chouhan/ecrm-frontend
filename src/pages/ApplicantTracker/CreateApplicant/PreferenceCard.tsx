@@ -1,3 +1,4 @@
+import React, { useMemo } from "react";
 import { Button } from "../../../components";
 import { COLORS, countries, programs, universities, campuses, courses, intakes, counselors, agencyPartners } from "../../../constants";
 import { Edit, Trash } from "../../../assets";
@@ -30,14 +31,26 @@ const PreferenceCard = ({
 }: PreferenceCardProps) => {
   const { t } = useTranslation();
 
-  const countryLabel = countries.find((c) => c.value === preference.desiredCountry)?.label || preference.desiredCountry;
-  const programLabel = programs.find((p) => p.value === preference.program)?.label || preference.program;
-  const universityLabel = universities.find((u) => u.value === preference.desiredUniversity)?.label || preference.desiredUniversity;
-  const campusLabel = campuses.find((c) => c.value === preference.desiredCampus)?.label || preference.desiredCampus;
-  const courseLabel = courses.find((c) => c.value === preference.course)?.label || preference.course;
-  const intakeLabel = intakes.find((i) => i.value === preference.desiredIntake)?.label || preference.desiredIntake;
-  const counselorLabel = counselors.find((c) => c.value === preference.assignCounselor)?.label || preference.assignCounselor;
-  const agencyLabel = agencyPartners.find((a) => a.value === preference.agencyPartnerName)?.label || preference.agencyPartnerName;
+  // Memoize label lookups to prevent recalculation on every render
+  const labels = useMemo(() => ({
+    country: countries.find((c) => c.value === preference.desiredCountry)?.label || preference.desiredCountry,
+    program: programs.find((p) => p.value === preference.program)?.label || preference.program,
+    university: universities.find((u) => u.value === preference.desiredUniversity)?.label || preference.desiredUniversity,
+    campus: campuses.find((c) => c.value === preference.desiredCampus)?.label || preference.desiredCampus,
+    course: courses.find((c) => c.value === preference.course)?.label || preference.course,
+    intake: intakes.find((i) => i.value === preference.desiredIntake)?.label || preference.desiredIntake,
+    counselor: counselors.find((c) => c.value === preference.assignCounselor)?.label || preference.assignCounselor,
+    agency: agencyPartners.find((a) => a.value === preference.agencyPartnerName)?.label || preference.agencyPartnerName,
+  }), [
+    preference.desiredCountry,
+    preference.program,
+    preference.desiredUniversity,
+    preference.desiredCampus,
+    preference.course,
+    preference.desiredIntake,
+    preference.assignCounselor,
+    preference.agencyPartnerName,
+  ]);
 
   if (isEditing) {
     return (
@@ -58,6 +71,7 @@ const PreferenceCard = ({
             type="button"
             variant="accent"
             onClick={onSave}
+            rounded
           >
             {t("common.save")}
           </Button>
@@ -65,6 +79,7 @@ const PreferenceCard = ({
             type="button"
             variant="cancel"
             onClick={onCancel}
+            rounded
           >
             {t("common.cancel")}
           </Button>
@@ -86,7 +101,7 @@ const PreferenceCard = ({
               {t("applicant.desiredCountry")}
             </p>
             <p className="text-sm" style={{ color: COLORS.textDark }}>
-              {countryLabel}
+              {labels.country}
             </p>
           </div>
           <div>
@@ -94,7 +109,7 @@ const PreferenceCard = ({
               {t("applicant.desiredUniversity")}
             </p>
             <p className="text-sm" style={{ color: COLORS.textDark }}>
-              {universityLabel}
+              {labels.university}
             </p>
           </div>
           <div>
@@ -102,7 +117,7 @@ const PreferenceCard = ({
               {t("applicant.program")}
             </p>
             <p className="text-sm" style={{ color: COLORS.textDark }}>
-              {programLabel}
+              {labels.program}
             </p>
           </div>
         </div>
@@ -112,7 +127,7 @@ const PreferenceCard = ({
               {t("applicant.course")}
             </p>
             <p className="text-sm" style={{ color: COLORS.textDark }}>
-              {courseLabel}
+              {labels.course}
             </p>
           </div>
           <div>
@@ -120,7 +135,7 @@ const PreferenceCard = ({
               {t("applicant.desiredIntake")}
             </p>
             <p className="text-sm" style={{ color: COLORS.textDark }}>
-              {intakeLabel}
+              {labels.intake}
             </p>
           </div>
           <div>
@@ -128,7 +143,7 @@ const PreferenceCard = ({
               {t("applicant.assignCounselor")}
             </p>
             <p className="text-sm" style={{ color: COLORS.textDark }}>
-              {counselorLabel}
+              {labels.counselor}
             </p>
           </div>
         </div>
@@ -138,7 +153,7 @@ const PreferenceCard = ({
               {t("applicant.agencyPartnerName")}
             </p>
             <p className="text-sm" style={{ color: COLORS.textDark }}>
-              {agencyLabel}
+              {labels.agency}
             </p>
           </div>
           <div>
@@ -146,7 +161,7 @@ const PreferenceCard = ({
               {t("applicant.desiredCampus")}
             </p>
             <p className="text-sm" style={{ color: COLORS.textDark }}>
-              {campusLabel}
+              {labels.campus}
             </p>
           </div>
           <div className="flex items-end justify-end gap-2">
@@ -158,6 +173,7 @@ const PreferenceCard = ({
               iconOnly
               onClick={onEdit}
               title={t("common.edit")}
+              rounded
             />
             <Button
               type="button"
@@ -167,6 +183,7 @@ const PreferenceCard = ({
               iconOnly
               onClick={onDelete}
               title={t("common.delete")}
+              rounded
             />
           </div>
         </div>
@@ -175,5 +192,6 @@ const PreferenceCard = ({
   );
 };
 
-export default PreferenceCard;
+// Memoize component to prevent unnecessary re-renders when props haven't changed
+export default React.memo(PreferenceCard);
 

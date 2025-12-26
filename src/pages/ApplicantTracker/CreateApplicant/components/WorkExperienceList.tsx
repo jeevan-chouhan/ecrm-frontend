@@ -1,0 +1,142 @@
+import { memo } from "react";
+import { useTranslation } from "react-i18next";
+import { Button } from "../../../../components";
+import { COLORS } from "../../../../constants";
+import { Edit, Trash } from "../../../../assets";
+import WorkExperienceForm from "../WorkExperienceForm";
+import type { WorkExperienceItem } from "../types";
+
+interface WorkExperienceListProps {
+  workExperiences: WorkExperienceItem[];
+  editingIndex: number | null;
+  getFieldError: (index: number, fieldName: keyof WorkExperienceItem) => string | undefined;
+  updateWorkExperienceField: (
+    index: number,
+    field: keyof WorkExperienceItem,
+    value: string | Date | null | boolean
+  ) => Promise<void>;
+  onEdit: (index: number) => void;
+  onDelete: (index: number) => void;
+  onSave: (index: number) => Promise<void>;
+  onCancelEdit: () => void;
+  findIndexById: (id: string) => number;
+}
+
+/**
+ * Component to display list of saved work experiences
+ */
+const WorkExperienceList = ({
+  workExperiences,
+  editingIndex,
+  getFieldError,
+  updateWorkExperienceField,
+  onEdit,
+  onDelete,
+  onSave,
+  onCancelEdit,
+  findIndexById,
+}: WorkExperienceListProps) => {
+  const { t } = useTranslation();
+
+  if (workExperiences.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mt-6">
+      <h2 className="text-lg font-bold mb-4" style={{ color: COLORS.textDark }}>
+        {t("applicant.addedWorkExperiences")}
+      </h2>
+
+      <div className="space-y-4">
+        {workExperiences.map((workExperience) => {
+          const index = findIndexById(workExperience.id);
+          const isEditing = editingIndex === index;
+
+          return (
+            <div
+              key={workExperience.id}
+              className="p-4 rounded-lg border"
+              style={{ borderColor: COLORS.border, backgroundColor: COLORS.surface }}
+            >
+              {isEditing ? (
+                <>
+                  <WorkExperienceForm
+                    workExperience={workExperience}
+                    index={index}
+                    onFieldChange={updateWorkExperienceField}
+                    getFieldError={getFieldError}
+                    showCancel={false}
+                    showAddMore={false}
+                  />
+                  <div className="flex gap-2 mt-4 justify-end">
+                    <Button
+                      type="button"
+                      variant="accent"
+                      onClick={() => onSave(index)}
+                      rounded
+                    >
+                      {t("common.save")}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="cancel"
+                      onClick={onCancelEdit}
+                      rounded
+                    >
+                      {t("common.cancel")}
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium" style={{ color: COLORS.textDark }}>
+                      {workExperience.companyName} - {workExperience.jobTitle}
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: COLORS.textMuted }}>
+                      {workExperience.startDate
+                        ? new Date(workExperience.startDate).toLocaleDateString()
+                        : ""}
+                      {" - "}
+                      {workExperience.currentlyWorking
+                        ? t("applicant.currentlyWorking")
+                        : workExperience.endDate
+                        ? new Date(workExperience.endDate).toLocaleDateString()
+                        : ""}
+                    </p>
+                  </div>
+                  <div className="flex items-end justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      icon={<Edit className="h-5 w-5" style={{ color: COLORS.accent }} />}
+                      iconOnly
+                      onClick={() => onEdit(index)}
+                      title={t("common.edit")}
+                      rounded
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      icon={<Trash className="h-5 w-5" style={{ color: COLORS.error }} />}
+                      iconOnly
+                      onClick={() => onDelete(index)}
+                      title={t("common.delete")}
+                      rounded
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+export default memo(WorkExperienceList);
+
