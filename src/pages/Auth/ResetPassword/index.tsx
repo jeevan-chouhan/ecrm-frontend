@@ -54,7 +54,7 @@ const ResetPassword = () => {
             <form onSubmit={formik.handleSubmit}>
               <div className="space-y-5">
                 <Input
-                  label={t("auth.password")}
+                  label={<>{t("auth.password")} <span style={{ color: COLORS.error }}>*</span></>}
                   type="password"
                   placeholder={t("auth.passwordPlaceholder")}
                   name="password"
@@ -66,7 +66,7 @@ const ResetPassword = () => {
                 />
 
                 <Input
-                  label={t("auth.confirmPassword")}
+                  label={<>{t("auth.confirmPassword")} <span style={{ color: COLORS.error }}>*</span></>}
                   type="password"
                   placeholder={t("auth.confirmPasswordPlaceholder")}
                   name="confirmPassword"

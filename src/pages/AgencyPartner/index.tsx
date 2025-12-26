@@ -351,7 +351,7 @@ const AgencyPartner = () => {
           {/* Row 1: Agency Name, Contact Person */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              label={t("agencyPartner.agencyName", "Agency Name")}
+              label={<>{t("agencyPartner.agencyName", "Agency Name")} <span style={{ color: COLORS.error }}>*</span></>}
               placeholder={t("agencyPartner.enterAgencyName", "Enter agency name")}
               value={formData.name}
               onChange={(e) => handleInputChange("name", e.target.value)}
@@ -359,7 +359,7 @@ const AgencyPartner = () => {
               fullWidth
             />
             <Input
-              label={t("agencyPartner.contactPerson", "Contact Person")}
+              label={<>{t("agencyPartner.contactPerson", "Contact Person")} <span style={{ color: COLORS.error }}>*</span></>}
               placeholder={t("agencyPartner.enterContactPerson", "Enter contact person name")}
               value={formData.contactPerson}
               onChange={(e) => handleInputChange("contactPerson", e.target.value)}
@@ -371,7 +371,7 @@ const AgencyPartner = () => {
           {/* Row 2: Email, Contact Number */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              label={t("agencyPartner.email", "Email")}
+              label={<>{t("agencyPartner.email", "Email")} <span style={{ color: COLORS.error }}>*</span></>}
               type="email"
               placeholder={t("agencyPartner.enterEmail", "Enter email address")}
               value={formData.email}
@@ -380,7 +380,7 @@ const AgencyPartner = () => {
               fullWidth
             />
             <PhoneInput
-              label={t("agencyPartner.contactNumber", "Contact Number")}
+              label={<>{t("agencyPartner.contactNumber", "Contact Number")} <span style={{ color: COLORS.error }}>*</span></>}
               placeholder={t("agencyPartner.enterPhoneNumber", "Enter phone number")}
               value={formData.contactNo}
               onChange={(value) => handleInputChange("contactNo", value)}
@@ -393,7 +393,7 @@ const AgencyPartner = () => {
           {/* Row 3: Commission Percentage, Description */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              label={t("agencyPartner.commissionPercentage", "Commission Percentage")}
+              label={<>{t("agencyPartner.commissionPercentage", "Commission Percentage")} <span style={{ color: COLORS.error }}>*</span></>}
               type="number"
               placeholder={t("agencyPartner.enterCommission", "Enter commission")}
               value={formData.commissionPercentage}

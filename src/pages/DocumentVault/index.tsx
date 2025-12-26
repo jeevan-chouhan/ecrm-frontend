@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { GridColDef } from "@mui/x-data-grid";
 import { Layout, SearchBar, DataTable, Button } from "../../components";
+import { Eye } from "../../assets";
 import { COLORS } from "../../constants";
 
 // Mock applicants data
@@ -164,11 +165,11 @@ const DocumentVault = () => {
         <Button
           variant="ghost"
           size="sm"
+          icon={<Eye className="h-4 w-4" />}
           onClick={() => handleViewDocuments(params.row.applicantId)}
-          style={{ color: COLORS.accent }}
-        >
-          {t("documentVault.view", "View")}
-        </Button>
+          title={t("documentVault.view", "View")}
+          rounded
+        />
       ),
     },
   ];
