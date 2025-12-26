@@ -35,6 +35,8 @@ export interface TeamMember {
   role: string;
   email: string;
   mobileNo: string;
+  country: string;
+  university: string;
   status: MemberStatus;
 }
 
@@ -45,25 +47,25 @@ export interface RoleGroup {
 
 // Status filter options for dropdown
 export const statusFilterOptions: SelectOption[] = [
-  { value: "all", label: "Status - Active/Inactive" },
+  { value: "all", label: "All" },
   { value: "active", label: "Active" },
   { value: "inactive", label: "Inactive" },
 ];
 
 // Mock data for team members (flat list for table)
 export const mockTeamMembers: TeamMember[] = [
-  { id: "1", name: "John Smith", memberId: "A#45", role: "Admin", email: "john.smith@example.com", mobileNo: "+91 9876543210", status: "active" },
-  { id: "2", name: "Emily Johnson", memberId: "A#52", role: "Admin", email: "emily.johnson@example.com", mobileNo: "+91 9876543211", status: "active" },
-  { id: "3", name: "Michael Brown", memberId: "A#61", role: "Admin", email: "michael.brown@example.com", mobileNo: "+91 9876543212", status: "inactive" },
-  { id: "4", name: "Sarah Davis", memberId: "A#23", role: "Manager", email: "sarah.davis@example.com", mobileNo: "+91 9876543213", status: "active" },
-  { id: "5", name: "David Wilson", memberId: "A#34", role: "Manager", email: "david.wilson@example.com", mobileNo: "+91 9876543214", status: "active" },
-  { id: "6", name: "Jessica Taylor", memberId: "A#41", role: "Manager", email: "jessica.taylor@example.com", mobileNo: "+91 9876543215", status: "inactive" },
-  { id: "7", name: "Bob Williams", memberId: "A#77", role: "Counselor", email: "bob.williams@example.com", mobileNo: "+91 9876543216", status: "active" },
-  { id: "8", name: "Sara Williams", memberId: "A#88", role: "Counselor", email: "sara.williams@example.com", mobileNo: "+91 9876543217", status: "active" },
-  { id: "9", name: "Jon Doe", memberId: "A#66", role: "Counselor", email: "jon.doe@example.com", mobileNo: "+91 9876543218", status: "active" },
-  { id: "10", name: "Alice Martin", memberId: "A#91", role: "Counselor", email: "alice.martin@example.com", mobileNo: "+91 9876543219", status: "active" },
-  { id: "11", name: "Robert Garcia", memberId: "A#94", role: "Counselor", email: "robert.garcia@example.com", mobileNo: "+91 9876543220", status: "inactive" },
-  { id: "12", name: "Linda Martinez", memberId: "A#99", role: "Counselor", email: "linda.martinez@example.com", mobileNo: "+91 9876543221", status: "active" },
+  { id: "1", name: "John Smith", memberId: "A#45", role: "Admin", email: "john.smith@example.com", mobileNo: "+91 9876543210", country: "USA", university: "Harvard University", status: "active" },
+  { id: "2", name: "Emily Johnson", memberId: "A#52", role: "Admin", email: "emily.johnson@example.com", mobileNo: "+91 9876543211", country: "UK", university: "Oxford University", status: "active" },
+  { id: "3", name: "Michael Brown", memberId: "A#61", role: "Admin", email: "michael.brown@example.com", mobileNo: "+91 9876543212", country: "Canada", university: "University of Toronto", status: "inactive" },
+  { id: "4", name: "Sarah Davis", memberId: "A#23", role: "Manager", email: "sarah.davis@example.com", mobileNo: "+91 9876543213", country: "Australia", university: "University of Melbourne", status: "active" },
+  { id: "5", name: "David Wilson", memberId: "A#34", role: "Manager", email: "david.wilson@example.com", mobileNo: "+91 9876543214", country: "USA", university: "MIT", status: "active" },
+  { id: "6", name: "Jessica Taylor", memberId: "A#41", role: "Manager", email: "jessica.taylor@example.com", mobileNo: "+91 9876543215", country: "UK", university: "Cambridge University", status: "inactive" },
+  { id: "7", name: "Bob Williams", memberId: "A#77", role: "Counselor", email: "bob.williams@example.com", mobileNo: "+91 9876543216", country: "Canada", university: "McGill University", status: "active" },
+  { id: "8", name: "Sara Williams", memberId: "A#88", role: "Counselor", email: "sara.williams@example.com", mobileNo: "+91 9876543217", country: "Australia", university: "University of Sydney", status: "active" },
+  { id: "9", name: "Jon Doe", memberId: "A#66", role: "Counselor", email: "jon.doe@example.com", mobileNo: "+91 9876543218", country: "USA", university: "Stanford University", status: "active" },
+  { id: "10", name: "Alice Martin", memberId: "A#91", role: "Counselor", email: "alice.martin@example.com", mobileNo: "+91 9876543219", country: "UK", university: "Imperial College", status: "active" },
+  { id: "11", name: "Robert Garcia", memberId: "A#94", role: "Counselor", email: "robert.garcia@example.com", mobileNo: "+91 9876543220", country: "Canada", university: "University of British Columbia", status: "inactive" },
+  { id: "12", name: "Linda Martinez", memberId: "A#99", role: "Counselor", email: "linda.martinez@example.com", mobileNo: "+91 9876543221", country: "Australia", university: "Australian National University", status: "active" },
 ];
 
 // Mock data for team members (grouped by role - kept for backward compatibility)
@@ -115,6 +117,7 @@ export const roleOptions: SelectOption[] = [
   { value: "admin", label: "Admin" },
   { value: "manager", label: "Manager" },
   { value: "counselor", label: "Counselor" },
+  { value: "billing", label: "Billing" },
 ];
 
 // Admin options for dropdown
@@ -129,6 +132,13 @@ export const managerOptions: SelectOption[] = [
   { value: "carlos", label: "Carlos" },
   { value: "sarah", label: "Sarah" },
   { value: "david", label: "David" },
+];
+
+export const counselorOptions: SelectOption[] = [
+  { value: "bob", label: "Bob Williams" },
+  { value: "sara", label: "Sara Williams" },
+  { value: "jon", label: "Jon Doe" },
+  { value: "alice", label: "Alice Martin" },
 ];
 
 // Country options for dropdown

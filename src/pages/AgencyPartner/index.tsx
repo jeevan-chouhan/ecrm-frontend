@@ -290,44 +290,47 @@ const AgencyPartner = () => {
         className="bg-white rounded-lg shadow-sm p-4 md:p-6"
         style={{ backgroundColor: COLORS.surface }}
       >
-        {/* Header with Add Button */}
-        <div className="flex items-center justify-between mb-6">
-          <h1
-            className="text-xl md:text-2xl font-bold"
-            style={{ color: COLORS.textDark }}
-          >
-            {t("agencyPartner.title", "Agency Partner")}
-          </h1>
-          <Button
-            variant="accent"
-            size="md"
-            rounded
-            onClick={handleOpenAddPopup}
-          >
-            {t("agencyPartner.addAgencyPartner", "Add Agency Partner")}
-          </Button>
-        </div>
-
-        {/* Agency Partner List Section */}
-        <div>
-          {/* Table Heading with Search */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-            <h2
-              className="text-lg font-semibold"
+        {/* Header with Search and Add Button */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+          {/* Title with Count */}
+          <div className="flex items-center gap-2 shrink-0">
+            <h1
+              className="text-xl md:text-2xl font-bold"
               style={{ color: COLORS.textDark }}
             >
-              {t("agencyPartner.agencyPartnerList", "Agency Partner List")}
-            </h2>
-            <div className="w-full md:w-96">
+              {t("agencyPartner.title", "Agency Partner")}
+            </h1>
+            {searchQuery && (
+              <span
+                className="text-lg font-medium"
+                style={{ color: COLORS.textMuted }}
+              >
+                ({filteredPartners.length})
+              </span>
+            )}
+          </div>
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="w-full sm:w-96">
               <SearchBar
                 value={searchQuery}
                 onChange={setSearchQuery}
                 placeholder={t("agencyPartner.searchPlaceholder", "Search agency by name, contact person...")}
               />
             </div>
+            <Button
+              variant="accent"
+              size="md"
+              rounded
+              onClick={handleOpenAddPopup}
+              className="shrink-0"
+            >
+              {t("agencyPartner.addAgencyPartner", "Add Agency Partner")}
+            </Button>
           </div>
+        </div>
 
-          {/* DataTable */}
+        {/* DataTable */}
+        <div>
           <DataTable
             rows={filteredPartners}
             columns={columns}
