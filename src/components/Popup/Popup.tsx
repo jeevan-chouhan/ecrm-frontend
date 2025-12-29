@@ -14,6 +14,7 @@ interface PopupProps {
   closeOnOverlayClick?: boolean;
   closeOnEscape?: boolean;
   footer?: ReactNode;
+  minHeight?: string;
 }
 
 const sizeStyles: Record<PopupSize, string> = {
@@ -34,6 +35,7 @@ const Popup = ({
   closeOnOverlayClick = true,
   closeOnEscape = true,
   footer,
+  minHeight,
 }: PopupProps) => {
   const popupRef = useRef<HTMLDivElement>(null);
 
@@ -104,7 +106,10 @@ const Popup = ({
         )}
 
         {/* Body */}
-        <div className="px-6 py-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+        <div 
+          className="px-6 py-4 max-h-[calc(100vh-200px)] overflow-y-auto"
+          style={{ minHeight: minHeight || "auto" }}
+        >
           {children}
         </div>
 

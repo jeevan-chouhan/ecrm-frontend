@@ -6,17 +6,18 @@ import {
   Layout,
   Button,
   Select,
-  SearchBar,
-  DatePicker,
+  DateRangePicker,
   Card,
   DataTable,
 } from "../../components";
+import type { DateRange } from "../../components";
 import { COLORS, ROUTES } from "../../constants";
 
 // Mock data for filters
 const adminOptions = [
-  { value: "admin-aron", label: "Admin - Aron" },
-  { value: "admin-ben", label: "Admin - Ben" },
+  { value: "", label: "Select Admin" },
+  { value: "aron", label: "Aron" },
+  { value: "ben", label: "Ben" },
 ];
 
 const managerOptions = [
@@ -33,9 +34,9 @@ const counselorOptions = [
 
 const enrollmentTypeOptions = [
   { value: "", label: "Select Enrollment type" },
-  { value: "enrolled", label: "Enrolled" },
-  { value: "in-progress", label: "In Progress" },
-  { value: "leads", label: "Leads" },
+  { value: "walk-in", label: "Walk-in" },
+  { value: "referred-to-agency", label: "Referred to Agency Partner" },
+  { value: "referred-by-agency", label: "Referred by Agency Partner" },
 ];
 
 // Mock data for table
@@ -177,12 +178,23 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   // Filter states
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedAdmin, setSelectedAdmin] = useState("admin-aron");
+  const [selectedAdmin, setSelectedAdmin] = useState("");
   const [selectedManager, setSelectedManager] = useState("");
   const [selectedCounselor, setSelectedCounselor] = useState("");
   const [selectedEnrollmentType, setSelectedEnrollmentType] = useState("");
-  const [selectedDateRange, setSelectedDateRange] = useState<Date | null>(null);
+  const [selectedDateRange, setSelectedDateRange] = useState<DateRange>({
+    startDate: null,
+    endDate: null,
+  });
+
+  // Applied filters state
+  const [appliedFilters, setAppliedFilters] = useState({
+    admin: "",
+    manager: "",
+    counselor: "",
+    enrollmentType: "",
+    dateRange: { startDate: null, endDate: null } as DateRange,
+  });
 
   // Stats data
   const stats = {
@@ -196,18 +208,50 @@ const Dashboard = () => {
     universitiesServing: 15,
   };
 
+  const handleApplyFilters = () => {
+    setAppliedFilters({
+      admin: selectedAdmin,
+      manager: selectedManager,
+      counselor: selectedCounselor,
+      enrollmentType: selectedEnrollmentType,
+      dateRange: selectedDateRange,
+    });
+  };
+
   const handleClearFilters = () => {
-    setSearchQuery("");
-    setSelectedAdmin("admin-aron");
+    setSelectedAdmin("");
     setSelectedManager("");
     setSelectedCounselor("");
     setSelectedEnrollmentType("");
-    setSelectedDateRange(null);
+    setSelectedDateRange({ startDate: null, endDate: null });
+    setAppliedFilters({
+      admin: "",
+      manager: "",
+      counselor: "",
+      enrollmentType: "",
+      dateRange: { startDate: null, endDate: null },
+    });
   };
 
   const handleAddApplicant = () => {
     navigate(ROUTES.CREATE_APPLICANT);
   };
+
+  // Filter table data based on applied filters
+  const filteredTableData = teamOverviewData.filter((row) => {
+    // Filter by manager
+    if (appliedFilters.manager && row.manager.toLowerCase() !== appliedFilters.manager.toLowerCase()) {
+      return false;
+    }
+    // Filter by counselor
+    if (appliedFilters.counselor) {
+      const counselorLabel = counselorOptions.find(opt => opt.value === appliedFilters.counselor)?.label || "";
+      if (row.counselor.toLowerCase() !== counselorLabel.toLowerCase()) {
+        return false;
+      }
+    }
+    return true;
+  });
 
   return (
     <Layout userName="Admin" userRole="Primary Admin">
@@ -215,7 +259,7 @@ const Dashboard = () => {
         className="bg-white rounded-lg shadow-sm p-4 md:p-6 space-y-6"
         style={{ backgroundColor: COLORS.surface }}
       >
-        {/* Title Row - Dashboard on left, Search on right */}
+        {/* Title Row - Dashboard on left, Add Applicant on right */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <h1
             className="text-xl md:text-2xl font-bold"
@@ -223,69 +267,8 @@ const Dashboard = () => {
           >
             {t("dashboard.title", "Dashboard")}
           </h1>
-          <div className="w-full md:w-64">
-            <SearchBar
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder={t("dashboard.searchPlaceholder", "Search country, university, c/m/a name ...")}
-            />
-          </div>
-        </div>
-
-        {/* Filters Row */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Admin Select */}
-          <div className="w-40">
-            <Select
-              options={adminOptions}
-              value={selectedAdmin}
-              onChange={(value) => setSelectedAdmin(value as string)}
-              searchable
-            />
-          </div>
-
-          {/* Manager Select */}
-          <div className="w-40">
-            <Select
-              options={managerOptions}
-              value={selectedManager}
-              onChange={(value) => setSelectedManager(value as string)}
-              searchable
-            />
-          </div>
-
-          {/* Counselor Select */}
-          <div className="w-44">
-            <Select
-              options={counselorOptions}
-              value={selectedCounselor}
-              onChange={(value) => setSelectedCounselor(value as string)}
-              searchable
-            />
-          </div>
-
-          {/* Enrollment Type Select */}
-          <div className="w-48">
-            <Select
-              options={enrollmentTypeOptions}
-              value={selectedEnrollmentType}
-              onChange={(value) => setSelectedEnrollmentType(value as string)}
-              searchable
-            />
-          </div>
-
-          {/* Date Range */}
-          <div className="w-44">
-            <DatePicker
-              value={selectedDateRange}
-              onChange={setSelectedDateRange}
-              placeholder={t("dashboard.selectDateRange", "Select Date Range")}
-            />
-          </div>
-
-          {/* Clear Filter Button */}
-          <Button variant="cancel" size="sm" rounded onClick={handleClearFilters}>
-            {t("dashboard.clearFilter", "Clear Filter")}
+          <Button variant="accent" size="md" rounded onClick={handleAddApplicant}>
+            {t("dashboard.addApplicant", "ADD APPLICANT")}
           </Button>
         </div>
 
@@ -329,22 +312,79 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Team Overview Header with Add Applicant Button */}
-        <div className="flex items-center justify-between">
-          <h2
-            className="text-lg font-semibold"
-            style={{ color: COLORS.textDark }}
-          >
-            {t("dashboard.teamOverview", "Team  Overview")}
-          </h2>
-          <Button variant="accent" size="md" rounded onClick={handleAddApplicant}>
-            {t("dashboard.addApplicant", "ADD APPLICANT")}
+        {/* Team Overview Header */}
+        <h2
+          className="text-lg font-semibold"
+          style={{ color: COLORS.textDark }}
+        >
+          {t("dashboard.teamOverview", "Team Overview")}
+        </h2>
+
+        {/* Filters Row - near Team Overview */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Admin Select */}
+          <div className="w-40">
+            <Select
+              options={adminOptions}
+              value={selectedAdmin}
+              onChange={(value) => setSelectedAdmin(value as string)}
+              searchable
+            />
+          </div>
+
+          {/* Manager Select */}
+          <div className="w-40">
+            <Select
+              options={managerOptions}
+              value={selectedManager}
+              onChange={(value) => setSelectedManager(value as string)}
+              searchable
+            />
+          </div>
+
+          {/* Counselor Select */}
+          <div className="w-44">
+            <Select
+              options={counselorOptions}
+              value={selectedCounselor}
+              onChange={(value) => setSelectedCounselor(value as string)}
+              searchable
+            />
+          </div>
+
+          {/* Enrollment Type Select */}
+          <div className="w-48">
+            <Select
+              options={enrollmentTypeOptions}
+              value={selectedEnrollmentType}
+              onChange={(value) => setSelectedEnrollmentType(value as string)}
+              searchable
+            />
+          </div>
+
+          {/* Date Range Picker */}
+          <div className="w-56">
+            <DateRangePicker
+              value={selectedDateRange}
+              onChange={setSelectedDateRange}
+              placeholder={t("dashboard.selectDateRange", "Select Date Range")}
+            />
+          </div>
+
+          {/* Apply Filter Button */}
+          <Button variant="accent" size="sm" rounded onClick={handleApplyFilters}>
+            {t("dashboard.applyFilter", "Apply")}
+          </Button>
+
+          {/* Clear Filter Button */}
+          <Button variant="cancel" size="sm" rounded onClick={handleClearFilters}>
+            {t("dashboard.clearFilter", "Clear Filter")}
           </Button>
         </div>
 
         {/* Team Overview Table */}
         <DataTable
-          rows={teamOverviewData}
+          rows={filteredTableData}
           columns={columns}
           pageSize={10}
           pageSizeOptions={[5, 10, 25]}

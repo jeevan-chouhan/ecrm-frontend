@@ -5,19 +5,17 @@ import {
   Layout,
   Button,
   Input,
-  Select,
   MultiSelect,
   DataTable,
   Popup,
 } from "../../../components";
-import { ArrowLeft, UserMinus } from "../../../assets";
+import { ArrowLeft, ToggleStatus } from "../../../assets";
 import {
   COLORS,
   ROUTES,
   mockTeamMemberDetail,
-  roleOptions,
-  adminOptions,
   managerOptions,
+  counselorOptions,
   countryOptions,
   universityOptions,
   mockTeamData,
@@ -92,13 +90,16 @@ const ViewMember = () => {
     count: uni.count,
   }));
 
-  const [formData, setFormData] = useState({
+  // Mock data for view mode (in real app, this would come from API)
+  const viewData = {
+    email: member.email,
+    contactNumber: member.contactNumber,
     role: member.role,
-    adminId: member.adminId,
-    managerId: member.managerId,
-    assignedCountry: member.assignedCountry,
-    assignedUniversities: member.assignedUniversities,
-  });
+    managers: ["carlos", "sarah"], // Mock managers for admin view
+    counselors: ["bob", "sara", "jon"], // Mock counselors for manager view
+    assignedCountries: ["usa", "uk", "canada"],
+    assignedUniversities: ["harvard", "toronto", "mit"],
+  };
 
   const handleBack = () => {
     navigate(ROUTES.MANAGE_TEAM);
@@ -119,10 +120,106 @@ const ViewMember = () => {
     setIsDeactivatePopupOpen(false);
   };
 
-  const handleSave = () => {
-    console.log("Save member:", { ...member, ...formData });
-    // Add save logic here
-    navigate(ROUTES.MANAGE_TEAM);
+  // Get role display name
+  const getRoleDisplayName = (role: string) => {
+    return role.charAt(0).toUpperCase() + role.slice(1);
+  };
+
+  // Render role-based fields
+  // View mode:
+  // - Admin/Primary Admin: Show Manager field (multiselect)
+  // - Manager: Show Counselor field (multiselect)
+  // - Counselor: Hide field (just show country and university)
+  const renderRoleBasedFields = () => {
+    const role = member.role.toLowerCase();
+
+    if (role === "admin" || role === "primary admin" || role === "admin-primary") {
+      return (
+        <>
+          {/* Managers (MultiSelect for Admin) */}
+          <div className="mb-4">
+            <MultiSelect
+              label="Managers"
+              options={managerOptions}
+              value={viewData.managers}
+              disabled
+              fullWidth
+            />
+          </div>
+          {/* Assigned Country & University */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <MultiSelect
+              label="Assigned Country"
+              options={countryOptions}
+              value={viewData.assignedCountries}
+              disabled
+              fullWidth
+            />
+            <MultiSelect
+              label="Assigned University"
+              options={universityOptions}
+              value={viewData.assignedUniversities}
+              disabled
+              fullWidth
+            />
+          </div>
+        </>
+      );
+    }
+
+    if (role === "manager") {
+      return (
+        <>
+          {/* Counselors (MultiSelect for Manager) */}
+          <div className="mb-4">
+            <MultiSelect
+              label="Counselors"
+              options={counselorOptions}
+              value={viewData.counselors}
+              disabled
+              fullWidth
+            />
+          </div>
+          {/* Assigned Country & University */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <MultiSelect
+              label="Assigned Country"
+              options={countryOptions}
+              value={viewData.assignedCountries}
+              disabled
+              fullWidth
+            />
+            <MultiSelect
+              label="Assigned University"
+              options={universityOptions}
+              value={viewData.assignedUniversities}
+              disabled
+              fullWidth
+            />
+          </div>
+        </>
+      );
+    }
+
+    // Counselor or other roles - hide manager/counselor fields, only show country & university
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <MultiSelect
+          label="Assigned Country"
+          options={countryOptions}
+          value={viewData.assignedCountries}
+          disabled
+          fullWidth
+        />
+        <MultiSelect
+          label="Assigned University"
+          options={universityOptions}
+          value={viewData.assignedUniversities}
+          disabled
+          fullWidth
+        />
+      </div>
+    );
   };
 
   return (
@@ -148,18 +245,17 @@ const ViewMember = () => {
                 ID: {member.memberId}
               </p>
               <p className="text-sm" style={{ color: COLORS.textMuted }}>
-                Role: {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
+                Role: {getRoleDisplayName(member.role)}
               </p>
             </div>
           </div>
           {/* Deactivate Icon Button */}
           <Button
             variant="ghost"
-            icon={<UserMinus className="h-5 w-5" />}
+            size="sm"
+            icon={<ToggleStatus className="h-5 w-5" style={{ color: COLORS.error }} />}
             onClick={handleDeactivateClick}
-            title="Deactivate Member"
-            rounded
-            style={{ color: COLORS.error }}
+            title="Deactivate"
           />
         </div>
 
@@ -180,86 +276,67 @@ const ViewMember = () => {
           />
         </div>
 
-        {/* Universities DataTable */}
-        <div className="mb-6">
-          <DataTable
-            rows={universityRows}
-            columns={universityColumns}
-            hideFooter
-            disableRowSelectionOnClick
-          />
-        </div>
+        {/* Two Cards Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Card 1: University List */}
+          <div
+            className="rounded-lg p-4"
+            style={{ border: `1px solid ${COLORS.border}` }}
+          >
+            <h2
+              className="text-lg font-semibold mb-4"
+              style={{ color: COLORS.textDark }}
+            >
+              University List
+            </h2>
+            <DataTable
+              rows={universityRows}
+              columns={universityColumns}
+              hideFooter
+              disableRowSelectionOnClick
+            />
+          </div>
 
-        {/* Email, Contact Number & Role */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Input
-            label="Email"
-            type="text"
-            value={member.email}
-            disabled
-            fullWidth
-          />
-          <Input
-            label="Contact Number"
-            type="text"
-            value={member.contactNumber}
-            disabled
-            fullWidth
-          />
-          <Select
-            label="Role"
-            options={roleOptions}
-            value={formData.role}
-            onChange={(value) => setFormData({ ...formData, role: value })}
-            fullWidth
-          />
-        </div>
+          {/* Card 2: Member Details (View Mode) */}
+          <div
+            className="rounded-lg p-4"
+            style={{ border: `1px solid ${COLORS.border}` }}
+          >
+            <h2
+              className="text-lg font-semibold mb-4"
+              style={{ color: COLORS.textDark }}
+            >
+              Member Details
+            </h2>
 
-        {/* Admin, Manager & Assigned Country */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Select
-            label="Admin"
-            options={adminOptions}
-            value={formData.adminId}
-            onChange={(value) => setFormData({ ...formData, adminId: value })}
-            fullWidth
-          />
-          <Select
-            label="Manager"
-            options={managerOptions}
-            value={formData.managerId}
-            onChange={(value) => setFormData({ ...formData, managerId: value })}
-            fullWidth
-          />
-          <Select
-            label="Assigned Country"
-            options={countryOptions}
-            value={formData.assignedCountry}
-            onChange={(value) =>
-              setFormData({ ...formData, assignedCountry: value })
-            }
-            fullWidth
-          />
-        </div>
+            {/* Email, Contact Number & Role */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <Input
+                label="Email"
+                type="text"
+                value={viewData.email}
+                disabled
+                fullWidth
+              />
+              <Input
+                label="Contact Number"
+                type="text"
+                value={viewData.contactNumber}
+                disabled
+                fullWidth
+              />
+              <Input
+                label="Role"
+                type="text"
+                value={getRoleDisplayName(viewData.role)}
+                disabled
+                fullWidth
+              />
+            </div>
 
-        {/* Assigned University */}
-        <div className="mb-6">
-          <MultiSelect
-            label="Assigned University"
-            options={universityOptions}
-            value={formData.assignedUniversities}
-            onChange={(values) =>
-              setFormData({ ...formData, assignedUniversities: values })
-            }
-            fullWidth
-          />
-        </div>
-
-        {/* Action Buttons - Only Save Changes */}
-        <div className="flex justify-end pt-4">
-          <Button variant="accent" rounded onClick={handleSave}>
-            Save Changes
-          </Button>
+            {/* Role-based fields */}
+            {renderRoleBasedFields()}
+          </div>
         </div>
       </div>
 
@@ -267,20 +344,21 @@ const ViewMember = () => {
       <Popup
         isOpen={isDeactivatePopupOpen}
         onClose={handleDeactivateCancel}
+        title="Confirm Status Change"
         size="sm"
-        showCloseButton={false}
+        showCloseButton={true}
       >
-        <div className="text-center">
-          <p className="text-base mb-6" style={{ color: COLORS.textDark }}>
-            Are you sure you want to deactivate the account of{" "}
-            <strong>{member.name}</strong>?
+        <div>
+          <p className="text-base mb-8" style={{ color: COLORS.textDark }}>
+            Are you sure you want to change the status of{" "}
+            <strong>{member.name}</strong> from Active to Inactive?
           </p>
-          <div className="flex justify-center gap-3">
+          <div className="flex justify-end gap-3">
             <Button variant="cancel" rounded onClick={handleDeactivateCancel}>
-              No
+              Cancel
             </Button>
             <Button variant="accent" rounded onClick={handleDeactivateConfirm}>
-              Yes
+              Confirm
             </Button>
           </div>
         </div>

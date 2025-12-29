@@ -159,6 +159,9 @@ const DataTable = ({
           rowCount={rowCount}
           paginationMode={paginationMode}
           sortingMode={sortingMode}
+          localeText={{
+            noRowsLabel: "No Record Found",
+          }}
           sx={{
             ...dataGridStyles,
             "& .MuiDataGrid-virtualScroller": {
