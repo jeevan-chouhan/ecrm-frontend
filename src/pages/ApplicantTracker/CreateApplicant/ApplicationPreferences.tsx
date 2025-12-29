@@ -73,12 +73,19 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
   };
 
   // Ensure we have at least one preference (empty if none exist)
+  // Use JSON.stringify to detect deep changes in the preferences array
+  const initialPreferencesKey = useMemo(() => 
+    JSON.stringify(initialValues.preferences || []), 
+    [initialValues.preferences]
+  );
+
   const initialPreferences = useMemo(() => {
     if (initialValues.preferences && initialValues.preferences.length > 0) {
-      return initialValues.preferences;
+      // Create a new array reference to ensure formik detects the change
+      return [...initialValues.preferences];
     }
     return [getEmptyPreference()];
-  }, [initialValues.preferences]);
+  }, [initialPreferencesKey]);
 
   const formik = useFormik<ApplicationPreferencesFormData>({
     initialValues: {
@@ -165,6 +172,19 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
       });
     }
   );
+
+  // Force formik to update when initialValues change (for edit mode)
+  useEffect(() => {
+    if (initialValues.preferences && initialValues.preferences.length > 0) {
+      const currentPrefsString = JSON.stringify(formik.values.preferences);
+      const newPrefsString = JSON.stringify(initialValues.preferences);
+      if (currentPrefsString !== newPrefsString) {
+        formik.setValues({
+          preferences: [...initialValues.preferences],
+        }, false);
+      }
+    }
+  }, [initialPreferencesKey]); // Re-run when initialValues change
 
   // Check form validity - at least one complete preference required
   useEffect(() => {

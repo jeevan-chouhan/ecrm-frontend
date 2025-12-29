@@ -76,6 +76,13 @@ export interface Documents {
   documents: DocumentItem[];
 }
 
+export interface ApplicationStatusHistory {
+  id: string;
+  statusName: string;
+  notes: string;
+  time: string; // ISO date string
+}
+
 export interface ApplicantDetail {
   id: string;
   applicantId: string;

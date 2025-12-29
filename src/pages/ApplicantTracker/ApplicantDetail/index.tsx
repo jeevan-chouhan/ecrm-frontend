@@ -6,13 +6,14 @@ import { Layout, Button, StatusChangePopup, ConfirmationPopup } from "../../../c
 import { COLORS, ROUTES, applicationStatusOptions } from "../../../constants";
 import { ArrowLeft } from "../../../assets";
 import { formatDate } from "../../../utils";
-import type { ApplicantDetail, UniversityApplication } from "./types";
+import type { ApplicantDetail, UniversityApplication, ApplicationStatusHistory } from "./types";
 import { mockApplicantDetail } from "../../../constants";
 import ApplicantHeader from "./ApplicantHeader";
 import UniversityApplicationTable from "./UniversityApplicationTable";
 import ApplicantCards from "./ApplicantCards";
 import NotesSection from "./NotesSection";
 import ApplicationStatusPopup from "./ApplicationStatusPopup";
+import ApplicationStatusHistoryPopup from "./ApplicationStatusHistoryPopup";
 
 const ApplicantDetailView = () => {
   const { t } = useTranslation();
@@ -46,6 +47,11 @@ const ApplicantDetailView = () => {
   const [isApplyConfirmationOpen, setIsApplyConfirmationOpen] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const [applicationToApply, setApplicationToApply] = useState<UniversityApplication | null>(null);
+  
+  // Status history popup state
+  const [isStatusHistoryPopupOpen, setIsStatusHistoryPopupOpen] = useState(false);
+  const [selectedApplicationForHistory, setSelectedApplicationForHistory] = useState<UniversityApplication | null>(null);
+  const [statusHistory, setStatusHistory] = useState<ApplicationStatusHistory[]>([]);
 
   // Fetch applicant data
   useEffect(() => {
@@ -378,6 +384,72 @@ const ApplicantDetailView = () => {
     setNotifyStudent(notify);
   }, []);
 
+  // Handle view status history
+  const handleViewStatusHistory = useCallback(async (application: UniversityApplication) => {
+    setSelectedApplicationForHistory(application);
+    setIsStatusHistoryPopupOpen(true);
+
+    try {
+      // TODO: Replace with actual API call
+      // const response = await fetch(`/api/applications/${application.id}/status-history`);
+      // if (!response.ok) throw new Error("Failed to fetch status history");
+      // const data = await response.json();
+      // setStatusHistory(data.history || []);
+
+      // Mock status history data for now
+      // In production, this will come from the API
+      const mockHistory: ApplicationStatusHistory[] = [
+        {
+          id: "1",
+          statusName: "Application Submitted",
+          notes: "Application submitted successfully with all required documents.",
+          time: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days ago
+        },
+        {
+          id: "2",
+          statusName: "Document Pending",
+          notes: "Waiting for transcript verification.",
+          time: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(), // 25 days ago
+        },
+        {
+          id: "3",
+          statusName: "Awaiting Conditional offer",
+          notes: "Application under review by admissions committee.",
+          time: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(), // 20 days ago
+        },
+        {
+          id: "4",
+          statusName: "Received Conditional offer",
+          notes: "Conditional offer received. Student needs to meet language requirements.",
+          time: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(), // 15 days ago
+        },
+        {
+          id: "5",
+          statusName: "Offer Received",
+          notes: "Final offer received. All conditions met.",
+          time: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+        },
+      ];
+
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      setStatusHistory(mockHistory);
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error("Error fetching status history:", error);
+      }
+      setStatusHistory([]);
+      // TODO: Show error toast notification
+    }
+  }, []);
+
+  // Handle close status history popup
+  const handleCloseStatusHistory = useCallback(() => {
+    setIsStatusHistoryPopupOpen(false);
+    setSelectedApplicationForHistory(null);
+    setStatusHistory([]);
+  }, []);
+
   if (loading) {
     return (
       <Layout userName="Admin" userRole="Abroad Agency">
@@ -431,6 +503,7 @@ const ApplicantDetailView = () => {
           onPaginationModelChange={handlePaginationModelChange}
           onUpdateStatus={handleUpdateApplicationStatus}
           onApply={handleApplyClick}
+          onViewStatusHistory={handleViewStatusHistory}
         />
 
         {/* Card Sections */}
@@ -510,6 +583,15 @@ const ApplicantDetailView = () => {
             </div>
           )}
         </ConfirmationPopup>
+
+        {/* Application Status History Popup */}
+        <ApplicationStatusHistoryPopup
+          isOpen={isStatusHistoryPopupOpen}
+          applicationId={selectedApplicationForHistory?.id || null}
+          universityName={selectedApplicationForHistory?.university || ""}
+          statusHistory={statusHistory}
+          onClose={handleCloseStatusHistory}
+        />
       </div>
     </Layout>
   );

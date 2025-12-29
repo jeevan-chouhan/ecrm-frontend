@@ -12,6 +12,7 @@ interface CardProps {
   bordered?: boolean;
   hoverable?: boolean;
   className?: string;
+  headerBackgroundColor?: string;
 }
 
 const paddingStyles = {
@@ -31,6 +32,7 @@ const Card = ({
   shadow = "md",
   hoverable = false,
   className = "",
+  headerBackgroundColor,
 }: CardProps) => {
   return (
     <div
@@ -53,6 +55,9 @@ const Card = ({
           style={{
             padding: padding !== "none" ? "16px 20px" : "0",
             borderBottom: children || footer ? `1px solid ${COLORS.border}` : "none",
+            backgroundColor: headerBackgroundColor || "transparent",
+            borderTopLeftRadius: componentSpecs.card.borderRadius,
+            borderTopRightRadius: componentSpecs.card.borderRadius,
           }}
         >
           <div>

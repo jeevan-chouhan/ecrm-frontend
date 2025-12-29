@@ -52,15 +52,15 @@ const ApplicantCards = ({ applicant }: ApplicantCardsProps) => {
               style={{
                 width: "40px",
                 height: "40px",
-                backgroundColor: `${COLORS.accent}15`,
+                backgroundColor: `${COLORS.textWhite}20`,
               }}
             >
               <IconComponent
                 className="w-5 h-5"
-                style={{ color: COLORS.accent }}
+                style={{ color: COLORS.textWhite }}
               />
             </div>
-            <span style={{ color: COLORS.textDark }}>
+            <span style={{ color: COLORS.textWhite }}>
               {title}
             </span>
           </div>
@@ -68,6 +68,7 @@ const ApplicantCards = ({ applicant }: ApplicantCardsProps) => {
         padding="lg"
         footer={footer}
         className="transition-all duration-200 hover:shadow-md"
+        headerBackgroundColor={COLORS.accent}
       >
         {content && (
           <div className="py-2">

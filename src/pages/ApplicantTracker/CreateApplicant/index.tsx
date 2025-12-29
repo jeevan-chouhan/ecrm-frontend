@@ -1,6 +1,6 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Layout } from "../../../components";
 import ApplicantPersonalDetails from "./ApplicantPersonalDetails";
 import ApplicationPreferences from "./ApplicationPreferences";
@@ -16,6 +16,8 @@ import type {
   WorkExperienceFormData,
   AchievementFormData,
 } from "./types";
+import type { ApplicantDetail } from "../ApplicantDetail/types";
+import { mockApplicantDetail } from "../../../constants";
 
 type TabType = "personal" | "preferences" | "educational" | "work" | "achievements";
 
@@ -61,11 +63,118 @@ const getInitialFormState = (): ApplicantFormState => ({
   },
 });
 
+// Helper function to map ApplicantDetail to ApplicantFormState
+const mapApplicantDetailToFormState = (applicantDetail: ApplicantDetail): ApplicantFormState => {
+  // Map personal details
+  const personalDetails: PersonalDetailsFormData = {
+    profilePhoto: null, // Will need to fetch separately if needed
+    enrollmentType: applicantDetail.personalDetails?.enrollmentType || "",
+    name: applicantDetail.personalDetails?.name || "",
+    dateOfBirth: applicantDetail.personalDetails?.dateOfBirth
+      ? new Date(applicantDetail.personalDetails.dateOfBirth)
+      : null,
+    gender: applicantDetail.personalDetails?.gender || "",
+    countryCode: applicantDetail.personalDetails?.countryCode || "",
+    contactNumber: applicantDetail.personalDetails?.contactNumber || "",
+    emailId: applicantDetail.personalDetails?.emailId || "",
+    permanentAddress: applicantDetail.personalDetails?.permanentAddress || "",
+    notes: applicantDetail.personalDetails?.notes || applicantDetail.notes || "",
+  };
+
+  // Map application preferences from applications array
+  // Extract program type from course name if possible (e.g., "Masters - Computer Science" -> "pg")
+  const extractProgramFromCourse = (course: string): string => {
+    const courseLower = course.toLowerCase();
+    if (courseLower.includes("masters") || courseLower.includes("master") || courseLower.includes("ms") || courseLower.includes("m.sc")) {
+      return "pg";
+    }
+    if (courseLower.includes("bachelors") || courseLower.includes("bachelor") || courseLower.includes("bs") || courseLower.includes("b.sc") || courseLower.includes("b.tech")) {
+      return "ug";
+    }
+    if (courseLower.includes("phd") || courseLower.includes("ph.d") || courseLower.includes("doctorate")) {
+      return "phd";
+    }
+    if (courseLower.includes("diploma") || courseLower.includes("certificate")) {
+      return "diploma";
+    }
+    return ""; // Return empty if can't determine
+  };
+
+  const preferences = (applicantDetail.applications || []).map((app, index) => ({
+    id: app.id || `pref-${index}`,
+    desiredCountry: app.country || "",
+    program: extractProgramFromCourse(app.course || ""), // Try to extract from course name
+    desiredUniversity: app.university || "",
+    desiredCampus: "", // Not available in UniversityApplication - will need to be filled by user
+    course: app.course || "",
+    desiredIntake: app.intake || "",
+    assignCounselor: app.counselor || "",
+    agencyPartnerName: app.agencyPartner === "-" ? "" : app.agencyPartner || "",
+    saved: false, // Set to false so they show in incomplete section and can be edited
+  }));
+
+  // Map educational details
+  const educationalDetails: EducationalDetailFormData = {
+    highestQualification: applicantDetail.educationalDetails?.highestQualification || "",
+    institutionName: applicantDetail.educationalDetails?.institutionName || "",
+    boardUniversity: applicantDetail.educationalDetails?.boardUniversity || "",
+    program: applicantDetail.educationalDetails?.program || "",
+    major: applicantDetail.educationalDetails?.major || "",
+    scoreType: applicantDetail.educationalDetails?.scoreType || "",
+    score: applicantDetail.educationalDetails?.score || "",
+    passingYear: applicantDetail.educationalDetails?.passingYear
+      ? new Date(applicantDetail.educationalDetails.passingYear)
+      : null,
+  };
+
+  // Map work experience
+  const workExperiences = (applicantDetail.workExperience?.experiences || []).map((exp) => ({
+    id: exp.id,
+    companyName: exp.companyName,
+    jobTitle: exp.jobTitle,
+    startDate: exp.startDate ? new Date(exp.startDate) : null,
+    endDate: exp.endDate ? new Date(exp.endDate) : null,
+    currentlyWorking: exp.currentlyWorking,
+    saved: true,
+  }));
+
+  const workExperience: WorkExperienceFormData = {
+    hasWorkExperience: workExperiences.length > 0 ? "yes" : "no",
+    workExperiences,
+  };
+
+  // Map achievements
+  const achievements = (applicantDetail.achievements?.achievements || []).map((ach) => ({
+    id: ach.id,
+    category: ach.category,
+    description: ach.description,
+    documents: null, // Documents are URLs/strings in detail view, not File objects
+    saved: true,
+  }));
+
+  const achievementFormData: AchievementFormData = {
+    hasAchievements: achievements.length > 0 ? "yes" : "no",
+    achievements,
+  };
+
+  return {
+    personalDetails,
+    applicationPreferences: { preferences },
+    educationalDetails,
+    workExperience,
+    achievements: achievementFormData,
+  };
+};
+
 const CreateApplicant = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const applicantId = searchParams.get("applicantId");
   const [activeTab, setActiveTab] = useState<TabType>("personal");
   const [formState, setFormState] = useState<ApplicantFormState>(getInitialFormState());
+  const [loading, setLoading] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // Memoize tabs array to prevent recreation on every render
   const tabs: Tab[] = useMemo(() => [
@@ -112,6 +221,67 @@ const CreateApplicant = () => {
     setFormState((prev) => ({ ...prev, achievements: data }));
   }, []);
 
+  // Fetch applicant data when applicantId is present
+  useEffect(() => {
+    let isMounted = true;
+    const abortController = new AbortController();
+
+    const fetchApplicantData = async () => {
+      if (!applicantId) {
+        setIsEditMode(false);
+        return;
+      }
+
+      setIsEditMode(true);
+      setLoading(true);
+
+      try {
+        // TODO: Replace with actual API call
+        // const response = await fetch(`/api/applicants/${applicantId}`, {
+        //   signal: abortController.signal,
+        // });
+        // if (!response.ok) throw new Error("Failed to fetch applicant");
+        // const data = await response.json();
+
+        // Mock data for now
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        // Check if component is still mounted before updating state
+        if (!isMounted || abortController.signal.aborted) return;
+
+        // Use mock data - in production, use data from API
+        const applicantData = mockApplicantDetail;
+        
+        // Map the data to form state
+        const mappedFormState = mapApplicantDetailToFormState(applicantData);
+        setFormState(mappedFormState);
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") {
+          return; // Ignore abort errors
+        }
+        if (import.meta.env.DEV) {
+          console.error("Error fetching applicant data:", error);
+        }
+        // TODO: Show error toast notification
+        // On error, reset to initial state
+        setIsEditMode(false);
+        setFormState(getInitialFormState());
+      } finally {
+        if (isMounted && !abortController.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchApplicantData();
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
+  }, [applicantId]);
+
   // Final submit handler - submits all form data and redirects
   const handleFinalSubmit = useCallback(async () => {
     try {
@@ -124,36 +294,44 @@ const CreateApplicant = () => {
         achievements: formState.achievements,
       };
 
+      // Determine API endpoint and method based on edit mode
+      const method = isEditMode ? "PUT" : "POST";
+      const endpoint = isEditMode 
+        ? `/api/applicants/${applicantId}`
+        : "/api/applicant/submit";
+
       // TODO: Replace with actual API endpoint
-      // const response = await fetch("/api/applicant/submit", {
-      //   method: "POST",
+      // const response = await fetch(endpoint, {
+      //   method,
       //   headers: {
       //     "Content-Type": "application/json",
       //   },
       //   body: JSON.stringify(payload),
       // });
       // if (!response.ok) {
-      //   throw new Error("Failed to submit applicant");
+      //   throw new Error(`Failed to ${isEditMode ? "update" : "submit"} applicant`);
       // }
       // const result = await response.json();
 
       // Log payload in development only
       if (import.meta.env.DEV) {
         console.log("Final submit payload ready for API:", payload);
-        console.log("API endpoint: POST /api/applicant/submit");
+        console.log(`API endpoint: ${method} ${endpoint}`);
       }
 
       // Simulate API call success
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      
       // After successful API response, redirect to applicant tracker list
       navigate(ROUTES.APPLICANT_TRACKER);
     } catch (error) {
       // TODO: Show error message to user
       if (import.meta.env.DEV) {
-        console.error("Error submitting applicant:", error);
+        console.error(`Error ${isEditMode ? "updating" : "submitting"} applicant:`, error);
       }
       // TODO: Show error message to user
     }
-  }, [formState, navigate]);
+  }, [formState, navigate, isEditMode, applicantId]);
 
   // Reset functions for each form section
   const resetPersonalDetails = useCallback(() => {
@@ -243,13 +421,26 @@ const CreateApplicant = () => {
     }
   }, [activeTab, personalTabContent, preferencesTabContent, educationalTabContent, workTabContent, achievementsTabContent]);
 
+  // Show loading state while fetching data
+  if (loading) {
+    return (
+      <Layout userName="Admin" userRole="Abroad Agency">
+        <div className="bg-white rounded-lg shadow-sm p-4 md:p-6">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <p style={{ color: COLORS.textMuted }}>{t("common.loading", "Loading...")}</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout userName="Admin" userRole="Abroad Agency">
       <div className="bg-white rounded-lg shadow-sm">
         {/* Header */}
         <div className="p-4 md:p-6 border-b" style={{ borderColor: COLORS.border }}>
           <h1 className="text-xl md:text-2xl font-semibold uppercase" style={{ color: COLORS.textDark }}>
-            {t("applicant.addApplicant")}
+            {isEditMode ? t("applicant.editApplicant", "Edit Applicant") : t("applicant.addApplicant")}
           </h1>
         </div>
 
