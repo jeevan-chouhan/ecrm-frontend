@@ -91,12 +91,12 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
               `}
               style={{
                 borderRadius: componentSpecs.input.borderRadius,
-                border: `1px solid ${error ? COLORS.error : isFocused ? COLORS.borderFocus : COLORS.border}`,
+                border: `1px solid ${error ? COLORS.error : isFocused ? COLORS.accent : COLORS.border}`,
                 backgroundColor: COLORS.surface,
                 color: COLORS.textDark,
                 fontFamily: "'Inter', sans-serif",
                 fontSize: "14px",
-                boxShadow: isFocused ? `0 0 0 3px ${COLORS.primary}20` : "none",
+                boxShadow: isFocused ? `0 0 0 3px ${COLORS.accent}20` : "none",
               }}
               {...(props as TextareaHTMLAttributes<HTMLTextAreaElement>)}
             />
@@ -118,12 +118,12 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
               `}
               style={{
                 borderRadius: componentSpecs.input.borderRadius,
-                border: `1px solid ${error ? COLORS.error : isFocused ? COLORS.borderFocus : COLORS.border}`,
+                border: `1px solid ${error ? COLORS.error : isFocused ? COLORS.accent : COLORS.border}`,
                 backgroundColor: COLORS.surface,
                 color: COLORS.textDark,
                 fontFamily: "'Inter', sans-serif",
                 fontSize: "14px",
-                boxShadow: isFocused ? `0 0 0 3px ${COLORS.primary}20` : "none",
+                boxShadow: isFocused ? `0 0 0 3px ${COLORS.accent}20` : "none",
               }}
               {...(props as InputHTMLAttributes<HTMLInputElement>)}
             />

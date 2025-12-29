@@ -63,6 +63,7 @@ const ViewMember = () => {
   const navigate = useNavigate();
   const { memberId } = useParams<{ memberId: string }>();
   const [isDeactivatePopupOpen, setIsDeactivatePopupOpen] = useState(false);
+  const [memberStatus, setMemberStatus] = useState<"active" | "inactive">("active");
 
   // Find member from mock data (in real app, fetch from API)
   const findMemberInfo = () => {
@@ -110,10 +111,12 @@ const ViewMember = () => {
   };
 
   const handleDeactivateConfirm = () => {
-    console.log("Deactivate member:", member.id);
-    // Add deactivation logic here
+    // Toggle status
+    const newStatus = memberStatus === "active" ? "inactive" : "active";
+    setMemberStatus(newStatus);
+    console.log("Status changed:", member.id, "to", newStatus);
     setIsDeactivatePopupOpen(false);
-    navigate(ROUTES.MANAGE_TEAM);
+    // Stay on the same page - do not navigate
   };
 
   const handleDeactivateCancel = () => {
@@ -249,13 +252,20 @@ const ViewMember = () => {
               </p>
             </div>
           </div>
-          {/* Deactivate Icon Button */}
+          {/* Status Toggle Icon Button */}
           <Button
             variant="ghost"
             size="sm"
-            icon={<ToggleStatus className="h-5 w-5" style={{ color: COLORS.error }} />}
+            icon={
+              <ToggleStatus
+                className="h-5 w-5"
+                style={{
+                  color: memberStatus === "active" ? COLORS.error : COLORS.success,
+                }}
+              />
+            }
             onClick={handleDeactivateClick}
-            title="Deactivate"
+            title={memberStatus === "active" ? "Deactivate" : "Activate"}
           />
         </div>
 
@@ -340,7 +350,7 @@ const ViewMember = () => {
         </div>
       </div>
 
-      {/* Deactivate Confirmation Popup */}
+      {/* Status Change Confirmation Popup */}
       <Popup
         isOpen={isDeactivatePopupOpen}
         onClose={handleDeactivateCancel}
@@ -351,7 +361,8 @@ const ViewMember = () => {
         <div>
           <p className="text-base mb-8" style={{ color: COLORS.textDark }}>
             Are you sure you want to change the status of{" "}
-            <strong>{member.name}</strong> from Active to Inactive?
+            <strong>{member.name}</strong> from{" "}
+            {memberStatus === "active" ? "Active to Inactive" : "Inactive to Active"}?
           </p>
           <div className="flex justify-end gap-3">
             <Button variant="cancel" rounded onClick={handleDeactivateCancel}>

@@ -99,6 +99,11 @@ const PhoneInput = ({
         }
         .phone-input-container .flag-dropdown {
           border-radius: 8px 0 0 8px !important;
+          border-top: 1px solid ${COLORS.border} !important;
+          border-bottom: 1px solid ${COLORS.border} !important;
+          border-left: 1px solid ${COLORS.border} !important;
+          border-right: none !important;
+          transition: border-color 0.2s ease;
         }
         .phone-input-container .flag-dropdown:hover,
         .phone-input-container .flag-dropdown:focus,
@@ -120,8 +125,14 @@ const PhoneInput = ({
           background-color: ${COLORS.surfaceHover} !important;
         }
         .phone-input-field:focus {
-          border-color: ${COLORS.borderFocus} !important;
-          box-shadow: 0 0 0 3px ${COLORS.primary}20 !important;
+          border-color: ${COLORS.accent} !important;
+          box-shadow: 0 0 0 3px ${COLORS.accent}20 !important;
+        }
+        /* When input is focused, also change flag dropdown border */
+        .phone-input-container:focus-within .flag-dropdown {
+          border-top-color: ${COLORS.accent} !important;
+          border-bottom-color: ${COLORS.accent} !important;
+          border-left-color: ${COLORS.accent} !important;
         }
       `}</style>
     </div>
