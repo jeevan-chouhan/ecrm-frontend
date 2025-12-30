@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { COLORS } from "../../constants";
+import { COLORS, hexToRgba } from "../../constants";
 import { Button } from "../../components";
 import { images, Chart, Pipeline, Customize, UserPlus, Admin, Form } from "../../assets";
 import PublicHeader from "../../components/wrapper/Header/PublicHeader";
@@ -87,7 +87,7 @@ const Home = () => {
                   variant="accent"
                   size="lg"
                   style={{
-                    boxShadow: "0 4px 14px rgba(138, 43, 226, 0.4)",
+                    boxShadow: `0 4px 14px ${hexToRgba(COLORS.accent, 0.4)}`,
                   }}
                 >
                   Try our Freemium model
@@ -156,7 +156,7 @@ const Home = () => {
                   icon={<Customize className="w-5 h-5" />}
                   title="Customizable Views"
                   description="Filter and sort data to focus on what matters most to you."
-                  iconBg={COLORS.primary}
+                  iconBg={COLORS.accent}
                 />
               </div>
             </div>
@@ -226,7 +226,7 @@ const Home = () => {
                   icon={<UserPlus className="w-5 h-5" />}
                   title="Add Candidates Instantly"
                   description="Quickly create new candidate profiles with essential details."
-                  iconBg={COLORS.primary}
+                  iconBg={COLORS.accent}
                 />
                 <FeatureItem
                   icon={<Admin className="w-5 h-5" />}

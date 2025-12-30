@@ -86,7 +86,7 @@ const ForgotPassword = () => {
                 <Link
                   to={ROUTES.LOGIN}
                   className="text-sm font-medium hover:underline inline-flex items-center gap-1"
-                  style={{ color: COLORS.primary }}
+                  style={{ color: COLORS.accent }}
                 >
                   {t("auth.backToLogin")}
                 </Link>

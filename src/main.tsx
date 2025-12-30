@@ -1,3 +1,7 @@
+// IMPORTANT: Initialize CSS variables FIRST before any other imports
+// This ensures CSS variables are set before CSS is loaded, preventing FOUC
+import './utils/initCssVariables'
+
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Provider } from 'react-redux'

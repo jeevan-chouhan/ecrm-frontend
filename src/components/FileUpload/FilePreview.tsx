@@ -74,7 +74,7 @@ const FilePreview = memo(({
             type="button"
             onClick={() => onPreview(0)}
             className="text-xs underline hover:no-underline"
-            style={{ color: COLORS.primary }}
+            style={{ color: COLORS.accent }}
           >
             {t("fileUpload.previewAll", { count: files.length })}
           </button>
@@ -140,7 +140,7 @@ const FilePreview = memo(({
               type="button"
               onClick={() => onPreview(0)}
               className="text-xs underline hover:no-underline"
-              style={{ color: COLORS.primary }}
+              style={{ color: COLORS.accent }}
             >
               {t("fileUpload.preview")}
             </button>
@@ -153,7 +153,7 @@ const FilePreview = memo(({
                 onChangeFile();
               }}
               className="text-xs underline hover:no-underline"
-              style={{ color: COLORS.primary }}
+              style={{ color: COLORS.accent }}
             >
               {t("fileUpload.changeFile")}
             </button>

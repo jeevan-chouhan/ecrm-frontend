@@ -65,7 +65,7 @@ const Accordion = ({
           className="px-4 pb-4"
           style={{
             borderTop: `1px solid ${COLORS.border}`,
-            backgroundColor: "#FAFAFA",
+            backgroundColor: COLORS.background,
           }}
         >
           {children}

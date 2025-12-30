@@ -7,13 +7,13 @@ import { EmptyState } from "./DisplayComponents";
 
 // Document type icons mapping
 const documentIcons: Record<string, string> = {
-  passport: "#8B5CF6",
-  transcript: "#3B82F6",
-  letter: "#10B981",
-  statement: "#F59E0B",
-  resume: "#EF4444",
-  financial: "#6366F1",
-  default: "#64748B",
+  passport: COLORS.documentPassport,
+  transcript: COLORS.documentTranscript,
+  letter: COLORS.documentLetter,
+  statement: COLORS.documentStatement,
+  resume: COLORS.documentResume,
+  financial: COLORS.documentFinancial,
+  default: COLORS.documentDefault,
 };
 
 export interface DocumentItem {

@@ -50,8 +50,8 @@ const variantColors: Record<ButtonVariant, { bg: string; hover: string; text: st
   outline: {
     bg: "transparent",
     hover: COLORS.surfaceHover,
-    text: COLORS.primary,
-    border: COLORS.primary,
+    text: COLORS.accent,
+    border: COLORS.accent,
   },
   danger: {
     bg: COLORS.error,
@@ -65,7 +65,7 @@ const variantColors: Record<ButtonVariant, { bg: string; hover: string; text: st
   },
   cancel: {
     bg: COLORS.surface,
-    hover: "#F0F0FF",
+    hover: COLORS.surfaceHover,
     text: COLORS.accent,
     border: COLORS.accent,
   },
