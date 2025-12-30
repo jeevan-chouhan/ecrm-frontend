@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type { GridColDef } from "@mui/x-data-grid";
 import {
   Layout,
@@ -18,6 +19,7 @@ import {
 } from "../../constants";
 
 const ManageTeam = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -91,7 +93,7 @@ const ManageTeam = () => {
   const columns: GridColDef[] = [
     {
       field: "name",
-      headerName: "Name",
+      headerName: t("manageTeam.name", "Name"),
       flex: 1,
       minWidth: 150,
       renderCell: (params) => (
@@ -104,25 +106,25 @@ const ManageTeam = () => {
     },
     {
       field: "role",
-      headerName: "Role",
+      headerName: t("manageTeam.role", "Role"),
       flex: 0.7,
       minWidth: 100,
     },
     {
       field: "email",
-      headerName: "Email",
+      headerName: t("manageTeam.email", "Email"),
       flex: 1.2,
       minWidth: 180,
     },
     {
       field: "mobileNo",
-      headerName: "Mobile No",
+      headerName: t("manageTeam.mobileNo", "Mobile No"),
       flex: 0.9,
       minWidth: 130,
     },
     {
       field: "status",
-      headerName: "Status",
+      headerName: t("manageTeam.status", "Status"),
       flex: 0.6,
       minWidth: 80,
       renderCell: (params) => (
@@ -139,7 +141,7 @@ const ManageTeam = () => {
     },
     {
       field: "actions",
-      headerName: "Action",
+      headerName: t("manageTeam.action", "Action"),
       flex: 0.8,
       minWidth: 120,
       sortable: false,
@@ -153,7 +155,7 @@ const ManageTeam = () => {
               e.stopPropagation();
               handleView(params.row);
             }}
-            title="View"
+            title={t("common.view", "View")}
           />
           <Button
             variant="ghost"
@@ -163,7 +165,7 @@ const ManageTeam = () => {
               e.stopPropagation();
               handleEdit(params.row);
             }}
-            title="Edit"
+            title={t("common.edit", "Edit")}
           />
           <Button
             variant="ghost"
@@ -180,7 +182,7 @@ const ManageTeam = () => {
               e.stopPropagation();
               handleStatusToggle(params.row);
             }}
-            title={params.row.status === "active" ? "Deactivate" : "Activate"}
+            title={params.row.status === "active" ? t("common.deactivate", "Deactivate") : t("common.activate", "Activate")}
           />
         </div>
       ),
@@ -198,7 +200,7 @@ const ManageTeam = () => {
               className="text-2xl font-semibold"
               style={{ color: COLORS.textDark }}
             >
-              Manage Team
+              {t("manageTeam.title", "Manage Team")}
             </h1>
             {(searchTerm || (statusFilter && statusFilter !== "all")) && (
               <span
@@ -224,7 +226,7 @@ const ManageTeam = () => {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by name, email or mobile..."
+                placeholder={t("manageTeam.searchPlaceholder", "Search by name, email or mobile...")}
                 className="block w-full rounded-lg pl-10 pr-4 py-2.5 text-sm transition-all duration-200 focus:outline-none"
                 style={{
                   border: `1px solid ${COLORS.border}`,
@@ -251,7 +253,7 @@ const ManageTeam = () => {
                 options={statusFilterOptions}
                 value={statusFilter}
                 onChange={(value) => setStatusFilter(value)}
-                placeholder="Status"
+                placeholder={t("manageTeam.status", "Status")}
                 fullWidth
               />
             </div>
@@ -264,7 +266,7 @@ const ManageTeam = () => {
               onClick={handleAddMember}
               className="shrink-0"
             >
-              Add member
+              {t("manageTeam.addMember", "Add member")}
             </Button>
           </div>
         </div>
@@ -283,7 +285,7 @@ const ManageTeam = () => {
       <Popup
         isOpen={statusPopup.isOpen}
         onClose={handleStatusCancel}
-        title="Confirm Status Change"
+        title={t("manageTeam.confirmStatusChange", "Confirm Status Change")}
         size="sm"
         showCloseButton={true}
       >
@@ -293,10 +295,10 @@ const ManageTeam = () => {
           </p>
           <div className="flex justify-end gap-3">
             <Button variant="cancel" rounded onClick={handleStatusCancel}>
-              Cancel
+              {t("common.cancel", "Cancel")}
             </Button>
             <Button variant="accent" rounded onClick={handleStatusConfirm}>
-              Confirm
+              {t("common.confirm", "Confirm")}
             </Button>
           </div>
         </div>

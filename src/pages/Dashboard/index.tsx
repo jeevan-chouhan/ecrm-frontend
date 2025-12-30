@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { GridColDef } from "@mui/x-data-grid";
@@ -12,32 +12,6 @@ import {
 } from "../../components";
 import type { DateRange } from "../../components";
 import { COLORS, ROUTES } from "../../constants";
-
-// Mock data for filters
-const adminOptions = [
-  { value: "", label: "Select Admin" },
-  { value: "aron", label: "Aron" },
-  { value: "ben", label: "Ben" },
-];
-
-const managerOptions = [
-  { value: "", label: "Select Manager" },
-  { value: "ben", label: "Ben" },
-  { value: "john", label: "John" },
-];
-
-const counselorOptions = [
-  { value: "", label: "Select Counselor" },
-  { value: "roger", label: "Roger Fredrick" },
-  { value: "sam", label: "Sam Roy" },
-];
-
-const enrollmentTypeOptions = [
-  { value: "", label: "Select Enrollment type" },
-  { value: "walk-in", label: "Walk-in" },
-  { value: "referred-to-agency", label: "Referred to Agency Partner" },
-  { value: "referred-by-agency", label: "Referred by Agency Partner" },
-];
 
 // Mock data for table
 const teamOverviewData = [
@@ -80,73 +54,6 @@ const teamOverviewData = [
     leads: 12,
     inProgressApplicants: 4,
     enrolledApplicants: 12,
-  },
-];
-
-// Table columns
-const columns: GridColDef[] = [
-  {
-    field: "id",
-    headerName: "ID",
-    width: 70,
-    sortable: true,
-  },
-  {
-    field: "manager",
-    headerName: "MANAGER",
-    flex: 1,
-    minWidth: 120,
-    sortable: true,
-  },
-  {
-    field: "counselor",
-    headerName: "COUNSELOR",
-    flex: 1,
-    minWidth: 150,
-    sortable: true,
-  },
-  {
-    field: "country",
-    headerName: "COUNTRY",
-    flex: 1,
-    minWidth: 120,
-    sortable: true,
-  },
-  {
-    field: "totalApplicants",
-    headerName: "TOTAL APPLICANTS",
-    flex: 1,
-    minWidth: 150,
-    sortable: true,
-    align: "center",
-    headerAlign: "center",
-  },
-  {
-    field: "leads",
-    headerName: "LEADS",
-    flex: 1,
-    minWidth: 100,
-    sortable: true,
-    align: "center",
-    headerAlign: "center",
-  },
-  {
-    field: "inProgressApplicants",
-    headerName: "IN PROGRESS APPLICANTS",
-    flex: 1,
-    minWidth: 200,
-    sortable: true,
-    align: "center",
-    headerAlign: "center",
-  },
-  {
-    field: "enrolledApplicants",
-    headerName: "ENROLLED APPLICANTS",
-    flex: 1,
-    minWidth: 180,
-    sortable: true,
-    align: "center",
-    headerAlign: "center",
   },
 ];
 
@@ -195,6 +102,99 @@ const Dashboard = () => {
     enrollmentType: "",
     dateRange: { startDate: null, endDate: null } as DateRange,
   });
+
+  // Filter options with translations
+  const adminOptions = useMemo(() => [
+    { value: "", label: t("dashboard.selectAdmin", "Select Admin") },
+    { value: "aron", label: "Aron" },
+    { value: "ben", label: "Ben" },
+  ], [t]);
+
+  const managerOptions = useMemo(() => [
+    { value: "", label: t("dashboard.selectManager", "Select Manager") },
+    { value: "ben", label: "Ben" },
+    { value: "john", label: "John" },
+  ], [t]);
+
+  const counselorOptions = useMemo(() => [
+    { value: "", label: t("dashboard.selectCounselor", "Select Counselor") },
+    { value: "roger", label: "Roger Fredrick" },
+    { value: "sam", label: "Sam Roy" },
+  ], [t]);
+
+  const enrollmentTypeOptions = useMemo(() => [
+    { value: "", label: t("dashboard.selectEnrollmentType", "Select Enrollment type") },
+    { value: "walk-in", label: t("enrollmentType.walkIn", "Walk-in") },
+    { value: "referred-to-agency", label: t("enrollmentType.referredToAgency", "Referred to Agency Partner") },
+    { value: "referred-by-agency", label: t("enrollmentType.referredByAgency", "Referred by Agency Partner") },
+  ], [t]);
+
+  // Table columns with translations
+  const columns: GridColDef[] = useMemo(() => [
+    {
+      field: "id",
+      headerName: t("dashboard.tableId", "ID"),
+      width: 70,
+      sortable: true,
+    },
+    {
+      field: "manager",
+      headerName: t("dashboard.tableManager", "MANAGER"),
+      flex: 1,
+      minWidth: 120,
+      sortable: true,
+    },
+    {
+      field: "counselor",
+      headerName: t("dashboard.tableCounselor", "COUNSELOR"),
+      flex: 1,
+      minWidth: 150,
+      sortable: true,
+    },
+    {
+      field: "country",
+      headerName: t("dashboard.tableCountry", "COUNTRY"),
+      flex: 1,
+      minWidth: 120,
+      sortable: true,
+    },
+    {
+      field: "totalApplicants",
+      headerName: t("dashboard.tableTotalApplicants", "TOTAL APPLICANTS"),
+      flex: 1,
+      minWidth: 150,
+      sortable: true,
+      align: "center",
+      headerAlign: "center",
+    },
+    {
+      field: "leads",
+      headerName: t("dashboard.tableLeads", "LEADS"),
+      flex: 1,
+      minWidth: 100,
+      sortable: true,
+      align: "center",
+      headerAlign: "center",
+    },
+    {
+      field: "inProgressApplicants",
+      headerName: t("dashboard.tableInProgressApplicants", "IN PROGRESS APPLICANTS"),
+      flex: 1,
+      minWidth: 200,
+      sortable: true,
+      align: "center",
+      headerAlign: "center",
+    },
+    {
+      field: "enrolledApplicants",
+      headerName: t("dashboard.tableEnrolledApplicants", "ENROLLED APPLICANTS"),
+      flex: 1,
+      minWidth: 180,
+      sortable: true,
+      align: "center",
+      headerAlign: "center",
+    },
+  ], [t]);
 
   // Stats data
   const stats = {

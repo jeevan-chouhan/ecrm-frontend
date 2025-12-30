@@ -1,33 +1,38 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useFormik } from "formik";
-import { Input, Button, PhoneInput, Checkbox } from "../../../components";
+import { Input, Button, PhoneInput, Checkbox, Popup, FileUpload } from "../../../components";
 import PublicLayout from "../../../components/wrapper/PublicLayout";
-import { COLORS } from "../../../constants";
-import { ROUTES } from "../../../constants";
+import { COLORS, ROUTES, termsAndConditions } from "../../../constants";
 import { getRegisterSchema } from "../../../utils";
 
 interface RegisterFormValues {
   agencyName: string;
   fullName: string;
+  brandName: string;
   email: string;
   password: string;
   confirmPassword: string;
   phone: string;
+  logo: File | null;
   agreeToTerms: boolean;
 }
 
 const Register = () => {
   const { t } = useTranslation();
+  const [isTermsPopupOpen, setIsTermsPopupOpen] = useState(false);
 
   const formik = useFormik<RegisterFormValues>({
     initialValues: {
       agencyName: "",
       fullName: "",
+      brandName: "",
       email: "",
       password: "",
       confirmPassword: "",
       phone: "",
+      logo: null,
       agreeToTerms: false,
     },
     validationSchema: getRegisterSchema(t),
@@ -36,6 +41,20 @@ const Register = () => {
       // Handle registration logic here
     },
   });
+
+  const handleLogoChange = (file: File | File[] | null) => {
+    if (file) {
+      // If array, take first file; otherwise use the file directly
+      const singleFile = Array.isArray(file) ? file[0] : file;
+      formik.setFieldValue("logo", singleFile);
+    } else {
+      formik.setFieldValue("logo", null);
+    }
+  };
+
+  const handleLogoRemove = () => {
+    formik.setFieldValue("logo", null);
+  };
 
   return (
     <PublicLayout>
@@ -67,7 +86,7 @@ const Register = () => {
                 <div className="space-y-5">
                   <Input
                     label={<>{t("auth.agencyName")} <span style={{ color: COLORS.error }}>*</span></>}
-                    placeholder={t("auth.agencyNamePlaceholder")}
+                    placeholder={t("auth.enterAgencyName")}
                     name="agencyName"
                     value={formik.values.agencyName}
                     onChange={formik.handleChange}
@@ -97,13 +116,27 @@ const Register = () => {
                     country="in"
                     fullWidth
                   />
+
+                  {/* Upload Logo */}
+                  <FileUpload
+                    label={t("auth.uploadLogo")}
+                    value={formik.values.logo}
+                    onChange={handleLogoChange}
+                    onRemove={handleLogoRemove}
+                    accept="image/*"
+                    maxSizeMB={2}
+                    showPreview
+                    multiple={false}
+                    supportedFormats="PNG, JPG, JPEG"
+                    dismissible={false}
+                  />
                 </div>
 
                 {/* Right Column */}
                 <div className="space-y-5">
                   <Input
                     label={<>{t("auth.fullName")} <span style={{ color: COLORS.error }}>*</span></>}
-                    placeholder={t("auth.fullNamePlaceholder")}
+                    placeholder={t("auth.enterFullName")}
                     name="fullName"
                     value={formik.values.fullName}
                     onChange={formik.handleChange}
@@ -133,6 +166,17 @@ const Register = () => {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     error={formik.touched.confirmPassword ? formik.errors.confirmPassword : undefined}
+                    fullWidth
+                  />
+
+                  {/* Brand Name */}
+                  <Input
+                    label={t("auth.brandName")}
+                    placeholder={t("auth.enterBrandName")}
+                    name="brandName"
+                    value={formik.values.brandName}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
                     fullWidth
                   />
                 </div>
@@ -172,13 +216,14 @@ const Register = () => {
                 {/* Terms Link */}
                 <p className="text-sm mb-6" style={{ color: COLORS.textMuted }}>
                   {t("auth.readTerms")}{" "}
-                  <Link
-                    to={ROUTES.TERMS_AND_CONDITIONS}
+                  <button
+                    type="button"
+                    onClick={() => setIsTermsPopupOpen(true)}
                     className="font-medium hover:underline"
                     style={{ color: COLORS.primary }}
                   >
                     {t("auth.clickHere")}
-                  </Link>
+                  </button>
                 </p>
 
                 {/* Submit Button */}
@@ -205,6 +250,51 @@ const Register = () => {
           </div>
         </div>
       </div>
+
+      {/* Terms and Conditions Popup */}
+      <Popup
+        isOpen={isTermsPopupOpen}
+        onClose={() => setIsTermsPopupOpen(false)}
+        title={t("auth.termsAndConditions")}
+        size="lg"
+        showCloseButton
+      >
+        <div>
+          <p
+            className="text-xs mb-4"
+            style={{ color: COLORS.textMuted }}
+          >
+            {t("auth.lastUpdated")}: 10-07-2025
+          </p>
+          <div className="space-y-4">
+            {termsAndConditions.map((section, index) => (
+              <div key={index}>
+                <h3
+                  className="text-sm font-semibold mb-1"
+                  style={{ color: COLORS.textDark }}
+                >
+                  {section.title}
+                </h3>
+                <p
+                  className="text-sm leading-relaxed whitespace-pre-line"
+                  style={{ color: COLORS.textMuted }}
+                >
+                  {section.content}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="flex justify-end mt-4 pt-4" style={{ borderTop: `1px solid ${COLORS.border}` }}>
+          <Button
+            variant="accent"
+            rounded
+            onClick={() => setIsTermsPopupOpen(false)}
+          >
+            {t("common.close")}
+          </Button>
+        </div>
+      </Popup>
     </PublicLayout>
   );
 };
