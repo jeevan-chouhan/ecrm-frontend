@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Layout, Button, Input, Select, PhoneInput, MultiSelect } from "../../../components";
@@ -40,6 +41,7 @@ const defaultInitialValues: AddMemberFormValues = {
 };
 
 const AddMember = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { memberId } = useParams<{ memberId: string }>();
 
@@ -52,18 +54,53 @@ const AddMember = () => {
     return mockTeamMembers.find((m) => m.id === memberId) || null;
   }, [memberId]);
 
+  // Helper function to find country value by label
+  const getCountryValueByLabel = (label: string): string | null => {
+    const country = countryOptions.find(
+      (c) => c.label.toLowerCase() === label.toLowerCase()
+    );
+    return country?.value || null;
+  };
+
+  // Helper function to find university value by label
+  const getUniversityValueByLabel = (label: string): string | null => {
+    const university = universityOptions.find(
+      (u) => u.label.toLowerCase() === label.toLowerCase()
+    );
+    return university?.value || null;
+  };
+
+  // Get original country and university values for edit mode (these will be disabled)
+  const originalCountryValue = useMemo(() => {
+    if (isEditMode && memberData?.country) {
+      return getCountryValueByLabel(memberData.country);
+    }
+    return null;
+  }, [isEditMode, memberData]);
+
+  const originalUniversityValue = useMemo(() => {
+    if (isEditMode && memberData?.university) {
+      return getUniversityValueByLabel(memberData.university);
+    }
+    return null;
+  }, [isEditMode, memberData]);
+
   // Prepare initial values based on mode
   const initialValues = useMemo<AddMemberFormValues>(() => {
     if (isEditMode && memberData) {
+      // Get country and university values from member data
+      const countryValue = getCountryValueByLabel(memberData.country);
+      const universityValue = getUniversityValueByLabel(memberData.university);
+      
       return {
         name: memberData.name || "",
         email: memberData.email || "",
         contactNumber: memberData.mobileNo?.replace("+", "") || "",
         role: memberData.role?.toLowerCase() || "",
-        adminId: "admin1", // Default admin ID (in real app, get from member data)
-        managerId: "carlos", // Default manager ID (in real app, get from member data)
-        assignedCountries: ["usa", "uk"], // Mock data (in real app, get from member data)
-        assignedUniversities: ["harvard", "mit"], // Mock data (in real app, get from member data)
+        adminId: "", // In real app, get from member data
+        managerId: "", // In real app, get from member data
+        assignedCountries: countryValue ? [countryValue] : [],
+        assignedUniversities: universityValue ? [universityValue] : [],
       };
     }
     return defaultInitialValues;
@@ -74,34 +111,34 @@ const AddMember = () => {
     const baseSchema = {
       name: Yup.string()
         .trim()
-        .min(2, "Name must be at least 2 characters")
-        .required("Name is required"),
+        .min(2, t("validation.nameMinLength", "Name must be at least 2 characters"))
+        .required(t("validation.nameRequired", "Name is required")),
       email: Yup.string()
         .trim()
-        .email("Please enter a valid email")
-        .required("Email is required"),
+        .email(t("validation.invalidEmail", "Please enter a valid email"))
+        .required(t("validation.emailRequired", "Email is required")),
       contactNumber: Yup.string()
-        .min(8, "Contact number must be at least 8 digits")
-        .required("Contact number is required"),
-      role: Yup.string().required("Role is required"),
+        .min(8, t("validation.contactMinLength", "Contact number must be at least 8 digits"))
+        .required(t("validation.contactRequired", "Contact number is required")),
+      role: Yup.string().required(t("validation.roleRequired", "Role is required")),
       assignedCountries: Yup.array()
-        .min(1, "At least one country is required")
-        .required("Assigned country is required"),
+        .min(1, t("validation.countryRequired", "At least one country is required"))
+        .required(t("validation.assignedCountryRequired", "Assigned country is required")),
       assignedUniversities: Yup.array()
-        .min(1, "At least one university is required")
-        .required("Assigned university is required"),
+        .min(1, t("validation.universityRequired", "At least one university is required"))
+        .required(t("validation.assignedUniversityRequired", "Assigned university is required")),
     };
 
     // Role-based validation
     if (role === "counselor") {
       return Yup.object().shape({
         ...baseSchema,
-        managerId: Yup.string().required("Manager is required"),
+        managerId: Yup.string().required(t("validation.managerRequired", "Manager is required")),
       });
     } else if (role === "manager" || role === "billing") {
       return Yup.object().shape({
         ...baseSchema,
-        adminId: Yup.string().required("Admin is required"),
+        adminId: Yup.string().required(t("validation.adminRequired", "Admin is required")),
       });
     }
     
@@ -195,7 +232,7 @@ const AddMember = () => {
             className="text-xl md:text-2xl font-bold"
             style={{ color: COLORS.textDark }}
           >
-            {isEditMode ? "Edit Member" : "Add New Member"}
+            {isEditMode ? t("manageTeam.editMember", "Edit Member") : t("manageTeam.addNewMember", "Add New Member")}
           </h1>
         </div>
 
@@ -206,8 +243,8 @@ const AddMember = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 name="name"
-                label={<>Name <span style={{ color: COLORS.error }}>*</span></>}
-                placeholder="Name"
+                label={<>{t("manageTeam.name", "Name")} <span style={{ color: COLORS.error }}>*</span></>}
+                placeholder={t("manageTeam.name", "Name")}
                 value={formik.values.name}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -216,8 +253,8 @@ const AddMember = () => {
               />
               <Input
                 name="email"
-                label={<>Email <span style={{ color: COLORS.error }}>*</span></>}
-                placeholder="Email"
+                label={<>{t("manageTeam.email", "Email")} <span style={{ color: COLORS.error }}>*</span></>}
+                placeholder={t("manageTeam.email", "Email")}
                 type="email"
                 value={formik.values.email}
                 onChange={formik.handleChange}
@@ -230,8 +267,8 @@ const AddMember = () => {
             {/* Row 2: Contact Number, Role */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <PhoneInput
-                label={<>Contact Number <span style={{ color: COLORS.error }}>*</span></>}
-                placeholder="Contact Number"
+                label={<>{t("manageTeam.contactNumber", "Contact Number")} <span style={{ color: COLORS.error }}>*</span></>}
+                placeholder={t("manageTeam.contactNumber", "Contact Number")}
                 value={formik.values.contactNumber}
                 onChange={(value) => formik.setFieldValue("contactNumber", value)}
                 onBlur={() => formik.setFieldTouched("contactNumber", true)}
@@ -239,7 +276,7 @@ const AddMember = () => {
                 fullWidth
               />
               <Select
-                label={<>Role <span style={{ color: COLORS.error }}>*</span></>}
+                label={<>{t("manageTeam.role", "Role")} <span style={{ color: COLORS.error }}>*</span></>}
                 options={roleOptions}
                 value={formik.values.role}
                 onChange={(value) => {
@@ -248,7 +285,7 @@ const AddMember = () => {
                   formik.setFieldValue("adminId", "");
                   formik.setFieldValue("managerId", "");
                 }}
-                placeholder="Select Role"
+                placeholder={t("manageTeam.selectRole", "Select Role")}
                 error={formik.submitCount > 0 && formik.errors.role ? formik.errors.role : undefined}
                 fullWidth
               />
@@ -259,11 +296,11 @@ const AddMember = () => {
               {/* Show Admin field for Manager and Billing roles */}
               {showAdminField && (
                 <Select
-                  label={<>Admin <span style={{ color: COLORS.error }}>*</span></>}
+                  label={<>{t("manageTeam.admin", "Admin")} <span style={{ color: COLORS.error }}>*</span></>}
                   options={adminOptions}
                   value={formik.values.adminId}
                   onChange={(value) => formik.setFieldValue("adminId", value)}
-                  placeholder="Select Admin"
+                  placeholder={t("manageTeam.selectAdmin", "Select Admin")}
                   error={getAdminError()}
                   fullWidth
                   searchable
@@ -273,11 +310,11 @@ const AddMember = () => {
               {/* Show Manager field for Counselor role */}
               {showManagerField && (
                 <Select
-                  label={<>Manager <span style={{ color: COLORS.error }}>*</span></>}
+                  label={<>{t("manageTeam.manager", "Manager")} <span style={{ color: COLORS.error }}>*</span></>}
                   options={managerOptions}
                   value={formik.values.managerId}
                   onChange={(value) => formik.setFieldValue("managerId", value)}
-                  placeholder="Select Manager"
+                  placeholder={t("manageTeam.selectManager", "Select Manager")}
                   error={getManagerError()}
                   fullWidth
                   searchable
@@ -285,12 +322,12 @@ const AddMember = () => {
               )}
 
               <MultiSelect
-                label={<>Assigned Country <span style={{ color: COLORS.error }}>*</span></>}
+                label={<>{t("manageTeam.assignedCountry", "Assigned Country")} <span style={{ color: COLORS.error }}>*</span></>}
                 options={countryOptions}
                 value={formik.values.assignedCountries}
                 onChange={(values) => formik.setFieldValue("assignedCountries", values)}
                 onBlur={() => formik.setFieldTouched("assignedCountries", true)}
-                placeholder="Select Assigned Country"
+                placeholder={t("manageTeam.selectAssignedCountry", "Select Assigned Country")}
                 error={
                   formik.submitCount > 0 && formik.errors.assignedCountries
                     ? String(formik.errors.assignedCountries)
@@ -298,18 +335,19 @@ const AddMember = () => {
                 }
                 fullWidth
                 searchable
+                disabledValues={isEditMode && originalCountryValue ? [originalCountryValue] : []}
               />
             </div>
 
             {/* Row 4: Assigned University */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <MultiSelect
-                label={<>Assigned University <span style={{ color: COLORS.error }}>*</span></>}
+                label={<>{t("manageTeam.assignedUniversity", "Assigned University")} <span style={{ color: COLORS.error }}>*</span></>}
                 options={universityOptions}
                 value={formik.values.assignedUniversities}
                 onChange={(values) => formik.setFieldValue("assignedUniversities", values)}
                 onBlur={() => formik.setFieldTouched("assignedUniversities", true)}
-                placeholder="Select Assigned University"
+                placeholder={t("manageTeam.selectAssignedUniversity", "Select Assigned University")}
                 error={
                   formik.submitCount > 0 && formik.errors.assignedUniversities
                     ? String(formik.errors.assignedUniversities)
@@ -317,6 +355,7 @@ const AddMember = () => {
                 }
                 fullWidth
                 searchable
+                disabledValues={isEditMode && originalUniversityValue ? [originalUniversityValue] : []}
               />
             </div>
           </div>
@@ -324,10 +363,10 @@ const AddMember = () => {
           {/* Action Buttons */}
           <div className="flex justify-end gap-3 mt-8">
             <Button type="button" variant="cancel" rounded onClick={handleBack}>
-              Cancel
+              {t("common.cancel", "Cancel")}
             </Button>
             <Button type="submit" variant="accent" rounded>
-              {isEditMode ? "Update" : "Save"}
+              {isEditMode ? t("common.update", "Update") : t("common.save", "Save")}
             </Button>
           </div>
         </form>

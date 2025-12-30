@@ -1,8 +1,19 @@
 import { useState } from "react";
 import { DataGrid } from "@mui/x-data-grid";
-import type { GridColDef, GridRowsProp, GridPaginationModel } from "@mui/x-data-grid";
+import type { GridColDef, GridRowsProp, GridPaginationModel, GridRowSelectionModel, GridRowId } from "@mui/x-data-grid";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { COLORS } from "../../constants";
+
+// Helper to convert GridRowId[] to GridRowSelectionModel (MUI v8 format)
+const toSelectionModel = (ids: GridRowId[]): GridRowSelectionModel => ({
+  type: "include" as const,
+  ids: new Set(ids),
+});
+
+// Helper to convert GridRowSelectionModel to GridRowId[]
+const fromSelectionModel = (model: GridRowSelectionModel): GridRowId[] => {
+  return Array.from(model.ids || []);
+};
 
 interface DataTableProps {
   rows: GridRowsProp;
@@ -21,6 +32,9 @@ interface DataTableProps {
   paginationMode?: "client" | "server";
   sortingMode?: "client" | "server";
   className?: string;
+  height?: number | string; // Fixed height for table with scroll
+  rowSelectionModel?: GridRowId[];
+  onRowSelectionModelChange?: (newSelection: GridRowId[]) => void;
 }
 
 // Custom DataGrid styles - applied via sx prop since MuiDataGrid theme types
@@ -118,6 +132,9 @@ const DataTable = ({
   paginationMode = "client",
   sortingMode = "client",
   className = "",
+  height,
+  rowSelectionModel,
+  onRowSelectionModelChange,
 }: DataTableProps) => {
   // Internal pagination state for uncontrolled mode
   const [internalPaginationModel, setInternalPaginationModel] = useState<GridPaginationModel>({
@@ -136,12 +153,16 @@ const DataTable = ({
     }
   };
 
+  // If height is provided, disable autoHeight
+  const useAutoHeight = height ? false : autoHeight;
+
   return (
     <ThemeProvider theme={customTheme}>
       <div
         className={`rounded-xl overflow-hidden ${className}`}
         style={{
           boxShadow: "0 1px 3px rgba(0, 0, 0, 0.08)",
+          height: height || "auto",
         }}
       >
         <DataGrid
@@ -151,7 +172,7 @@ const DataTable = ({
           pageSizeOptions={pageSizeOptions}
           checkboxSelection={checkboxSelection}
           disableRowSelectionOnClick={disableRowSelectionOnClick}
-          autoHeight={autoHeight}
+          autoHeight={useAutoHeight}
           hideFooter={hideFooter}
           onRowClick={onRowClick}
           paginationModel={paginationModel}
@@ -159,11 +180,16 @@ const DataTable = ({
           rowCount={rowCount}
           paginationMode={paginationMode}
           sortingMode={sortingMode}
+          rowSelectionModel={rowSelectionModel ? toSelectionModel(rowSelectionModel) : undefined}
+          onRowSelectionModelChange={onRowSelectionModelChange ? (model: GridRowSelectionModel) => {
+            onRowSelectionModelChange(fromSelectionModel(model));
+          } : undefined}
           localeText={{
             noRowsLabel: "No Record Found",
           }}
           sx={{
             ...dataGridStyles,
+            height: height ? "100%" : "auto",
             "& .MuiDataGrid-virtualScroller": {
               minHeight: rows.length === 0 ? "200px" : "auto",
             },
@@ -175,4 +201,5 @@ const DataTable = ({
 };
 
 export default DataTable;
+export type { GridRowId, GridColDef } from "@mui/x-data-grid";
 

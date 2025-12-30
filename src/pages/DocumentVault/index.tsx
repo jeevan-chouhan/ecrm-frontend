@@ -215,6 +215,7 @@ const DocumentVault = () => {
             columns={columns}
             pageSize={10}
             pageSizeOptions={[5, 10, 25]}
+            // height="calc(100vh - 290px)"
           />
         </div>
       </div>
