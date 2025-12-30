@@ -66,7 +66,7 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
       pref.desiredCountry &&
       pref.program &&
       pref.desiredUniversity &&
-      pref.desiredCampus &&
+      // pref.desiredCampus &&
       pref.course &&
       pref.desiredIntake
     );
@@ -475,24 +475,47 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
       )}
 
       {/* Action Buttons */}
-      <div className="flex justify-between gap-3 mt-6 pt-6 border-t" style={{ borderColor: COLORS.border }}>
-        <div>
+      {/* Mobile: Back and Save on same line, Save & Next on next line */}
+      {/* Desktop: All buttons in one line */}
+      <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6 pt-6 border-t" style={{ borderColor: COLORS.border }}>
+        {/* First row on mobile: Back and Save */}
+        <div className="flex flex-row gap-3 sm:flex-row sm:w-auto">
           {onBack && (
-            <Button type="button" variant="cancel" onClick={onBack} rounded>
+            <Button type="button" variant="cancel" onClick={onBack} rounded className="flex-1 sm:flex-none sm:w-auto">
               {t("common.back")}
             </Button>
           )}
-        </div>
-        <div className="flex gap-3">
-          <Button type="button" variant="accent" onClick={handleSave} rounded>
+          {/* Save button - visible on mobile only (first line) */}
+          <Button 
+            type="button" 
+            variant="accent" 
+            onClick={handleSave} 
+            rounded 
+            className="flex-1 sm:!hidden"
+          >
             {t("applicant.save")}
           </Button>
+        </div>
+        {/* Second row on mobile: Save & Next, Desktop: Save and Save & Next */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          {/* Save button - visible on desktop only */}
+          <Button 
+            type="button" 
+            variant="accent" 
+            onClick={handleSave} 
+            rounded 
+            className="!hidden sm:!inline-flex sm:w-auto"
+          >
+            {t("applicant.save")}
+          </Button>
+          {/* Save & Next button - always visible */}
           <Button 
             type="button" 
             variant="accent" 
             onClick={handleSaveAndNextClick}
             disabled={!isFormValid}
             rounded
+            className="w-full sm:w-auto"
           >
             {t("applicant.saveAndNext")}
           </Button>
