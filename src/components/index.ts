@@ -13,6 +13,7 @@ export { default as Checkbox } from "./Checkbox/Checkbox";
 export { default as PhoneInput } from "./PhoneInput/PhoneInput";
 export { default as FileUpload } from "./FileUpload/FileUpload";
 export { default as DataTable } from "./DataTable/DataTable";
+export type { GridRowId, GridColDef } from "./DataTable/DataTable";
 export {
   Accordion,
   AccordionGroup,

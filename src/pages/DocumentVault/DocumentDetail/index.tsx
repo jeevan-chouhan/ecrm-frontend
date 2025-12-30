@@ -1,18 +1,19 @@
 import { useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Layout, Card, SearchBar, Button, Checkbox } from "../../../components";
+import { Layout, Card, Button, Popup, DataTable } from "../../../components";
+import type { GridColDef, GridRowId } from "../../../components";
 import { COLORS } from "../../../constants";
 import {
   ArrowLeft,
   File,
   Download,
-  Trash,
   Plus,
   Eye,
   Close,
-  Minus,
 } from "../../../assets";
+import UploadDocView from "./UploadDocView";
+import type { ViewerFile } from "./UploadDocView";
 
 // Document type icons mapping
 const documentIcons: Record<string, string> = {
@@ -55,57 +56,42 @@ const applicantsData: Record<string, { name: string; applicantId: string; stage:
 
 // Mock documents data
 const initialDocuments: DocumentItem[] = [
-  { id: "1", name: "Passport", type: "passport", uploaded: true, verified: true, fileUrl: "/sample.pdf", fileName: "passport.pdf" },
+  { id: "1", name: "Passport", type: "passport", uploaded: false, verified: false },
   { id: "2", name: "Transcripts (UG)", type: "transcript", uploaded: false, verified: false },
   { id: "3", name: "Letters of Recommendation", type: "letter", uploaded: false, verified: false },
   { id: "4", name: "Statement of Purpose", type: "statement", uploaded: false, verified: false },
   { id: "5", name: "Resume", type: "resume", uploaded: false, verified: false },
   { id: "6", name: "Financial Statement", type: "financial", uploaded: false, verified: false },
+  { id: "7", name: "Embassy approved visa", type: "passport", uploaded: false, verified: false },
 ];
 
 const DocumentDetail = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { applicantId } = useParams<{ applicantId: string }>();
-  const [searchQuery, setSearchQuery] = useState("");
   const [documents, setDocuments] = useState<DocumentItem[]>(initialDocuments);
-  const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
+  const [selectedDocs, setSelectedDocs] = useState<GridRowId[]>([]);
   const [viewerOpen, setViewerOpen] = useState(false);
-  const [viewerFile, setViewerFile] = useState<{ url: string; name: string; type: string } | null>(null);
+  const [viewerFile, setViewerFile] = useState<ViewerFile | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
+  const [approvePopupOpen, setApprovePopupOpen] = useState(false);
+  const [approvingDocId, setApprovingDocId] = useState<string | null>(null);
 
   // Get applicant data
   const applicantData = applicantsData[applicantId || "S324"] || applicantsData["S324"];
 
   // Stats
   const totalDocuments = documents.length;
-  const verifiedCount = documents.filter((d) => d.verified).length;
+  const approvedCount = documents.filter((d) => d.verified).length;
   const pendingCount = documents.filter((d) => !d.verified).length;
-
-  // Filter documents based on search
-  const filteredDocuments = documents.filter((doc) =>
-    doc.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const handleBack = () => {
     navigate(-1);
   };
 
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedDocs(documents.map((d) => d.id));
-    } else {
-      setSelectedDocs([]);
-    }
-  };
-
-  const handleSelectDoc = (docId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedDocs([...selectedDocs, docId]);
-    } else {
-      setSelectedDocs(selectedDocs.filter((id) => id !== docId));
-    }
+  const handleSelectionChange = (newSelection: GridRowId[]) => {
+    setSelectedDocs(newSelection);
   };
 
   const handleUploadClick = (docId: string) => {
@@ -142,26 +128,26 @@ const DocumentDetail = () => {
     );
   };
 
-  const handleVerify = (docId: string) => {
-    setDocuments(
-      documents.map((doc) =>
-        doc.id === docId ? { ...doc, verified: true } : doc
-      )
-    );
+  const handleVerifyClick = (docId: string) => {
+    setApprovingDocId(docId);
+    setApprovePopupOpen(true);
   };
 
-  const handleDeleteSelected = () => {
-    setDocuments(documents.filter((doc) => !selectedDocs.includes(doc.id)));
-    setSelectedDocs([]);
+  const handleVerifyConfirm = () => {
+    if (approvingDocId) {
+      setDocuments(
+        documents.map((doc) =>
+          doc.id === approvingDocId ? { ...doc, verified: true } : doc
+        )
+      );
+    }
+    setApprovePopupOpen(false);
+    setApprovingDocId(null);
   };
 
-  const handleDownloadSelected = () => {
-    selectedDocs.forEach((docId) => {
-      const doc = documents.find((d) => d.id === docId);
-      if (doc?.fileUrl && doc?.fileName) {
-        handleDownload(doc.fileUrl, doc.fileName);
-      }
-    });
+  const handleVerifyCancel = () => {
+    setApprovePopupOpen(false);
+    setApprovingDocId(null);
   };
 
   const handleDownload = (fileUrl: string, fileName: string) => {
@@ -208,6 +194,21 @@ const DocumentDetail = () => {
     setDocuments([...documents, newDoc]);
   };
 
+  const handleDownloadSelected = () => {
+    selectedDocs.forEach((docId) => {
+      const doc = documents.find((d) => d.id === String(docId));
+      if (doc?.fileUrl && doc?.fileName && doc.uploaded) {
+        handleDownload(doc.fileUrl, doc.fileName);
+      }
+    });
+  };
+
+  // Check if any selected documents have files to download
+  const hasDownloadableSelection = selectedDocs.some((docId) => {
+    const doc = documents.find((d) => d.id === String(docId));
+    return doc?.uploaded && doc?.fileUrl;
+  });
+
   const handleUpdateDocName = (docId: string, name: string) => {
     setDocuments(
       documents.map((doc) =>
@@ -221,6 +222,163 @@ const DocumentDetail = () => {
     setViewerOpen(false);
     setViewerFile(null);
   };
+
+  // DataTable columns
+  const columns: GridColDef[] = [
+    {
+      field: "name",
+      headerName: t("documentVault.documentName", "Document Name"),
+      flex: 2,
+      minWidth: 250,
+      sortable: true,
+      renderCell: (params) => {
+        const doc = params.row as DocumentItem;
+        return (
+          <div className="flex items-center gap-3 h-full">
+            <div
+              className="p-2 rounded-lg shrink-0 flex items-center justify-center"
+              style={{ backgroundColor: `${documentIcons[doc.type] || documentIcons.default}20` }}
+            >
+              <File
+                className="h-5 w-5"
+                style={{ color: documentIcons[doc.type] || documentIcons.default }}
+              />
+            </div>
+            {doc.isNew && !doc.name ? (
+              <input
+                type="text"
+                placeholder={t("documentVault.enterDocName", "Enter document name")}
+                className="flex-1 px-3 py-1.5 rounded-lg text-sm outline-none"
+                style={{
+                  border: `1px solid ${COLORS.border}`,
+                  color: COLORS.textDark,
+                }}
+                onBlur={(e) => handleUpdateDocName(doc.id, e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleUpdateDocName(doc.id, (e.target as HTMLInputElement).value);
+                  }
+                }}
+                onClick={(e) => e.stopPropagation()}
+                autoFocus
+              />
+            ) : (
+              <span style={{ color: COLORS.textDark }}>{doc.name}</span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      field: "upload",
+      headerName: t("documentVault.upload", "Upload"),
+      flex: 1.5,
+      minWidth: 200,
+      sortable: false,
+      headerAlign: "center",
+      align: "center",
+      renderCell: (params) => {
+        const doc = params.row as DocumentItem;
+        return (
+          <div className="flex items-center justify-center gap-2 h-full">
+            {doc.uploaded ? (
+              <>
+                <Button
+                  variant="accent"
+                  size="sm"
+                  rounded
+                  leftIcon={<Eye className="h-4 w-4" />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewDocument(doc);
+                  }}
+                >
+                  {t("documentVault.view", "View")}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={<Download className="h-4 w-4" style={{ color: COLORS.textMuted }} />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (doc.fileUrl && doc.fileName) handleDownload(doc.fileUrl, doc.fileName);
+                  }}
+                  title={t("common.download", "Download")}
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={<Close className="h-4 w-4" style={{ color: COLORS.error }} />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveFile(doc.id);
+                  }}
+                  title={t("common.remove", "Remove")}
+                />
+              </>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleUploadClick(doc.id);
+                }}
+                disabled={doc.isNew && !doc.name}
+                style={{ color: COLORS.accent }}
+              >
+                {t("documentVault.upload", "Upload")}
+              </Button>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      field: "verified",
+      headerName: t("documentVault.verificationStatus", "Verification Status"),
+      flex: 1,
+      minWidth: 150,
+      sortable: true,
+      headerAlign: "center",
+      align: "center",
+      renderCell: (params) => {
+        const doc = params.row as DocumentItem;
+        return (
+          <div className="flex items-center justify-center gap-2 h-full">
+            {doc.verified ? (
+              <span
+                className="px-3 py-1 rounded-full text-xs font-medium"
+                style={{
+                  backgroundColor: `${COLORS.success}20`,
+                  color: COLORS.success,
+                }}
+              >
+                {t("documentVault.approved", "Approved")}
+              </span>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleVerifyClick(doc.id);
+                }}
+                disabled={!doc.uploaded}
+                style={{
+                  color: doc.uploaded ? COLORS.accent : COLORS.textMuted,
+                  opacity: doc.uploaded ? 1 : 0.5,
+                  cursor: doc.uploaded ? "pointer" : "not-allowed",
+                }}
+              >
+                {t("documentVault.verify", "Verify")}
+              </Button>
+            )}
+          </div>
+        );
+      },
+    },
+  ];
 
   return (
     <Layout userName="Admin" userRole="Abroad Agency">
@@ -280,10 +438,10 @@ const DocumentDetail = () => {
               className="text-2xl md:text-3xl font-bold"
               style={{ color: COLORS.textDark }}
             >
-              {verifiedCount}
+              {approvedCount}
             </p>
             <p className="text-sm" style={{ color: COLORS.textMuted }}>
-              {t("documentVault.verified", "Verified")}
+              {t("documentVault.approved", "Approved")}
             </p>
           </Card>
           <Card padding="md" shadow="sm">
@@ -299,332 +457,69 @@ const DocumentDetail = () => {
           </Card>
         </div>
 
-        {/* Search Bar with Action Buttons */}
+        {/* Add Document & Download Buttons */}
         <div className="flex justify-end items-center gap-3 mb-4">
-          {/* Download & Delete buttons - always visible but disabled when no selection */}
           <Button
             variant="ghost"
             size="sm"
-            icon={<Download className="h-5 w-5" style={{ color: COLORS.accent }} />}
+            icon={<Download className="h-5 w-5" style={{ color: hasDownloadableSelection ? COLORS.accent : COLORS.textMuted }} />}
             onClick={handleDownloadSelected}
-            title={t("common.download", "Download Selected")}
-            disabled={selectedDocs.length === 0}
-            style={{ opacity: selectedDocs.length === 0 ? 0.4 : 1 }}
+            title={t("common.downloadSelected", "Download Selected")}
+            disabled={!hasDownloadableSelection}
+            style={{ opacity: hasDownloadableSelection ? 1 : 0.4 }}
           />
           <Button
-            variant="ghost"
+            variant="accent"
             size="sm"
-            icon={<Trash className="h-5 w-5" style={{ color: COLORS.error }} />}
-            onClick={handleDeleteSelected}
-            title={t("common.delete", "Delete Selected")}
-            disabled={selectedDocs.length === 0}
-            style={{ opacity: selectedDocs.length === 0 ? 0.4 : 1 }}
-          />
-          <div className="w-full max-w-xs">
-            <SearchBar
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder={t("documentVault.searchPlaceholder", "Search document name, ID...")}
-            />
-          </div>
+            rounded
+            leftIcon={<Plus className="h-4 w-4" />}
+            onClick={handleAddDocument}
+          >
+            {t("documentVault.addDocument", "Add Document")}
+          </Button>
         </div>
 
         {/* Documents Table */}
-        <div
-          className="rounded-lg overflow-hidden overflow-x-auto"
-          style={{ border: `1px solid ${COLORS.border}`, display: "flex", flexDirection: "column" }}
-        >
-          <div className="min-w-[600px]">
-          {/* Table Header */}
-          <div
-            className="grid grid-cols-12 gap-4 px-4 py-3 items-center shrink-0"
-            style={{ backgroundColor: COLORS.background }}
-          >
-            <div className="col-span-1">
-              <Checkbox
-                checked={selectedDocs.length === documents.length && documents.length > 0}
-                onChange={handleSelectAll}
-              />
-            </div>
-            <div className="col-span-5">
-              <span
-                className="text-xs font-semibold uppercase"
-                style={{ color: COLORS.textMuted }}
-              >
-                {t("documentVault.documentName", "Document Name")}
-              </span>
-            </div>
-            <div className="col-span-3">
-              <span
-                className="text-xs font-semibold uppercase"
-                style={{ color: COLORS.textMuted }}
-              >
-                {t("documentVault.upload", "Upload")}
-              </span>
-            </div>
-            <div className="col-span-3">
-              <span
-                className="text-xs font-semibold uppercase"
-                style={{ color: COLORS.textMuted }}
-              >
-                {t("documentVault.verificationStatus", "Verification Status")}
-              </span>
-            </div>
-          </div>
-
-          {/* Table Body - Scrollable */}
-          <div className="flex-1 overflow-y-auto">
-          {filteredDocuments.map((doc) => (
-            <div
-              key={doc.id}
-              className="grid grid-cols-12 gap-4 px-4 py-3 items-center"
-              style={{ borderTop: `1px solid ${COLORS.border}` }}
-            >
-              {/* Checkbox */}
-              <div className="col-span-1">
-                <Checkbox
-                  checked={selectedDocs.includes(doc.id)}
-                  onChange={(checked) => handleSelectDoc(doc.id, checked)}
-                />
-              </div>
-
-              {/* Document Name */}
-              <div className="col-span-5 flex items-center gap-3">
-                <div
-                  className="p-2 rounded-lg"
-                  style={{ backgroundColor: `${documentIcons[doc.type] || documentIcons.default}20` }}
-                >
-                  <File
-                    className="h-5 w-5"
-                    style={{ color: documentIcons[doc.type] || documentIcons.default }}
-                  />
-                </div>
-                {doc.isNew && !doc.name ? (
-                  <input
-                    type="text"
-                    placeholder="Enter document name"
-                    className="flex-1 px-3 py-1.5 rounded-lg text-sm outline-none"
-                    style={{
-                      border: `1px solid ${COLORS.border}`,
-                      color: COLORS.textDark,
-                    }}
-                    onBlur={(e) => handleUpdateDocName(doc.id, e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleUpdateDocName(doc.id, (e.target as HTMLInputElement).value);
-                      }
-                    }}
-                    autoFocus
-                  />
-                ) : (
-                  <span style={{ color: COLORS.textDark }}>{doc.name}</span>
-                )}
-              </div>
-
-              {/* Upload Actions */}
-              <div className="col-span-3 flex items-center gap-2">
-                {doc.uploaded ? (
-                  <>
-                    {/* View Button */}
-                    <Button
-                      variant="accent"
-                      size="sm"
-                      rounded
-                      leftIcon={<Eye className="h-4 w-4" />}
-                      onClick={() => handleViewDocument(doc)}
-                    >
-                      {t("documentVault.view", "View")}
-                    </Button>
-                    {/* Download */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      icon={<Download className="h-4 w-4" style={{ color: COLORS.textMuted }} />}
-                      onClick={() => doc.fileUrl && doc.fileName && handleDownload(doc.fileUrl, doc.fileName)}
-                      title={t("common.download", "Download")}
-                    />
-                    {/* Remove/Cross Icon */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      icon={<Close className="h-4 w-4" style={{ color: COLORS.error }} />}
-                      onClick={() => handleRemoveFile(doc.id)}
-                      title={t("common.remove", "Remove")}
-                    />
-                  </>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleUploadClick(doc.id)}
-                    disabled={doc.isNew && !doc.name}
-                    style={{ color: COLORS.accent }}
-                  >
-                    {t("documentVault.upload", "Upload")}
-                  </Button>
-                )}
-              </div>
-
-              {/* Verification Status */}
-              <div className="col-span-3 flex items-center gap-2">
-                {doc.verified ? (
-                  <span
-                    className="px-3 py-1 rounded-full text-xs font-medium"
-                    style={{
-                      backgroundColor: `${COLORS.success}20`,
-                      color: COLORS.success,
-                    }}
-                  >
-                    {t("documentVault.verified", "Verified")}
-                  </span>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleVerify(doc.id)}
-                    style={{ color: COLORS.accent }}
-                  >
-                    {t("documentVault.verify", "Verify")}
-                  </Button>
-                )}
-              </div>
-            </div>
-          ))}
-
-          {/* Empty State */}
-          {filteredDocuments.length === 0 && (
-            <div className="px-4 py-8 text-center">
-              <p style={{ color: COLORS.textMuted }}>
-                {t("documentVault.noDocuments", "No documents found")}
-              </p>
-            </div>
-          )}
-          </div>
-
-          {/* Add Document Row */}
-          <div
-            className="flex justify-end px-4 py-3 shrink-0"
-            style={{ borderTop: `1px solid ${COLORS.border}` }}
-          >
-            <Button
-              variant={selectedDocs.length > 0 ? "danger" : "accent"}
-              size="md"
-              rounded
-              icon={selectedDocs.length > 0 ? (
-                <Minus className="h-5 w-5" />
-              ) : (
-                <Plus className="h-5 w-5" />
-              )}
-              onClick={selectedDocs.length > 0 ? handleDeleteSelected : handleAddDocument}
-              title={selectedDocs.length > 0 ? t("common.deleteSelected", "Delete Selected") : t("common.addDocument", "Add Document")}
-              className="shadow-md hover:scale-110 transition-transform"
-            />
-          </div>
-          </div>
-        </div>
+        <DataTable
+          rows={documents}
+          columns={columns}
+          checkboxSelection
+          disableRowSelectionOnClick
+          hideFooter
+          rowSelectionModel={selectedDocs}
+          onRowSelectionModelChange={handleSelectionChange}
+        />
       </div>
 
-      {/* Document Viewer Modal */}
-      {viewerOpen && viewerFile && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={closeViewer}
-        >
-          <div
-            className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Viewer Header */}
-            <div
-              className="flex items-center justify-between px-4 py-3"
-              style={{ borderBottom: `1px solid ${COLORS.border}` }}
-            >
-              <h3 className="font-semibold" style={{ color: COLORS.textDark }}>
-                {viewerFile.name}
-              </h3>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  icon={<Download className="h-5 w-5" style={{ color: COLORS.textMuted }} />}
-                  onClick={() => handleDownload(viewerFile.url, viewerFile.name)}
-                  title={t("common.download", "Download")}
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  icon={<Close className="h-5 w-5" style={{ color: COLORS.textMuted }} />}
-                  onClick={closeViewer}
-                />
-              </div>
-            </div>
-
-            {/* Viewer Content */}
-            <div className="p-4 overflow-auto" style={{ height: "calc(90vh - 60px)" }}>
-              {viewerFile.type === "pdf" && (
-                <iframe
-                  src={viewerFile.url}
-                  className="w-full h-full"
-                  title={viewerFile.name}
-                />
-              )}
-              {viewerFile.type === "image" && (
-                <img
-                  src={viewerFile.url}
-                  alt={viewerFile.name}
-                  className="max-w-full max-h-full mx-auto"
-                />
-              )}
-              {viewerFile.type === "text" && (
-                <iframe
-                  src={viewerFile.url}
-                  className="w-full h-full bg-white"
-                  title={viewerFile.name}
-                />
-              )}
-              {viewerFile.type === "csv" && (
-                <iframe
-                  src={viewerFile.url}
-                  className="w-full h-full bg-white"
-                  title={viewerFile.name}
-                />
-              )}
-              {(viewerFile.type === "excel" || viewerFile.type === "word") && (
-                <div className="flex flex-col items-center justify-center h-full">
-                  <File className="h-16 w-16 mb-4" style={{ color: COLORS.textMuted }} />
-                  <p style={{ color: COLORS.textDark }} className="mb-4">
-                    {t("documentVault.cannotPreview", "This file type cannot be previewed directly.")}
-                  </p>
-                  <Button
-                    variant="accent"
-                    rounded
-                    leftIcon={<Download className="h-4 w-4" />}
-                    onClick={() => handleDownload(viewerFile.url, viewerFile.name)}
-                  >
-                    {t("common.download", "Download")}
-                  </Button>
-                </div>
-              )}
-              {viewerFile.type === "other" && (
-                <div className="flex flex-col items-center justify-center h-full">
-                  <File className="h-16 w-16 mb-4" style={{ color: COLORS.textMuted }} />
-                  <p style={{ color: COLORS.textDark }} className="mb-4">
-                    {t("documentVault.cannotPreview", "This file type cannot be previewed directly.")}
-                  </p>
-                  <Button
-                    variant="accent"
-                    rounded
-                    leftIcon={<Download className="h-4 w-4" />}
-                    onClick={() => handleDownload(viewerFile.url, viewerFile.name)}
-                  >
-                    {t("common.download", "Download")}
-                  </Button>
-                </div>
-              )}
-            </div>
+      {/* Verify Confirmation Popup */}
+      <Popup
+        isOpen={approvePopupOpen}
+        onClose={handleVerifyCancel}
+        title={t("documentVault.verifyDocument", "Verify Document")}
+        size="sm"
+        showCloseButton
+      >
+        <div>
+          <p className="text-base mb-6" style={{ color: COLORS.textDark }}>
+            {t("documentVault.verifyConfirmation", "Are you sure you want to verify this document?")}
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button variant="cancel" rounded onClick={handleVerifyCancel}>
+              {t("common.no", "No")}
+            </Button>
+            <Button variant="accent" rounded onClick={handleVerifyConfirm}>
+              {t("common.yes", "Yes")}
+            </Button>
           </div>
         </div>
-      )}
+      </Popup>
+
+      {/* Document Viewer Modal */}
+      <UploadDocView
+        isOpen={viewerOpen}
+        file={viewerFile}
+        onClose={closeViewer}
+      />
     </Layout>
   );
 };

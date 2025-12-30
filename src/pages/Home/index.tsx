@@ -46,7 +46,7 @@ const FeatureItem = ({
 const Home = () => {
   return (
     <div
-      className="min-h-screen"
+      className="h-screen overflow-y-auto"
       style={{ backgroundColor: COLORS.background }}
     >
       {/* Public Header */}

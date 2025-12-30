@@ -54,18 +54,53 @@ const AddMember = () => {
     return mockTeamMembers.find((m) => m.id === memberId) || null;
   }, [memberId]);
 
+  // Helper function to find country value by label
+  const getCountryValueByLabel = (label: string): string | null => {
+    const country = countryOptions.find(
+      (c) => c.label.toLowerCase() === label.toLowerCase()
+    );
+    return country?.value || null;
+  };
+
+  // Helper function to find university value by label
+  const getUniversityValueByLabel = (label: string): string | null => {
+    const university = universityOptions.find(
+      (u) => u.label.toLowerCase() === label.toLowerCase()
+    );
+    return university?.value || null;
+  };
+
+  // Get original country and university values for edit mode (these will be disabled)
+  const originalCountryValue = useMemo(() => {
+    if (isEditMode && memberData?.country) {
+      return getCountryValueByLabel(memberData.country);
+    }
+    return null;
+  }, [isEditMode, memberData]);
+
+  const originalUniversityValue = useMemo(() => {
+    if (isEditMode && memberData?.university) {
+      return getUniversityValueByLabel(memberData.university);
+    }
+    return null;
+  }, [isEditMode, memberData]);
+
   // Prepare initial values based on mode
   const initialValues = useMemo<AddMemberFormValues>(() => {
     if (isEditMode && memberData) {
+      // Get country and university values from member data
+      const countryValue = getCountryValueByLabel(memberData.country);
+      const universityValue = getUniversityValueByLabel(memberData.university);
+      
       return {
         name: memberData.name || "",
         email: memberData.email || "",
         contactNumber: memberData.mobileNo?.replace("+", "") || "",
         role: memberData.role?.toLowerCase() || "",
-        adminId: "admin1", // Default admin ID (in real app, get from member data)
-        managerId: "carlos", // Default manager ID (in real app, get from member data)
-        assignedCountries: ["usa", "uk"], // Mock data (in real app, get from member data)
-        assignedUniversities: ["harvard", "mit"], // Mock data (in real app, get from member data)
+        adminId: "", // In real app, get from member data
+        managerId: "", // In real app, get from member data
+        assignedCountries: countryValue ? [countryValue] : [],
+        assignedUniversities: universityValue ? [universityValue] : [],
       };
     }
     return defaultInitialValues;
@@ -300,6 +335,7 @@ const AddMember = () => {
                 }
                 fullWidth
                 searchable
+                disabledValues={isEditMode && originalCountryValue ? [originalCountryValue] : []}
               />
             </div>
 
@@ -319,6 +355,7 @@ const AddMember = () => {
                 }
                 fullWidth
                 searchable
+                disabledValues={isEditMode && originalUniversityValue ? [originalUniversityValue] : []}
               />
             </div>
           </div>

@@ -80,6 +80,8 @@ const ViewMember = () => {
           name: found.name,
           memberId: found.memberId,
           role: roleGroup.role.toLowerCase(),
+          email: found.email,
+          contactNumber: found.mobileNo,
         };
       }
     }

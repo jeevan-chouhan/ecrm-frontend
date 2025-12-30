@@ -30,6 +30,7 @@
     "deactivate": "Deactivate",
     "from": "from",
     "download": "Download",
+    "downloadSelected": "Download Selected",
     "remove": "Remove",
     "deleteSelected": "Delete Selected",
     "addDocument": "Add Document"
@@ -495,14 +496,21 @@
     "searchApplicants": "Search applicants ID, name...",
     "totalDocuments": "Total Documents",
     "verified": "Verified",
+    "approved": "Approved",
     "pending": "Pending",
     "documentName": "Document Name",
     "upload": "Upload",
     "verificationStatus": "Verification Status",
     "verify": "Verify",
+    "approve": "Approve",
     "noDocuments": "No documents found",
     "searchPlaceholder": "Search document name, ID...",
-    "cannotPreview": "This file type cannot be previewed directly."
+    "cannotPreview": "This file type cannot be previewed directly.",
+    "addDocument": "Add Document",
+    "approveDocument": "Approve Document",
+    "approveConfirmation": "Are you sure you want to approve this document?",
+    "verifyDocument": "Verify Document",
+    "verifyConfirmation": "Are you sure you want to verify this document?"
   },
   "agencyPartner": {
     "title": "Agency Partner",

@@ -9,12 +9,12 @@ interface PublicLayoutProps {
 const PublicLayout = ({ children }: PublicLayoutProps) => {
   return (
     <div
-      className="min-h-screen"
+      className="h-screen overflow-y-auto"
       style={{ backgroundColor: COLORS.background }}
     >
       <PublicHeader />
       {/* Add padding-top to account for fixed header */}
-      <main className="pt-16">{children}</main>
+      <main className="pt-16 min-h-[calc(100vh-64px)]">{children}</main>
     </div>
   );
 };

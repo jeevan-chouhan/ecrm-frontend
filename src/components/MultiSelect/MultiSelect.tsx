@@ -21,6 +21,7 @@ interface MultiSelectProps {
   leftIcon?: ReactNode;
   searchable?: boolean;
   searchPlaceholder?: string;
+  disabledValues?: string[]; // Values that cannot be removed (shown without close icon)
 }
 
 const MultiSelect = ({
@@ -36,6 +37,7 @@ const MultiSelect = ({
   leftIcon,
   searchable = false,
   searchPlaceholder = "Search...",
+  disabledValues = [],
 }: MultiSelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -73,6 +75,10 @@ const MultiSelect = ({
   }, [isOpen, searchable]);
 
   const handleToggle = (optionValue: string) => {
+    // Don't allow removing disabled values
+    if (value.includes(optionValue) && disabledValues.includes(optionValue)) {
+      return;
+    }
     const newValue = value.includes(optionValue)
       ? value.filter((v) => v !== optionValue)
       : [...value, optionValue];
@@ -81,6 +87,10 @@ const MultiSelect = ({
 
   const handleRemove = (optionValue: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    // Don't allow removing disabled values
+    if (disabledValues.includes(optionValue)) {
+      return;
+    }
     onChange?.(value.filter((v) => v !== optionValue));
   };
 
@@ -126,25 +136,30 @@ const MultiSelect = ({
           )}
           <div className="flex flex-wrap gap-1.5 pr-8">
             {selectedOptions.length > 0 ? (
-              selectedOptions.map((option) => (
-                <span
-                  key={option.value}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-sm"
-                  style={{
-                    backgroundColor: `${COLORS.accent}20`,
-                    color: COLORS.accent,
-                  }}
-                >
-                  {option.label}
+              selectedOptions.map((option) => {
+                const isDisabledValue = disabledValues.includes(option.value);
+                return (
                   <span
-                    onClick={(e) => handleRemove(option.value, e)}
-                    className="cursor-pointer"
-                    style={{ color: COLORS.accent }}
+                    key={option.value}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-sm"
+                    style={{
+                      backgroundColor: isDisabledValue ? `${COLORS.textMuted}20` : `${COLORS.accent}20`,
+                      color: isDisabledValue ? COLORS.textMuted : COLORS.accent,
+                    }}
                   >
-                    <Close className="h-4 w-4" />
+                    {option.label}
+                    {!isDisabledValue && !disabled && (
+                      <span
+                        onClick={(e) => handleRemove(option.value, e)}
+                        className="cursor-pointer"
+                        style={{ color: COLORS.accent }}
+                      >
+                        <Close className="h-4 w-4" />
+                      </span>
+                    )}
                   </span>
-                </span>
-              ))
+                );
+              })
             ) : (
               <span style={{ color: COLORS.textMuted }}>{placeholder}</span>
             )}
@@ -201,11 +216,15 @@ const MultiSelect = ({
               {filteredOptions.length > 0 ? (
                 filteredOptions.map((option) => {
                   const isSelected = value.includes(option.value);
+                  const isDisabledValue = disabledValues.includes(option.value);
+                  const isLocked = isSelected && isDisabledValue;
                   return (
                     <li
                       key={option.value}
                       onClick={() => handleToggle(option.value)}
-                      className="px-4 py-2.5 cursor-pointer flex items-center gap-3 transition-colors duration-150"
+                      className={`px-4 py-2.5 flex items-center gap-3 transition-colors duration-150 ${
+                        isLocked ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+                      }`}
                       style={{
                         backgroundColor: isSelected
                           ? COLORS.surfaceHover
@@ -213,13 +232,13 @@ const MultiSelect = ({
                         color: isSelected ? COLORS.accent : COLORS.textDark,
                       }}
                       onMouseEnter={(e) => {
-                        if (!isSelected) {
+                        if (!isSelected && !isLocked) {
                           e.currentTarget.style.backgroundColor =
                             COLORS.surfaceHover;
                         }
                       }}
                       onMouseLeave={(e) => {
-                        if (!isSelected) {
+                        if (!isSelected && !isLocked) {
                           e.currentTarget.style.backgroundColor = "transparent";
                         }
                       }}
@@ -228,10 +247,10 @@ const MultiSelect = ({
                         className="flex items-center justify-center w-5 h-5 rounded border-2 transition-colors duration-150"
                         style={{
                           backgroundColor: isSelected
-                            ? COLORS.accent
+                            ? isLocked ? COLORS.textMuted : COLORS.accent
                             : "transparent",
                           borderColor: isSelected
-                            ? COLORS.accent
+                            ? isLocked ? COLORS.textMuted : COLORS.accent
                             : COLORS.border,
                         }}
                       >

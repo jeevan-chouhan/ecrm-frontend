@@ -30,6 +30,7 @@
     "deactivate": "निष्क्रिय करें",
     "from": "से",
     "download": "डाउनलोड करें",
+    "downloadSelected": "चयनित डाउनलोड करें",
     "remove": "हटाएं",
     "deleteSelected": "चयनित हटाएं",
     "addDocument": "दस्तावेज़ जोड़ें"
@@ -494,14 +495,21 @@
     "searchApplicants": "आवेदक आईडी, नाम खोजें...",
     "totalDocuments": "कुल दस्तावेज़",
     "verified": "सत्यापित",
+    "approved": "स्वीकृत",
     "pending": "लंबित",
     "documentName": "दस्तावेज़ का नाम",
     "upload": "अपलोड करें",
     "verificationStatus": "सत्यापन स्थिति",
     "verify": "सत्यापित करें",
+    "approve": "स्वीकृत करें",
     "noDocuments": "कोई दस्तावेज़ नहीं मिला",
     "searchPlaceholder": "दस्तावेज़ नाम, आईडी खोजें...",
-    "cannotPreview": "इस फ़ाइल प्रकार का पूर्वावलोकन सीधे नहीं किया जा सकता।"
+    "cannotPreview": "इस फ़ाइल प्रकार का पूर्वावलोकन सीधे नहीं किया जा सकता।",
+    "addDocument": "दस्तावेज़ जोड़ें",
+    "approveDocument": "दस्तावेज़ स्वीकृत करें",
+    "approveConfirmation": "क्या आप वाकई इस दस्तावेज़ को स्वीकृत करना चाहते हैं?",
+    "verifyDocument": "दस्तावेज़ सत्यापित करें",
+    "verifyConfirmation": "क्या आप वाकई इस दस्तावेज़ को सत्यापित करना चाहते हैं?"
   },
   "agencyPartner": {
     "title": "एजेंसी पार्टनर",
