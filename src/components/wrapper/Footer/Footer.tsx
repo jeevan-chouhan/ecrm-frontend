@@ -40,7 +40,7 @@ const Footer = ({
               className="text-sm transition-colors"
               style={{ color: COLORS.textMuted }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.color = COLORS.primary;
+                e.currentTarget.style.color = COLORS.accent;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.color = COLORS.textMuted;

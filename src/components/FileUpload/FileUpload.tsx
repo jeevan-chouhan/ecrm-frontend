@@ -162,7 +162,7 @@ const FileUpload = ({
       <div
         className="relative p-3 rounded-lg"
         style={{
-          backgroundColor: "#F9FAFB",
+          backgroundColor: COLORS.background,
           border: `1px solid ${showError ? COLORS.error : COLORS.border}`,
           boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
         }}

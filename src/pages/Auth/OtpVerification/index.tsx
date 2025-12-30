@@ -203,7 +203,7 @@ const OtpVerification = () => {
             <div className="mt-6 text-center">
               <p className="text-sm mb-3" style={{ color: COLORS.textMuted }}>
                 {t("auth.resendOtpIn")}{" "}
-                <span style={{ color: COLORS.primary, fontWeight: 600 }}>
+                <span style={{ color: COLORS.accent, fontWeight: 600 }}>
                   {formatTime(timer)}
                 </span>
               </p>
@@ -223,7 +223,7 @@ const OtpVerification = () => {
             <Link
               to={ROUTES.LOGIN}
               className="text-sm font-medium hover:underline"
-              style={{ color: COLORS.primary }}
+              style={{ color: COLORS.accent }}
             >
               {t("auth.backToLogin")}
             </Link>

@@ -1,7 +1,7 @@
 import { useMemo, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../../constants";
-import { formatDateValue } from "../../../utils";
+import { formatDateValue, getEnrollmentTypeLabel, getGenderLabel } from "../../../utils";
 import { DetailField } from "./DisplayComponents";
 
 interface PersonalDetailsData {
@@ -35,7 +35,7 @@ const PersonalDetailsDisplay = ({ data }: PersonalDetailsDisplayProps) => {
   const details = useMemo(() => [
     {
       label: t("applicant.enrollmentType", "Enrollment Type"),
-      value: data.enrollmentType || "-",
+      value: getEnrollmentTypeLabel(data.enrollmentType),
     },
     {
       label: t("applicant.name", "Name"),
@@ -47,7 +47,7 @@ const PersonalDetailsDisplay = ({ data }: PersonalDetailsDisplayProps) => {
     },
     {
       label: t("applicant.gender", "Gender"),
-      value: data.gender || "-",
+      value: getGenderLabel(data.gender),
     },
     {
       label: t("applicant.contactNumber", "Contact Number"),
