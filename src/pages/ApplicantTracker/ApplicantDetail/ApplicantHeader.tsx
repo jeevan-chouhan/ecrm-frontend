@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../../constants";
+import { getEnrollmentTypeLabel } from "../../../utils";
 import { Edit, ToggleStatus } from "../../../assets";
 import type { ApplicantDetail } from "./types";
 
@@ -30,7 +31,7 @@ const ApplicantHeader = ({ applicant, onEdit, onStatusToggle }: ApplicantHeaderP
             {t("applicantTracker.applicantStage", "Applicant Stage")} - {applicant.applicantStage}
           </p>
           <p className="text-sm" style={{ color: COLORS.textMuted }}>
-            {t("applicantTracker.enrollmentType", "Enrollment Type")} - {applicant.enrollmentType}
+            {t("applicantTracker.enrollmentType", "Enrollment Type")} - {getEnrollmentTypeLabel(applicant.enrollmentType)}
           </p>
         </div>
       </div>

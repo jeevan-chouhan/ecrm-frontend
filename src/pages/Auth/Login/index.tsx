@@ -94,7 +94,7 @@ const Login = () => {
                 <Link
                   to={ROUTES.FORGOT_PASSWORD}
                   className="text-sm font-medium hover:underline"
-                  style={{ color: COLORS.primary }}
+                  style={{ color: COLORS.accent }}
                 >
                   {t("auth.forgotPasswordLink")}
                 </Link>
@@ -123,7 +123,7 @@ const Login = () => {
             <Link
               to={ROUTES.REGISTER}
               className="font-medium hover:underline"
-              style={{ color: COLORS.primary }}
+              style={{ color: COLORS.accent }}
             >
               {t("auth.register")}
             </Link>

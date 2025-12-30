@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { Calendar, ChevronLeft, ChevronRight } from "../../assets";
+import { Calendar } from "../../assets";
 import { COLORS } from "../../constants";
+import MonthYearSelector from "./MonthYearSelector";
+import CalendarDaysGrid from "./CalendarDaysGrid";
 
 interface DatePickerProps {
   label?: string;
@@ -15,21 +17,6 @@ interface DatePickerProps {
   dateFormat?: string;
 }
 
-const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
 
 const DatePicker = ({
   label,
@@ -99,13 +86,6 @@ const DatePicker = ({
     return `${month}/${day}/${year}`;
   };
 
-  const getDaysInMonth = (month: number, year: number): number => {
-    return new Date(year, month + 1, 0).getDate();
-  };
-
-  const getFirstDayOfMonth = (month: number, year: number): number => {
-    return new Date(year, month, 1).getDay();
-  };
 
   const handlePrevMonth = () => {
     if (currentMonth === 0) {
@@ -144,77 +124,6 @@ const DatePicker = ({
     setIsOpen(false);
   };
 
-  const isDateDisabled = (day: number): boolean => {
-    const date = new Date(currentYear, currentMonth, day);
-    if (minDate && date < minDate) return true;
-    if (maxDate && date > maxDate) return true;
-    return false;
-  };
-
-  const isToday = (day: number): boolean => {
-    const today = new Date();
-    return (
-      day === today.getDate() &&
-      currentMonth === today.getMonth() &&
-      currentYear === today.getFullYear()
-    );
-  };
-
-  const isSelected = (day: number): boolean => {
-    if (!value) return false;
-    return (
-      day === value.getDate() &&
-      currentMonth === value.getMonth() &&
-      currentYear === value.getFullYear()
-    );
-  };
-
-  const renderCalendarDays = () => {
-    const daysInMonth = getDaysInMonth(currentMonth, currentYear);
-    const firstDay = getFirstDayOfMonth(currentMonth, currentYear);
-    const days = [];
-
-    // Empty cells for days before the first day of the month
-    for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} className="h-9 w-9" />);
-    }
-
-    // Days of the month
-    for (let day = 1; day <= daysInMonth; day++) {
-      const isDisabled = isDateDisabled(day);
-      const selected = isSelected(day);
-      const today = isToday(day);
-      days.push(
-        <button
-          key={day}
-          type="button"
-          disabled={isDisabled}
-          onClick={() => handleDateSelect(day)}
-          className="h-9 w-9 rounded-lg text-sm font-medium transition-colors duration-150"
-          style={{
-            backgroundColor: selected ? COLORS.accent : "transparent",
-            color: selected ? COLORS.textWhite : isDisabled ? COLORS.border : COLORS.textDark,
-            border: today && !selected ? `1px solid ${COLORS.accent}` : "none",
-            cursor: isDisabled ? "not-allowed" : "pointer",
-          }}
-          onMouseEnter={(e) => {
-            if (!isDisabled && !selected) {
-              e.currentTarget.style.backgroundColor = COLORS.surfaceHover;
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!isDisabled && !selected) {
-              e.currentTarget.style.backgroundColor = "transparent";
-            }
-          }}
-        >
-          {day}
-        </button>
-      );
-    }
-
-    return days;
-  };
 
   return (
     <div className={`${fullWidth ? "w-full" : ""}`} ref={pickerRef}>
@@ -265,62 +174,27 @@ const DatePicker = ({
             }}
           >
             {/* Month/Year Navigation */}
-            <div className="flex items-center justify-between mb-4">
-              <button
-                type="button"
-                onClick={handlePrevMonth}
-                className="p-1.5 rounded-lg transition-colors"
-                style={{ color: COLORS.textMuted }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = COLORS.surfaceHover;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                }}
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              <span className="text-sm font-semibold" style={{ color: COLORS.textDark }}>
-                {MONTHS[currentMonth]} {currentYear}
-              </span>
-              <button
-                type="button"
-                onClick={handleNextMonth}
-                disabled={!canNavigateNext()}
-                className="p-1.5 rounded-lg transition-colors"
-                style={{ 
-                  color: canNavigateNext() ? COLORS.textMuted : COLORS.border,
-                  cursor: canNavigateNext() ? "pointer" : "not-allowed",
-                  opacity: canNavigateNext() ? 1 : 0.5,
-                }}
-                onMouseEnter={(e) => {
-                  if (canNavigateNext()) {
-                    e.currentTarget.style.backgroundColor = COLORS.surfaceHover;
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                }}
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
-            </div>
+            <MonthYearSelector
+              currentMonth={currentMonth}
+              currentYear={currentYear}
+              onMonthChange={setCurrentMonth}
+              onYearChange={setCurrentYear}
+              onPrevMonth={handlePrevMonth}
+              onNextMonth={handleNextMonth}
+              canNavigateNext={canNavigateNext()}
+              minDate={minDate}
+              maxDate={maxDate}
+            />
 
-            {/* Day Headers */}
-            <div className="grid grid-cols-7 gap-1 mb-2">
-              {DAYS.map((day) => (
-                <div
-                  key={day}
-                  className="h-9 w-9 flex items-center justify-center text-xs font-medium"
-                  style={{ color: COLORS.textMuted }}
-                >
-                  {day}
-                </div>
-              ))}
-            </div>
-
-            {/* Calendar Days */}
-            <div className="grid grid-cols-7 gap-1">{renderCalendarDays()}</div>
+            {/* Calendar Days Grid */}
+            <CalendarDaysGrid
+              currentMonth={currentMonth}
+              currentYear={currentYear}
+              selectedDate={value || null}
+              minDate={minDate}
+              maxDate={maxDate}
+              onDateSelect={handleDateSelect}
+            />
 
             {/* Today Button */}
             <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${COLORS.border}` }}>

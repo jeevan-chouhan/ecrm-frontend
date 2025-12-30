@@ -10,6 +10,8 @@ export const COLORS = {
   secondaryHover: "#1C9E99",
   accent: "#8A2BE2",
   accentHover: "#7B27CC",
+  // accent: "#FF0000",
+  // accentHover: "#CC0000",
 
   // Background Colors
   background: "#F5F5F5",
@@ -18,7 +20,7 @@ export const COLORS = {
 
   // Border Colors
   border: "#D3D3D3",
-  borderFocus: "#1E90FF",
+  borderFocus: "#8A2BE2", // Same as accent for consistency
 
   // Text Colors
   textDark: "#333333",
@@ -35,6 +37,15 @@ export const COLORS = {
   warningHover: "#D97706",
   info: "#3B82F6",
   infoHover: "#2563EB",
+
+  // Document Type Colors
+  documentPassport: "#8B5CF6",
+  documentTranscript: "#3B82F6",
+  documentLetter: "#10B981",
+  documentStatement: "#F59E0B",
+  documentResume: "#EF4444",
+  documentFinancial: "#6366F1",
+  documentDefault: "#64748B",
 } as const;
 
 // ==========================================
@@ -136,7 +147,7 @@ export const componentSpecs = {
   input: {
     borderRadius: "8px",
     borderColor: COLORS.border,
-    focusBorderColor: COLORS.borderFocus,
+    focusBorderColor: COLORS.accent, // Use accent for focus to match user requirement
   },
   card: {
     borderRadius: "12px",
@@ -159,6 +170,23 @@ export const shadows = {
   lg: "0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05)",
   xl: "0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04)",
 } as const;
+
+// ==========================================
+// Helper Functions
+// ==========================================
+
+/**
+ * Convert hex color to rgba format
+ * @param hex - Hex color string (e.g., "#8A2BE2")
+ * @param alpha - Alpha value between 0 and 1 (e.g., 0.4)
+ * @returns rgba color string (e.g., "rgba(138, 43, 226, 0.4)")
+ */
+export const hexToRgba = (hex: string, alpha: number): string => {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
 
 // ==========================================
 // Export Types

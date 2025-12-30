@@ -146,7 +146,7 @@ const Register = () => {
                   <Link
                     to={ROUTES.LOGIN}
                     className="font-medium hover:underline"
-                    style={{ color: COLORS.primary }}
+                    style={{ color: COLORS.accent }}
                   >
                     {t("auth.login")}
                   </Link>
@@ -175,7 +175,7 @@ const Register = () => {
                   <Link
                     to={ROUTES.TERMS_AND_CONDITIONS}
                     className="font-medium hover:underline"
-                    style={{ color: COLORS.primary }}
+                    style={{ color: COLORS.accent }}
                   >
                     {t("auth.clickHere")}
                   </Link>

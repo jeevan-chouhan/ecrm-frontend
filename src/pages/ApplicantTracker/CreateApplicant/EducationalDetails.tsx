@@ -31,9 +31,9 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack }: 
       boardUniversity: Yup.string().required(t("validation.boardUniversityRequired")).trim(),
       program: Yup.string(),
       major: Yup.string().when("highestQualification", {
-        is: (val: string) => val === "ug",
-        then: (schema) => schema,
-        otherwise: (schema) => schema,
+        is: (val: string) => val === "high-school",
+        then: (schema) => schema.nullable(), // Optional when High School is selected (field is hidden)
+        otherwise: (schema) => schema.nullable(), // Optional for other qualifications
       }),
       scoreType: Yup.string().required(t("validation.scoreTypeRequired")),
       score: Yup.string()
@@ -181,7 +181,8 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack }: 
     }
   };
 
-  const showMajor = formik.values.highestQualification === "ug";
+  // Show Major field for all qualification types except High School
+  const showMajor = formik.values.highestQualification !== "high-school";
 
   return (
     <div className="space-y-6">

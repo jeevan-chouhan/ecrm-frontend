@@ -100,18 +100,59 @@ const mapApplicantDetailToFormState = (applicantDetail: ApplicantDetail): Applic
     return ""; // Return empty if can't determine
   };
 
-  const preferences = (applicantDetail.applications || []).map((app, index) => ({
-    id: app.id || `pref-${index}`,
-    desiredCountry: app.country || "",
-    program: extractProgramFromCourse(app.course || ""), // Try to extract from course name
-    desiredUniversity: app.university || "",
-    desiredCampus: "", // Not available in UniversityApplication - will need to be filled by user
-    course: app.course || "",
-    desiredIntake: app.intake || "",
-    assignCounselor: app.counselor || "",
-    agencyPartnerName: app.agencyPartner === "-" ? "" : app.agencyPartner || "",
-    saved: false, // Set to false so they show in incomplete section and can be edited
-  }));
+  // Normalize country value to match dropdown options (e.g., "USA" -> "usa")
+  const normalizeCountry = (country: string): string => {
+    if (!country) return "";
+    const countryLower = country.toLowerCase();
+    // Map common country name variations to dropdown values
+    if (countryLower === "usa" || countryLower === "united states" || countryLower === "united states of america") {
+      return "usa";
+    }
+    if (countryLower === "uk" || countryLower === "united kingdom") {
+      return "uk";
+    }
+    // Return lowercase version if it matches a known value, otherwise return as-is
+    return countryLower;
+  };
+
+  // Normalize university value to match dropdown options (e.g., "MIT" -> "mit")
+  const normalizeUniversity = (university: string): string => {
+    if (!university) return "";
+    const universityLower = university.toLowerCase();
+    // Map common university name variations to dropdown values
+    if (universityLower === "mit" || universityLower === "massachusetts institute of technology") {
+      return "mit";
+    }
+    if (universityLower === "stanford" || universityLower === "stanford university") {
+      return "stanford"; // Note: "stanford" might not be in dropdown, but we'll use it
+    }
+    // Return as-is - Select component might have search/filter functionality
+    return university;
+  };
+
+  const preferences = (applicantDetail.applications || []).map((app, index) => {
+    // Check if preference has enough data to be considered "saved"
+    // (campus is optional in existing data, so we check other required fields)
+    const hasEssentialData = !!(
+      app.country &&
+      app.course &&
+      app.intake &&
+      app.university
+    );
+    
+    return {
+      id: app.id || `pref-${index}`,
+      desiredCountry: normalizeCountry(app.country || ""),
+      program: extractProgramFromCourse(app.course || ""), // Try to extract from course name
+      desiredUniversity: normalizeUniversity(app.university || ""),
+      desiredCampus: "", // Not available in UniversityApplication - will need to be filled by user
+      course: app.course || "",
+      desiredIntake: app.intake || "",
+      assignCounselor: app.counselor || "",
+      agencyPartnerName: app.agencyPartner === "-" ? "" : app.agencyPartner || "",
+      saved: hasEssentialData, // Mark as saved if it has essential data, so it shows as a card
+    };
+  });
 
   // Map educational details
   const educationalDetails: EducationalDetailFormData = {
@@ -223,31 +264,24 @@ const CreateApplicant = () => {
 
   // Fetch applicant data when applicantId is present
   useEffect(() => {
-    let isMounted = true;
-    const abortController = new AbortController();
+    if (!applicantId) {
+      setIsEditMode(false);
+      return;
+    }
 
+    setIsEditMode(true);
+    setLoading(true);
+
+    // Simulate API call with mock data
     const fetchApplicantData = async () => {
-      if (!applicantId) {
-        setIsEditMode(false);
-        return;
-      }
-
-      setIsEditMode(true);
-      setLoading(true);
-
       try {
         // TODO: Replace with actual API call
-        // const response = await fetch(`/api/applicants/${applicantId}`, {
-        //   signal: abortController.signal,
-        // });
+        // const response = await fetch(`/api/applicants/${applicantId}`);
         // if (!response.ok) throw new Error("Failed to fetch applicant");
         // const data = await response.json();
 
         // Mock data for now
         await new Promise((resolve) => setTimeout(resolve, 500));
-
-        // Check if component is still mounted before updating state
-        if (!isMounted || abortController.signal.aborted) return;
 
         // Use mock data - in production, use data from API
         const applicantData = mockApplicantDetail;
@@ -255,10 +289,8 @@ const CreateApplicant = () => {
         // Map the data to form state
         const mappedFormState = mapApplicantDetailToFormState(applicantData);
         setFormState(mappedFormState);
+        setLoading(false);
       } catch (error) {
-        if (error instanceof Error && error.name === "AbortError") {
-          return; // Ignore abort errors
-        }
         if (import.meta.env.DEV) {
           console.error("Error fetching applicant data:", error);
         }
@@ -266,20 +298,11 @@ const CreateApplicant = () => {
         // On error, reset to initial state
         setIsEditMode(false);
         setFormState(getInitialFormState());
-      } finally {
-        if (isMounted && !abortController.signal.aborted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
     fetchApplicantData();
-
-    // Cleanup function
-    return () => {
-      isMounted = false;
-      abortController.abort();
-    };
   }, [applicantId]);
 
   // Final submit handler - submits all form data and redirects
