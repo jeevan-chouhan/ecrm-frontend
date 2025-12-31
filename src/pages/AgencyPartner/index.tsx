@@ -238,9 +238,12 @@ const AgencyPartner = () => {
       headerName: t("agencyPartner.contactNo", "CONTACT NO."),
       flex: 1,
       minWidth: 140,
-      renderCell: (params) => (
-        <span>+{params.value}</span>
-      ),
+      renderCell: (params) => {
+        const value = params.value || "";
+        // Format: +91 9877123462 (space after country code)
+        const formatted = value.length > 2 ? `+${value.slice(0, 2)} ${value.slice(2)}` : `+${value}`;
+        return <span>{formatted}</span>;
+      },
     },
     {
       field: "commissionPercentage",
@@ -362,7 +365,7 @@ const AgencyPartner = () => {
               fullWidth
             />
             <Input
-              label={<>{t("agencyPartner.contactPerson", "Contact Person")} <span style={{ color: COLORS.error }}>*</span></>}
+              label={<>{t("agencyPartner.contactPersonLabel", "Contact Person")} <span style={{ color: COLORS.error }}>*</span></>}
               placeholder={t("agencyPartner.enterContactPerson", "Enter contact person name")}
               value={formData.contactPerson}
               onChange={(e) => handleInputChange("contactPerson", e.target.value)}
@@ -374,7 +377,7 @@ const AgencyPartner = () => {
           {/* Row 2: Email, Contact Number */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              label={<>{t("agencyPartner.email", "Email")} <span style={{ color: COLORS.error }}>*</span></>}
+              label={<>{t("agencyPartner.emailLabel", "Email")} <span style={{ color: COLORS.error }}>*</span></>}
               type="email"
               placeholder={t("agencyPartner.enterEmail", "Enter email address")}
               value={formData.email}
@@ -396,7 +399,7 @@ const AgencyPartner = () => {
           {/* Row 3: Commission Percentage, Description */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              label={<>{t("agencyPartner.commissionPercentage", "Commission Percentage")} <span style={{ color: COLORS.error }}>*</span></>}
+              label={<>{t("agencyPartner.commissionPercentageLabel", "Commission Percentage")} <span style={{ color: COLORS.error }}>*</span></>}
               type="number"
               placeholder={t("agencyPartner.enterCommission", "Enter commission")}
               value={formData.commissionPercentage}
@@ -422,7 +425,7 @@ const AgencyPartner = () => {
             />
             <Input
               inputType="textarea"
-              label={t("agencyPartner.description", "Description")}
+              label={t("agencyPartner.descriptionLabel", "Description")}
               placeholder={t("agencyPartner.descriptionPlaceholder", "Description of agency")}
               value={formData.description}
               onChange={(e) => handleInputChange("description", e.target.value)}

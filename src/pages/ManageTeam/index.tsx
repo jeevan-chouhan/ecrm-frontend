@@ -118,7 +118,7 @@ const ManageTeam = () => {
     },
     {
       field: "mobileNo",
-      headerName: t("manageTeam.mobileNo", "Mobile No"),
+      headerName: t("manageTeam.contactNo", "Contact No"),
       flex: 0.9,
       minWidth: 130,
     },
@@ -226,7 +226,7 @@ const ManageTeam = () => {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder={t("manageTeam.searchPlaceholder", "Search by name, email or mobile...")}
+                placeholder={t("manageTeam.searchPlaceholder", "Search by name, email or contact...")}
                 className="block w-full rounded-lg pl-10 pr-4 py-2.5 text-sm transition-all duration-200 focus:outline-none"
                 style={{
                   border: `1px solid ${COLORS.border}`,
