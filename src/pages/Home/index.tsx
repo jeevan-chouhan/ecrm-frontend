@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { COLORS, hexToRgba } from "../../constants";
+import { COLORS, hexToRgba, APP_CONFIG } from "../../constants";
 import { Button } from "../../components";
 import { images, Chart, Pipeline, Customize, UserPlus, Admin, Form } from "../../assets";
 import PublicHeader from "../../components/wrapper/Header/PublicHeader";
@@ -262,8 +262,7 @@ const Home = () => {
               fontFamily: "'Inter', sans-serif",
             }}
           >
-            © {new Date().getFullYear()} Edu_Immigration_CRM. All rights
-            reserved.
+            {APP_CONFIG.copyright()}
           </p>
         </div>
       </footer>

@@ -4,6 +4,16 @@ export * from "./colors";
 export * from "./routes";
 export * from "./mockData";
 
+// ==========================================
+// App Configuration
+// ==========================================
+export const APP_CONFIG = {
+  name: "E-CRM",
+  fullName: "Education CRM",
+  tagline: "Your Immigration Partner",
+  copyright: (year: number = new Date().getFullYear()) => `© ${year} E-CRM. All rights reserved.`,
+} as const;
+
 export const enrollmentTypes: SelectOption[] = [
   { value: "walk-in", label: "Walk-in" },
   { value: "referred-to-agency", label: "Referred to Agency Partner" },

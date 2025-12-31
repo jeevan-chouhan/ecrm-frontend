@@ -1,4 +1,4 @@
-import { COLORS } from "../../../constants";
+import { COLORS, APP_CONFIG } from "../../../constants";
 
 interface FooterProps {
   companyName?: string;
@@ -7,7 +7,7 @@ interface FooterProps {
 }
 
 const Footer = ({
-  companyName = "E-CRM",
+  companyName = APP_CONFIG.name,
   year = new Date().getFullYear(),
   links = [],
 }: FooterProps) => {

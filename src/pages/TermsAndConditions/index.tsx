@@ -21,7 +21,7 @@ const TermsAndConditions = () => {
             className="text-sm"
             style={{ color: COLORS.textMuted, fontFamily: "'Inter', sans-serif" }}
           >
-            Last Updated: 10-07-2025
+            Last Updated: 10 Jul 2025
           </p>
         </div>
 
