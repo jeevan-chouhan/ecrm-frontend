@@ -25,7 +25,7 @@ const NotesSection = ({ notes, isSaving, hasChanges, onNotesChange, onSaveNotes 
       <textarea
         value={notes}
         onChange={(e) => onNotesChange(e.target.value)}
-        placeholder={t("applicant.enterNotes", "Enter notes")}
+        placeholder={t("applicant.enterNotes", "Enter Notes")}
         className="w-full px-4 py-3 rounded-lg resize-none"
         rows={4}
         style={{

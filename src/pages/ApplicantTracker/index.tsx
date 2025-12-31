@@ -12,6 +12,7 @@ import {
 } from "../../components";
 import { COLORS, ROUTES } from "../../constants";
 import { Plus, Eye, ToggleStatus } from "../../assets";
+import { formatDateValue } from "../../utils";
 import ApplicantTrackerFilters from "./ApplicantTrackerFilters";
 
 // Mock applicant data
@@ -434,6 +435,24 @@ const ApplicantTracker = () => {
     </span>
   ), []);
 
+  const renderCreatedDateCell = useCallback((params: GridRenderCellParams<Applicant>) => (
+    <span className="text-sm" style={{ color: COLORS.textDark }}>
+      {formatDateValue(params.row.createdAt)}
+    </span>
+  ), []);
+
+  const renderIntakeYearCell = useCallback((params: GridRenderCellParams<Applicant>) => {
+    if (!params.row.intake) return "-";
+    // Format intake like "jan-2026" to "Jan 2026" or just "2026"
+    const intakeParts = params.row.intake.split("-");
+    if (intakeParts.length === 2) {
+      const month = intakeParts[0].charAt(0).toUpperCase() + intakeParts[0].slice(1);
+      const year = intakeParts[1];
+      return `${month} ${year}`;
+    }
+    return params.row.intake;
+  }, []);
+
   const renderActionsCell = useCallback((params: GridRenderCellParams<Applicant>) => (
     <div className="flex items-center gap-3">
       <Tooltip title={t("applicantTracker.view", "View")} arrow>
@@ -469,14 +488,14 @@ const ApplicantTracker = () => {
   const columns: GridColDef[] = useMemo(() => [
     {
       field: "applicantId",
-      headerName: t("applicantTracker.applicantId", "APPLICANT ID"),
+      headerName: t("applicantTracker.applicantId", "Applicant Id"),
       flex: 0.8,
       minWidth: 100,
       sortable: true,
     },
     {
       field: "applicantName",
-      headerName: t("applicantTracker.applicantName", "APPLICANT NAME"),
+      headerName: t("applicantTracker.applicantName", "Applicant Name"),
       flex: 1.5,
       minWidth: 180,
       sortable: true,
@@ -484,56 +503,65 @@ const ApplicantTracker = () => {
     },
     {
       field: "course",
-      headerName: t("applicantTracker.course", "COURSE"),
+      headerName: t("applicantTracker.course", "Course"),
       flex: 1.2,
       minWidth: 150,
       sortable: true,
     },
     {
       field: "applicantStage",
-      headerName: t("applicantTracker.applicantStage", "APPLICANT STAGE"),
+      headerName: t("applicantTracker.applicantStage", "Applicant Stage"),
       flex: 1.2,
       minWidth: 150,
       sortable: true,
     },
     {
       field: "applicantStatus",
-      headerName: t("applicantTracker.applicantStatus", "APPLICANT STATUS"),
+      headerName: t("applicantTracker.applicantStatus", "Applicant Status"),
       flex: 1.2,
       minWidth: 150,
       sortable: true,
     },
     {
       field: "enrollmentType",
-      headerName: t("applicantTracker.enrollmentType", "ENROLLMENT TYPE"),
+      headerName: t("applicantTracker.enrollmentType", "Enrollment Type"),
       flex: 1.3,
       minWidth: 180,
       sortable: true,
     },
     {
-      field: "notes",
-      headerName: t("applicantTracker.notes", "NOTES"),
-      flex: 1.5,
-      minWidth: 200,
-      sortable: false,
+      field: "intakeYear",
+      headerName: t("applicantTracker.intakeYear", "Intake Year"),
+      flex: 1.2,
+      minWidth: 150,
+      sortable: true,
+      renderCell: renderIntakeYearCell,
     },
     {
       field: "status",
-      headerName: t("applicantTracker.status", "STATUS"),
+      headerName: t("applicantTracker.status", "Status"),
       flex: 0.8,
       minWidth: 100,
       sortable: true,
       renderCell: renderStatusCell,
     },
     {
+      field: "createdDate",
+      headerName: t("applicantTracker.createdDate", "Created Date"),
+      flex: 1.2,
+      minWidth: 150,
+      sortable: true,
+      renderCell: renderCreatedDateCell,
+    },
+    {
       field: "actions",
-      headerName: t("applicantTracker.action", "ACTION"),
+      headerName: t("applicantTracker.action", "Action"),
       flex: 1,
       minWidth: 120,
       sortable: false,
       renderCell: renderActionsCell,
     },
-  ], [t, renderApplicantNameCell, renderStatusCell, renderActionsCell]);
+  ], [t, renderApplicantNameCell, renderStatusCell, renderCreatedDateCell, renderIntakeYearCell, renderActionsCell]);
 
   return (
     <Layout userName="Admin" userRole="Abroad Agency">
@@ -553,7 +581,7 @@ const ApplicantTracker = () => {
             <div className="w-full md:w-72">
               <SearchBar
                 onSearch={handleSearch}
-                placeholder={t("applicantTracker.searchPlaceholder", "Search applicants...")}
+                placeholder={t("applicantTracker.searchPlaceholder", "Search Applicants...")}
               />
             </div>
             <Link to={ROUTES.CREATE_APPLICANT}>

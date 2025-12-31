@@ -90,7 +90,7 @@ const ApplicantTrackerFilters = ({
   ], [t]);
 
   const enrollmentTypeOptionsWithPlaceholder = useMemo(() => [
-    { value: "", label: t("applicantTracker.selectEnrollmentType", "Select Enrollment type") },
+    { value: "", label: t("applicantTracker.selectEnrollmentType", "Select Enrollment Type") },
     ...enrollmentTypes,
   ], [t]);
 
@@ -106,6 +106,7 @@ const ApplicantTrackerFilters = ({
         {/* Admin Select */}
         <div className="flex-1 min-w-[160px]">
           <Select
+            label={t("applicantTracker.adminLabel", "Admin")}
             options={adminOptionsWithPlaceholder}
             value={selectedAdmin}
             onChange={onAdminChange}
@@ -116,6 +117,7 @@ const ApplicantTrackerFilters = ({
         {/* Manager Select */}
         <div className="flex-1 min-w-[160px]">
           <Select
+            label={t("applicantTracker.managerLabel", "Manager")}
             options={managerOptionsWithPlaceholder}
             value={selectedManager}
             onChange={onManagerChange}
@@ -126,6 +128,7 @@ const ApplicantTrackerFilters = ({
         {/* Counselor Select */}
         <div className="flex-1 min-w-[160px]">
           <Select
+            label={t("applicantTracker.counselorLabel", "Counselor")}
             options={counselorOptionsWithPlaceholder}
             value={selectedCounselor}
             onChange={onCounselorChange}
@@ -136,6 +139,7 @@ const ApplicantTrackerFilters = ({
         {/* Applicant Stage MultiSelect */}
         <div className="flex-1 min-w-[160px]">
           <MultiSelect
+            label={t("applicantTracker.applicantStageLabel", "Applicant Stage")}
             options={applicantStageOptions}
             value={selectedApplicantStages}
             onChange={onApplicantStagesChange}
@@ -147,6 +151,7 @@ const ApplicantTrackerFilters = ({
         {/* Status Select */}
         <div className="flex-1 min-w-[160px]">
           <Select
+            label={t("applicantTracker.statusLabel", "Status")}
             options={statusOptionsWithPlaceholder}
             value={selectedStatus}
             onChange={onStatusChange}
@@ -157,6 +162,7 @@ const ApplicantTrackerFilters = ({
         {/* Intake Select */}
         <div className="flex-1 min-w-[160px]">
           <Select
+            label={t("applicantTracker.intakeLabel", "Intake")}
             options={intakeOptionsWithPlaceholder}
             value={selectedIntake}
             onChange={onIntakeChange}
@@ -170,6 +176,7 @@ const ApplicantTrackerFilters = ({
         {/* Enrollment Type Select */}
         <div className="flex-1 min-w-[160px]">
           <Select
+            label={t("applicantTracker.enrollmentTypeLabel", "Enrollment Type")}
             options={enrollmentTypeOptionsWithPlaceholder}
             value={selectedEnrollmentType}
             onChange={onEnrollmentTypeChange}
@@ -180,6 +187,7 @@ const ApplicantTrackerFilters = ({
         {/* Agency Partner Select */}
         <div className="flex-1 min-w-[160px]">
           <Select
+            label={t("applicantTracker.agencyPartnerLabel", "Agency Partner")}
             options={agencyPartnerOptionsWithPlaceholder}
             value={selectedAgencyPartner}
             onChange={onAgencyPartnerChange}
@@ -190,6 +198,7 @@ const ApplicantTrackerFilters = ({
         {/* From Date Picker */}
         <div className="flex-1 min-w-[160px]">
           <DatePicker
+            label={t("applicantTracker.fromDateLabel", "From Date")}
             value={startDate}
             onChange={onStartDateChange}
             placeholder={t("applicantTracker.fromDate", "From Date")}
@@ -199,6 +208,7 @@ const ApplicantTrackerFilters = ({
         {/* To Date Picker */}
         <div className="flex-1 min-w-[160px]">
           <DatePicker
+            label={t("applicantTracker.toDateLabel", "To Date")}
             value={endDate}
             onChange={onEndDateChange}
             placeholder={t("applicantTracker.toDate", "To Date")}

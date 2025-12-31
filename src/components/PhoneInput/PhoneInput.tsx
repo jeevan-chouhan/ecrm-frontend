@@ -21,7 +21,7 @@ const PhoneInput = ({
   onChange,
   onBlur,
   error,
-  placeholder = "Enter phone number",
+  placeholder = "Enter Phone Number",
   fullWidth = false,
   disabled = false,
   country = "in",
@@ -47,7 +47,7 @@ const PhoneInput = ({
         disabled={disabled}
         placeholder={placeholder}
         enableSearch
-        searchPlaceholder="Search country..."
+        searchPlaceholder="Search Country..."
         inputProps={{
           onBlur: onBlur,
         }}

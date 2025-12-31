@@ -52,7 +52,7 @@ const dataGridStyles = {
   "& .MuiDataGrid-columnHeaderTitle": {
     fontWeight: 600,
     fontSize: "12px",
-    textTransform: "uppercase",
+    textTransform: "none",
     color: COLORS.textMuted,
     letterSpacing: "0.5px",
   },

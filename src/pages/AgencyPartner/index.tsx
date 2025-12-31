@@ -212,7 +212,7 @@ const AgencyPartner = () => {
     },
     {
       field: "name",
-      headerName: t("agencyPartner.agencyPartnerName", "AGENCY PARTNER NAME"),
+      headerName: t("agencyPartner.agencyPartnerName", "Agency Partner Name"),
       flex: 1,
       minWidth: 150,
       renderCell: (params) => (
@@ -223,19 +223,19 @@ const AgencyPartner = () => {
     },
     {
       field: "contactPerson",
-      headerName: t("agencyPartner.contactPerson", "CONTACT PERSON"),
+      headerName: t("agencyPartner.contactPerson", "Contact Person"),
       flex: 1,
       minWidth: 140,
     },
     {
       field: "email",
-      headerName: t("agencyPartner.email", "EMAIL"),
+      headerName: t("agencyPartner.email", "Email"),
       flex: 1.2,
       minWidth: 180,
     },
     {
       field: "contactNo",
-      headerName: t("agencyPartner.contactNo", "CONTACT NO."),
+      headerName: t("agencyPartner.contactNo", "Contact No."),
       flex: 1,
       minWidth: 140,
       renderCell: (params) => {
@@ -247,7 +247,7 @@ const AgencyPartner = () => {
     },
     {
       field: "commissionPercentage",
-      headerName: t("agencyPartner.commissionPercentage", "COMMISSION PERCENTAGE"),
+      headerName: t("agencyPartner.commissionPercentage", "Commission Percentage"),
       flex: 1,
       minWidth: 180,
       renderCell: (params) => (
@@ -256,13 +256,13 @@ const AgencyPartner = () => {
     },
     {
       field: "description",
-      headerName: t("agencyPartner.description", "DESCRIPTION"),
+      headerName: t("agencyPartner.description", "Description"),
       flex: 1.2,
       minWidth: 180,
     },
     {
       field: "actions",
-      headerName: t("agencyPartner.action", "ACTION"),
+      headerName: t("agencyPartner.action", "Action"),
       flex: 0.8,
       minWidth: 100,
       sortable: false,
@@ -317,7 +317,7 @@ const AgencyPartner = () => {
               <SearchBar
                 value={searchQuery}
                 onChange={setSearchQuery}
-                placeholder={t("agencyPartner.searchPlaceholder", "Search agency by name, contact person...")}
+                placeholder={t("agencyPartner.searchPlaceholder", "Search Agency By Name, Contact Person...")}
               />
             </div>
             <Button
@@ -358,7 +358,7 @@ const AgencyPartner = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               label={<>{t("agencyPartner.agencyName", "Agency Name")} <span style={{ color: COLORS.error }}>*</span></>}
-              placeholder={t("agencyPartner.enterAgencyName", "Enter agency name")}
+              placeholder={t("agencyPartner.enterAgencyName", "Enter Agency Name")}
               value={formData.name}
               onChange={(e) => handleInputChange("name", e.target.value)}
               error={formErrors.name}
@@ -366,7 +366,7 @@ const AgencyPartner = () => {
             />
             <Input
               label={<>{t("agencyPartner.contactPersonLabel", "Contact Person")} <span style={{ color: COLORS.error }}>*</span></>}
-              placeholder={t("agencyPartner.enterContactPerson", "Enter contact person name")}
+              placeholder={t("agencyPartner.enterContactPerson", "Enter Contact Person Name")}
               value={formData.contactPerson}
               onChange={(e) => handleInputChange("contactPerson", e.target.value)}
               error={formErrors.contactPerson}
@@ -379,7 +379,7 @@ const AgencyPartner = () => {
             <Input
               label={<>{t("agencyPartner.emailLabel", "Email")} <span style={{ color: COLORS.error }}>*</span></>}
               type="email"
-              placeholder={t("agencyPartner.enterEmail", "Enter email address")}
+              placeholder={t("agencyPartner.enterEmail", "Enter Email Address")}
               value={formData.email}
               onChange={(e) => handleInputChange("email", e.target.value)}
               error={formErrors.email}
@@ -387,7 +387,7 @@ const AgencyPartner = () => {
             />
             <PhoneInput
               label={<>{t("agencyPartner.contactNumber", "Contact Number")} <span style={{ color: COLORS.error }}>*</span></>}
-              placeholder={t("agencyPartner.enterPhoneNumber", "Enter phone number")}
+              placeholder={t("agencyPartner.enterPhoneNumber", "Enter Phone Number")}
               value={formData.contactNo}
               onChange={(value) => handleInputChange("contactNo", value)}
               error={formErrors.contactNo}
@@ -401,7 +401,7 @@ const AgencyPartner = () => {
             <Input
               label={<>{t("agencyPartner.commissionPercentageLabel", "Commission Percentage")} <span style={{ color: COLORS.error }}>*</span></>}
               type="number"
-              placeholder={t("agencyPartner.enterCommission", "Enter commission")}
+              placeholder={t("agencyPartner.enterCommission", "Enter Commission")}
               value={formData.commissionPercentage}
               onChange={(e) => {
                 const value = e.target.value;
@@ -426,7 +426,7 @@ const AgencyPartner = () => {
             <Input
               inputType="textarea"
               label={t("agencyPartner.descriptionLabel", "Description")}
-              placeholder={t("agencyPartner.descriptionPlaceholder", "Description of agency")}
+              placeholder={t("agencyPartner.descriptionPlaceholder", "Description Of Agency")}
               value={formData.description}
               onChange={(e) => handleInputChange("description", e.target.value)}
               rows={3}

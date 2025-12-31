@@ -24,7 +24,7 @@ const Footer = ({
         className="text-sm text-center"
         style={{ color: COLORS.textMuted, fontFamily: "'Inter', sans-serif" }}
       >
-        © {year} {companyName}. All rights reserved.
+        © {year} {companyName}. All Rights Reserved.
       </div>
 
       {/* Links */}

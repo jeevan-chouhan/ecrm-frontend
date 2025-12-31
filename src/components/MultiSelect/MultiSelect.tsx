@@ -30,7 +30,7 @@ const MultiSelect = ({
   value = [],
   onChange,
   onBlur,
-  placeholder = "Select options",
+  placeholder = "Select Options",
   error,
   disabled = false,
   fullWidth = false,

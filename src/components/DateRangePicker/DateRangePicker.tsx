@@ -39,7 +39,7 @@ const DateRangePicker = ({
   label,
   value,
   onChange,
-  placeholder = "Select date range",
+  placeholder = "Select Date Range",
   error,
   disabled = false,
   fullWidth = false,
@@ -338,8 +338,8 @@ const DateRangePicker = ({
               style={{ color: COLORS.textMuted }}
             >
               {selectingEnd && value?.startDate
-                ? "Select end date"
-                : "Select start date"}
+                ? "Select End Date"
+                : "Select Start Date"}
             </div>
 
             {/* Month/Year Navigation */}
