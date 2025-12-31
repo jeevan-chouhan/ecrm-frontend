@@ -61,7 +61,7 @@ const Layout = ({
       isActive: location.pathname === ROUTES.COUNTRY_UNIVERSITY,
     },
     {
-      label: "Document vault",
+      label: "Document Vault",
       path: ROUTES.DOCUMENT_VAULT,
       icon: <Document className="h-5 w-5" />,
       isActive: location.pathname.startsWith(ROUTES.DOCUMENT_VAULT),
