@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "../../../../components";
 import { COLORS } from "../../../../constants";
 import { Edit, Trash } from "../../../../assets";
+import { formatDate } from "../../../../utils/dateUtils";
 import WorkExperienceForm from "../WorkExperienceForm";
 import type { WorkExperienceItem } from "../types";
 
@@ -96,13 +97,13 @@ const WorkExperienceList = ({
                     </p>
                     <p className="text-xs mt-1" style={{ color: COLORS.textMuted }}>
                       {workExperience.startDate
-                        ? new Date(workExperience.startDate).toLocaleDateString()
+                        ? formatDate(workExperience.startDate)
                         : ""}
                       {" - "}
                       {workExperience.currentlyWorking
                         ? t("applicant.currentlyWorking")
                         : workExperience.endDate
-                        ? new Date(workExperience.endDate).toLocaleDateString()
+                        ? formatDate(workExperience.endDate)
                         : ""}
                     </p>
                   </div>

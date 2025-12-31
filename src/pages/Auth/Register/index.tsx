@@ -264,7 +264,7 @@ const Register = () => {
             className="text-xs mb-4"
             style={{ color: COLORS.textMuted }}
           >
-            {t("auth.lastUpdated")}: 10-07-2025
+            {t("auth.lastUpdated")}: 10 Jul 2025
           </p>
           <div className="space-y-4">
             {termsAndConditions.map((section, index) => (

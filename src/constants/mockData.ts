@@ -338,8 +338,8 @@ export const mockApplicantDetail: ApplicantDetail = {
       counselor: "celina",
       agencyPartner: "apply-board",
       status: "Application Incomplete",
-      appliedDate: "06-05-2025",
-      lastUpdated: "02-07-2025",
+      appliedDate: "6 May 2025",
+      lastUpdated: "2 Jul 2025",
     },
     {
       id: "2",

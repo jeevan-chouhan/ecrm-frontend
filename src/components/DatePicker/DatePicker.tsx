@@ -79,11 +79,13 @@ const DatePicker = ({
     }
   }, [isOpen, maxDate, currentMonth, currentYear]);
 
+  const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  
   const formatDate = (date: Date): string => {
-    const day = date.getDate().toString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate();
+    const month = MONTH_NAMES[date.getMonth()];
     const year = date.getFullYear();
-    return `${month}/${day}/${year}`;
+    return `${day} ${month} ${year}`;
   };
 
 

@@ -2,10 +2,13 @@
  * Date formatting utility functions
  */
 
+// Month abbreviations
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 /**
- * Formats a date to DD-MM-YYYY format
+ * Formats a date to DD MMM YYYY format
  * @param date - Date object or date string
- * @returns Formatted date string in DD-MM-YYYY format (e.g., "25-12-2025")
+ * @returns Formatted date string in DD MMM YYYY format (e.g., "31 Dec 2025")
  */
 export const formatDate = (date: Date | string): string => {
   const d = typeof date === "string" ? new Date(date) : date;
@@ -16,10 +19,10 @@ export const formatDate = (date: Date | string): string => {
     return "";
   }
   
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = d.getDate();
+  const month = MONTH_NAMES[d.getMonth()];
   const year = d.getFullYear();
-  return `${day}-${month}-${year}`;
+  return `${day} ${month} ${year}`;
 };
 
 /**
@@ -40,7 +43,7 @@ export const formatDateValue = (date: string | Date | null | undefined): string 
 /**
  * Formats a date to a different format if needed
  * @param date - Date object or date string
- * @param format - Format string (e.g., "YYYY-MM-DD", "DD/MM/YYYY")
+ * @param format - Format string (e.g., "YYYY-MM-DD", "DD/MM/YYYY", "DD MMM YYYY")
  * @returns Formatted date string
  */
 export const formatDateCustom = (date: Date | string, format: string): string => {
@@ -53,11 +56,15 @@ export const formatDateCustom = (date: Date | string, format: string): string =>
   }
   
   const day = String(d.getDate()).padStart(2, "0");
+  const dayNum = String(d.getDate());
   const month = String(d.getMonth() + 1).padStart(2, "0");
+  const monthName = MONTH_NAMES[d.getMonth()];
   const year = d.getFullYear();
   
   return format
     .replace("DD", day)
+    .replace("D", dayNum)
+    .replace("MMM", monthName)
     .replace("MM", month)
     .replace("YYYY", String(year))
     .replace("YY", String(year).slice(-2));

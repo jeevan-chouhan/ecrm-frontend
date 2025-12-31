@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ROUTES } from "../../../constants";
-import { COLORS } from "../../../constants";
+import { ROUTES, COLORS, APP_CONFIG } from "../../../constants";
 import { Menu, Close } from "../../../assets";
 import Button from "../../Button/Button";
 
@@ -47,7 +46,7 @@ const PublicHeader = ({
             fontFamily: "'Inter', sans-serif",
           }}
         >
-          Edu_Immigration_CRM
+          {APP_CONFIG.name}
         </span>
       </Link>
 

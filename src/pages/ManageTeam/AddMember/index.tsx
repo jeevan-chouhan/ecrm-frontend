@@ -244,7 +244,7 @@ const AddMember = () => {
               <Input
                 name="name"
                 label={<>{t("manageTeam.name", "Name")} <span style={{ color: COLORS.error }}>*</span></>}
-                placeholder={t("manageTeam.name", "Name")}
+                placeholder={t("manageTeam.enterName", "Enter name")}
                 value={formik.values.name}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -254,7 +254,7 @@ const AddMember = () => {
               <Input
                 name="email"
                 label={<>{t("manageTeam.email", "Email")} <span style={{ color: COLORS.error }}>*</span></>}
-                placeholder={t("manageTeam.email", "Email")}
+                placeholder={t("manageTeam.enterEmail", "Enter email")}
                 type="email"
                 value={formik.values.email}
                 onChange={formik.handleChange}
@@ -327,7 +327,7 @@ const AddMember = () => {
                 value={formik.values.assignedCountries}
                 onChange={(values) => formik.setFieldValue("assignedCountries", values)}
                 onBlur={() => formik.setFieldTouched("assignedCountries", true)}
-                placeholder={t("manageTeam.selectAssignedCountry", "Select Assigned Country")}
+                placeholder={t("manageTeam.selectAssignedCountry", "Select assigned country")}
                 error={
                   formik.submitCount > 0 && formik.errors.assignedCountries
                     ? String(formik.errors.assignedCountries)
@@ -347,7 +347,7 @@ const AddMember = () => {
                 value={formik.values.assignedUniversities}
                 onChange={(values) => formik.setFieldValue("assignedUniversities", values)}
                 onBlur={() => formik.setFieldTouched("assignedUniversities", true)}
-                placeholder={t("manageTeam.selectAssignedUniversity", "Select Assigned University")}
+                placeholder={t("manageTeam.selectAssignedUniversity", "Select assigned university")}
                 error={
                   formik.submitCount > 0 && formik.errors.assignedUniversities
                     ? String(formik.errors.assignedUniversities)

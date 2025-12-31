@@ -14,7 +14,7 @@ import {
   Report,
   Settings,
 } from "../../../assets";
-import { COLORS, ROUTES } from "../../../constants";
+import { COLORS, ROUTES, APP_CONFIG } from "../../../constants";
 
 interface LayoutProps {
   children: ReactNode;
@@ -99,7 +99,7 @@ const Layout = ({
     >
       {/* Sidebar */}
       <Sidebar
-        logoText="E-CRM"
+        logoText={APP_CONFIG.name}
         items={sidebarItems}
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -134,7 +134,7 @@ const Layout = ({
         </main>
 
         {/* Footer */}
-        <Footer companyName="E-CRM" />
+        <Footer companyName={APP_CONFIG.name} />
       </div>
     </div>
   );

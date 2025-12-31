@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Close } from "../../../assets";
-import { COLORS, componentSpecs } from "../../../constants";
+import { COLORS, componentSpecs, APP_CONFIG } from "../../../constants";
 import Button from "../../Button/Button";
 
 interface SidebarItem {
@@ -26,7 +26,7 @@ interface SidebarProps {
 
 const Sidebar = ({
   logo,
-  logoText = "E-CRM",
+  logoText = APP_CONFIG.name,
   items = [],
   footer,
   collapsed = false,
