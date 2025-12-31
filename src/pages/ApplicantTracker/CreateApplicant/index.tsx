@@ -462,8 +462,8 @@ const CreateApplicant = () => {
       <div className="bg-white rounded-lg shadow-sm">
         {/* Header */}
         <div className="p-4 md:p-6 border-b" style={{ borderColor: COLORS.border }}>
-          <h1 className="text-xl md:text-2xl font-semibold uppercase" style={{ color: COLORS.textDark }}>
-            {isEditMode ? t("applicant.editApplicant", "Edit Applicant") : t("applicant.addApplicant")}
+          <h1 className="text-xl md:text-2xl font-semibold" style={{ color: COLORS.textDark }}>
+            {isEditMode ? t("applicant.editApplicant", "Edit Applicant") : t("applicant.addApplicant", "Add Applicant")}
           </h1>
         </div>
 

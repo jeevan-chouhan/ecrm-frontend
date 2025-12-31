@@ -137,9 +137,9 @@ const MonthYearSelector = ({
             options={getMonthOptions()}
             value={currentMonth.toString()}
             onChange={handleMonthSelect}
-            placeholder="Select month"
+            placeholder="Select Month"
             searchable
-            searchPlaceholder="Search month..."
+            searchPlaceholder="Search Month..."
             fullWidth
           />
         </div>
@@ -150,9 +150,9 @@ const MonthYearSelector = ({
             options={getYearOptions()}
             value={currentYear.toString()}
             onChange={handleYearSelect}
-            placeholder="Select year"
+            placeholder="Select Year"
             searchable
-            searchPlaceholder="Search year..."
+            searchPlaceholder="Search Year..."
             fullWidth
           />
         </div>

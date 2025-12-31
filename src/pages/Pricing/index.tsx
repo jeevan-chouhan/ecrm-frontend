@@ -52,13 +52,13 @@ const Pricing = () => {
               className="text-2xl md:text-3xl font-bold mb-3"
               style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
             >
-              Choose the Right Plan for Your Agency
+              Choose The Right Plan For Your Agency
             </h1>
             <p
               className="text-sm md:text-base"
               style={{ color: COLORS.textMuted, fontFamily: "'Inter', sans-serif" }}
             >
-              Explore features included in your current plan. Upgrade anytime to unlock more capabilities.
+              Explore Features Included In Your Current Plan. Upgrade Anytime To Unlock More Capabilities.
             </p>
           </div>
 

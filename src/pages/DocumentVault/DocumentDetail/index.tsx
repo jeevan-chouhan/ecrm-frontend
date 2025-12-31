@@ -247,7 +247,7 @@ const DocumentDetail = () => {
             {doc.isNew && !doc.name ? (
               <input
                 type="text"
-                placeholder={t("documentVault.enterDocName", "Enter document name")}
+                placeholder={t("documentVault.enterDocName", "Enter Document Name")}
                 className="flex-1 px-3 py-1.5 rounded-lg text-sm outline-none"
                 style={{
                   border: `1px solid ${COLORS.border}`,

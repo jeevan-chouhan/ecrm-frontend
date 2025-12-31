@@ -367,7 +367,7 @@ const ViewMember = () => {
         <div>
           <p className="text-base mb-8" style={{ color: COLORS.textDark }}>
             {t("manageTeam.statusChangeConfirmation", "Are you sure you want to change the status of")}{" "}
-            <strong>{member.name}</strong> {t("common.from", "from")}{" "}
+            <strong>{member.name}</strong> {t("common.from", "From")}{" "}
             {memberStatus === "active" 
               ? t("manageTeam.activeToInactive", "Active to Inactive") 
               : t("manageTeam.inactiveToActive", "Inactive to Active")}?

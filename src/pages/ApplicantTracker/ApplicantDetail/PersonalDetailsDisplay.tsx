@@ -72,7 +72,7 @@ const PersonalDetailsDisplay = ({ data }: PersonalDetailsDisplayProps) => {
           <div className="flex-shrink-0">
             <div className="space-y-1.5">
               <label
-                className="text-xs font-medium uppercase tracking-wide block"
+                className="text-xs font-medium tracking-wide block"
                 style={{ color: COLORS.textMuted }}
               >
                 {t("applicant.uploadProfilePhoto", "Profile Photo")}

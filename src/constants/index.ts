@@ -11,7 +11,7 @@ export const APP_CONFIG = {
   name: "E-CRM",
   fullName: "Education CRM",
   tagline: "Your Immigration Partner",
-  copyright: (year: number = new Date().getFullYear()) => `© ${year} E-CRM. All rights reserved.`,
+  copyright: (year: number = new Date().getFullYear()) => `© ${year} E-CRM. All Rights Reserved.`,
 } as const;
 
 export const enrollmentTypes: SelectOption[] = [
@@ -248,9 +248,9 @@ export const applicationStatusOptions: SelectOption[] = [
   { value: "application-submitted", label: "Application Submitted" },
   { value: "document-pending", label: "Document Pending" },
   { value: "application-applicant-declined", label: "Application/Applicant Declined" },
-  { value: "awaiting-conditional-offer", label: "Awaiting Conditional offer" },
-  { value: "awaiting-unconditional-offer", label: "Awaiting Unconditional offer" },
-  { value: "received-conditional-offer", label: "Received Conditional offer" },
+  { value: "awaiting-conditional-offer", label: "Awaiting Conditional Offer" },
+  { value: "awaiting-unconditional-offer", label: "Awaiting Unconditional Offer" },
+  { value: "received-conditional-offer", label: "Received Conditional Offer" },
   { value: "offer-received", label: "Offer Received" },
   { value: "offer-accepted", label: "Offer Accepted" },
   { value: "offer-rejected", label: "Offer Rejected" },
@@ -259,7 +259,7 @@ export const applicationStatusOptions: SelectOption[] = [
   { value: "application-rejected-not-paid", label: "Application Rejected Not Paid" },
   { value: "application-rejected-paid", label: "Application Rejected Paid" },
   { value: "application-accepted", label: "Application Accepted" },
-  { value: "applied-for-visa", label: "Applied for Visa" },
+  { value: "applied-for-visa", label: "Applied For Visa" },
   { value: "visa-approved", label: "Visa Approved" },
   { value: "visa-rejected", label: "Visa Rejected" },
   { value: "student-deferring", label: "Student Deferring" },

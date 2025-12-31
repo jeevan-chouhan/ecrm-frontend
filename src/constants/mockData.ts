@@ -11,53 +11,53 @@ export const termsAndConditions: TermsSection[] = [
   {
     title: "1. Acceptance of Terms",
     content:
-      'By accessing or using our Immigration CRM platform ("Platform"), you agree to be bound by these Terms and Conditions. If you do not agree, you may not use the Platform.',
+      'By Accessing Or Using Our Immigration CRM Platform ("Platform"), You Agree To Be Bound By These Terms And Conditions. If You Do Not Agree, You May Not Use The Platform.',
   },
   {
     title: "2. Services Provided",
-    content: `The Platform is designed to help immigration consultants/agencies:
-Manage candidate profiles. Track visa and university application statuses. Upload and store supporting documents. Communicate with clients and internal staff. We do not provide legal immigration advice through the Platform.`,
+    content: `The Platform Is Designed To Help Immigration Consultants/Agencies:
+Manage Candidate Profiles. Track Visa And University Application Statuses. Upload And Store Supporting Documents. Communicate With Clients And Internal Staff. We Do Not Provide Legal Immigration Advice Through The Platform.`,
   },
   {
     title: "3. Client Data and Privacy",
-    content: `The Platform stores sensitive client information (passport, visa docs, transcripts, etc.). All data is protected using encryption and access control. Agencies must obtain consent from clients before uploading their personal documents.
-Refer to our Privacy Policy for complete details.`,
+    content: `The Platform Stores Sensitive Client Information (Passport, Visa Docs, Transcripts, Etc.). All Data Is Protected Using Encryption And Access Control. Agencies Must Obtain Consent From Clients Before Uploading Their Personal Documents.
+Refer To Our Privacy Policy For Complete Details.`,
   },
   {
     title: "4. Document Management",
-    content: `Uploaded documents are stored in structured folders (e.g., by client or application type). Deleted files may be recoverable from system backup logs or archives for up to 30 days.
-Agencies are responsible for uploading valid, authentic, and non-expired documents.`,
+    content: `Uploaded Documents Are Stored In Structured Folders (E.G., By Client Or Application Type). Deleted Files May Be Recoverable From System Backup Logs Or Archives For Up To 30 Days.
+Agencies Are Responsible For Uploading Valid, Authentic, And Non-Expired Documents.`,
   },
   {
     title: "5. Compliance and Legal Use",
-    content: `Users must comply with local immigration laws, GDPR, and data protection regulations. The Platform shall not be used to forge, manipulate, or falsify any documents or application details.
-Any violation will result in suspension of access and may be reported to authorities.`,
+    content: `Users Must Comply With Local Immigration Laws, GDPR, And Data Protection Regulations. The Platform Shall Not Be Used To Forge, Manipulate, Or Falsify Any Documents Or Application Details.
+Any Violation Will Result In Suspension Of Access And May Be Reported To Authorities.`,
   },
   {
     title: "6. Intellectual Property",
     content:
-      "All code, features, designs, and documentation are the intellectual property of [Your Agency/Company Name]. You may not reverse-engineer, copy, or redistribute the system without written consent.",
+      "All Code, Features, Designs, And Documentation Are The Intellectual Property Of [Your Agency/Company Name]. You May Not Reverse-Engineer, Copy, Or Redistribute The System Without Written Consent.",
   },
   {
     title: "7. Termination of Access",
     content:
-      "We reserve the right to: Suspend or terminate access for any user violating these terms. Permanently delete data after inactivity of 12 months (with prior notice).",
+      "We Reserve The Right To: Suspend Or Terminate Access For Any User Violating These Terms. Permanently Delete Data After Inactivity Of 12 Months (With Prior Notice).",
   },
   {
     title: "8. Limitation of Liability",
-    content: `We are not liable for:
-Rejected applications or lost opportunities due to incorrect data
-Actions taken by immigration authorities or consulates
-Third-party delays or service failures (e.g., payment gateways, email providers)`,
+    content: `We Are Not Liable For:
+Rejected Applications Or Lost Opportunities Due To Incorrect Data
+Actions Taken By Immigration Authorities Or Consulates
+Third-Party Delays Or Service Failures (E.G., Payment Gateways, Email Providers)`,
   },
   {
     title: "9. Amendments",
     content:
-      "We may update these Terms from time to time. Continued use of the Platform after updates constitutes your acceptance of the changes.",
+      "We May Update These Terms From Time To Time. Continued Use Of The Platform After Updates Constitutes Your Acceptance Of The Changes.",
   },
   {
     title: "10. Contact",
-    content: "For questions or support, contact: [support@youragency.com]",
+    content: "For Questions Or Support, Contact: [support@youragency.com]",
   },
 ];
 
