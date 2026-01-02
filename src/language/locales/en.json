@@ -559,5 +559,12 @@
     "deleteAgencyPartner": "Delete Agency Partner",
     "deleteConfirmation": "Are You Sure You Want To Delete",
     "deleteWarning": "This Action Cannot Be Undone."
+  },
+  "intakeSelector": {
+    "selectIntake": "Select Intake",
+    "selectMonth": "Select Month",
+    "selectYear": "Select Year",
+    "searchMonth": "Search Month...",
+    "searchYear": "Search Year..."
   }
 }

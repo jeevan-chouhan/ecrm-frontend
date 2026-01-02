@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Calendar, ChevronLeft, ChevronRight } from "../../assets";
-import { COLORS } from "../../constants";
+import { COLORS, MONTHS } from "../../constants";
 
 export interface DateRange {
   startDate: Date | null;
@@ -20,20 +20,6 @@ interface DateRangePickerProps {
 }
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
 
 const DateRangePicker = ({
   label,

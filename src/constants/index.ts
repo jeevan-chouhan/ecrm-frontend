@@ -14,6 +14,39 @@ export const APP_CONFIG = {
   copyright: (year: number = new Date().getFullYear()) => `© ${year} E-CRM. All Rights Reserved.`,
 } as const;
 
+// ==========================================
+// Date and Time Constants
+// ==========================================
+export const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
+
+export const MONTH_SHORT_NAMES = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
+
 export const enrollmentTypes: SelectOption[] = [
   { value: "walk-in", label: "Walk-in" },
   { value: "referred-to-agency", label: "Referred to Agency Partner" },
@@ -218,22 +251,6 @@ export const applicantStageOptions: SelectOption[] = [
 export const applicantStatusOptions: SelectOption[] = [
   { value: "active", label: "Active" },
   { value: "inactive", label: "Inactive" },
-];
-
-// Intake options (extended from mockData)
-export const intakeOptions: SelectOption[] = [
-  { value: "jan-2026", label: "Jan - 2026" },
-  { value: "feb-2026", label: "Feb - 2026" },
-  { value: "mar-2026", label: "Mar - 2026" },
-  { value: "apr-2026", label: "Apr - 2026" },
-  { value: "may-2026", label: "May - 2026" },
-  { value: "jun-2026", label: "Jun - 2026" },
-  { value: "jul-2026", label: "Jul - 2026" },
-  { value: "aug-2026", label: "Aug - 2026" },
-  { value: "sep-2026", label: "Sep - 2026" },
-  { value: "oct-2026", label: "Oct - 2026" },
-  { value: "nov-2026", label: "Nov - 2026" },
-  { value: "dec-2026", label: "Dec - 2026" },
 ];
 
 // Agency partner options

@@ -1,6 +1,6 @@
 import React from "react";
-import { Select, Button } from "../../../components";
-import { countries, programs, universities, campuses, courses, intakes, counselors, agencyPartners, COLORS } from "../../../constants";
+import { Select, Button, IntakeSelector } from "../../../components";
+import { countries, programs, universities, campuses, courses, counselors, agencyPartners, COLORS } from "../../../constants";
 import { useTranslation } from "react-i18next";
 import type { PreferenceItem } from "./types";
 
@@ -132,14 +132,13 @@ const PreferenceForm = ({
             >
               {t("applicant.desiredIntake")} <span style={{ color: COLORS.error }}>*</span>
             </label>
-            <Select
-              options={intakes}
+            <IntakeSelector
               value={preference.desiredIntake}
               onChange={(value) => onFieldChange(index, "desiredIntake", value)}
               placeholder={t("applicant.selectIntake")}
               error={getFieldError(index, "desiredIntake")}
               fullWidth
-              searchable
+              allowPastMonths={false}
             />
           </div>
         </div>

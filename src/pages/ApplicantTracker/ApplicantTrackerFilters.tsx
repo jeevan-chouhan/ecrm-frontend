@@ -1,12 +1,11 @@
 import { useMemo, memo } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Select, MultiSelect, DatePicker } from "../../components";
+import { Button, Select, MultiSelect, DatePicker, IntakeSelector } from "../../components";
 import {
   adminOptions,
   managerOptions,
   applicantStageOptions,
   applicantStatusOptions,
-  intakeOptions,
   enrollmentTypes,
   agencyPartnerOptions,
 } from "../../constants";
@@ -84,11 +83,6 @@ const ApplicantTrackerFilters = ({
     ...applicantStatusOptions,
   ], [t]);
 
-  const intakeOptionsWithPlaceholder = useMemo(() => [
-    { value: "", label: t("applicantTracker.selectIntake", "Select Intake") },
-    ...intakeOptions,
-  ], [t]);
-
   const enrollmentTypeOptionsWithPlaceholder = useMemo(() => [
     { value: "", label: t("applicantTracker.selectEnrollmentType", "Select Enrollment Type") },
     ...enrollmentTypes,
@@ -161,12 +155,11 @@ const ApplicantTrackerFilters = ({
 
         {/* Intake Select */}
         <div className="flex-1 min-w-[160px]">
-          <Select
+          <IntakeSelector
             label={t("applicantTracker.intakeLabel", "Intake")}
-            options={intakeOptionsWithPlaceholder}
             value={selectedIntake}
             onChange={onIntakeChange}
-            searchable
+            placeholder={t("applicantTracker.selectIntake", "Select Intake")}
           />
         </div>
       </div>

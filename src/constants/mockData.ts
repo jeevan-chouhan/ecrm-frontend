@@ -90,17 +90,6 @@ export const courses: SelectOption[] = [
   { value: "other", label: "Other" },
 ];
 
-export const intakes: SelectOption[] = [
-  { value: "jan-2025", label: "Jan - 2025" },
-  { value: "apr-2025", label: "Apr - 2025" },
-  { value: "jul-2025", label: "Jul - 2025" },
-  { value: "oct-2025", label: "Oct - 2025" },
-  { value: "jan-2026", label: "Jan - 2026" },
-  { value: "apr-2026", label: "Apr - 2026" },
-  { value: "jul-2026", label: "Jul - 2026" },
-  { value: "oct-2026", label: "Oct - 2026" },
-];
-
 export const counselors: SelectOption[] = [
   { value: "celina", label: "Celina" },
   { value: "john", label: "John" },
