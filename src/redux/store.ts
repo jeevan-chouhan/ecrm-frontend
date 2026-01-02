@@ -14,11 +14,13 @@ import storage from "redux-persist/lib/storage";
 // Import slices
 import loaderReducer from "./slices/loader/loaderSlice";
 import toastReducer from "./slices/toast/toastSlice";
+import authReducer from "./slices/auth/authSlice";
 
 // Combine all reducers
 const rootReducer = combineReducers({
   loader: loaderReducer,
   toast: toastReducer,
+  auth: authReducer,
 });
 
 // Persist configuration
@@ -27,6 +29,7 @@ const persistConfig = {
   version: 1,
   storage,
   blacklist: ["loader", "toast"], // Don't persist transient UI states
+  whitelist: ["auth"], // Persist auth state
 };
 
 // Create persisted reducer

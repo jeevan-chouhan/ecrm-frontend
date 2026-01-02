@@ -376,15 +376,15 @@ const Dashboard = () => {
             />
           </div>
 
-          {/* Apply Filter Button */}
-          <Button variant="accent" size="sm" rounded onClick={handleApplyFilters}>
-            {t("dashboard.applyFilter", "Apply")}
-          </Button>
-
-          {/* Clear Filter Button */}
-          <Button variant="cancel" size="sm" rounded onClick={handleClearFilters}>
-            {t("dashboard.clearFilter", "Clear Filter")}
-          </Button>
+          {/* Filter Buttons - aligned with inputs */}
+          <div className="flex items-end gap-3 pt-6">
+            <Button variant="accent" size="sm" rounded onClick={handleApplyFilters}>
+              {t("dashboard.applyFilter", "Apply")}
+            </Button>
+            <Button variant="cancel" size="sm" rounded onClick={handleClearFilters}>
+              {t("dashboard.clearFilter", "Clear Filter")}
+            </Button>
+          </div>
         </div>
 
         {/* Team Overview Table */}

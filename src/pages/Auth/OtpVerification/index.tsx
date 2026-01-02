@@ -1,9 +1,14 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../../components";
 import PublicLayout from "../../../components/wrapper/PublicLayout";
 import { COLORS, ROUTES } from "../../../constants";
+import { authService } from "../../../services";
+import type { OtpVerificationState } from "../../../services";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { addToast } from "../../../redux/slices/toast/toastSlice";
+import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
 
 const OTP_LENGTH = 6;
 const RESEND_TIMER = 300; // 5 minutes in seconds
@@ -11,11 +16,25 @@ const RESEND_TIMER = 300; // 5 minutes in seconds
 const OtpVerification = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
+  const dispatch = useAppDispatch();
+  const isLoading = useAppSelector((state) => state.loader.isLoading);
+  
+  // Get email from navigation state (passed from ForgotPassword)
+  const { email } = (location.state as OtpVerificationState) || {};
+  
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [timer, setTimer] = useState(RESEND_TIMER);
   const [canResend, setCanResend] = useState(false);
   const [error, setError] = useState("");
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  
+  // Redirect if no email in state
+  useEffect(() => {
+    if (!email) {
+      navigate(ROUTES.FORGOT_PASSWORD);
+    }
+  }, [email, navigate]);
 
   // Timer countdown
   useEffect(() => {
@@ -77,26 +96,91 @@ const OtpVerification = () => {
 
   const isOtpComplete = otp.every((digit) => digit !== "");
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     if (!isOtpComplete) {
       setError(t("validation.otpRequired"));
       return;
     }
 
-    const otpValue = otp.join("");
-    console.log("Verifying OTP:", otpValue);
-    // Handle OTP verification logic here
-    navigate(ROUTES.RESET_PASSWORD);
+    if (!email) {
+      dispatch(addToast({ type: "error", message: "Email not found" }));
+      return;
+    }
+
+    const otpValue = parseInt(otp.join(""), 10);
+    dispatch(showLoader());
+
+    try {
+      const response = await authService.verifyOtp({
+        email,
+        otp: otpValue,
+      });
+
+      if (response.status === "success") {
+        dispatch(
+          addToast({
+            type: "success",
+            message: response.message || "OTP verified successfully",
+          })
+        );
+
+        // Navigate to reset password with email
+        navigate(ROUTES.RESET_PASSWORD, {
+          state: { email },
+        });
+      } else {
+        setError(response.message || "Invalid OTP");
+        dispatch(
+          addToast({
+            type: "error",
+            message: response.message || "Invalid OTP",
+          })
+        );
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || error.message || "OTP verification failed";
+      setError(errorMessage);
+      dispatch(addToast({ type: "error", message: errorMessage }));
+    } finally {
+      dispatch(hideLoader());
+    }
   };
 
-  const handleResendOtp = () => {
-    if (!canResend) return;
+  const handleResendOtp = async () => {
+    if (!canResend || !email) return;
 
-    console.log("Resending OTP...");
-    // Handle resend OTP logic here
-    setTimer(RESEND_TIMER);
-    setCanResend(false);
-    setOtp(Array(OTP_LENGTH).fill(""));
+    dispatch(showLoader());
+
+    try {
+      const response = await authService.forgotPassword({ email });
+
+      if (response.status === "success") {
+        dispatch(
+          addToast({
+            type: "success",
+            message: response.message || "OTP sent successfully",
+          })
+        );
+        setTimer(RESEND_TIMER);
+        setCanResend(false);
+        setOtp(Array(OTP_LENGTH).fill(""));
+        setError("");
+      } else {
+        dispatch(
+          addToast({
+            type: "error",
+            message: response.message || "Failed to resend OTP",
+          })
+        );
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || error.message || "Failed to resend OTP";
+      dispatch(addToast({ type: "error", message: errorMessage }));
+    } finally {
+      dispatch(hideLoader());
+    }
   };
 
   return (
@@ -193,6 +277,7 @@ const OtpVerification = () => {
                 size="lg"
                 rounded
                 onClick={handleVerify}
+                isLoading={isLoading}
                 disabled={!isOtpComplete}
               >
                 {t("auth.verify")}

@@ -1,10 +1,16 @@
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useFormik } from "formik";
 import { Input, Button } from "../../../components";
 import PublicLayout from "../../../components/wrapper/PublicLayout";
 import { COLORS, ROUTES } from "../../../constants";
 import { getResetPasswordSchema } from "../../../utils";
+import { authService } from "../../../services";
+import type { ResetPasswordState } from "../../../services";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { addToast } from "../../../redux/slices/toast/toastSlice";
+import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
 
 interface ResetPasswordFormValues {
   password: string;
@@ -14,6 +20,19 @@ interface ResetPasswordFormValues {
 const ResetPassword = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
+  const dispatch = useAppDispatch();
+  const isLoading = useAppSelector((state) => state.loader.isLoading);
+
+  // Get email from navigation state (passed from OtpVerification)
+  const { email } = (location.state as ResetPasswordState) || {};
+
+  // Redirect if no email in state
+  useEffect(() => {
+    if (!email) {
+      navigate(ROUTES.FORGOT_PASSWORD);
+    }
+  }, [email, navigate]);
 
   const formik = useFormik<ResetPasswordFormValues>({
     initialValues: {
@@ -21,10 +40,49 @@ const ResetPassword = () => {
       confirmPassword: "",
     },
     validationSchema: getResetPasswordSchema(t),
-    onSubmit: (values) => {
-      console.log("Password reset:", values);
-      // Handle password reset logic here
-      navigate(ROUTES.LOGIN);
+    onSubmit: async (values) => {
+      if (!email) {
+        dispatch(addToast({ type: "error", message: "Email not found" }));
+        return;
+      }
+
+      dispatch(showLoader());
+
+      try {
+        const response = await authService.updatePassword({
+          email,
+          newPassword: values.password,
+          confirmPassword: values.confirmPassword,
+        });
+
+        if (response.status === "success") {
+          dispatch(
+            addToast({
+              type: "success",
+              message: response.message || "Password updated successfully",
+            })
+          );
+
+          // Navigate to login
+          navigate(ROUTES.LOGIN);
+        } else {
+          dispatch(
+            addToast({
+              type: "error",
+              message: response.message || "Failed to update password",
+            })
+          );
+        }
+      } catch (error: any) {
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to update password";
+
+        dispatch(addToast({ type: "error", message: errorMessage }));
+      } finally {
+        dispatch(hideLoader());
+      }
     },
   });
 
@@ -86,6 +144,7 @@ const ResetPassword = () => {
                   size="lg"
                   fullWidth
                   rounded
+                  isLoading={isLoading}
                   disabled={!formik.values.password || !formik.values.confirmPassword || Object.keys(formik.errors).length > 0}
                 >
                   {t("auth.save")}

@@ -5,6 +5,10 @@ import { Input, Button } from "../../../components";
 import PublicLayout from "../../../components/wrapper/PublicLayout";
 import { COLORS, ROUTES } from "../../../constants";
 import { getForgotPasswordSchema } from "../../../utils";
+import { authService } from "../../../services";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { addToast } from "../../../redux/slices/toast/toastSlice";
+import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
 
 interface ForgotPasswordFormValues {
   email: string;
@@ -13,16 +17,63 @@ interface ForgotPasswordFormValues {
 const ForgotPassword = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const isLoading = useAppSelector((state) => state.loader.isLoading);
 
   const formik = useFormik<ForgotPasswordFormValues>({
     initialValues: {
       email: "",
     },
     validationSchema: getForgotPasswordSchema(t),
-    onSubmit: (values) => {
-      console.log("Password reset requested for:", values.email);
-      // Handle forgot password logic here
-      navigate(ROUTES.OTP_VERIFICATION);
+    onSubmit: async (values) => {
+      dispatch(showLoader());
+
+      try {
+        // Call forgot password API
+        const response = await authService.forgotPassword({
+          email: values.email,
+        });
+        console.log(response,response?.message);
+        
+        if (response.status === "success") {
+          // Show success toast
+          dispatch(
+            addToast({
+              type: "success",
+              message: response.message || "OTP sent to your email",
+            })
+          );
+
+          // Navigate to OTP verification with user data
+          navigate(ROUTES.OTP_VERIFICATION, {
+            state: {
+              userId: response.data.userId,
+              email: response.data.emailId,
+            },
+          });
+        } else {
+          dispatch(
+            addToast({
+              type: "error",
+              message: response.message || "Failed to send OTP",
+            })
+          );
+        }
+      } catch (error: any) {
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to send OTP";
+
+        dispatch(
+          addToast({
+            type: "error",
+            message: errorMessage,
+          })
+        );
+      } finally {
+        dispatch(hideLoader());
+      }
     },
   });
 
@@ -75,6 +126,7 @@ const ForgotPassword = () => {
                   size="lg"
                   fullWidth
                   rounded
+                  isLoading={isLoading}
                   disabled={!formik.values.email || !!formik.errors.email}
                 >
                   {t("auth.requestPasswordReset")}

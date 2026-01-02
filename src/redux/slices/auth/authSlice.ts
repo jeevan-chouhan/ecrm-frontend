@@ -1,0 +1,104 @@
+import { createSlice } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
+import { decodeToken, isTokenExpired } from "../../../utils";
+import type { UserData } from "../../../services/types";
+
+// Auth state interface
+interface AuthState {
+  accessToken: string | null;
+  refreshToken: string | null;
+  user: UserData | null;
+  isAuthenticated: boolean;
+}
+
+// Initial state
+const initialState: AuthState = {
+  accessToken: null,
+  refreshToken: null,
+  user: null,
+  isAuthenticated: false,
+};
+
+// Auth slice
+const authSlice = createSlice({
+  name: "auth",
+  initialState,
+  reducers: {
+    // Set tokens after successful login
+    setCredentials: (
+      state,
+      action: PayloadAction<{ accessToken: string; refreshToken: string }>
+    ) => {
+      const { accessToken, refreshToken } = action.payload;
+      state.accessToken = accessToken;
+      state.refreshToken = refreshToken;
+      state.user = decodeToken(accessToken);
+      state.isAuthenticated = true;
+
+      // Also save to localStorage for persistence
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+    },
+
+    // Update access token only
+    updateAccessToken: (state, action: PayloadAction<string>) => {
+      state.accessToken = action.payload;
+      state.user = decodeToken(action.payload);
+      localStorage.setItem("accessToken", action.payload);
+    },
+
+    // Update both tokens (e.g., after refresh)
+    updateTokens: (
+      state,
+      action: PayloadAction<{ accessToken: string; refreshToken: string }>
+    ) => {
+      const { accessToken, refreshToken } = action.payload;
+      state.accessToken = accessToken;
+      state.refreshToken = refreshToken;
+      state.user = decodeToken(accessToken);
+      state.isAuthenticated = true;
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+    },
+
+    // Clear credentials on logout
+    clearCredentials: (state) => {
+      state.accessToken = null;
+      state.refreshToken = null;
+      state.user = null;
+      state.isAuthenticated = false;
+
+      // Clear from localStorage
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+    },
+
+    // Initialize auth state from localStorage (for page refresh)
+    initializeAuth: (state) => {
+      const accessToken = localStorage.getItem("accessToken");
+      const refreshToken = localStorage.getItem("refreshToken");
+
+      if (accessToken && refreshToken && !isTokenExpired(accessToken)) {
+        state.accessToken = accessToken;
+        state.refreshToken = refreshToken;
+        state.user = decodeToken(accessToken);
+        state.isAuthenticated = true;
+      } else {
+        // Token expired or invalid, clear everything
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+      }
+    },
+  },
+});
+
+export const {
+  setCredentials,
+  updateAccessToken,
+  updateTokens,
+  clearCredentials,
+  initializeAuth,
+} = authSlice.actions;
+
+export default authSlice.reducer;
+
