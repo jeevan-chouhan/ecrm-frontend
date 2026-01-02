@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../Header/Header";
 import Sidebar from "../Sidebar/Sidebar";
 import Footer from "../Footer/Footer";
@@ -15,6 +15,9 @@ import {
   Settings,
 } from "../../../assets";
 import { COLORS, ROUTES, APP_CONFIG } from "../../../constants";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { clearCredentials } from "../../../redux/slices/auth/authSlice";
+import { addToast } from "../../../redux/slices/toast/toastSlice";
 
 interface LayoutProps {
   children: ReactNode;
@@ -29,8 +32,8 @@ interface LayoutProps {
 
 const Layout = ({
   children,
-  userName = "Admin",
-  userRole = "Abroad Agency",
+  userName,
+  userRole,
   userAvatar,
   notificationCount = 0,
   onNotificationClick,
@@ -40,6 +43,35 @@ const Layout = ({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  
+  // Get user data from Redux store
+  const { user } = useAppSelector((state) => state.auth);
+  
+  // Use Redux user data or props
+  const displayName = userName || user?.name || "Admin";
+  const displayRole = userRole || user?.role || "User";
+
+  // Handle logout - clear localStorage and Redux state
+  const handleLogout = () => {
+    // Clear Redux auth state (this also clears localStorage)
+    dispatch(clearCredentials());
+    
+    // Show logout success toast
+    dispatch(
+      addToast({
+        type: "success",
+        message: "Logged out successfully",
+      })
+    );
+    
+    // Call optional callback
+    onLogoutClick?.();
+    
+    // Navigate to login page
+    navigate(ROUTES.LOGIN);
+  };
 
   const sidebarItems = [
     {
@@ -111,15 +143,15 @@ const Layout = ({
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <Header
-          userName={userName}
-          userRole={userRole}
+          userName={displayName}
+          userRole={displayRole}
           userAvatar={userAvatar}
           notificationCount={notificationCount}
           showMenuButton={true}
           onMenuClick={() => setMobileMenuOpen(true)}
           onNotificationClick={onNotificationClick}
           onProfileClick={onProfileClick}
-          onLogoutClick={onLogoutClick}
+          onLogoutClick={handleLogout}
         />
 
         {/* Page Content */}

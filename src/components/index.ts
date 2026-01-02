@@ -13,6 +13,8 @@ export { default as Checkbox } from "./Checkbox/Checkbox";
 export { default as PhoneInput } from "./PhoneInput/PhoneInput";
 export { default as FileUpload } from "./FileUpload/FileUpload";
 export { default as DataTable } from "./DataTable/DataTable";
+export { default as GlobalLoader } from "./GlobalLoader/GlobalLoader";
+export { default as Toast } from "./Toast/Toast";
 export type { GridRowId, GridColDef } from "./DataTable/DataTable";
 export {
   Accordion,

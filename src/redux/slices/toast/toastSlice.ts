@@ -30,7 +30,7 @@ const toastSlice = createSlice({
       state.toasts.push({
         ...action.payload,
         id,
-        duration: action.payload.duration || 3000,
+        duration: action.payload.duration || 5000,
       });
     },
     removeToast: (state, action: PayloadAction<string>) => {

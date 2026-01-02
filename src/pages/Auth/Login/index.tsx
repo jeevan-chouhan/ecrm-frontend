@@ -1,10 +1,25 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useFormik } from "formik";
 import { Input, Button, Checkbox } from "../../../components";
 import PublicLayout from "../../../components/wrapper/PublicLayout";
 import { COLORS, ROUTES } from "../../../constants";
 import { getLoginSchema } from "../../../utils";
+import { useAuth } from "../../../context";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { addToast } from "../../../redux/slices/toast/toastSlice";
+import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
+
+// Type for location state from ProtectedRoute
+interface LocationState {
+  from?: {
+    pathname: string;
+  };
+}
+
+// Constants for localStorage keys
+const REMEMBER_EMAIL_KEY = "rememberedEmail";
 
 interface LoginFormValues {
   email: string;
@@ -15,6 +30,23 @@ interface LoginFormValues {
 const Login = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
+  const dispatch = useAppDispatch();
+  const { login } = useAuth();
+  const isLoading = useAppSelector((state) => state.loader.isLoading);
+
+  // Get the URL user was trying to access before being redirected to login
+  const from = (location.state as LocationState)?.from?.pathname || ROUTES.DASHBOARD;
+
+  // Check for remembered email on component mount
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem(REMEMBER_EMAIL_KEY);
+    if (rememberedEmail) {
+      formik.setFieldValue("email", rememberedEmail);
+      formik.setFieldValue("rememberMe", true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const formik = useFormik<LoginFormValues>({
     initialValues: {
@@ -23,10 +55,59 @@ const Login = () => {
       rememberMe: false,
     },
     validationSchema: getLoginSchema(t),
-    onSubmit: (values) => {
-      console.log("Login submitted:", values);
-      // Handle login logic here
-      navigate(ROUTES.DASHBOARD);
+    onSubmit: async (values) => {
+      dispatch(showLoader());
+      
+      try {
+        // Call login from AuthContext
+        const response = await login({
+          email: values.email,
+          password: values.password,
+        });
+
+        if (response.status === "success" && response.data) {
+          // Handle remember me functionality
+          if (values.rememberMe) {
+            localStorage.setItem(REMEMBER_EMAIL_KEY, values.email);
+          } else {
+            localStorage.removeItem(REMEMBER_EMAIL_KEY);
+          }
+
+          // Show success toast
+          dispatch(
+            addToast({
+              type: "success",
+              message: response.message || t("auth.loginSuccess"),
+            })
+          );
+
+          // Navigate to the originally requested URL or dashboard
+          navigate(from, { replace: true });
+        } else {
+          // Show error toast for non-success response
+          dispatch(
+            addToast({
+              type: "error",
+              message: response.message || t("auth.loginError"),
+            })
+          );
+        }
+      } catch (error: any) {
+        // Handle API errors
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          t("auth.loginError");
+
+        dispatch(
+          addToast({
+            type: "error",
+            message: errorMessage,
+          })
+        );
+      } finally {
+        dispatch(hideLoader());
+      }
     },
   });
 
@@ -107,6 +188,7 @@ const Login = () => {
                 size="lg"
                 fullWidth
                 rounded
+                isLoading={isLoading}
                 disabled={!formik.values.email || !formik.values.password || Object.keys(formik.errors).length > 0}
               >
                 {t("auth.loginIn")}
