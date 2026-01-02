@@ -15,7 +15,7 @@ export const DetailField = memo(({ label, value, className = "" }: DetailFieldPr
     <div className={className}>
       <div className="space-y-1">
         <label
-          className="text-xs font-medium uppercase tracking-wide"
+          className="text-xs font-medium tracking-wide"
           style={{ color: COLORS.textMuted }}
         >
           {label}

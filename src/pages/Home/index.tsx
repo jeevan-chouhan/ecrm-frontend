@@ -78,9 +78,9 @@ const Home = () => {
                   fontFamily: "'Inter', sans-serif",
                 }}
               >
-                Manage your immigration agency efficiently with our comprehensive
-                CRM solution. Track applications, manage candidates, and
-                streamline your workflow.
+                Manage Your Immigration Agency Efficiently With Our Comprehensive
+                CRM Solution. Track Applications, Manage Candidates, And
+                Streamline Your Workflow.
               </p>
               <Link to="/register">
                 <Button
@@ -90,7 +90,7 @@ const Home = () => {
                     boxShadow: `0 4px 14px ${hexToRgba(COLORS.accent, 0.4)}`,
                   }}
                 >
-                  Try our Freemium model
+                  Try Our Freemium Model
                 </Button>
               </Link>
             </div>
@@ -136,26 +136,26 @@ const Home = () => {
                   fontFamily: "'Inter', sans-serif",
                 }}
               >
-                Gain complete visibility into your admissions pipeline. Track
-                every application from initial inquiry to final enrollment.
+                Gain Complete Visibility Into Your Admissions Pipeline. Track
+                Every Application From Initial Inquiry To Final Enrollment.
               </p>
 
               <div className="space-y-6">
                 <FeatureItem
                   icon={<Chart className="w-5 h-5" />}
-                  title="Real-time Insights"
-                  description="Monitor application statuses, deadlines, and key metrics at a glance."
+                  title="Real-Time Insights"
+                  description="Monitor Application Statuses, Deadlines, And Key Metrics At A Glance."
                 />
                 <FeatureItem
                   icon={<Pipeline className="w-5 h-5" />}
                   title="Pipeline Management"
-                  description="Visualize and move applications through custom stages effortlessly."
+                  description="Visualize And Move Applications Through Custom Stages Effortlessly."
                   iconBg={COLORS.secondary}
                 />
                 <FeatureItem
                   icon={<Customize className="w-5 h-5" />}
                   title="Customizable Views"
-                  description="Filter and sort data to focus on what matters most to you."
+                  description="Filter And Sort Data To Focus On What Matters Most To You."
                   iconBg={COLORS.accent}
                 />
               </div>
@@ -217,27 +217,27 @@ const Home = () => {
                   fontFamily: "'Inter', sans-serif",
                 }}
               >
-                Adding new candidates and administrators is quick and
-                straightforward.
+                Adding New Candidates And Administrators Is Quick And
+                Straightforward.
               </p>
 
               <div className="space-y-6">
                 <FeatureItem
                   icon={<UserPlus className="w-5 h-5" />}
                   title="Add Candidates Instantly"
-                  description="Quickly create new candidate profiles with essential details."
+                  description="Quickly Create New Candidate Profiles With Essential Details."
                   iconBg={COLORS.accent}
                 />
                 <FeatureItem
                   icon={<Admin className="w-5 h-5" />}
                   title="Manage Administrators"
-                  description="Onboard new team members and define their roles and permissions."
+                  description="Onboard New Team Members And Define Their Roles And Permissions."
                   iconBg={COLORS.secondary}
                 />
                 <FeatureItem
                   icon={<Form className="w-5 h-5" />}
                   title="Structured Data Entry"
-                  description="Intuitive forms guide you through adding all necessary information."
+                  description="Intuitive Forms Guide You Through Adding All Necessary Information."
                   iconBg={COLORS.accent}
                 />
               </div>

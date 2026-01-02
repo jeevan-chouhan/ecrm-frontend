@@ -74,31 +74,31 @@ const DocumentsDisplay = ({
         <thead>
           <tr>
             <th
-              className="text-left py-3 px-4 font-semibold text-xs uppercase tracking-wide"
+              className="text-left py-3 px-4 font-semibold text-xs tracking-wide"
               style={{
                 color: COLORS.textMuted,
                 borderBottom: `1px solid ${COLORS.border}`,
               }}
             >
-              {t("applicantDetailView.documentName", "DOCUMENT NAME")}
+              {t("applicantDetailView.documentName", "Document Name")}
             </th>
             <th
-              className="text-left py-3 px-4 font-semibold text-xs uppercase tracking-wide"
+              className="text-left py-3 px-4 font-semibold text-xs tracking-wide"
               style={{
                 color: COLORS.textMuted,
                 borderBottom: `1px solid ${COLORS.border}`,
               }}
             >
-              {t("applicantDetailView.actions", "ACTIONS")}
+              {t("applicantDetailView.actions", "Actions")}
             </th>
             <th
-              className="text-left py-3 px-4 font-semibold text-xs uppercase tracking-wide"
+              className="text-left py-3 px-4 font-semibold text-xs tracking-wide"
               style={{
                 color: COLORS.textMuted,
                 borderBottom: `1px solid ${COLORS.border}`,
               }}
             >
-              {t("applicantDetailView.verificationStatus", "VERIFICATION STATUS")}
+              {t("applicantDetailView.verificationStatus", "Verification Status")}
             </th>
           </tr>
         </thead>

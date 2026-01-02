@@ -27,7 +27,7 @@ const Select = ({
   options,
   value,
   onChange,
-  placeholder = "Select an option",
+  placeholder = "Select An Option",
   error,
   disabled = false,
   fullWidth = false,

@@ -22,7 +22,7 @@ const DatePicker = ({
   label,
   value,
   onChange,
-  placeholder = "Select date",
+  placeholder = "Select Date",
   error,
   disabled = false,
   fullWidth = false,

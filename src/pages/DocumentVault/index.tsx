@@ -119,13 +119,13 @@ const DocumentVault = () => {
   const columns: GridColDef[] = [
     {
       field: "applicantId",
-      headerName: t("documentVault.applicantId", "APPLICANT ID"),
+      headerName: t("documentVault.applicantId", "Applicant Id"),
       flex: 1,
       minWidth: 120,
     },
     {
       field: "name",
-      headerName: t("documentVault.applicantName", "APPLICANT NAME"),
+      headerName: t("documentVault.applicantName", "Applicant Name"),
       flex: 1.5,
       minWidth: 150,
       renderCell: (params) => (
@@ -136,19 +136,19 @@ const DocumentVault = () => {
     },
     {
       field: "passportNo",
-      headerName: t("documentVault.passportNo", "PASSPORT NO."),
+      headerName: t("documentVault.passportNo", "Passport No."),
       flex: 1,
       minWidth: 130,
     },
     {
       field: "enrollmentType",
-      headerName: t("documentVault.enrollmentType", "ENROLLMENT TYPE"),
+      headerName: t("documentVault.enrollmentType", "Enrollment Type"),
       flex: 1.5,
       minWidth: 180,
     },
     {
       field: "status",
-      headerName: t("documentVault.status", "STATUS"),
+      headerName: t("documentVault.status", "Status"),
       flex: 1,
       minWidth: 100,
       renderCell: (params) => (
@@ -157,7 +157,7 @@ const DocumentVault = () => {
     },
     {
       field: "actions",
-      headerName: t("documentVault.action", "ACTION"),
+      headerName: t("documentVault.action", "Action"),
       flex: 0.8,
       minWidth: 100,
       sortable: false,
@@ -203,7 +203,7 @@ const DocumentVault = () => {
             <SearchBar
               value={searchQuery}
               onChange={setSearchQuery}
-              placeholder={t("documentVault.searchApplicants", "Search applicants ID, name...")}
+              placeholder={t("documentVault.searchApplicants", "Search Applicants ID, Name...")}
             />
           </div>
         </div>

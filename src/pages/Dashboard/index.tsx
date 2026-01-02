@@ -123,7 +123,7 @@ const Dashboard = () => {
   ], [t]);
 
   const enrollmentTypeOptions = useMemo(() => [
-    { value: "", label: t("dashboard.selectEnrollmentType", "Select Enrollment type") },
+    { value: "", label: t("dashboard.selectEnrollmentType", "Select Enrollment Type") },
     { value: "walk-in", label: t("enrollmentType.walkIn", "Walk-in") },
     { value: "referred-to-agency", label: t("enrollmentType.referredToAgency", "Referred to Agency Partner") },
     { value: "referred-by-agency", label: t("enrollmentType.referredByAgency", "Referred by Agency Partner") },
@@ -139,28 +139,28 @@ const Dashboard = () => {
     },
     {
       field: "manager",
-      headerName: t("dashboard.tableManager", "MANAGER"),
+      headerName: t("dashboard.tableManager", "Manager"),
       flex: 1,
       minWidth: 120,
       sortable: true,
     },
     {
       field: "counselor",
-      headerName: t("dashboard.tableCounselor", "COUNSELOR"),
+      headerName: t("dashboard.tableCounselor", "Counselor"),
       flex: 1,
       minWidth: 150,
       sortable: true,
     },
     {
       field: "country",
-      headerName: t("dashboard.tableCountry", "COUNTRY"),
+      headerName: t("dashboard.tableCountry", "Country"),
       flex: 1,
       minWidth: 120,
       sortable: true,
     },
     {
       field: "totalApplicants",
-      headerName: t("dashboard.tableTotalApplicants", "TOTAL APPLICANTS"),
+      headerName: t("dashboard.tableTotalApplicants", "Total Applicants"),
       flex: 1,
       minWidth: 150,
       sortable: true,
@@ -169,7 +169,7 @@ const Dashboard = () => {
     },
     {
       field: "leads",
-      headerName: t("dashboard.tableLeads", "LEADS"),
+      headerName: t("dashboard.tableLeads", "Leads"),
       flex: 1,
       minWidth: 100,
       sortable: true,
@@ -178,7 +178,7 @@ const Dashboard = () => {
     },
     {
       field: "inProgressApplicants",
-      headerName: t("dashboard.tableInProgressApplicants", "IN PROGRESS APPLICANTS"),
+      headerName: t("dashboard.tableInProgressApplicants", "In Progress Applicants"),
       flex: 1,
       minWidth: 200,
       sortable: true,
@@ -187,7 +187,7 @@ const Dashboard = () => {
     },
     {
       field: "enrolledApplicants",
-      headerName: t("dashboard.tableEnrolledApplicants", "ENROLLED APPLICANTS"),
+      headerName: t("dashboard.tableEnrolledApplicants", "Enrolled Applicants"),
       flex: 1,
       minWidth: 180,
       sortable: true,
@@ -268,7 +268,7 @@ const Dashboard = () => {
             {t("dashboard.title", "Dashboard")}
           </h1>
           <Button variant="accent" size="md" rounded onClick={handleAddApplicant}>
-            {t("dashboard.addApplicant", "ADD APPLICANT")}
+            {t("dashboard.addApplicant", "Add Applicant")}
           </Button>
         </div>
 
@@ -325,6 +325,7 @@ const Dashboard = () => {
           {/* Admin Select */}
           <div className="w-40">
             <Select
+              label={t("dashboard.adminLabel", "Admin")}
               options={adminOptions}
               value={selectedAdmin}
               onChange={(value) => setSelectedAdmin(value as string)}
@@ -335,6 +336,7 @@ const Dashboard = () => {
           {/* Manager Select */}
           <div className="w-40">
             <Select
+              label={t("dashboard.managerLabel", "Manager")}
               options={managerOptions}
               value={selectedManager}
               onChange={(value) => setSelectedManager(value as string)}
@@ -345,6 +347,7 @@ const Dashboard = () => {
           {/* Counselor Select */}
           <div className="w-44">
             <Select
+              label={t("dashboard.counselorLabel", "Counselor")}
               options={counselorOptions}
               value={selectedCounselor}
               onChange={(value) => setSelectedCounselor(value as string)}
@@ -355,6 +358,7 @@ const Dashboard = () => {
           {/* Enrollment Type Select */}
           <div className="w-48">
             <Select
+              label={t("dashboard.enrollmentTypeLabel", "Enrollment Type")}
               options={enrollmentTypeOptions}
               value={selectedEnrollmentType}
               onChange={(value) => setSelectedEnrollmentType(value as string)}
@@ -365,6 +369,7 @@ const Dashboard = () => {
           {/* Date Range Picker */}
           <div className="w-56">
             <DateRangePicker
+              label={t("dashboard.dateRangeLabel", "Date Range")}
               value={selectedDateRange}
               onChange={setSelectedDateRange}
               placeholder={t("dashboard.selectDateRange", "Select Date Range")}

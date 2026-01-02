@@ -199,7 +199,7 @@ const UniversityApplicationTable = ({
     },
     {
       field: "actions",
-      headerName: t("applicantTracker.action", "ACTION"),
+      headerName: t("applicantTracker.action", "Action"),
       flex: 1,
       minWidth: 150,
       sortable: false,

@@ -77,7 +77,7 @@ const ApplicationStatusPopup = ({
                 placeholder={t("applicantDetailView.selectStatus", "Select Status")}
                 fullWidth
                 searchable
-                searchPlaceholder={t("applicantDetailView.searchStatus", "Search status...")}
+                searchPlaceholder={t("applicantDetailView.searchStatus", "Search Status...")}
               />
             </div>
 
