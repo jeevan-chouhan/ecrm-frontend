@@ -29,13 +29,13 @@ const FeatureItem = ({
     <div>
       <h4
         className="font-semibold text-base mb-1"
-        style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+        style={{ color: COLORS.textDark }}
       >
         {title}
       </h4>
       <p
         className="text-sm leading-relaxed"
-        style={{ color: COLORS.textMuted, fontFamily: "'Inter', sans-serif" }}
+        style={{ color: COLORS.textMuted }}
       >
         {description}
       </p>
@@ -65,7 +65,6 @@ const Home = () => {
                 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-6"
                 style={{
                   color: COLORS.textDark,
-                  fontFamily: "'Inter', sans-serif",
                 }}
               >
                 Streamline Student Applications with Edu
@@ -75,7 +74,6 @@ const Home = () => {
                 className="text-base md:text-lg mb-8 leading-relaxed"
                 style={{
                   color: COLORS.textMuted,
-                  fontFamily: "'Inter', sans-serif",
                 }}
               >
                 Manage Your Immigration Agency Efficiently With Our Comprehensive
@@ -124,7 +122,6 @@ const Home = () => {
                 className="text-2xl md:text-3xl font-bold mb-4"
                 style={{
                   color: COLORS.textDark,
-                  fontFamily: "'Inter', sans-serif",
                 }}
               >
                 Unified Application Dashboard
@@ -133,7 +130,6 @@ const Home = () => {
                 className="text-base mb-8 leading-relaxed"
                 style={{
                   color: COLORS.textMuted,
-                  fontFamily: "'Inter', sans-serif",
                 }}
               >
                 Gain Complete Visibility Into Your Admissions Pipeline. Track
@@ -205,7 +201,6 @@ const Home = () => {
                 className="text-2xl md:text-3xl font-bold mb-4"
                 style={{
                   color: COLORS.textDark,
-                  fontFamily: "'Inter', sans-serif",
                 }}
               >
                 Easy Candidate & Admin Management
@@ -214,7 +209,6 @@ const Home = () => {
                 className="text-base mb-8 leading-relaxed"
                 style={{
                   color: COLORS.textMuted,
-                  fontFamily: "'Inter', sans-serif",
                 }}
               >
                 Adding New Candidates And Administrators Is Quick And
@@ -259,7 +253,6 @@ const Home = () => {
             className="text-sm"
             style={{
               color: COLORS.textMuted,
-              fontFamily: "'Inter', sans-serif",
             }}
           >
             {APP_CONFIG.copyright()}

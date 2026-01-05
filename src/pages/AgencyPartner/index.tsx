@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { GridColDef } from "@mui/x-data-grid";
 import { Layout, SearchBar, DataTable, Button, Popup, Input, PhoneInput } from "../../components";
-import { COLORS } from "../../constants";
+import { COLORS, typography } from "../../constants";
 import { Edit, Trash } from "../../assets";
 import { isValidEmail } from "../../utils/regex";
 
@@ -420,7 +420,7 @@ const AgencyPartner = () => {
               max="100"
               step="0.01"
               error={formErrors.commissionPercentage}
-              rightIcon={<span style={{ color: COLORS.textMuted, fontWeight: 500 }}>%</span>}
+              rightIcon={<span style={{ color: COLORS.textMuted, fontWeight: typography.fontWeight.medium }}>%</span>}
               fullWidth
             />
             <Input

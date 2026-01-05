@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import type { ReactNode } from "react";
 import { ChevronDown, Close, Check, Search } from "../../assets";
-import { COLORS } from "../../constants";
+import { COLORS, typography } from "../../constants";
 
 export interface MultiSelectOption {
   value: string;
@@ -124,6 +124,8 @@ const MultiSelect = ({
               ? COLORS.accent
               : COLORS.border,
             boxShadow: isOpen ? `0 0 0 3px ${COLORS.accent}20` : "none",
+            backgroundColor: COLORS.surface,
+            fontSize: typography.fontSize.small,
           }}
         >
           {leftIcon && (

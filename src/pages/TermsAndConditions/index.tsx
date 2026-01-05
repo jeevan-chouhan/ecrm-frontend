@@ -13,13 +13,13 @@ const TermsAndConditions = () => {
         <div className="mb-8">
           <h1
             className="text-2xl md:text-3xl font-bold mb-2"
-            style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+            style={{ color: COLORS.textDark,  }}
           >
             Terms & Conditions
           </h1>
           <p
             className="text-sm"
-            style={{ color: COLORS.textMuted, fontFamily: "'Inter', sans-serif" }}
+            style={{ color: COLORS.textMuted,  }}
           >
             Last Updated: 10 Jul 2025
           </p>
@@ -38,13 +38,13 @@ const TermsAndConditions = () => {
               <div key={index}>
                 <h2
                   className="text-sm font-semibold mb-2"
-                  style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.textDark,  }}
                 >
                   {section.title}
                 </h2>
                 <p
                   className="text-sm leading-relaxed whitespace-pre-line"
-                  style={{ color: COLORS.textMuted, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.textMuted,  }}
                 >
                   {section.content}
                 </p>

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { DataGrid } from "@mui/x-data-grid";
 import type { GridColDef, GridRowsProp, GridPaginationModel, GridRowSelectionModel, GridRowId } from "@mui/x-data-grid";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
-import { COLORS } from "../../constants";
+import { COLORS, typography } from "../../constants";
 
 // Helper to convert GridRowId[] to GridRowSelectionModel (MUI v8 format)
 const toSelectionModel = (ids: GridRowId[]): GridRowSelectionModel => ({
@@ -43,23 +43,22 @@ const dataGridStyles = {
   border: "none",
   backgroundColor: COLORS.surface,
   borderRadius: "12px",
-  fontFamily: "'Inter', sans-serif",
   "& .MuiDataGrid-columnHeaders": {
     backgroundColor: COLORS.background,
     borderBottom: `1px solid ${COLORS.border}`,
     borderRadius: 0,
   },
   "& .MuiDataGrid-columnHeaderTitle": {
-    fontWeight: 600,
-    fontSize: "12px",
+    fontWeight: typography.fontWeight.semibold,
+    fontSize: typography.fontSize.body,
     textTransform: "none",
-    color: COLORS.textMuted,
+    color: COLORS.textDark,
     letterSpacing: "0.5px",
   },
   "& .MuiDataGrid-cell": {
     borderBottom: `1px solid ${COLORS.border}`,
     color: COLORS.textDark,
-    fontSize: "14px",
+    fontSize: typography.fontSize.small,
   },
   "& .MuiDataGrid-row:hover": {
     backgroundColor: COLORS.surfaceHover,
@@ -111,7 +110,7 @@ const customTheme = createTheme({
     },
   },
   typography: {
-    fontFamily: "'Inter', sans-serif",
+    fontFamily: typography.fontFamily.primary,
   },
 });
 

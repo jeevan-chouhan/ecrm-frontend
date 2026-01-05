@@ -50,13 +50,13 @@ const Pricing = () => {
           <div className="mb-12">
             <h1
               className="text-2xl md:text-3xl font-bold mb-3"
-              style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+              style={{ color: COLORS.textDark,  }}
             >
               Choose The Right Plan For Your Agency
             </h1>
             <p
               className="text-sm md:text-base"
-              style={{ color: COLORS.textMuted, fontFamily: "'Inter', sans-serif" }}
+              style={{ color: COLORS.textMuted,  }}
             >
               Explore Features Included In Your Current Plan. Upgrade Anytime To Unlock More Capabilities.
             </p>
@@ -83,7 +83,7 @@ const Pricing = () => {
                   {/* Plan Name */}
                   <h2
                     className="text-lg font-semibold mb-2"
-                    style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+                    style={{ color: COLORS.textDark,  }}
                   >
                     {plan.name}
                   </h2>
@@ -92,14 +92,14 @@ const Pricing = () => {
                   <div className="mb-6">
                     <span
                       className="text-3xl md:text-4xl font-bold"
-                      style={{ color: COLORS.accent, fontFamily: "'Inter', sans-serif" }}
+                      style={{ color: COLORS.accent,  }}
                     >
                       {plan.price}
                     </span>
                     {plan.period && (
                       <span
                         className="text-lg md:text-xl ml-1"
-                        style={{ color: COLORS.textMuted, fontFamily: "'Inter', sans-serif" }}
+                        style={{ color: COLORS.textMuted,  }}
                       >
                         / {plan.period}
                       </span>

@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import type { InputHTMLAttributes } from "react";
 import { Search, CloseCircle } from "../../assets";
-import { COLORS } from "../../constants";
+import { COLORS, typography } from "../../constants";
 
 interface SearchBarProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, "onChange"> {
@@ -91,8 +91,7 @@ const SearchBar = ({
           boxShadow: isFocused ? `0 0 0 3px ${COLORS.accent}20` : "none",
           color: COLORS.textDark,
           backgroundColor: COLORS.surface,
-          fontFamily: "'Inter', sans-serif",
-          fontSize: "14px",
+          fontSize: typography.fontSize.small,
         }}
         {...props}
       />

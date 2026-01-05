@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../../components";
-import { COLORS } from "../../../constants";
+import { COLORS, typography } from "../../../constants";
 
 interface NotesSectionProps {
   notes: string;
@@ -32,8 +32,7 @@ const NotesSection = ({ notes, isSaving, hasChanges, onNotesChange, onSaveNotes 
           border: `1px solid ${COLORS.border}`,
           color: COLORS.textDark,
           backgroundColor: COLORS.surface,
-          fontFamily: "'Inter', sans-serif",
-          fontSize: "14px",
+          fontSize: typography.fontSize.small,
         }}
       />
       <div className="flex justify-end">

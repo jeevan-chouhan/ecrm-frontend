@@ -1,22 +1,7 @@
 import { ChevronLeft, ChevronRight } from "../../assets";
-import { COLORS } from "../../constants";
+import { COLORS, MONTHS } from "../../constants";
 import type { SelectOption } from "../Select/Select";
 import Select from "../Select/Select";
-
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
 
 interface MonthYearSelectorProps {
   currentMonth: number;

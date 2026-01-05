@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../../components";
 import PublicLayout from "../../../components/wrapper/PublicLayout";
-import { COLORS, ROUTES } from "../../../constants";
+import { COLORS, ROUTES, typography  } from "../../../constants";
 import { authService } from "../../../services";
 import type { OtpVerificationState } from "../../../services";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
@@ -288,7 +288,7 @@ const OtpVerification = () => {
             <div className="mt-6 text-center">
               <p className="text-sm mb-3" style={{ color: COLORS.textMuted }}>
                 {t("auth.resendOtpIn")}{" "}
-                <span style={{ color: COLORS.accent, fontWeight: 600 }}>
+                <span style={{ color: COLORS.accent, fontWeight: typography.fontWeight.semibold }}>
                   {formatTime(timer)}
                 </span>
               </p>

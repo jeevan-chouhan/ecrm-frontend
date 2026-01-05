@@ -37,7 +37,7 @@ const AchievementForm = ({
           <div className="w-full">
             <label
               className="block text-sm font-medium mb-1.5"
-              style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+              style={{ color: COLORS.textDark,  }}
             >
               {t("applicant.selectCategory")} <span style={{ color: COLORS.error }}>*</span>
             </label>
@@ -55,7 +55,7 @@ const AchievementForm = ({
         <div className="w-full">
           <label
             className="block text-sm font-medium mb-1.5"
-            style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+            style={{ color: COLORS.textDark,  }}
           >
             {t("applicant.description")} <span style={{ color: COLORS.error }}>*</span>
           </label>

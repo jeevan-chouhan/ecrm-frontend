@@ -126,7 +126,6 @@ const Button = ({
         backgroundColor: variantStyle.bg,
         color: variantStyle.text,
         border: variantStyle.border ? `2px solid ${variantStyle.border}` : "none",
-        fontFamily: "'Inter', sans-serif",
         ...style,
       }}
       {...props}

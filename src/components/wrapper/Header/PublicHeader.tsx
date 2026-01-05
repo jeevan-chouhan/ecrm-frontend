@@ -43,7 +43,6 @@ const PublicHeader = ({
           className="text-lg md:text-xl font-bold tracking-tight"
           style={{
             color: COLORS.textDark,
-            fontFamily: "'Inter', sans-serif",
           }}
         >
           {APP_CONFIG.name}
@@ -60,7 +59,6 @@ const PublicHeader = ({
             className="text-sm font-medium transition-colors hover:opacity-80"
             style={{
               color: isActive(item.href) ? COLORS.accent : COLORS.textDark,
-              fontFamily: "'Inter', sans-serif",
             }}
           >
             {item.label}
@@ -104,7 +102,6 @@ const PublicHeader = ({
                 style={{
                   color: isActive(item.href) ? COLORS.accent : COLORS.textDark,
                   backgroundColor: isActive(item.href) ? `${COLORS.accent}10` : "transparent",
-                  fontFamily: "'Inter', sans-serif",
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive(item.href)) {

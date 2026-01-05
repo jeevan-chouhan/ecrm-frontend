@@ -1,10 +1,39 @@
 import React, { useMemo } from "react";
 import { Button } from "../../../components";
-import { COLORS, countries, programs, universities, campuses, courses, intakes, counselors, agencyPartners } from "../../../constants";
+import { COLORS, countries, programs, universities, campuses, courses, counselors, agencyPartners } from "../../../constants";
 import { Edit, Trash } from "../../../assets";
 import { useTranslation } from "react-i18next";
 import PreferenceForm from "./PreferenceForm";
 import type { PreferenceItem } from "./types";
+
+// Helper function to format intake value (e.g., "jan-2026" -> "Jan - 2026")
+const formatIntakeDisplay = (intakeValue: string): string => {
+  if (!intakeValue) return intakeValue;
+  
+  const parts = intakeValue.toLowerCase().split("-");
+  if (parts.length !== 2) return intakeValue;
+  
+  const monthName = parts[0];
+  const year = parts[1];
+  
+  const monthMap: Record<string, string> = {
+    jan: "Jan",
+    feb: "Feb",
+    mar: "Mar",
+    apr: "Apr",
+    may: "May",
+    jun: "Jun",
+    jul: "Jul",
+    aug: "Aug",
+    sep: "Sep",
+    oct: "Oct",
+    nov: "Nov",
+    dec: "Dec",
+  };
+  
+  const monthDisplay = monthMap[monthName] || monthName;
+  return `${monthDisplay} - ${year}`;
+};
 
 interface PreferenceCardProps {
   preference: PreferenceItem;
@@ -38,7 +67,7 @@ const PreferenceCard = ({
     university: universities.find((u) => u.value === preference.desiredUniversity)?.label || preference.desiredUniversity,
     campus: campuses.find((c) => c.value === preference.desiredCampus)?.label || preference.desiredCampus,
     course: courses.find((c) => c.value === preference.course)?.label || preference.course,
-    intake: intakes.find((i) => i.value === preference.desiredIntake)?.label || preference.desiredIntake,
+    intake: formatIntakeDisplay(preference.desiredIntake),
     counselor: counselors.find((c) => c.value === preference.assignCounselor)?.label || preference.assignCounselor,
     agency: agencyPartners.find((a) => a.value === preference.agencyPartnerName)?.label || preference.agencyPartnerName,
   }), [

@@ -561,5 +561,12 @@
     "deleteAgencyPartner": "एजेंसी पार्टनर हटाएं",
     "deleteConfirmation": "क्या आप वाकई हटाना चाहते हैं",
     "deleteWarning": "यह कार्रवाई पूर्ववत नहीं की जा सकती।"
+  },
+  "intakeSelector": {
+    "selectIntake": "सेवन चुनें",
+    "selectMonth": "महीना चुनें",
+    "selectYear": "वर्ष चुनें",
+    "searchMonth": "महीना खोजें...",
+    "searchYear": "वर्ष खोजें..."
   }
 }

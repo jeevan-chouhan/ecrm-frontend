@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { Popup, Button, Select, Checkbox } from "../../../components";
-import { COLORS, applicationStatusOptions } from "../../../constants";
+import { COLORS, applicationStatusOptions, typography } from "../../../constants";
 import type { UniversityApplication } from "./types";
 
 interface ApplicationStatusPopupProps {
@@ -99,8 +99,7 @@ const ApplicationStatusPopup = ({
                   border: `1px solid ${COLORS.border}`,
                   color: COLORS.textDark,
                   backgroundColor: COLORS.surface,
-                  fontFamily: "'Inter', sans-serif",
-                  fontSize: "14px",
+                  fontSize: typography.fontSize.small,
                 }}
               />
             </div>

@@ -1,6 +1,6 @@
 import React from "react";
-import { Select, Button } from "../../../components";
-import { countries, programs, universities, campuses, courses, intakes, counselors, agencyPartners, COLORS } from "../../../constants";
+import { Select, Button, IntakeSelector } from "../../../components";
+import { countries, programs, universities, campuses, courses, counselors, agencyPartners, COLORS } from "../../../constants";
 import { useTranslation } from "react-i18next";
 import type { PreferenceItem } from "./types";
 
@@ -35,7 +35,7 @@ const PreferenceForm = ({
           <div className="w-full">
             <label
               className="block text-sm font-medium mb-1.5"
-              style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+              style={{ color: COLORS.textDark,  }}
             >
               {t("applicant.desiredCountry")} <span style={{ color: COLORS.error }}>*</span>
             </label>
@@ -53,7 +53,7 @@ const PreferenceForm = ({
           <div className="w-full">
             <label
               className="block text-sm font-medium mb-1.5"
-              style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+              style={{ color: COLORS.textDark,  }}
             >
               {t("applicant.desiredUniversity")} <span style={{ color: COLORS.error }}>*</span>
             </label>
@@ -71,7 +71,7 @@ const PreferenceForm = ({
           <div className="w-full">
             <label
               className="block text-sm font-medium mb-1.5"
-              style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+              style={{ color: COLORS.textDark,  }}
             >
               {t("applicant.desiredCampus")} <span style={{ color: COLORS.error }}>*</span>
             </label>
@@ -92,7 +92,7 @@ const PreferenceForm = ({
           <div className="w-full">
             <label
               className="block text-sm font-medium mb-1.5"
-              style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+              style={{ color: COLORS.textDark,  }}
             >
               {t("applicant.program")} <span style={{ color: COLORS.error }}>*</span>
             </label>
@@ -110,7 +110,7 @@ const PreferenceForm = ({
           <div className="w-full">
             <label
               className="block text-sm font-medium mb-1.5"
-              style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+              style={{ color: COLORS.textDark,  }}
             >
               {t("applicant.course")} <span style={{ color: COLORS.error }}>*</span>
             </label>
@@ -128,18 +128,17 @@ const PreferenceForm = ({
           <div className="w-full">
             <label
               className="block text-sm font-medium mb-1.5"
-              style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+              style={{ color: COLORS.textDark,  }}
             >
               {t("applicant.desiredIntake")} <span style={{ color: COLORS.error }}>*</span>
             </label>
-            <Select
-              options={intakes}
+            <IntakeSelector
               value={preference.desiredIntake}
               onChange={(value) => onFieldChange(index, "desiredIntake", value)}
               placeholder={t("applicant.selectIntake")}
               error={getFieldError(index, "desiredIntake")}
               fullWidth
-              searchable
+              allowPastMonths={false}
             />
           </div>
         </div>
@@ -149,7 +148,7 @@ const PreferenceForm = ({
           <div className="w-full">
             <label
               className="block text-sm font-medium mb-1.5"
-              style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+              style={{ color: COLORS.textDark,  }}
             >
               {t("applicant.assignCounselor")}
             </label>
@@ -167,7 +166,7 @@ const PreferenceForm = ({
           <div className="w-full">
             <label
               className="block text-sm font-medium mb-1.5"
-              style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+              style={{ color: COLORS.textDark,  }}
             >
               {t("applicant.agencyPartnerName")}
             </label>

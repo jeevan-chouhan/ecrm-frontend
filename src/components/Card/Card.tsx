@@ -64,7 +64,7 @@ const Card = ({
             {title && (
               <h3
                 className="text-lg font-semibold"
-                style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+                style={{ color: COLORS.textDark }}
               >
                 {title}
               </h3>
