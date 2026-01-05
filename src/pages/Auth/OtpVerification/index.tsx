@@ -11,7 +11,7 @@ import { addToast } from "../../../redux/slices/toast/toastSlice";
 import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
 
 const OTP_LENGTH = 6;
-const RESEND_TIMER = 60; // 5 minutes in seconds
+const RESEND_TIMER = 300; // 5 minutes in seconds
 
 const OtpVerification = () => {
   const { t } = useTranslation();
