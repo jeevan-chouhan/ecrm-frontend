@@ -1,6 +1,7 @@
 import { forwardRef, useState } from "react";
 import type { InputHTMLAttributes, TextareaHTMLAttributes, ReactNode } from "react";
 import { COLORS, componentSpecs, typography } from "../../constants";
+import { Eye, EyeOff } from "../../assets";
 
 type InputVariant = "input" | "textarea";
 
@@ -13,6 +14,7 @@ interface BaseInputProps {
   fullWidth?: boolean;
   inputType?: InputVariant;
   rows?: number;
+  showPasswordToggle?: boolean;
 }
 
 type InputProps = BaseInputProps & (
@@ -35,13 +37,26 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
       onBlur,
       inputType = "input",
       rows = 4,
+      showPasswordToggle = false,
       ...props
     },
     ref
   ) => {
     const [isFocused, setIsFocused] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const inputId = id || `input-${Math.random().toString(36).slice(2, 9)}`;
     const isTextarea = inputType === "textarea";
+    
+    // Determine if this is a password field
+    const isPasswordField = (props as InputHTMLAttributes<HTMLInputElement>).type === "password";
+    
+    // Get the actual input type (toggle between password and text)
+    const getInputType = () => {
+      if (isPasswordField && showPasswordToggle && showPassword) {
+        return "text";
+      }
+      return (props as InputHTMLAttributes<HTMLInputElement>).type;
+    };
 
     const handleFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       setIsFocused(true);
@@ -112,7 +127,7 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
                 focus:outline-none
                 disabled:opacity-50 disabled:cursor-not-allowed
                 ${leftIcon ? "pl-10" : ""}
-                ${rightIcon ? "pr-10" : ""}
+                ${rightIcon || (isPasswordField && showPasswordToggle) ? "pr-10" : ""}
                 ${className}
               `}
               style={{
@@ -124,9 +139,27 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
                 boxShadow: isFocused ? `0 0 0 3px ${COLORS.accent}20` : "none",
               }}
               {...(props as InputHTMLAttributes<HTMLInputElement>)}
+              type={getInputType()}
             />
           )}
-          {rightIcon && !isTextarea && (
+          {/* Password toggle icon */}
+          {isPasswordField && showPasswordToggle && !isTextarea && (
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer hover:opacity-70 transition-opacity"
+              style={{ color: COLORS.textMuted }}
+              tabIndex={-1}
+            >
+              {showPassword ? (
+                <EyeOff className="w-5 h-5" />
+              ) : (
+                <Eye className="w-5 h-5" />
+              )}
+            </button>
+          )}
+          {/* Right icon (only show if not password toggle) */}
+          {rightIcon && !isTextarea && !(isPasswordField && showPasswordToggle) && (
             <div
               className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
               style={{ color: COLORS.textMuted }}

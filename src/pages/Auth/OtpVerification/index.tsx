@@ -6,19 +6,18 @@ import PublicLayout from "../../../components/wrapper/PublicLayout";
 import { COLORS, ROUTES, typography  } from "../../../constants";
 import { authService } from "../../../services";
 import type { OtpVerificationState } from "../../../services";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { useAppDispatch } from "../../../redux/hooks";
 import { addToast } from "../../../redux/slices/toast/toastSlice";
 import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
 
 const OTP_LENGTH = 6;
-const RESEND_TIMER = 300; // 5 minutes in seconds
+const RESEND_TIMER = 60; // 5 minutes in seconds
 
 const OtpVerification = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
-  const isLoading = useAppSelector((state) => state.loader.isLoading);
   
   // Get email from navigation state (passed from ForgotPassword)
   const { email } = (location.state as OtpVerificationState) || {};
@@ -27,6 +26,8 @@ const OtpVerification = () => {
   const [timer, setTimer] = useState(RESEND_TIMER);
   const [canResend, setCanResend] = useState(false);
   const [error, setError] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   
   // Redirect if no email in state
@@ -108,6 +109,7 @@ const OtpVerification = () => {
     }
 
     const otpValue = parseInt(otp.join(""), 10);
+    setIsVerifying(true);
     dispatch(showLoader());
 
     try {
@@ -143,6 +145,7 @@ const OtpVerification = () => {
       setError(errorMessage);
       dispatch(addToast({ type: "error", message: errorMessage }));
     } finally {
+      setIsVerifying(false);
       dispatch(hideLoader());
     }
   };
@@ -150,6 +153,7 @@ const OtpVerification = () => {
   const handleResendOtp = async () => {
     if (!canResend || !email) return;
 
+    setIsResending(true);
     dispatch(showLoader());
 
     try {
@@ -179,6 +183,7 @@ const OtpVerification = () => {
         error.response?.data?.message || error.message || "Failed to resend OTP";
       dispatch(addToast({ type: "error", message: errorMessage }));
     } finally {
+      setIsResending(false);
       dispatch(hideLoader());
     }
   };
@@ -277,8 +282,8 @@ const OtpVerification = () => {
                 size="lg"
                 rounded
                 onClick={handleVerify}
-                isLoading={isLoading}
-                disabled={!isOtpComplete}
+                isLoading={isVerifying}
+                disabled={!isOtpComplete || isResending}
               >
                 {t("auth.verify")}
               </Button>
@@ -293,10 +298,12 @@ const OtpVerification = () => {
                 </span>
               </p>
               <Button
-                variant="ghost"
+                variant="accent"
                 size="md"
+                rounded
                 onClick={handleResendOtp}
-                disabled={!canResend}
+                disabled={!canResend || isVerifying}
+                isLoading={isResending}
               >
                 {t("auth.resendOtp")}
               </Button>
