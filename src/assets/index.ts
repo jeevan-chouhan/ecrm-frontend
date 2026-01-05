@@ -41,6 +41,10 @@ import ArrowLeftIcon from "./ArrowLeft.svg?react";
 import MinusIcon from "./Minus.svg?react";
 import UserMinusIcon from "./UserMinus.svg?react";
 import ToggleStatusIcon from "./ToggleStatus.svg?react";
+import SuccessCircleIcon from "./SuccessCircle.svg?react";
+import ErrorCircleIcon from "./ErrorCircle.svg?react";
+import WarningCircleIcon from "./WarningCircle.svg?react";
+import InfoCircleIcon from "./InfoCircle.svg?react";
 
 // Export icons as named exports (same names as before)
 export const Dashboard = DashboardIcon;
@@ -82,6 +86,10 @@ export const ArrowLeft = ArrowLeftIcon;
 export const Minus = MinusIcon;
 export const UserMinus = UserMinusIcon;
 export const ToggleStatus = ToggleStatusIcon;
+export const SuccessCircle = SuccessCircleIcon;
+export const ErrorCircle = ErrorCircleIcon;
+export const WarningCircle = WarningCircleIcon;
+export const InfoCircle = InfoCircleIcon;
 
 // Also export as icons object for alternative usage
 export const icons = {
@@ -124,6 +132,10 @@ export const icons = {
   Minus: MinusIcon,
   UserMinus: UserMinusIcon,
   ToggleStatus: ToggleStatusIcon,
+  SuccessCircle: SuccessCircleIcon,
+  ErrorCircle: ErrorCircleIcon,
+  WarningCircle: WarningCircleIcon,
+  InfoCircle: InfoCircleIcon,
 };
 
 // Images

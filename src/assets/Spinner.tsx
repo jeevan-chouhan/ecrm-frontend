@@ -1,13 +1,17 @@
+import type { CSSProperties } from "react";
+
 interface SpinnerProps {
   className?: string;
+  style?: CSSProperties;
 }
 
-const Spinner = ({ className = "h-5 w-5" }: SpinnerProps) => (
+const Spinner = ({ className = "h-5 w-5", style }: SpinnerProps) => (
   <svg
     className={`animate-spin ${className}`}
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
     viewBox="0 0 24 24"
+    style={style}
   >
     <circle
       className="opacity-25"

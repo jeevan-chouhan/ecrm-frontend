@@ -208,27 +208,27 @@ const ApplicantTrackerFilters = ({
           />
         </div>
 
-        {/* Apply Filter Button */}
-        <Button 
-          variant="accent" 
-          size="sm" 
-          rounded 
-          onClick={onApplyFilters}
-          style={{ minWidth: "100px" }}
-        >
-          {t("applicantTracker.applyFilter", "Apply")}
-        </Button>
-
-        {/* Clear Filter Button */}
-        <Button 
-          variant="cancel" 
-          size="sm" 
-          rounded 
-          onClick={onClearFilters}
-          style={{ minWidth: "100px" }}
-        >
-          {t("applicantTracker.clearFilter", "Clear Filter")}
-        </Button>
+        {/* Filter Buttons - aligned with inputs */}
+        <div className="flex items-end gap-3 pt-6">
+          <Button 
+            variant="accent" 
+            size="sm" 
+            rounded 
+            onClick={onApplyFilters}
+            style={{ minWidth: "100px" }}
+          >
+            {t("applicantTracker.applyFilter", "Apply")}
+          </Button>
+          <Button 
+            variant="cancel" 
+            size="sm" 
+            rounded 
+            onClick={onClearFilters}
+            style={{ minWidth: "100px" }}
+          >
+            {t("applicantTracker.clearFilter", "Clear Filter")}
+          </Button>
+        </div>
       </div>
     </div>
   );
