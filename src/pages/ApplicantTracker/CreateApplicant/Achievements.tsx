@@ -453,31 +453,28 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit }: Achievement
         )}
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex justify-between gap-3 mt-6 pt-6 border-t" style={{ borderColor: COLORS.border }}>
-        <div>
-          {onBack && (
-            <Button type="button" variant="cancel" onClick={onBack} rounded>
-              {t("common.back")}
-            </Button>
-          )}
-        </div>
-        <div className="flex gap-3">
-          <Button type="button" variant="accent" onClick={handleSave} disabled={!hasDataChanged} rounded>
-            {t("applicant.save")}
+      {/* Action Buttons - Responsive */}
+      <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-6 border-t" style={{ borderColor: COLORS.border }}>
+        {onBack && (
+          <Button type="button" variant="cancel" onClick={onBack} rounded className="w-full sm:w-auto">
+            {t("common.back")}
           </Button>
-          {onSubmit && (
-            <Button 
-              type="button" 
-              variant="accent" 
-              onClick={handleSubmit} 
-              disabled={!isFormValid}
-              rounded
-            >
-              {t("applicant.submit")}
-            </Button>
-          )}
-        </div>
+        )}
+        <Button type="button" variant="accent" onClick={handleSave} disabled={!hasDataChanged} rounded className="w-full sm:w-auto">
+          {t("applicant.save")}
+        </Button>
+        {onSubmit && (
+          <Button 
+            type="button" 
+            variant="accent" 
+            onClick={handleSubmit} 
+            disabled={!isFormValid}
+            rounded
+            className="w-full sm:w-auto"
+          >
+            {t("applicant.submit")}
+          </Button>
+        )}
       </div>
 
       {/* Delete Confirmation Popup */}
