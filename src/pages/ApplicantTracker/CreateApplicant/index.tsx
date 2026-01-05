@@ -7,7 +7,7 @@ import ApplicationPreferences from "./ApplicationPreferences";
 import EducationalDetails from "./EducationalDetails";
 import WorkExperience from "./WorkExperience";
 import Achievements from "./Achievements";
-import { COLORS, ROUTES } from "../../../constants";
+import { COLORS, ROUTES, typography } from "../../../constants";
 import type {
   ApplicantFormState,
   PersonalDetailsFormData,
@@ -482,7 +482,7 @@ const CreateApplicant = () => {
                   color: isActive ? COLORS.accent : COLORS.textMuted,
                   backgroundColor: "transparent",
                   borderBottom: isActive ? `2px solid ${COLORS.accent}` : "2px solid transparent",
-                  fontSize: "16px",
+                  fontSize: typography.fontSize.body,
                   cursor: "default",
                 }}
               >

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Calendar } from "../../assets";
-import { COLORS } from "../../constants";
+import { COLORS, typography } from "../../constants";
 import MonthYearSelector from "./MonthYearSelector";
 import CalendarDaysGrid from "./CalendarDaysGrid";
 
@@ -153,11 +153,10 @@ const DatePicker = ({
             border: `1px solid ${error ? COLORS.error : isOpen ? COLORS.accent : COLORS.border}`,
             boxShadow: isOpen ? `0 0 0 3px ${COLORS.accent}20` : "none",
             backgroundColor: COLORS.surface,
-            fontFamily: "'Inter', sans-serif",
-            fontSize: "14px",
+            fontSize: typography.fontSize.small,
           }}
         >
-          <span style={{ color: value ? COLORS.textDark : COLORS.textDark, opacity: value ? 1 : 0.7 }}>
+          <span style={{ color: value ? COLORS.textDark : COLORS.textMuted }}>
             {value ? formatDate(value) : placeholder}
           </span>
           <span className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">

@@ -172,7 +172,7 @@ const Header = ({
               <div className="flex items-center gap-1">
                 <span
                   className="text-sm font-medium"
-                  style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.textDark }}
                 >
                   {userName}
                 </span>
@@ -232,7 +232,6 @@ const Header = ({
                   className="w-full px-4 py-2.5 flex items-center gap-3 text-sm transition-colors"
                   style={{
                     color: COLORS.textDark,
-                    fontFamily: "'Inter', sans-serif",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = COLORS.surfaceHover;

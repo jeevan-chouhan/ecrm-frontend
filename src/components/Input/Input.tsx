@@ -1,6 +1,6 @@
 import { forwardRef, useState } from "react";
 import type { InputHTMLAttributes, TextareaHTMLAttributes, ReactNode } from "react";
-import { COLORS, componentSpecs } from "../../constants";
+import { COLORS, componentSpecs, typography } from "../../constants";
 
 type InputVariant = "input" | "textarea";
 
@@ -59,7 +59,7 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
           <label
             htmlFor={inputId}
             className="block text-sm font-medium mb-1.5"
-            style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+            style={{ color: COLORS.textDark }}
           >
             {label}
           </label>
@@ -94,8 +94,7 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
                 border: `1px solid ${error ? COLORS.error : isFocused ? COLORS.accent : COLORS.border}`,
                 backgroundColor: COLORS.surface,
                 color: COLORS.textDark,
-                fontFamily: "'Inter', sans-serif",
-                fontSize: "14px",
+                fontSize: typography.fontSize.small,
                 boxShadow: isFocused ? `0 0 0 3px ${COLORS.accent}20` : "none",
               }}
               {...(props as TextareaHTMLAttributes<HTMLTextAreaElement>)}
@@ -121,8 +120,7 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
                 border: `1px solid ${error ? COLORS.error : isFocused ? COLORS.accent : COLORS.border}`,
                 backgroundColor: COLORS.surface,
                 color: COLORS.textDark,
-                fontFamily: "'Inter', sans-serif",
-                fontSize: "14px",
+                fontSize: typography.fontSize.small,
                 boxShadow: isFocused ? `0 0 0 3px ${COLORS.accent}20` : "none",
               }}
               {...(props as InputHTMLAttributes<HTMLInputElement>)}

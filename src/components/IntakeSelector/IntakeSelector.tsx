@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown } from "../../assets";
-import { COLORS, MONTHS, MONTH_SHORT_NAMES } from "../../constants";
+import { COLORS, MONTHS, MONTH_SHORT_NAMES, typography } from "../../constants";
 import Select from "../Select/Select";
 
 interface IntakeSelectorProps {
@@ -213,8 +213,7 @@ const IntakeSelector = ({
               : COLORS.border,
             boxShadow: isOpen ? `0 0 0 3px ${COLORS.accent}20` : "none",
             backgroundColor: COLORS.surface,
-            fontFamily: "'Inter', sans-serif",
-            fontSize: "14px",
+            fontSize: typography.fontSize.small,
           }}
         >
           <span

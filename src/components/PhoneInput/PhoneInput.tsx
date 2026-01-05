@@ -1,7 +1,7 @@
 import PhoneInput2 from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import type { ReactNode } from "react";
-import { COLORS } from "../../constants";
+import { COLORS, typography } from "../../constants";
 
 interface PhoneInputProps {
   label?: string | ReactNode;
@@ -35,7 +35,7 @@ const PhoneInput = ({
       {label && (
         <label
           className="block text-sm font-medium mb-1.5"
-          style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+          style={{ color: COLORS.textDark }}
         >
           {label}
         </label>
@@ -54,8 +54,7 @@ const PhoneInput = ({
         inputStyle={{
           width: "100%",
           height: "42px",
-          fontSize: "14px",
-          fontFamily: "'Inter', sans-serif",
+          fontSize: typography.fontSize.small,
           borderRadius: "8px",
           border: `1px solid ${error ? COLORS.error : COLORS.border}`,
           backgroundColor: COLORS.surface,

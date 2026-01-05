@@ -35,7 +35,7 @@ const PreferenceForm = ({
           <div className="w-full">
             <label
               className="block text-sm font-medium mb-1.5"
-              style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+              style={{ color: COLORS.textDark,  }}
             >
               {t("applicant.desiredCountry")} <span style={{ color: COLORS.error }}>*</span>
             </label>
@@ -53,7 +53,7 @@ const PreferenceForm = ({
           <div className="w-full">
             <label
               className="block text-sm font-medium mb-1.5"
-              style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+              style={{ color: COLORS.textDark,  }}
             >
               {t("applicant.desiredUniversity")} <span style={{ color: COLORS.error }}>*</span>
             </label>
@@ -71,7 +71,7 @@ const PreferenceForm = ({
           <div className="w-full">
             <label
               className="block text-sm font-medium mb-1.5"
-              style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+              style={{ color: COLORS.textDark,  }}
             >
               {t("applicant.desiredCampus")} <span style={{ color: COLORS.error }}>*</span>
             </label>
@@ -92,7 +92,7 @@ const PreferenceForm = ({
           <div className="w-full">
             <label
               className="block text-sm font-medium mb-1.5"
-              style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+              style={{ color: COLORS.textDark,  }}
             >
               {t("applicant.program")} <span style={{ color: COLORS.error }}>*</span>
             </label>
@@ -110,7 +110,7 @@ const PreferenceForm = ({
           <div className="w-full">
             <label
               className="block text-sm font-medium mb-1.5"
-              style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+              style={{ color: COLORS.textDark,  }}
             >
               {t("applicant.course")} <span style={{ color: COLORS.error }}>*</span>
             </label>
@@ -128,7 +128,7 @@ const PreferenceForm = ({
           <div className="w-full">
             <label
               className="block text-sm font-medium mb-1.5"
-              style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+              style={{ color: COLORS.textDark,  }}
             >
               {t("applicant.desiredIntake")} <span style={{ color: COLORS.error }}>*</span>
             </label>
@@ -148,7 +148,7 @@ const PreferenceForm = ({
           <div className="w-full">
             <label
               className="block text-sm font-medium mb-1.5"
-              style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+              style={{ color: COLORS.textDark,  }}
             >
               {t("applicant.assignCounselor")}
             </label>
@@ -166,7 +166,7 @@ const PreferenceForm = ({
           <div className="w-full">
             <label
               className="block text-sm font-medium mb-1.5"
-              style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+              style={{ color: COLORS.textDark,  }}
             >
               {t("applicant.agencyPartnerName")}
             </label>

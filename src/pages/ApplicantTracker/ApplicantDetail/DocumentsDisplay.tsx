@@ -1,7 +1,7 @@
 import { useMemo, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../../components";
-import { COLORS } from "../../../constants";
+import { COLORS, typography } from "../../../constants";
 import { File, Eye, Download } from "../../../assets";
 import { EmptyState } from "./DisplayComponents";
 
@@ -74,28 +74,31 @@ const DocumentsDisplay = ({
         <thead>
           <tr>
             <th
-              className="text-left py-3 px-4 font-semibold text-xs tracking-wide"
+              className="text-left py-3 px-4 font-semibold tracking-wide"
               style={{
                 color: COLORS.textMuted,
                 borderBottom: `1px solid ${COLORS.border}`,
+                fontSize: typography.fontSize.body,
               }}
             >
               {t("applicantDetailView.documentName", "Document Name")}
             </th>
             <th
-              className="text-left py-3 px-4 font-semibold text-xs tracking-wide"
+              className="text-left py-3 px-4 font-semibold tracking-wide"
               style={{
                 color: COLORS.textMuted,
                 borderBottom: `1px solid ${COLORS.border}`,
+                fontSize: typography.fontSize.body,
               }}
             >
               {t("applicantDetailView.actions", "Actions")}
             </th>
             <th
-              className="text-left py-3 px-4 font-semibold text-xs tracking-wide"
+              className="text-left py-3 px-4 font-semibold tracking-wide"
               style={{
                 color: COLORS.textMuted,
                 borderBottom: `1px solid ${COLORS.border}`,
+                fontSize: typography.fontSize.body,
               }}
             >
               {t("applicantDetailView.verificationStatus", "Verification Status")}

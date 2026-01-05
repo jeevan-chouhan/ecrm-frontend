@@ -260,7 +260,7 @@ const ApplicantPersonalDetails = ({ initialValues, onUpdate, onSaveAndNext }: Ap
               <div className="w-full">
                 <label
                   className="block text-sm font-medium mb-1.5"
-                  style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.textDark,  }}
                 >
                   {t("applicant.enrollmentType")} <span style={{ color: COLORS.error }}>*</span>
                 </label>
@@ -277,7 +277,7 @@ const ApplicantPersonalDetails = ({ initialValues, onUpdate, onSaveAndNext }: Ap
               <div className="w-full">
                 <label
                   className="block text-sm font-medium mb-1.5"
-                  style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.textDark,  }}
                 >
                   {t("applicant.name")} <span style={{ color: COLORS.error }}>*</span>
                 </label>
@@ -295,7 +295,7 @@ const ApplicantPersonalDetails = ({ initialValues, onUpdate, onSaveAndNext }: Ap
               <div className="w-full">
                 <label
                   className="block text-sm font-medium mb-1.5"
-                  style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.textDark,  }}
                 >
                   {t("applicant.dateOfBirth")} <span style={{ color: COLORS.error }}>*</span>
                 </label>
@@ -315,7 +315,7 @@ const ApplicantPersonalDetails = ({ initialValues, onUpdate, onSaveAndNext }: Ap
               <div className="w-full">
                 <label
                   className="block text-sm font-medium mb-1.5"
-                  style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.textDark,  }}
                 >
                   {t("applicant.gender")} <span style={{ color: COLORS.error }}>*</span>
                 </label>
@@ -332,7 +332,7 @@ const ApplicantPersonalDetails = ({ initialValues, onUpdate, onSaveAndNext }: Ap
               <div className="w-full">
                 <label
                   className="block text-sm font-medium mb-1.5"
-                  style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.textDark,  }}
                 >
                   {t("applicant.contactNumber")} <span style={{ color: COLORS.error }}>*</span>
                 </label>
@@ -353,7 +353,7 @@ const ApplicantPersonalDetails = ({ initialValues, onUpdate, onSaveAndNext }: Ap
               <div className="w-full">
                 <label
                   className="block text-sm font-medium mb-1.5"
-                  style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.textDark,  }}
                 >
                   {t("applicant.emailId")} <span style={{ color: COLORS.error }}>*</span>
                 </label>

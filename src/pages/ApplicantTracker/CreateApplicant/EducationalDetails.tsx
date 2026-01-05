@@ -194,7 +194,7 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack }: 
               <div className="w-full">
                 <label
                   className="block text-sm font-medium mb-1.5"
-                  style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.textDark,  }}
                 >
                   {t("applicant.highestQualification")} <span style={{ color: COLORS.error }}>*</span>
                 </label>
@@ -211,7 +211,7 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack }: 
               <div className="w-full">
                 <label
                   className="block text-sm font-medium mb-1.5"
-                  style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.textDark,  }}
                 >
                   {t("applicant.institutionName")} <span style={{ color: COLORS.error }}>*</span>
                 </label>
@@ -229,7 +229,7 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack }: 
               <div className="w-full">
                 <label
                   className="block text-sm font-medium mb-1.5"
-                  style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.textDark,  }}
                 >
                   {t("applicant.boardUniversity")} <span style={{ color: COLORS.error }}>*</span>
                 </label>
@@ -262,7 +262,7 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack }: 
                 <div className="w-full">
                   <label
                     className="block text-sm font-medium mb-1.5"
-                    style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+                    style={{ color: COLORS.textDark,  }}
                   >
                     {t("applicant.major")}
                   </label>
@@ -283,7 +283,7 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack }: 
               <div className="w-full">
                 <label
                   className="block text-sm font-medium mb-1.5"
-                  style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.textDark,  }}
                 >
                   {t("applicant.scoreType")} <span style={{ color: COLORS.error }}>*</span>
                 </label>
@@ -300,7 +300,7 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack }: 
               <div className="w-full">
                 <label
                   className="block text-sm font-medium mb-1.5"
-                  style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.textDark,  }}
                 >
                   {t("applicant.score")} <span style={{ color: COLORS.error }}>*</span>
                 </label>
@@ -319,7 +319,7 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack }: 
               <div className="w-full">
                 <label
                   className="block text-sm font-medium mb-1.5"
-                  style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+                  style={{ color: COLORS.textDark,  }}
                 >
                   {t("applicant.passingYear")} <span style={{ color: COLORS.error }}>*</span>
                 </label>

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import type { ReactNode } from "react";
 import { ChevronDown, Search } from "../../assets";
-import { COLORS } from "../../constants";
+import { COLORS, typography } from "../../constants";
 
 export interface SelectOption {
   value: string;
@@ -137,8 +137,7 @@ const Select = ({
               : COLORS.border,
             boxShadow: isOpen ? `0 0 0 3px ${COLORS.accent}20` : "none",
             backgroundColor: COLORS.surface,
-            fontFamily: "'Inter', sans-serif",
-            fontSize: "14px",
+            fontSize: typography.fontSize.small,
           }}
         >
           {leftIcon && (

@@ -22,7 +22,7 @@ const Footer = ({
       {/* Copyright - Centered */}
       <div
         className="text-sm text-center"
-        style={{ color: COLORS.textMuted, fontFamily: "'Inter', sans-serif" }}
+        style={{ color: COLORS.textMuted }}
       >
         © {year} {companyName}. All Rights Reserved.
       </div>

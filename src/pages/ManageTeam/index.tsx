@@ -16,6 +16,7 @@ import {
   statusFilterOptions,
   mockTeamMembers,
   type TeamMember,
+  typography,
 } from "../../constants";
 
 const ManageTeam = () => {
@@ -131,7 +132,7 @@ const ManageTeam = () => {
         <span
           style={{
             color: params.value === "active" ? COLORS.success : COLORS.textMuted,
-            fontWeight: 500,
+            fontWeight: typography.fontWeight.medium,
             textTransform: "capitalize",
           }}
         >
@@ -234,7 +235,6 @@ const ManageTeam = () => {
                     border: `1px solid ${COLORS.border}`,
                     color: COLORS.textDark,
                     backgroundColor: COLORS.surface,
-                    fontFamily: "'Inter', sans-serif",
                   }}
                 />
                 {searchTerm && (
