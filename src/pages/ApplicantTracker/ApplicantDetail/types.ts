@@ -6,10 +6,11 @@ export interface UniversityApplication {
   university: string;
   country: string;
   course: string;
+  applicationStage: string;
+  status: string;
   intake: string;
   counselor: string;
   agencyPartner: string;
-  status: string;
   appliedDate: string;
   lastUpdated: string;
 }

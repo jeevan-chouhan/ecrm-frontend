@@ -70,3 +70,43 @@ export const formatDateCustom = (date: Date | string, format: string): string =>
     .replace("YY", String(year).slice(-2));
 };
 
+/**
+ * Normalizes a date to the start of the day (00:00:00.000)
+ * @param date - Date object, date string, or null/undefined
+ * @returns Date object set to start of day, or null if input is null/undefined
+ */
+export const normalizeDateToStartOfDay = (date: Date | string | null | undefined): Date | null => {
+  if (!date) return null;
+  const d = typeof date === "string" ? new Date(date) : date;
+  
+  // Validate date
+  if (isNaN(d.getTime())) {
+    console.warn("Invalid date provided to normalizeDateToStartOfDay:", date);
+    return null;
+  }
+  
+  const normalized = new Date(d);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized;
+};
+
+/**
+ * Normalizes a date to the end of the day (23:59:59.999)
+ * @param date - Date object, date string, or null/undefined
+ * @returns Date object set to end of day, or null if input is null/undefined
+ */
+export const normalizeDateToEndOfDay = (date: Date | string | null | undefined): Date | null => {
+  if (!date) return null;
+  const d = typeof date === "string" ? new Date(date) : date;
+  
+  // Validate date
+  if (isNaN(d.getTime())) {
+    console.warn("Invalid date provided to normalizeDateToEndOfDay:", date);
+    return null;
+  }
+  
+  const normalized = new Date(d);
+  normalized.setHours(23, 59, 59, 999);
+  return normalized;
+};
+

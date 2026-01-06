@@ -41,6 +41,27 @@ const UniversityApplicationTable = ({
     </span>
   ), []);
 
+  const renderStageCell = useCallback((params: GridRenderCellParams<UniversityApplication>) => {
+    const stage = params.value?.toLowerCase() || "";
+    const isOfferReceived = stage === "offer received";
+    
+    return (
+      <span
+        className="px-3 py-1 rounded-full text-xs font-medium"
+        style={{
+          backgroundColor: isOfferReceived 
+            ? `${COLORS.success}20` 
+            : `${COLORS.accent}20`,
+          color: isOfferReceived 
+            ? COLORS.success 
+            : COLORS.accent,
+        }}
+      >
+        {params.value}
+      </span>
+    );
+  }, []);
+
   const renderStatusCell = useCallback((params: GridRenderCellParams<UniversityApplication>) => {
     const status = params.value.toLowerCase();
     const isOfferReceived = status === "offer received";
@@ -130,17 +151,17 @@ const UniversityApplicationTable = ({
       sortable: false,
     },
     {
-      field: "university",
-      headerName: t("applicantDetailView.university", "University"),
-      flex: 1.5,
-      minWidth: 150,
-      sortable: true,
-    },
-    {
       field: "country",
       headerName: t("applicantDetailView.country", "Country"),
       flex: 1,
       minWidth: 100,
+      sortable: true,
+    },
+    {
+      field: "university",
+      headerName: t("applicantDetailView.university", "University"),
+      flex: 1.5,
+      minWidth: 150,
       sortable: true,
     },
     {
@@ -152,8 +173,24 @@ const UniversityApplicationTable = ({
       renderCell: renderCourseCell,
     },
     {
+      field: "applicationStage",
+      headerName: t("applicantDetailView.applicationStage", "Application Stage"),
+      flex: 1.2,
+      minWidth: 150,
+      sortable: true,
+      renderCell: renderStageCell,
+    },
+    {
+      field: "status",
+      headerName: t("applicantDetailView.applicationStatus", "Application Status"),
+      flex: 1.2,
+      minWidth: 150,
+      sortable: true,
+      renderCell: renderStatusCell,
+    },
+    {
       field: "intake",
-      headerName: t("applicantDetailView.intake", "Intake"),
+      headerName: t("applicantDetailView.intakeYear", "Intake Year"),
       flex: 1,
       minWidth: 100,
       sortable: true,
@@ -174,14 +211,6 @@ const UniversityApplicationTable = ({
       renderCell: renderAgencyPartnerCell,
     },
     {
-      field: "status",
-      headerName: t("applicantDetailView.status", "Status"),
-      flex: 1.2,
-      minWidth: 120,
-      sortable: true,
-      renderCell: renderStatusCell,
-    },
-    {
       field: "appliedDate",
       headerName: t("applicantDetailView.appliedDate", "Applied Date"),
       flex: 1.2,
@@ -191,7 +220,7 @@ const UniversityApplicationTable = ({
     },
     {
       field: "lastUpdated",
-      headerName: t("applicantDetailView.lastUpdated", "Last Updated"),
+      headerName: t("applicantDetailView.lastUpdatedDate", "Last Updated Date"),
       flex: 1.2,
       minWidth: 120,
       sortable: true,
@@ -205,7 +234,7 @@ const UniversityApplicationTable = ({
       sortable: false,
       renderCell: renderActionsCell,
     },
-  ], [t, onApply, onUpdateStatus, renderCourseCell, renderAgencyPartnerCell, renderStatusCell, renderDateCell, renderActionsCell]);
+  ], [t, onApply, onUpdateStatus, renderCourseCell, renderAgencyPartnerCell, renderStageCell, renderStatusCell, renderDateCell, renderActionsCell]);
 
   return (
     <div className="space-y-4">

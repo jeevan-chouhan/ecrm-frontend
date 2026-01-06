@@ -318,6 +318,7 @@ const AgencyPartner = () => {
                 value={searchQuery}
                 onChange={setSearchQuery}
                 placeholder={t("agencyPartner.searchPlaceholder", "Search Agency By Name, Contact Person...")}
+                tooltip={t("agencyPartner.searchPlaceholder", "Search Agency By Name, Contact Person...")}
               />
             </div>
             <Button
