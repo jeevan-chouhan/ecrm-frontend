@@ -1,17 +1,17 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import type { GridColDef } from "@mui/x-data-grid";
+import type { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import {
   Layout,
   Button,
   Select,
   DateRangePicker,
-  Card,
   DataTable,
 } from "../../components";
 import type { DateRange } from "../../components";
 import { COLORS, ROUTES } from "../../constants";
+import ApplicantOverview from "./ApplicantOverview";
 
 // Mock data for table
 const teamOverviewData = [
@@ -57,29 +57,6 @@ const teamOverviewData = [
   },
 ];
 
-// Stat Card using common Card component
-interface StatItemProps {
-  label: string;
-  value: string | number;
-}
-
-const StatItem = ({ label, value }: StatItemProps) => (
-  <Card padding="md" shadow="sm">
-    <p
-      className="text-xs md:text-sm font-medium mb-1"
-      style={{ color: COLORS.textMuted }}
-    >
-      {label}
-    </p>
-    <p
-      className="text-xl md:text-2xl font-bold"
-      style={{ color: COLORS.textDark }}
-    >
-      {value}
-    </p>
-  </Card>
-);
-
 const Dashboard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -102,6 +79,15 @@ const Dashboard = () => {
     enrollmentType: "",
     dateRange: { startDate: null, endDate: null } as DateRange,
   });
+
+  // Pagination state for Team Overview table
+  const [teamOverviewPaginationModel, setTeamOverviewPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
+    pageSize: 10,
+  });
+
+  // Calculate if we need internal scrolling for Team Overview (more than 10 records per page)
+  const teamOverviewNeedsInternalScrolling = teamOverviewPaginationModel.pageSize > 10;
 
   // Filter options with translations
   const adminOptions = useMemo(() => [
@@ -196,17 +182,26 @@ const Dashboard = () => {
     },
   ], [t]);
 
-  // Stats data
-  const stats = {
-    adminName: "Arthur",
-    totalAdmins: 3,
-    managers: 3,
-    counselors: 6,
-    totalApplicants: 150,
-    enrolledApplicants: 50,
-    countriesServing: 3,
-    universitiesServing: 15,
-  };
+  // TODO: Replace with API call to get applicant overview data
+  // const [applicantOverviewData, setApplicantOverviewData] = useState([]);
+  // const [applicantOverviewTotalCount, setApplicantOverviewTotalCount] = useState(0);
+  // const [applicantOverviewLoading, setApplicantOverviewLoading] = useState(false);
+  
+  // useEffect(() => {
+  //   const fetchApplicantOverview = async () => {
+  //     setApplicantOverviewLoading(true);
+  //     try {
+  //       const response = await fetchApplicantOverviewData();
+  //       setApplicantOverviewData(response.data);
+  //       setApplicantOverviewTotalCount(response.totalCount);
+  //     } catch (error) {
+  //       console.error("Error fetching applicant overview:", error);
+  //     } finally {
+  //       setApplicantOverviewLoading(false);
+  //     }
+  //   };
+  //   fetchApplicantOverview();
+  // }, []);
 
   const handleApplyFilters = () => {
     setAppliedFilters({
@@ -272,58 +267,31 @@ const Dashboard = () => {
           </Button>
         </div>
 
-        {/* Stats Cards - Row 1 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatItem
-            label={t("dashboard.adminName", "Admin Name")}
-            value={stats.adminName}
-          />
-          <StatItem
-            label={t("dashboard.totalAdmins", "Total Admins")}
-            value={stats.totalAdmins}
-          />
-          <StatItem
-            label={t("dashboard.managers", "Managers")}
-            value={stats.managers}
-          />
-          <StatItem
-            label={t("dashboard.counselors", "Counselors")}
-            value={stats.counselors}
-          />
-        </div>
-
-        {/* Stats Cards - Row 2 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatItem
-            label={t("dashboard.totalApplicants", "Total Applicants")}
-            value={stats.totalApplicants}
-          />
-          <StatItem
-            label={t("dashboard.enrolledApplicants", "Enrolled Applicants")}
-            value={stats.enrolledApplicants}
-          />
-          <StatItem
-            label={t("dashboard.countriesServing", "Countries Serving")}
-            value={stats.countriesServing}
-          />
-          <StatItem
-            label={t("dashboard.universitiesServing", "Universities Serving")}
-            value={stats.universitiesServing}
-          />
-        </div>
+        {/* Applicant Overview Section */}
+        <ApplicantOverview />
 
         {/* Team Overview Header */}
         <h2
           className="text-lg font-semibold"
           style={{ color: COLORS.textDark }}
         >
-          {t("dashboard.teamOverview", "Team Overview")}
+          {t("dashboard.teamOverview", "Team Overview")} ({filteredTableData.length})
         </h2>
 
         {/* Filters Row - near Team Overview */}
         <div className="flex flex-wrap items-center gap-3">
+          <style>{`
+            /* Override placeholder colors with opacity for dashboard filters */
+            .dashboard-filter-placeholder button > span.block.truncate {
+              opacity: 0.7 !important;
+            }
+            /* Override placeholder opacity for DateRangePicker */
+            .dashboard-date-range-placeholder button > span.block.truncate {
+              opacity: 0.7 !important;
+            }
+          `}</style>
           {/* Admin Select */}
-          <div className="w-40">
+          <div className="w-56 dashboard-filter-placeholder">
             <Select
               label={t("dashboard.adminLabel", "Admin")}
               options={adminOptions}
@@ -334,7 +302,7 @@ const Dashboard = () => {
           </div>
 
           {/* Manager Select */}
-          <div className="w-40">
+          <div className="w-56 dashboard-filter-placeholder">
             <Select
               label={t("dashboard.managerLabel", "Manager")}
               options={managerOptions}
@@ -345,7 +313,7 @@ const Dashboard = () => {
           </div>
 
           {/* Counselor Select */}
-          <div className="w-44">
+          <div className="w-56 dashboard-filter-placeholder">
             <Select
               label={t("dashboard.counselorLabel", "Counselor")}
               options={counselorOptions}
@@ -356,7 +324,7 @@ const Dashboard = () => {
           </div>
 
           {/* Enrollment Type Select */}
-          <div className="w-48">
+          <div className="w-56 dashboard-filter-placeholder">
             <Select
               label={t("dashboard.enrollmentTypeLabel", "Enrollment Type")}
               options={enrollmentTypeOptions}
@@ -367,7 +335,7 @@ const Dashboard = () => {
           </div>
 
           {/* Date Range Picker */}
-          <div className="w-56">
+          <div className="w-56 dashboard-date-range-placeholder">
             <DateRangePicker
               label={t("dashboard.dateRangeLabel", "Date Range")}
               value={selectedDateRange}
@@ -391,8 +359,13 @@ const Dashboard = () => {
         <DataTable
           rows={filteredTableData}
           columns={columns}
-          pageSize={10}
-          pageSizeOptions={[5, 10, 25]}
+          pageSize={teamOverviewPaginationModel.pageSize}
+          pageSizeOptions={[5, 10, 25, 50]}
+          paginationModel={teamOverviewPaginationModel}
+          onPaginationModelChange={setTeamOverviewPaginationModel}
+          paginationMode="client"
+          sortingMode="client"
+          height={teamOverviewNeedsInternalScrolling ? 600 : undefined}
         />
       </div>
     </Layout>

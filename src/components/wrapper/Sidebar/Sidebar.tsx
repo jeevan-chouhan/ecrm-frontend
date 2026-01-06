@@ -81,7 +81,7 @@ const Sidebar = ({
                   {!collapsed && (
                     <span
                       className="text-lg font-bold whitespace-nowrap"
-                      style={{ color: COLORS.textDark, fontFamily: "'Inter', sans-serif" }}
+                      style={{ color: COLORS.textDark }}
                     >
                       {logoText}
                     </span>
@@ -130,7 +130,6 @@ const Sidebar = ({
                             ? COLORS.surfaceHover
                             : "transparent",
                           color: isActive ? COLORS.textWhite : COLORS.textDark,
-                          fontFamily: "'Inter', sans-serif",
                           textDecoration: "none",
                         }}
                       >

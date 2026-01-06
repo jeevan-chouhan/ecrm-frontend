@@ -1,7 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { GridColDef } from "@mui/x-data-grid";
+import { Tooltip } from "@mui/material";
 import {
   Layout,
   Button,
@@ -29,6 +30,54 @@ const ManageTeam = () => {
     isOpen: boolean;
     member: TeamMember | null;
   }>({ isOpen: false, member: null });
+
+  // Stats counts from API
+  const [statsCounts, setStatsCounts] = useState({
+    totalAdmins: 0,
+    totalManagers: 0,
+    totalCounselors: 0,
+  });
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  // Fetch stats counts from API
+  useEffect(() => {
+    const fetchStatsCounts = async () => {
+      setLoadingStats(true);
+      try {
+        // TODO: Replace with actual API call
+        // const response = await fetch('/api/team/stats');
+        // if (!response.ok) throw new Error('Failed to fetch stats');
+        // const data = await response.json();
+        // setStatsCounts({
+        //   totalAdmins: data.totalAdmins || 0,
+        //   totalManagers: data.totalManagers || 0,
+        //   totalCounselors: data.totalCounselors || 0,
+        // });
+
+        // Mock API response for now
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        setStatsCounts({
+          totalAdmins: 3,
+          totalManagers: 3,
+          totalCounselors: 6,
+        });
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.error("Error fetching team stats:", error);
+        }
+        // Set default values on error
+        setStatsCounts({
+          totalAdmins: 0,
+          totalManagers: 0,
+          totalCounselors: 0,
+        });
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    fetchStatsCounts();
+  }, []);
 
   // Filter logic
   const filteredMembers = useMemo(() => {
@@ -218,36 +267,38 @@ const ManageTeam = () => {
             {/* Search Bar */}
             <div className="w-full sm:w-80">
               <div className="h-[21px] mb-1.5"></div>
-              <div className="relative">
-                <div
-                  className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none"
-                  style={{ color: COLORS.textMuted }}
-                >
-                  <Search className="h-5 w-5" />
-                </div>
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder={t("manageTeam.searchPlaceholder", "Search By Name, Email Or Contact...")}
-                  className="block w-full rounded-lg pl-10 pr-4 py-2.5 text-sm transition-all duration-200 focus:outline-none"
-                  style={{
-                    border: `1px solid ${COLORS.border}`,
-                    color: COLORS.textDark,
-                    backgroundColor: COLORS.surface,
-                  }}
-                />
-                {searchTerm && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchTerm("")}
-                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center transition-colors"
+              <Tooltip title={t("manageTeam.searchPlaceholder", "Search By Name, Email Or Contact...")} arrow>
+                <div className="relative">
+                  <div
+                    className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none"
                     style={{ color: COLORS.textMuted }}
                   >
-                    <CloseCircle className="h-5 w-5" />
-                  </button>
-                )}
-              </div>
+                    <Search className="h-5 w-5" />
+                  </div>
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder={t("manageTeam.searchPlaceholder", "Search By Name, Email Or Contact...")}
+                    className="block w-full rounded-lg pl-10 pr-4 py-2.5 text-sm transition-all duration-200 focus:outline-none"
+                    style={{
+                      border: `1px solid ${COLORS.border}`,
+                      color: COLORS.textDark,
+                      backgroundColor: COLORS.surface,
+                    }}
+                  />
+                  {searchTerm && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchTerm("")}
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center transition-colors"
+                      style={{ color: COLORS.textMuted }}
+                    >
+                      <CloseCircle className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
+              </Tooltip>
             </div>
 
             {/* Status Filter Dropdown */}
@@ -274,6 +325,75 @@ const ManageTeam = () => {
                 {t("manageTeam.addMember", "Add member")}
               </Button>
             </div>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          {/* Total Admins Card */}
+          <div
+            className="bg-white rounded-lg shadow-sm p-6"
+            style={{
+              border: `1px solid ${COLORS.border}`,
+              backgroundColor: COLORS.surface,
+            }}
+          >
+            <p
+              className="text-sm font-medium mb-2"
+              style={{ color: COLORS.textMuted }}
+            >
+              {t("manageTeam.totalAdmins", "Total Admins")}
+            </p>
+            <p
+              className="text-3xl font-bold"
+              style={{ color: COLORS.textDark }}
+            >
+              {loadingStats ? "-" : statsCounts.totalAdmins}
+            </p>
+          </div>
+
+          {/* Managers Card */}
+          <div
+            className="bg-white rounded-lg shadow-sm p-6"
+            style={{
+              border: `1px solid ${COLORS.border}`,
+              backgroundColor: COLORS.surface,
+            }}
+          >
+            <p
+              className="text-sm font-medium mb-2"
+              style={{ color: COLORS.textMuted }}
+            >
+              {t("manageTeam.totalManagers", "Total Managers")}
+            </p>
+            <p
+              className="text-3xl font-bold"
+              style={{ color: COLORS.textDark }}
+            >
+              {loadingStats ? "-" : statsCounts.totalManagers}
+            </p>
+          </div>
+
+          {/* Counselors Card */}
+          <div
+            className="bg-white rounded-lg shadow-sm p-6"
+            style={{
+              border: `1px solid ${COLORS.border}`,
+              backgroundColor: COLORS.surface,
+            }}
+          >
+            <p
+              className="text-sm font-medium mb-2"
+              style={{ color: COLORS.textMuted }}
+            >
+              {t("manageTeam.totalCounselors", "Total Counselors")}
+            </p>
+            <p
+              className="text-3xl font-bold"
+              style={{ color: COLORS.textDark }}
+            >
+              {loadingStats ? "-" : statsCounts.totalCounselors}
+            </p>
           </div>
         </div>
 

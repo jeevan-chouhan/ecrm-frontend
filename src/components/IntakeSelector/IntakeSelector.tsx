@@ -221,7 +221,6 @@ const IntakeSelector = ({
               color: parsedValue.month !== null && parsedValue.year !== null
                 ? COLORS.textDark
                 : COLORS.textMuted,
-              opacity: parsedValue.month !== null && parsedValue.year !== null ? 1 : 0.7,
             }}
           >
             {displayText}

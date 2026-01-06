@@ -13,10 +13,11 @@ interface ApplicantPersonalDetailsProps {
   initialValues: PersonalDetailsFormData;
   onUpdate: (data: PersonalDetailsFormData) => void;
   onSaveAndNext?: () => void;
+  onBack?: () => void;
   onReset?: () => void;
 }
 
-const ApplicantPersonalDetails = ({ initialValues, onUpdate, onSaveAndNext }: ApplicantPersonalDetailsProps) => {
+const ApplicantPersonalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack }: ApplicantPersonalDetailsProps) => {
   const { t, i18n } = useTranslation();
   const enrollmentTypeOptions: SelectOption[] = enrollmentTypes;
   const genderOptions: SelectOption[] = genderTypes;
@@ -339,7 +340,7 @@ const ApplicantPersonalDetails = ({ initialValues, onUpdate, onSaveAndNext }: Ap
                 <PhoneInput
                   value={formik.values.contactNumber}
                   onChange={handlePhoneChange}
-                  placeholder={t("applicant.enterPhoneNumber")}
+                  placeholder={t("applicant.enterContactNumber")}
                   error={
                     (formik.touched.contactNumber && formik.errors.contactNumber) ||
                     (formik.touched.countryCode && formik.errors.countryCode)
@@ -423,9 +424,14 @@ const ApplicantPersonalDetails = ({ initialValues, onUpdate, onSaveAndNext }: Ap
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 mt-6 pt-6 border-t" style={{ borderColor: COLORS.border }}>
-            <Button type="button" variant="accent" onClick={handleSave} rounded>
+          {/* Action Buttons - Responsive */}
+          <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-6 border-t" style={{ borderColor: COLORS.border }}>
+            {onBack && (
+              <Button type="button" variant="cancel" onClick={onBack} rounded className="w-full sm:w-auto">
+                {t("common.back")}
+              </Button>
+            )}
+            <Button type="button" variant="accent" onClick={handleSave} rounded className="w-full sm:w-auto">
               {t("applicant.save")}
             </Button>
             <Button 
@@ -434,6 +440,7 @@ const ApplicantPersonalDetails = ({ initialValues, onUpdate, onSaveAndNext }: Ap
               onClick={handleSaveAndNext}
               disabled={!isFormValid}
               rounded
+              className="w-full sm:w-auto"
             >
               {t("applicant.saveAndNext")}
             </Button>

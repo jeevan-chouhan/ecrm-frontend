@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import type { InputHTMLAttributes } from "react";
+import { Tooltip } from "@mui/material";
 import { Search, CloseCircle } from "../../assets";
 import { COLORS, typography } from "../../constants";
 
@@ -10,6 +11,7 @@ interface SearchBarProps
   debounceMs?: number;
   showClearButton?: boolean;
   fullWidth?: boolean;
+  tooltip?: string;
 }
 
 const SearchBar = ({
@@ -20,6 +22,7 @@ const SearchBar = ({
   fullWidth = false,
   placeholder = "Search...",
   className = "",
+  tooltip,
   ...props
 }: SearchBarProps) => {
   const [value, setValue] = useState("");
@@ -62,7 +65,7 @@ const SearchBar = ({
     }
   };
 
-  return (
+  const searchInput = (
     <div className={`relative ${fullWidth ? "w-full" : ""}`}>
       <div
         className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none"
@@ -113,6 +116,16 @@ const SearchBar = ({
       )}
     </div>
   );
+
+  if (tooltip) {
+    return (
+      <Tooltip title={tooltip} arrow>
+        {searchInput}
+      </Tooltip>
+    );
+  }
+
+  return searchInput;
 };
 
 export default SearchBar;
