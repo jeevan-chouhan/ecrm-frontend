@@ -5,6 +5,7 @@ interface CardProps {
   children: ReactNode;
   title?: string | ReactNode;
   subtitle?: string;
+  headerIcon?: ReactNode;
   headerAction?: ReactNode;
   footer?: ReactNode;
   padding?: "none" | "sm" | "md" | "lg";
@@ -13,6 +14,7 @@ interface CardProps {
   hoverable?: boolean;
   className?: string;
   headerBackgroundColor?: string;
+  headerTextColor?: string;
 }
 
 const paddingStyles = {
@@ -26,6 +28,7 @@ const Card = ({
   children,
   title,
   subtitle,
+  headerIcon,
   headerAction,
   footer,
   padding = "md",
@@ -33,11 +36,14 @@ const Card = ({
   hoverable = false,
   className = "",
   headerBackgroundColor,
+  headerTextColor,
 }: CardProps) => {
+  const hasColoredHeader = !!headerBackgroundColor;
+  
   return (
     <div
       className={`
-        transition-shadow duration-200
+        transition-shadow duration-200 overflow-hidden
         ${hoverable ? "hover:shadow-lg cursor-pointer" : ""}
         ${className}
       `}
@@ -54,29 +60,39 @@ const Card = ({
           className="flex items-center justify-between"
           style={{
             padding: padding !== "none" ? "16px 20px" : "0",
-            borderBottom: children || footer ? `1px solid ${COLORS.border}` : "none",
+            borderBottom: children || footer ? (hasColoredHeader ? "none" : `1px solid ${COLORS.border}`) : "none",
             backgroundColor: headerBackgroundColor || "transparent",
             borderTopLeftRadius: componentSpecs.card.borderRadius,
             borderTopRightRadius: componentSpecs.card.borderRadius,
           }}
         >
-          <div>
-            {title && (
-              <h3
-                className="text-lg font-semibold"
-                style={{ color: COLORS.textDark }}
+          <div className="flex items-center gap-3">
+            {headerIcon && (
+              <div 
+                className="w-10 h-10 rounded-lg flex items-center justify-center"
+                style={{ backgroundColor: hasColoredHeader ? "rgba(255, 255, 255, 0.2)" : COLORS.surface }}
               >
-                {title}
-              </h3>
+                {headerIcon}
+              </div>
             )}
-            {subtitle && (
-              <p
-                className="mt-0.5 text-sm"
-                style={{ color: COLORS.textMuted }}
-              >
-                {subtitle}
-              </p>
-            )}
+            <div>
+              {title && (
+                <h3
+                  className="text-lg font-semibold"
+                  style={{ color: headerTextColor || COLORS.textDark }}
+                >
+                  {title}
+                </h3>
+              )}
+              {subtitle && (
+                <p
+                  className="mt-0.5 text-sm"
+                  style={{ color: hasColoredHeader ? "rgba(255, 255, 255, 0.8)" : COLORS.textMuted }}
+                >
+                  {subtitle}
+                </p>
+              )}
+            </div>
           </div>
           {headerAction && <div>{headerAction}</div>}
         </div>

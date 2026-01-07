@@ -66,6 +66,33 @@ export const yesNoOptions: SelectOption[] = [
 ];
 
 // ==========================================
+// Enums
+// ==========================================
+
+export enum UserRole {
+  PRIMARY_ADMIN = "PRIMARY_ADMIN",
+  ADMIN = "ADMIN",
+  MANAGER = "MANAGER",
+  COUNSELLOR = "COUNSELLOR",
+  BILLING = "BILLING",
+}
+
+// Role display names mapping
+export const ROLE_DISPLAY_NAMES: Record<string, string> = {
+  [UserRole.PRIMARY_ADMIN]: "Primary Admin",
+  [UserRole.ADMIN]: "Admin",
+  [UserRole.MANAGER]: "Manager",
+  [UserRole.COUNSELLOR]: "Counsellor",
+  [UserRole.BILLING]: "Billing",
+};
+
+// Helper to get role display name
+export const getRoleDisplayName = (role: string): string => {
+  const upperRole = role?.toUpperCase();
+  return ROLE_DISPLAY_NAMES[upperRole] || role?.charAt(0).toUpperCase() + role?.slice(1).toLowerCase() || "-";
+};
+
+// ==========================================
 // Manage Team - Types & Mock Data
 // ==========================================
 

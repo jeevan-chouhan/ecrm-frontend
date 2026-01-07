@@ -103,11 +103,17 @@ const ResetPassword = () => {
           >
             {/* Title */}
             <h1
-              className="text-xl md:text-2xl font-bold mb-8 text-center"
+              className="text-xl md:text-2xl font-bold text-center"
               style={{ color: COLORS.textDark }}
             >
               {t("auth.resetPassword")}
             </h1>
+            <p
+              className="text-sm text-center mt-2 mb-8"
+              style={{ color: COLORS.textMuted }}
+            >
+              {t("auth.resetPasswordSubtitle", "Enter a new password below to change your password")}
+            </p>
 
             <form onSubmit={formik.handleSubmit}>
               <div className="space-y-5">
@@ -121,6 +127,7 @@ const ResetPassword = () => {
                   onBlur={formik.handleBlur}
                   error={formik.touched.password ? formik.errors.password : undefined}
                   fullWidth
+                  showPasswordToggle
                 />
 
                 <Input
@@ -133,6 +140,7 @@ const ResetPassword = () => {
                   onBlur={formik.handleBlur}
                   error={formik.touched.confirmPassword ? formik.errors.confirmPassword : undefined}
                   fullWidth
+                  showPasswordToggle
                 />
               </div>
 
@@ -147,7 +155,7 @@ const ResetPassword = () => {
                   isLoading={isLoading}
                   disabled={!formik.values.password || !formik.values.confirmPassword || Object.keys(formik.errors).length > 0}
                 >
-                  {t("auth.save")}
+                  {t("auth.updatePassword", "Update Password")}
                 </Button>
               </div>
             </form>

@@ -1,13 +1,15 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { InputHTMLAttributes } from "react";
 import { Tooltip } from "@mui/material";
 import { Search, CloseCircle } from "../../assets";
 import { COLORS, typography } from "../../constants";
 
 interface SearchBarProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, "onChange"> {
+  extends Omit<InputHTMLAttributes<HTMLInputElement>, "onChange" | "value"> {
+  value?: string;
   onSearch?: (value: string) => void;
   onChange?: (value: string) => void;
+  onClear?: () => void;
   debounceMs?: number;
   showClearButton?: boolean;
   fullWidth?: boolean;
@@ -15,8 +17,10 @@ interface SearchBarProps
 }
 
 const SearchBar = ({
+  value: controlledValue,
   onSearch,
   onChange,
+  onClear,
   debounceMs = 300,
   showClearButton = true,
   fullWidth = false,
@@ -25,16 +29,31 @@ const SearchBar = ({
   tooltip,
   ...props
 }: SearchBarProps) => {
-  const [value, setValue] = useState("");
+  // Support both controlled and uncontrolled modes
+  const isControlled = controlledValue !== undefined;
+  const [internalValue, setInternalValue] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [debounceTimer, setDebounceTimer] = useState<ReturnType<
     typeof setTimeout
   > | null>(null);
 
+  // Get the current value based on mode
+  const currentValue = isControlled ? controlledValue : internalValue;
+
+  // Sync internal value with controlled value
+  useEffect(() => {
+    if (isControlled) {
+      setInternalValue(controlledValue);
+    }
+  }, [isControlled, controlledValue]);
+
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = e.target.value;
-      setValue(newValue);
+      
+      if (!isControlled) {
+        setInternalValue(newValue);
+      }
       onChange?.(newValue);
 
       if (debounceTimer) {
@@ -47,13 +66,16 @@ const SearchBar = ({
 
       setDebounceTimer(timer);
     },
-    [onChange, onSearch, debounceMs, debounceTimer]
+    [onChange, onSearch, debounceMs, debounceTimer, isControlled]
   );
 
   const handleClear = () => {
-    setValue("");
+    if (!isControlled) {
+      setInternalValue("");
+    }
     onChange?.("");
     onSearch?.("");
+    onClear?.();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -61,7 +83,7 @@ const SearchBar = ({
       if (debounceTimer) {
         clearTimeout(debounceTimer);
       }
-      onSearch?.(value);
+      onSearch?.(currentValue);
     }
   };
 
@@ -75,7 +97,7 @@ const SearchBar = ({
       </div>
       <input
         type="text"
-        value={value}
+        value={currentValue}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         onFocus={() => setIsFocused(true)}
@@ -104,7 +126,7 @@ const SearchBar = ({
           opacity: 0.7;
         }
       `}</style>
-      {showClearButton && value && (
+      {showClearButton && currentValue && (
         <button
           type="button"
           onClick={handleClear}

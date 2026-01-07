@@ -1,38 +1,30 @@
-import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { GridColDef } from "@mui/x-data-grid";
 import {
   Layout,
   Button,
-  Input,
-  MultiSelect,
   DataTable,
   Popup,
+  Card,
 } from "../../../components";
-import { ArrowLeft, ToggleStatus } from "../../../assets";
-import {
-  COLORS,
-  ROUTES,
-  mockTeamMemberDetail,
-  managerOptions,
-  counselorOptions,
-  countryOptions,
-  universityOptions,
-  mockTeamData,
-  type TeamMemberDetail,
-} from "../../../constants";
+import { ArrowLeft, ToggleStatus, ToggleOn, User, Settings } from "../../../assets";
+import { COLORS, ROUTES, UserRole, getRoleDisplayName } from "../../../constants";
+import { userService } from "../../../services";
+import type { UserDetailsData } from "../../../services";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { addToast } from "../../../redux/slices/toast/toastSlice";
+import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
+import { handleApiError } from "../../../utils";
 
-// Stats Card Component
+// Stats Card Component - defined outside to prevent re-creation
 const StatsCard = ({ label, value }: { label: string; value: number }) => (
   <div
     className="flex flex-col items-center p-4 rounded-lg"
     style={{ border: `1px solid ${COLORS.border}` }}
   >
-    <span
-      className="text-xs text-center mb-1"
-      style={{ color: COLORS.textMuted }}
-    >
+    <span className="text-xs text-center mb-1" style={{ color: COLORS.textMuted }}>
       {label}
     </span>
     <span className="text-2xl font-semibold" style={{ color: COLORS.textDark }}>
@@ -41,17 +33,26 @@ const StatsCard = ({ label, value }: { label: string; value: number }) => (
   </div>
 );
 
-// DataTable columns for universities - moved inside component for i18n
-
 const ViewMember = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
+  const dispatch = useAppDispatch();
   const { memberId } = useParams<{ memberId: string }>();
+  
+  // Get user from Redux (decoded from token)
+  const { user } = useAppSelector((state) => state.auth);
+  
+  // Get initial status from navigation state
+  const initialStatus = (location.state?.memberStatus?.toUpperCase() as "ACTIVE" | "INACTIVE") || "ACTIVE";
+  
+  // State for member details
+  const [memberDetails, setMemberDetails] = useState<UserDetailsData | null>(null);
+  const [memberStatus, setMemberStatus] = useState<"ACTIVE" | "INACTIVE">(initialStatus);
   const [isDeactivatePopupOpen, setIsDeactivatePopupOpen] = useState(false);
-  const [memberStatus, setMemberStatus] = useState<"active" | "inactive">("active");
 
-  // DataTable columns for universities
-  const universityColumns: GridColDef[] = [
+  // Memoized DataTable columns for universities
+  const universityColumns: GridColDef[] = useMemo(() => [
     {
       field: "name",
       headerName: t("manageTeam.universities", "Universities"),
@@ -67,194 +68,128 @@ const ViewMember = () => {
       headerAlign: "right",
       renderCell: (params) => params.value.toString().padStart(2, "0"),
     },
-  ];
+  ], [t]);
 
-  // Find member from mock data (in real app, fetch from API)
-  const findMemberInfo = () => {
-    for (const roleGroup of mockTeamData) {
-      const found = roleGroup.members.find((m) => m.id === memberId);
-      if (found) {
-        return {
-          ...mockTeamMemberDetail,
-          id: found.id,
-          name: found.name,
-          memberId: found.memberId,
-          role: roleGroup.role.toLowerCase(),
-          email: found.email,
-          contactNumber: found.mobileNo,
-        };
+  /**
+   * Fetch user details from API
+   */
+  const fetchUserDetails = useCallback(async () => {
+    if (!memberId || !user) return;
+
+    dispatch(showLoader());
+
+    try {
+      const response = await userService.getUserDetails({
+        userId: parseInt(memberId),
+        agencyId: user.agencyId ?? null,
+        assignedManagerId: user.role === UserRole.MANAGER ? user.userId : null,
+        assignedAdminId: user.role === UserRole.ADMIN ? user.userId : null,
+        assignedCounsellorId: user.role === UserRole.COUNSELLOR ? user.userId : null,
+      });
+
+      if (response.status === "success" && response.data) {
+        setMemberDetails(response.data);
+      } else {
+        dispatch(addToast({ type: "error", message: response.message || "Failed to fetch user details" }));
       }
+    } catch (error: unknown) {
+      const { message } = handleApiError(error, "Failed to fetch user details");
+      dispatch(addToast({ type: "error", message }));
+    } finally {
+      dispatch(hideLoader());
     }
-    return mockTeamMemberDetail;
-  };
+  }, [memberId, user, dispatch]);
 
-  const member: TeamMemberDetail = findMemberInfo();
+  // Fetch user details on mount
+  useEffect(() => {
+    if (user && memberId) {
+      fetchUserDetails();
+    }
+  }, [user, memberId, fetchUserDetails]);
 
-  // Prepare university rows for DataTable
-  const universityRows = member.universities.map((uni, index) => ({
-    id: index,
-    name: uni.name,
-    count: uni.count,
-  }));
+  // Memoized university rows for DataTable
+  const universityRows = useMemo(() => 
+    memberDetails?.enrolledApplicantsByUniversity?.map((uni) => ({
+      id: uni.universityId,
+      name: uni.universityName,
+      count: uni.count,
+    })) || []
+  , [memberDetails?.enrolledApplicantsByUniversity]);
 
-  // Mock data for view mode (in real app, this would come from API)
-  const viewData = {
-    email: member.email,
-    contactNumber: member.contactNumber,
-    role: member.role,
-    managers: ["carlos", "sarah"], // Mock managers for admin view
-    counselors: ["bob", "sara", "jon"], // Mock counselors for manager view
-    assignedCountries: ["usa", "uk", "canada"],
-    assignedUniversities: ["harvard", "toronto", "mit"],
-  };
+  // Memoized member name
+  const memberName = useMemo(() => 
+    memberDetails?.personalData?.email?.split("@")[0] || `Member #${memberId}`
+  , [memberDetails?.personalData?.email, memberId]);
 
-  const handleBack = () => {
+  // Memoized handlers
+  const handleBack = useCallback(() => {
     navigate(ROUTES.MANAGE_TEAM);
-  };
+  }, [navigate]);
 
-  const handleDeactivateClick = () => {
+  const handleDeactivateClick = useCallback(() => {
     setIsDeactivatePopupOpen(true);
-  };
+  }, []);
 
-  const handleDeactivateConfirm = () => {
-    // Toggle status
-    const newStatus = memberStatus === "active" ? "inactive" : "active";
-    setMemberStatus(newStatus);
-    console.log("Status changed:", member.id, "to", newStatus);
+  const handleDeactivateCancel = useCallback(() => {
     setIsDeactivatePopupOpen(false);
-    // Stay on the same page - do not navigate
-  };
+  }, []);
 
-  const handleDeactivateCancel = () => {
-    setIsDeactivatePopupOpen(false);
-  };
-
-  // Get role display name
-  const getRoleDisplayName = (role: string) => {
-    return role.charAt(0).toUpperCase() + role.slice(1);
-  };
-
-  // Render role-based fields
-  // View mode:
-  // - Admin/Primary Admin: Show Manager field (multiselect)
-  // - Manager: Show Counselor field (multiselect)
-  // - Counselor: Hide field (just show country and university)
-  const renderRoleBasedFields = () => {
-    const role = member.role.toLowerCase();
-
-    if (role === "admin" || role === "primary admin" || role === "admin-primary") {
-      return (
-        <>
-          {/* Managers (MultiSelect for Admin) */}
-          <div className="mb-4">
-            <MultiSelect
-              label={t("manageTeam.managers", "Managers")}
-              options={managerOptions}
-              value={viewData.managers}
-              disabled
-              fullWidth
-            />
-          </div>
-          {/* Assigned Country & University */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <MultiSelect
-              label={t("manageTeam.assignedCountry", "Assigned Country")}
-              options={countryOptions}
-              value={viewData.assignedCountries}
-              disabled
-              fullWidth
-            />
-            <MultiSelect
-              label={t("manageTeam.assignedUniversity", "Assigned University")}
-              options={universityOptions}
-              value={viewData.assignedUniversities}
-              disabled
-              fullWidth
-            />
-          </div>
-        </>
-      );
+  const handleDeactivateConfirm = useCallback(async () => {
+    if (!memberId) return;
+    
+    dispatch(showLoader());
+    try {
+      const response = await userService.updateStatus(parseInt(memberId));
+      if (response.status === "success" && response.data) {
+        const newStatus = response.data.status as "ACTIVE" | "INACTIVE";
+        setMemberStatus(newStatus);
+        dispatch(addToast({ type: "success", message: t("manageTeam.statusUpdated", `Status changed to ${newStatus === "ACTIVE" ? "Active" : "Inactive"}`) }));
+      }
+    } catch (error: unknown) {
+      const { message } = handleApiError(error);
+      dispatch(addToast({ type: "error", message }));
+    } finally {
+      dispatch(hideLoader());
+      setIsDeactivatePopupOpen(false);
     }
+  }, [memberId, dispatch, t]);
 
-    if (role === "manager") {
-      return (
-        <>
-          {/* Counselors (MultiSelect for Manager) */}
-          <div className="mb-4">
-            <MultiSelect
-              label={t("manageTeam.counselors", "Counselors")}
-              options={counselorOptions}
-              value={viewData.counselors}
-              disabled
-              fullWidth
-            />
-          </div>
-          {/* Assigned Country & University */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <MultiSelect
-              label={t("manageTeam.assignedCountry", "Assigned Country")}
-              options={countryOptions}
-              value={viewData.assignedCountries}
-              disabled
-              fullWidth
-            />
-            <MultiSelect
-              label={t("manageTeam.assignedUniversity", "Assigned University")}
-              options={universityOptions}
-              value={viewData.assignedUniversities}
-              disabled
-              fullWidth
-            />
-          </div>
-        </>
-      );
-    }
-
-    // Counselor or other roles - hide manager/counselor fields, only show country & university
+  if (!memberDetails) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <MultiSelect
-          label={t("manageTeam.assignedCountry", "Assigned Country")}
-          options={countryOptions}
-          value={viewData.assignedCountries}
-          disabled
-          fullWidth
-        />
-        <MultiSelect
-          label={t("manageTeam.assignedUniversity", "Assigned University")}
-          options={universityOptions}
-          value={viewData.assignedUniversities}
-          disabled
-          fullWidth
-        />
-      </div>
+      <Layout userName={user?.name || "Admin"} userRole={user?.role || "User"}>
+        <div className="bg-white rounded-lg shadow-sm p-6 md:p-8 min-h-[calc(100vh-140px)] flex items-center justify-center">
+          <p style={{ color: COLORS.textMuted }}>Loading...</p>
+        </div>
+      </Layout>
     );
-  };
+  }
+
+  const { personalData, applicantCount, subordinates } = memberDetails;
 
   return (
-    <Layout userName="Admin" userRole="Abroad Agency">
+    <Layout userName={user?.name || "Admin"} userRole={user?.role || "User"}>
       <div className="bg-white rounded-lg shadow-sm p-6 md:p-8 min-h-[calc(100vh-140px)]">
         {/* Back Button & Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3 sm:gap-4">
             <Button
               variant="accent"
               icon={<ArrowLeft className="h-5 w-5" />}
               onClick={handleBack}
               rounded
             />
-            <div>
+            <div className="min-w-0">
               <h1
-                className="text-2xl font-semibold"
+                className="text-xl sm:text-2xl font-semibold truncate"
                 style={{ color: COLORS.textDark }}
               >
-                {member.name}
+                {memberName}
               </h1>
               <p className="text-sm" style={{ color: COLORS.textMuted }}>
-                {t("manageTeam.id", "ID")}: {member.memberId}
+                {t("manageTeam.id", "ID")}: {memberId}
               </p>
               <p className="text-sm" style={{ color: COLORS.textMuted }}>
-                {t("manageTeam.role", "Role")}: {getRoleDisplayName(member.role)}
+                {t("manageTeam.role", "Role")}: {getRoleDisplayName(personalData.role)}
               </p>
             </div>
           </div>
@@ -263,96 +198,161 @@ const ViewMember = () => {
             variant="ghost"
             size="sm"
             icon={
-              <ToggleStatus
-                className="h-5 w-5"
-                style={{
-                  color: memberStatus === "active" ? COLORS.error : COLORS.success,
-                }}
-              />
+              memberStatus === "ACTIVE" ? (
+                <ToggleOn
+                  className="h-5 w-5"
+                  style={{ color: COLORS.error }}
+                />
+              ) : (
+                <ToggleStatus
+                  className="h-5 w-5"
+                  style={{ color: COLORS.success }}
+                />
+              )
             }
             onClick={handleDeactivateClick}
-            title={memberStatus === "active" ? t("common.deactivate", "Deactivate") : t("common.activate", "Activate")}
+            title={memberStatus === "ACTIVE" ? t("common.inactive", "Inactive") : t("common.active", "Active")}
+            className="self-start sm:self-center"
           />
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <StatsCard label={t("manageTeam.totalApplicants", "Total Applicants")} value={member.totalApplicants} />
-          <StatsCard
-            label={t("manageTeam.inProgressApplicants", "In Progress Applicants")}
-            value={member.inProgressApplicants}
+          <StatsCard 
+            label={t("manageTeam.totalApplications", "Total Applications")} 
+            value={applicantCount.totalApplicants} 
           />
           <StatsCard
-            label={t("manageTeam.successfulApplicants", "Successful Applicants")}
-            value={member.successfulApplicants}
+            label={t("manageTeam.inProgressApplications", "In Progress Applications")}
+            value={applicantCount.inProgressApplicants}
           />
           <StatsCard
-            label={t("manageTeam.rejectedApplicants", "Rejected Applicants")}
-            value={member.rejectedApplicants}
+            label={t("manageTeam.successfulApplications", "Successful Applications")}
+            value={applicantCount.successFullApplicants}
+          />
+          <StatsCard
+            label={t("manageTeam.rejectedApplications", "Rejected Applications")}
+            value={applicantCount.rejectedApplicants}
           />
         </div>
 
         {/* Two Cards Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Card 1: University List */}
-          <div
-            className="rounded-lg p-4"
-            style={{ border: `1px solid ${COLORS.border}` }}
+          <Card
+            title={t("manageTeam.universityList", "University List")}
+            headerIcon={<Settings className="h-5 w-5 text-white" />}
+            headerBackgroundColor={COLORS.accent}
+            headerTextColor="white"
+            padding="md"
+            shadow="sm"
           >
-            <h2
-              className="text-lg font-semibold mb-4"
-              style={{ color: COLORS.textDark }}
-            >
-              {t("manageTeam.universityList", "University List")}
-            </h2>
-            <DataTable
-              rows={universityRows}
-              columns={universityColumns}
-              hideFooter
-              disableRowSelectionOnClick
-            />
-          </div>
+            {universityRows.length > 0 ? (
+              <DataTable
+                rows={universityRows}
+                columns={universityColumns}
+                hideFooter
+                disableRowSelectionOnClick
+              />
+            ) : (
+              <p className="text-center py-8" style={{ color: COLORS.textMuted }}>
+                {t("manageTeam.noUniversities", "No universities assigned")}
+              </p>
+            )}
+          </Card>
 
           {/* Card 2: Member Details (View Mode) */}
-          <div
-            className="rounded-lg p-4"
-            style={{ border: `1px solid ${COLORS.border}` }}
+          <Card
+            title={t("manageTeam.memberDetails", "Member Details")}
+            headerIcon={<User className="h-5 w-5 text-white" />}
+            headerBackgroundColor={COLORS.accent}
+            headerTextColor="white"
+            padding="md"
+            shadow="sm"
           >
-            <h2
-              className="text-lg font-semibold mb-4"
-              style={{ color: COLORS.textDark }}
-            >
-              {t("manageTeam.memberDetails", "Member Details")}
-            </h2>
-
             {/* Email, Contact Number & Role */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <Input
-                label={t("manageTeam.email", "Email")}
-                type="text"
-                value={viewData.email}
-                disabled
-                fullWidth
-              />
-              <Input
-                label={t("manageTeam.contactNumber", "Contact Number")}
-                type="text"
-                value={viewData.contactNumber}
-                disabled
-                fullWidth
-              />
-              <Input
-                label={t("manageTeam.role", "Role")}
-                type="text"
-                value={getRoleDisplayName(viewData.role)}
-                disabled
-                fullWidth
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-4">
+              <div className="min-w-0 space-y-1">
+                <label className="text-xs font-medium tracking-wide" style={{ color: COLORS.textMuted }}>
+                  {t("manageTeam.email", "Email")}
+                </label>
+                <p className="text-sm font-medium truncate" style={{ color: COLORS.textDark }} title={personalData.email || ""}>
+                  {personalData.email || "-"}
+                </p>
+              </div>
+              <div className="min-w-0 space-y-1">
+                <label className="text-xs font-medium tracking-wide" style={{ color: COLORS.textMuted }}>
+                  {t("manageTeam.contactNumber", "Contact Number")}
+                </label>
+                <p className="text-sm font-medium" style={{ color: COLORS.textDark }}>
+                  {personalData.contactNumber || "-"}
+                </p>
+              </div>
+              <div className="min-w-0 space-y-1">
+                <label className="text-xs font-medium tracking-wide" style={{ color: COLORS.textMuted }}>
+                  {t("manageTeam.role", "Role")}
+                </label>
+                <p className="text-sm font-medium" style={{ color: COLORS.textDark }}>
+                  {getRoleDisplayName(personalData.role)}
+                </p>
+              </div>
             </div>
 
-            {/* Role-based fields */}
-            {renderRoleBasedFields()}
-          </div>
+            {/* Assigned Admin/Manager Info */}
+            {(personalData.assignedAdminName || personalData.assignedManagerName) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4">
+                {personalData.assignedAdminName && (
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium tracking-wide" style={{ color: COLORS.textMuted }}>
+                      {t("manageTeam.assignedAdmin", "Assigned Admin")}
+                    </label>
+                    <p className="text-sm font-medium" style={{ color: COLORS.textDark }}>
+                      {personalData.assignedAdminName}
+                    </p>
+                  </div>
+                )}
+                {personalData.assignedManagerName && (
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium tracking-wide" style={{ color: COLORS.textMuted }}>
+                      {t("manageTeam.assignedManager", "Assigned Manager")}
+                    </label>
+                    <p className="text-sm font-medium" style={{ color: COLORS.textDark }}>
+                      {personalData.assignedManagerName}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Subordinates List */}
+            {subordinates && subordinates.length > 0 && (
+              <div className="pt-3 border-t" style={{ borderColor: COLORS.border }}>
+                <label className="text-xs font-medium tracking-wide mb-3 block" style={{ color: COLORS.textMuted }}>
+                  {t("manageTeam.subordinates", "Subordinates")}
+                </label>
+                <div className="space-y-2">
+                  {subordinates.map((sub) => (
+                    <div 
+                      key={sub.id} 
+                      className="flex justify-between items-center p-3 rounded-lg"
+                      style={{ backgroundColor: COLORS.surface }}
+                    >
+                      <span className="text-sm font-medium" style={{ color: COLORS.textDark }}>{sub.name}</span>
+                      <span 
+                        className="text-xs px-2 py-1 rounded-full"
+                        style={{ 
+                          backgroundColor: COLORS.accent + "20", 
+                          color: COLORS.accent 
+                        }}
+                      >
+                        {getRoleDisplayName(sub.role)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Card>
         </div>
       </div>
 
@@ -367,8 +367,8 @@ const ViewMember = () => {
         <div>
           <p className="text-base mb-8" style={{ color: COLORS.textDark }}>
             {t("manageTeam.statusChangeConfirmation", "Are you sure you want to change the status of")}{" "}
-            <strong>{member.name}</strong> {t("common.from", "From")}{" "}
-            {memberStatus === "active" 
+            <strong>{memberName}</strong> {t("common.from", "From")}{" "}
+            {memberStatus === "ACTIVE" 
               ? t("manageTeam.activeToInactive", "Active to Inactive") 
               : t("manageTeam.inactiveToActive", "Inactive to Active")}?
           </p>

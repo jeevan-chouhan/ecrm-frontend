@@ -35,12 +35,14 @@ import TrashIcon from "./Trash.svg?react";
 import DownloadIcon from "./Download.svg?react";
 import PlusIcon from "./Plus.svg?react";
 import EyeIcon from "./Eye.svg?react";
+import EyeOffIcon from "./EyeOff.svg?react";
 import FileIcon from "./File.svg?react";
 import UploadIcon from "./Upload.svg?react";
 import ArrowLeftIcon from "./ArrowLeft.svg?react";
 import MinusIcon from "./Minus.svg?react";
 import UserMinusIcon from "./UserMinus.svg?react";
 import ToggleStatusIcon from "./ToggleStatus.svg?react";
+import ToggleOnIcon from "./ToggleOn.svg?react";
 import SuccessCircleIcon from "./SuccessCircle.svg?react";
 import ErrorCircleIcon from "./ErrorCircle.svg?react";
 import WarningCircleIcon from "./WarningCircle.svg?react";
@@ -80,12 +82,14 @@ export const Trash = TrashIcon;
 export const Download = DownloadIcon;
 export const Plus = PlusIcon;
 export const Eye = EyeIcon;
+export const EyeOff = EyeOffIcon;
 export const File = FileIcon;
 export const Upload = UploadIcon;
 export const ArrowLeft = ArrowLeftIcon;
 export const Minus = MinusIcon;
 export const UserMinus = UserMinusIcon;
 export const ToggleStatus = ToggleStatusIcon;
+export const ToggleOn = ToggleOnIcon;
 export const SuccessCircle = SuccessCircleIcon;
 export const ErrorCircle = ErrorCircleIcon;
 export const WarningCircle = WarningCircleIcon;
@@ -126,12 +130,14 @@ export const icons = {
   Trash: TrashIcon,
   Download: DownloadIcon,
   Eye: EyeIcon,
+  EyeOff: EyeOffIcon,
   File: FileIcon,
   Upload: UploadIcon,
   ArrowLeft: ArrowLeftIcon,
   Minus: MinusIcon,
   UserMinus: UserMinusIcon,
   ToggleStatus: ToggleStatusIcon,
+  ToggleOn: ToggleOnIcon,
   SuccessCircle: SuccessCircleIcon,
   ErrorCircle: ErrorCircleIcon,
   WarningCircle: WarningCircleIcon,

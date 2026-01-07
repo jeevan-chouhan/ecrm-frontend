@@ -8,6 +8,7 @@ export { default as DateRangePicker } from "./DateRangePicker/DateRangePicker";
 export { default as IntakeSelector } from "./IntakeSelector/IntakeSelector";
 export { default as Popup } from "./Popup/Popup";
 export { default as Card } from "./Card/Card";
+export { default as Chip } from "./Chip/Chip";
 export { default as StatusChangePopup } from "./StatusChangePopup/StatusChangePopup";
 export { default as ConfirmationPopup } from "./ConfirmationPopup/ConfirmationPopup";
 export { default as Checkbox } from "./Checkbox/Checkbox";
@@ -16,7 +17,7 @@ export { default as FileUpload } from "./FileUpload/FileUpload";
 export { default as DataTable } from "./DataTable/DataTable";
 export { default as GlobalLoader } from "./GlobalLoader/GlobalLoader";
 export { default as Toast } from "./Toast/Toast";
-export type { GridRowId, GridColDef } from "./DataTable/DataTable";
+export type { GridRowId, GridColDef, GridSortModel } from "./DataTable/DataTable";
 export {
   Accordion,
   AccordionGroup,

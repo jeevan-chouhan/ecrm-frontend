@@ -158,6 +158,7 @@ const Login = () => {
                   onBlur={formik.handleBlur}
                   error={formik.touched.password ? formik.errors.password : undefined}
                   fullWidth
+                  showPasswordToggle
                 />
               </div>
 

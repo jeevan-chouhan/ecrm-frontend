@@ -52,6 +52,10 @@ const MultiSelect = ({
       )
     : options;
 
+  // Store onBlur in a ref to avoid recreating the effect
+  const onBlurRef = useRef(onBlur);
+  onBlurRef.current = onBlur;
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -60,13 +64,13 @@ const MultiSelect = ({
       ) {
         setIsOpen(false);
         setSearchTerm("");
-        onBlur?.();
+        onBlurRef.current?.();
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [onBlur]);
+  }, []);
 
   useEffect(() => {
     if (isOpen && searchable && searchInputRef.current) {
