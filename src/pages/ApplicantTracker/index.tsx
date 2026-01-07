@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { GridColDef, GridPaginationModel, GridRenderCellParams } from "@mui/x-data-grid";
 import { Tooltip } from "@mui/material";
@@ -8,117 +8,20 @@ import {
   Button,
   SearchBar,
   DataTable,
-  StatusChangePopup,
+  Popup,
+  Select,
+  Checkbox,
+  ConfirmationPopup,
 } from "../../components";
-import { COLORS, ROUTES } from "../../constants";
-import { Plus, Eye, ToggleStatus } from "../../assets";
-import { formatDateValue } from "../../utils";
+import { COLORS, ROUTES, applicantStatusOptions, typography, mockApplicants, type Applicant } from "../../constants";
+import { Plus, Calendar, Edit } from "../../assets";
+import { formatDateValue, normalizeDateToStartOfDay, normalizeDateToEndOfDay } from "../../utils";
 import ApplicantTrackerFilters from "./ApplicantTrackerFilters";
-
-// Mock applicant data
-interface Applicant {
-  id: string;
-  applicantId: string;
-  applicantName: string;
-  contactNo: string;
-  course: string;
-  applicantStage: string;
-  applicantStatus: string;
-  passportNo: string;
-  enrollmentType: string;
-  notes: string;
-  status: "Active" | "Inactive";
-  createdAt?: Date | string;
-  adminId?: string;
-  managerId?: string;
-  counselorId?: string;
-  intake?: string;
-  agencyPartner?: string;
-}
-
-const mockApplicants: Applicant[] = [
-  {
-    id: "1",
-    applicantId: "S223",
-    applicantName: "Jane Doe",
-    contactNo: "+91 9877123462",
-    course: "Master - Computers",
-    applicantStage: "Lead",
-    applicantStatus: "Application Incomplete",
-    passportNo: "P0122234",
-    enrollmentType: "Referred to Agency Partner",
-    notes: "talked about university preference",
-    status: "Active",
-    createdAt: new Date("2024-01-15"),
-    adminId: "arthur",
-    managerId: "carlos",
-    counselorId: "celina",
-    intake: "jan-2026",
-    agencyPartner: "apply-board",
-  },
-  {
-    id: "2",
-    applicantId: "S224",
-    applicantName: "John Smith",
-    contactNo: "+91 9877123463",
-    course: "Bachelor - Engineering",
-    applicantStage: "Application In Progress",
-    applicantStatus: "Application Complete",
-    passportNo: "P0122235",
-    enrollmentType: "Walk-in",
-    notes: "Interested in US universities",
-    status: "Active",
-    createdAt: new Date("2024-02-20"),
-    adminId: "arthur",
-    managerId: "carlos",
-    counselorId: "john",
-    intake: "apr-2026",
-    agencyPartner: "idp",
-  },
-  {
-    id: "3",
-    applicantId: "S225",
-    applicantName: "Emily Brown",
-    contactNo: "+91 9877123464",
-    course: "Master - Business",
-    applicantStage: "Application Submitted",
-    applicantStatus: "Under Review",
-    passportNo: "P0122236",
-    enrollmentType: "Referred by Agency Partner",
-    notes: "Waiting for offer",
-    status: "Active",
-    createdAt: new Date("2024-03-10"),
-    adminId: "john",
-    managerId: "sarah",
-    counselorId: "sarah",
-    intake: "jul-2026",
-    agencyPartner: "study-abroad",
-  },
-  // Add more mock data as needed
-  ...Array.from({ length: 20 }, (_, i) => ({
-    id: `${i + 4}`,
-    applicantId: `S${226 + i}`,
-    applicantName: `Applicant ${i + 4}`,
-    contactNo: `+91 9877123${String(465 + i).padStart(3, "0")}`,
-    course: ["Master - Computers", "Bachelor - Engineering", "Master - Business"][i % 3],
-    applicantStage: ["Lead", "Application In Progress", "Application Submitted", "Offer Received"][i % 4],
-    applicantStatus: ["Application Incomplete", "Application Complete", "Under Review", "Offer Pending"][i % 4],
-    passportNo: `P0122${String(237 + i).padStart(3, "0")}`,
-    enrollmentType: ["Walk-in", "Referred to Agency Partner", "Referred by Agency Partner"][i % 3],
-    notes: `Notes for applicant ${i + 4}`,
-    status: i % 3 === 0 ? "Inactive" : "Active" as "Active" | "Inactive",
-    createdAt: new Date(2024, 0, 15 + i * 5), // Spread dates across months
-    adminId: ["arthur", "john", "emily"][i % 3],
-    managerId: ["carlos", "sarah", "david"][i % 3],
-    counselorId: ["celina", "john", "sarah"][i % 3],
-    intake: ["jan-2026", "apr-2026", "jul-2026", "oct-2026"][i % 4],
-    agencyPartner: ["apply-board", "idp", "study-abroad"][i % 3],
-  })),
-];
+import ApplicationStatusHistoryPopup from "./ApplicantDetail/ApplicationStatusHistoryPopup";
+import type { ApplicationStatusHistory } from "./ApplicantDetail/types";
 
 const ApplicantTracker = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
 
   // Applicants state - will be updated from API
   const [applicants, setApplicants] = useState<Applicant[]>(mockApplicants);
@@ -130,25 +33,29 @@ const ApplicantTracker = () => {
   const [selectedAdmin, setSelectedAdmin] = useState("");
   const [selectedManager, setSelectedManager] = useState("");
   const [selectedCounselor, setSelectedCounselor] = useState("");
+  const [selectedUniversity, setSelectedUniversity] = useState("");
+  const [selectedCourse, setSelectedCourse] = useState("");
   const [selectedApplicantStages, setSelectedApplicantStages] = useState<string[]>([]);
-  const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedIntake, setSelectedIntake] = useState("");
-  const [selectedEnrollmentType, setSelectedEnrollmentType] = useState("");
   const [selectedAgencyPartner, setSelectedAgencyPartner] = useState("");
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [appliedFromDate, setAppliedFromDate] = useState<Date | null>(null);
+  const [appliedToDate, setAppliedToDate] = useState<Date | null>(null);
+  const [lastUpdatedFromDate, setLastUpdatedFromDate] = useState<Date | null>(null);
+  const [lastUpdatedToDate, setLastUpdatedToDate] = useState<Date | null>(null);
 
   // Applied filter states (used for API calls and filtering)
   const [appliedAdmin, setAppliedAdmin] = useState("");
   const [appliedManager, setAppliedManager] = useState("");
   const [appliedCounselor, setAppliedCounselor] = useState("");
+  const [appliedUniversity, setAppliedUniversity] = useState("");
+  const [appliedCourse, setAppliedCourse] = useState("");
   const [appliedApplicantStages, setAppliedApplicantStages] = useState<string[]>([]);
-  const [appliedStatus, setAppliedStatus] = useState("");
   const [appliedIntake, setAppliedIntake] = useState("");
-  const [appliedEnrollmentType, setAppliedEnrollmentType] = useState("");
   const [appliedAgencyPartner, setAppliedAgencyPartner] = useState("");
-  const [appliedStartDate, setAppliedStartDate] = useState<Date | null>(null);
-  const [appliedEndDate, setAppliedEndDate] = useState<Date | null>(null);
+  const [appliedAppliedFromDate, setAppliedAppliedFromDate] = useState<Date | null>(null);
+  const [appliedAppliedToDate, setAppliedAppliedToDate] = useState<Date | null>(null);
+  const [appliedLastUpdatedFromDate, setAppliedLastUpdatedFromDate] = useState<Date | null>(null);
+  const [appliedLastUpdatedToDate, setAppliedLastUpdatedToDate] = useState<Date | null>(null);
 
   // Pagination state
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
@@ -159,32 +66,44 @@ const ApplicantTracker = () => {
   // Total count will be calculated from filteredApplicants
   // TODO: Replace with actual API call - this should come from API response
 
-  // Status change confirmation popup state
-  const [isStatusPopupOpen, setIsStatusPopupOpen] = useState(false);
-  const [selectedApplicantForStatusChange, setSelectedApplicantForStatusChange] = useState<Applicant | null>(null);
-  const [isChangingStatus, setIsChangingStatus] = useState(false);
+  // Application status change popup state (reusing from University Application Summary)
+  const [isApplicationStatusPopupOpen, setIsApplicationStatusPopupOpen] = useState(false);
+  const [isChangingApplicationStatus, setIsChangingApplicationStatus] = useState(false);
+  const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
+  const [newApplicationStatus, setNewApplicationStatus] = useState("");
+  const [applicationNotes, setApplicationNotes] = useState("");
+  const [notifyStudent, setNotifyStudent] = useState(true);
 
-  // Memoize enrollment type map to prevent recreation
-  const enrollmentTypeMap = useMemo<Record<string, string>>(() => ({
-    "walk-in": "Walk-in",
-    "referred-to-agency": "Referred to Agency Partner",
-    "referred-by-agency": "Referred by Agency Partner",
-  }), []);
+  // Status history popup state (reusing from University Application Summary)
+  const [isStatusHistoryPopupOpen, setIsStatusHistoryPopupOpen] = useState(false);
+  const [selectedApplicantForHistory, setSelectedApplicantForHistory] = useState<Applicant | null>(null);
+  const [statusHistory, setStatusHistory] = useState<ApplicationStatusHistory[]>([]);
+
+  // Apply functionality state
+  const [isApplyConfirmationOpen, setIsApplyConfirmationOpen] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
+  const [applicantToApply, setApplicantToApply] = useState<Applicant | null>(null);
 
   // Memoize normalized dates to prevent recreation on every filter
-  const normalizedStartDate = useMemo(() => {
-    if (!appliedStartDate) return null;
-    const date = new Date(appliedStartDate);
-    date.setHours(0, 0, 0, 0);
-    return date;
-  }, [appliedStartDate]);
+  const normalizedAppliedFromDate = useMemo(
+    () => normalizeDateToStartOfDay(appliedAppliedFromDate),
+    [appliedAppliedFromDate]
+  );
 
-  const normalizedEndDate = useMemo(() => {
-    if (!appliedEndDate) return null;
-    const date = new Date(appliedEndDate);
-    date.setHours(23, 59, 59, 999);
-    return date;
-  }, [appliedEndDate]);
+  const normalizedAppliedToDate = useMemo(
+    () => normalizeDateToEndOfDay(appliedAppliedToDate),
+    [appliedAppliedToDate]
+  );
+
+  const normalizedLastUpdatedFromDate = useMemo(
+    () => normalizeDateToStartOfDay(appliedLastUpdatedFromDate),
+    [appliedLastUpdatedFromDate]
+  );
+
+  const normalizedLastUpdatedToDate = useMemo(
+    () => normalizeDateToEndOfDay(appliedLastUpdatedToDate),
+    [appliedLastUpdatedToDate]
+  );
 
   // Memoize search query lowercase transformation
   const searchLower = useMemo(() => searchQuery.toLowerCase(), [searchQuery]);
@@ -211,6 +130,23 @@ const ApplicantTracker = () => {
       // Counselor filter
       if (appliedCounselor && applicant.counselorId !== appliedCounselor) return false;
 
+      // University filter
+      if (appliedUniversity && applicant.university !== appliedUniversity) return false;
+
+      // Course filter
+      if (appliedCourse) {
+        // Map course values from mock data to course option values
+        // Mock data has "Master - Computers", "Bachelor - Engineering", "Master - Business"
+        // Course options have "computer-science", "engineering", "business-administration", etc.
+        const courseMapping: Record<string, string> = {
+          "Master - Computers": "computer-science",
+          "Bachelor - Engineering": "engineering",
+          "Master - Business": "business-administration",
+        };
+        const mappedCourse = courseMapping[applicant.course] || applicant.course.toLowerCase().replace(/\s+/g, "-").replace(/-/g, "-");
+        if (mappedCourse !== appliedCourse) return false;
+      }
+
       // Applicant Stage filter
       if (appliedApplicantStages.length > 0) {
         const applicantStageKey = applicant.applicantStage.toLowerCase().replace(/\s+/g, "-");
@@ -219,32 +155,36 @@ const ApplicantTracker = () => {
         }
       }
 
-      // Status filter
-      if (appliedStatus && applicant.status.toLowerCase() !== appliedStatus) return false;
-
       // Intake filter
       if (appliedIntake && applicant.intake !== appliedIntake) return false;
-
-      // Enrollment Type filter
-      if (appliedEnrollmentType) {
-        if (applicant.enrollmentType !== enrollmentTypeMap[appliedEnrollmentType]) return false;
-      }
 
       // Agency Partner filter
       if (appliedAgencyPartner && applicant.agencyPartner !== appliedAgencyPartner) {
         return false;
       }
 
-      // Date filters - filter by createdAt (using memoized normalized dates)
-      if (normalizedStartDate || normalizedEndDate) {
-        if (!applicant.createdAt) return false;
+      // Applied Date filters - filter by appliedDate
+      if (normalizedAppliedFromDate || normalizedAppliedToDate) {
+        if (!applicant.appliedDate) return false;
         
         // Normalize applicant date to start of day for comparison
-        const applicantDate = new Date(applicant.createdAt);
+        const applicantDate = new Date(applicant.appliedDate);
         applicantDate.setHours(0, 0, 0, 0);
         
-        if (normalizedStartDate && applicantDate < normalizedStartDate) return false;
-        if (normalizedEndDate && applicantDate > normalizedEndDate) return false;
+        if (normalizedAppliedFromDate && applicantDate < normalizedAppliedFromDate) return false;
+        if (normalizedAppliedToDate && applicantDate > normalizedAppliedToDate) return false;
+      }
+
+      // Last Updated Date filters - filter by lastUpdatedDate
+      if (normalizedLastUpdatedFromDate || normalizedLastUpdatedToDate) {
+        if (!applicant.lastUpdatedDate) return false;
+        
+        // Normalize applicant date to start of day for comparison
+        const applicantDate = new Date(applicant.lastUpdatedDate);
+        applicantDate.setHours(0, 0, 0, 0);
+        
+        if (normalizedLastUpdatedFromDate && applicantDate < normalizedLastUpdatedFromDate) return false;
+        if (normalizedLastUpdatedToDate && applicantDate > normalizedLastUpdatedToDate) return false;
       }
 
       return true;
@@ -252,16 +192,17 @@ const ApplicantTracker = () => {
   }, [
     searchQuery,
     searchLower,
-    enrollmentTypeMap,
-    normalizedStartDate,
-    normalizedEndDate,
+    normalizedAppliedFromDate,
+    normalizedAppliedToDate,
+    normalizedLastUpdatedFromDate,
+    normalizedLastUpdatedToDate,
     appliedAdmin,
     appliedManager,
     appliedCounselor,
+    appliedUniversity,
+    appliedCourse,
     appliedApplicantStages,
-    appliedStatus,
     appliedIntake,
-    appliedEnrollmentType,
     appliedAgencyPartner,
     applicants,
   ]);
@@ -276,13 +217,15 @@ const ApplicantTracker = () => {
     setAppliedAdmin(selectedAdmin);
     setAppliedManager(selectedManager);
     setAppliedCounselor(selectedCounselor);
+    setAppliedUniversity(selectedUniversity);
+    setAppliedCourse(selectedCourse);
     setAppliedApplicantStages(selectedApplicantStages);
-    setAppliedStatus(selectedStatus);
     setAppliedIntake(selectedIntake);
-    setAppliedEnrollmentType(selectedEnrollmentType);
     setAppliedAgencyPartner(selectedAgencyPartner);
-    setAppliedStartDate(startDate);
-    setAppliedEndDate(endDate);
+    setAppliedAppliedFromDate(appliedFromDate);
+    setAppliedAppliedToDate(appliedToDate);
+    setAppliedLastUpdatedFromDate(lastUpdatedFromDate);
+    setAppliedLastUpdatedToDate(lastUpdatedToDate);
     
     // Reset pagination to first page
     setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
@@ -294,19 +237,19 @@ const ApplicantTracker = () => {
     //   manager: appliedManager,
     //   counselor: appliedCounselor,
     //   applicantStages: appliedApplicantStages,
-    //   status: appliedStatus,
     //   intake: appliedIntake,
-    //   enrollmentType: appliedEnrollmentType,
     //   agencyPartner: appliedAgencyPartner,
-    //   startDate: appliedStartDate,
-    //   endDate: appliedEndDate,
+    //   appliedFromDate: appliedAppliedFromDate,
+    //   appliedToDate: appliedAppliedToDate,
+    //   lastUpdatedFromDate: appliedLastUpdatedFromDate,
+    //   lastUpdatedToDate: appliedLastUpdatedToDate,
     //   page: 0,
     //   pageSize: paginationModel.pageSize,
     // }).then(response => {
     //   setTotalCount(response.totalCount);
     //   // Update applicants data
     // });
-  }, [selectedAdmin, selectedManager, selectedCounselor, selectedApplicantStages, selectedStatus, selectedIntake, selectedEnrollmentType, selectedAgencyPartner, startDate, endDate, paginationModel.pageSize]);
+  }, [selectedAdmin, selectedManager, selectedCounselor, selectedUniversity, selectedCourse, selectedApplicantStages, selectedIntake, selectedAgencyPartner, appliedFromDate, appliedToDate, lastUpdatedFromDate, lastUpdatedToDate, paginationModel.pageSize]);
 
   // Handle clear filters
   const handleClearFilters = useCallback(() => {
@@ -314,25 +257,29 @@ const ApplicantTracker = () => {
     setSelectedAdmin("");
     setSelectedManager("");
     setSelectedCounselor("");
+    setSelectedUniversity("");
+    setSelectedCourse("");
     setSelectedApplicantStages([]);
-    setSelectedStatus("");
     setSelectedIntake("");
-    setSelectedEnrollmentType("");
     setSelectedAgencyPartner("");
-    setStartDate(null);
-    setEndDate(null);
+    setAppliedFromDate(null);
+    setAppliedToDate(null);
+    setLastUpdatedFromDate(null);
+    setLastUpdatedToDate(null);
 
     // Clear applied filters
     setAppliedAdmin("");
     setAppliedManager("");
     setAppliedCounselor("");
+    setAppliedUniversity("");
+    setAppliedCourse("");
     setAppliedApplicantStages([]);
-    setAppliedStatus("");
     setAppliedIntake("");
-    setAppliedEnrollmentType("");
     setAppliedAgencyPartner("");
-    setAppliedStartDate(null);
-    setAppliedEndDate(null);
+    setAppliedAppliedFromDate(null);
+    setAppliedAppliedToDate(null);
+    setAppliedLastUpdatedFromDate(null);
+    setAppliedLastUpdatedToDate(null);
 
     // Reset pagination
     setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
@@ -351,66 +298,201 @@ const ApplicantTracker = () => {
   }, []);
 
 
-  // Handle view action
-  const handleView = useCallback((applicantId: string) => {
-    // Navigate to applicant detail page or open modal
-    navigate(`/applicant-tracker/${applicantId}`);
-  }, [navigate]);
-
-  // Handle status toggle - open confirmation popup
-  const handleStatusToggle = useCallback((applicant: Applicant) => {
-    setSelectedApplicantForStatusChange(applicant);
-    setIsStatusPopupOpen(true);
+  // Handle update status (reusing from University Application Summary)
+  const handleUpdateStatus = useCallback((applicant: Applicant) => {
+    setSelectedApplicant(applicant);
+    // Map the applicant status to the constant value format
+    const statusValue = applicantStatusOptions.find(
+      (opt) => opt.label === applicant.status || 
+               opt.label.toLowerCase() === applicant.status?.toLowerCase()
+    )?.value || applicant.status?.toLowerCase() || "active";
+    setNewApplicationStatus(statusValue);
+    setApplicationNotes("");
+    setNotifyStudent(true);
+    setIsApplicationStatusPopupOpen(true);
   }, []);
 
-  // Handle confirm status change
-  const handleConfirmStatusChange = useCallback(async () => {
-    if (!selectedApplicantForStatusChange) return;
+  // Handle confirm application status change (reusing from University Application Summary)
+  const handleConfirmApplicationStatusChange = useCallback(async () => {
+    if (!selectedApplicant || !newApplicationStatus) return;
 
-    setIsChangingStatus(true);
-    const newStatus = selectedApplicantForStatusChange.status === "Active" ? "Inactive" : "Active";
+    setIsChangingApplicationStatus(true);
 
     try {
       // TODO: Replace with actual API call
-      // Example:
-      // const response = await updateApplicantStatus(selectedApplicantForStatusChange.id, newStatus);
+      // const response = await updateApplicantStatus(selectedApplicant.id, {
+      //   status: newApplicationStatus,
+      //   notes: applicationNotes,
+      //   notifyStudent,
+      // });
       
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Get the label for the status value
+      const statusLabel = applicantStatusOptions.find(
+        (opt) => opt.value === newApplicationStatus
+      )?.label || newApplicationStatus;
+
+      // Update the applicant in the state
+      setApplicants((prevApplicants) =>
+        prevApplicants.map((app) =>
+          app.id === selectedApplicant.id
+            ? { 
+                ...app, 
+                status: statusLabel as "Active" | "Inactive",
+                lastUpdatedDate: new Date(),
+              }
+            : app
+        )
+      );
+
+      setIsApplicationStatusPopupOpen(false);
+      setSelectedApplicant(null);
+      setNewApplicationStatus("");
+      setApplicationNotes("");
+      setNotifyStudent(true);
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error("Error changing applicant status:", error);
+      }
+      // TODO: Show error toast notification
+    } finally {
+      setIsChangingApplicationStatus(false);
+    }
+  }, [selectedApplicant, newApplicationStatus, applicationNotes, notifyStudent]);
+
+  // Handle cancel application status change
+  const handleCancelApplicationStatusChange = useCallback(() => {
+    setIsApplicationStatusPopupOpen(false);
+    setSelectedApplicant(null);
+    setNewApplicationStatus("");
+    setApplicationNotes("");
+    setNotifyStudent(true);
+  }, []);
+
+  // Handle application status change
+  const handleApplicationStatusChange = useCallback((status: string) => {
+    setNewApplicationStatus(status);
+  }, []);
+
+  // Handle application notes change
+  const handleApplicationNotesChange = useCallback((notes: string) => {
+    setApplicationNotes(notes);
+  }, []);
+
+  // Handle notify student change
+  const handleNotifyStudentChange = useCallback((notify: boolean) => {
+    setNotifyStudent(notify);
+  }, []);
+
+  // Handle view status history (reusing from University Application Summary)
+  const handleViewStatusHistory = useCallback(async (applicant: Applicant) => {
+    setSelectedApplicantForHistory(applicant);
+    setIsStatusHistoryPopupOpen(true);
+
+    try {
+      // TODO: Replace with actual API call
+      // const response = await fetch(`/api/applicants/${applicant.id}/status-history`);
+      // if (!response.ok) throw new Error("Failed to fetch status history");
+      // const data = await response.json();
+      // setStatusHistory(data.history || []);
+
+      // Mock status history data for now
+      const mockHistory: ApplicationStatusHistory[] = [
+        {
+          id: "1",
+          statusName: applicant.status || "Active",
+          notes: `Status changed to ${applicant.status || "Active"}`,
+          time: applicant.lastUpdatedDate ? new Date(applicant.lastUpdatedDate).toISOString() : new Date().toISOString(),
+        },
+        {
+          id: "2",
+          statusName: applicant.status === "Active" ? "Inactive" : "Active",
+          notes: `Previous status: ${applicant.status === "Active" ? "Inactive" : "Active"}`,
+          time: applicant.createdAt ? new Date(applicant.createdAt).toISOString() : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        },
+      ];
+
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      setStatusHistory(mockHistory);
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error("Error fetching status history:", error);
+      }
+      setStatusHistory([]);
+    }
+  }, []);
+
+  // Handle close status history
+  const handleCloseStatusHistory = useCallback(() => {
+    setIsStatusHistoryPopupOpen(false);
+    setSelectedApplicantForHistory(null);
+    setStatusHistory([]);
+  }, []);
+
+  // Handle apply click
+  const handleApplyClick = useCallback((applicant: Applicant) => {
+    setApplicantToApply(applicant);
+    setIsApplyConfirmationOpen(true);
+  }, []);
+
+  // Handle confirm apply - update status to Application Submitted
+  const handleConfirmApply = useCallback(async () => {
+    if (!applicantToApply) return;
+
+    setIsApplying(true);
+
+    try {
+      const currentDate = new Date();
+      const newStatus = "Application Submitted";
+
+      // TODO: Replace with actual API call
+      // const response = await fetch(`/api/applicants/${applicantToApply.id}/apply`, {
+      //   method: "PUT",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({
+      //     status: newStatus,
+      //     appliedDate: currentDate,
+      //   }),
+      // });
+      // if (!response.ok) throw new Error("Failed to apply");
+
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Update the applicant in the state
       setApplicants((prevApplicants) =>
         prevApplicants.map((app) =>
-          app.id === selectedApplicantForStatusChange.id
-            ? { ...app, status: newStatus as "Active" | "Inactive" }
+          app.id === applicantToApply.id
+            ? {
+                ...app,
+                applicantStatus: newStatus,
+                applicantStage: "Application Submitted",
+                appliedDate: currentDate,
+                lastUpdatedDate: currentDate,
+              }
             : app
         )
       );
 
-      // TODO: After API call, refetch the applicants list to get updated data
-      // await fetchApplicants({ ...filters, page: paginationModel.page, pageSize: paginationModel.pageSize })
-      //   .then(response => {
-      //     setApplicants(response.data);
-      //     setTotalCount(response.totalCount);
-      //   });
-
-      setIsStatusPopupOpen(false);
-      setSelectedApplicantForStatusChange(null);
+      setIsApplyConfirmationOpen(false);
+      setApplicantToApply(null);
     } catch (error) {
-      // TODO: Show error toast notification
-      // Error handling: Log to error tracking service in production
       if (import.meta.env.DEV) {
-        console.error("Error changing status:", error);
+        console.error("Error applying for application:", error);
       }
+      // TODO: Show error toast notification
     } finally {
-      setIsChangingStatus(false);
+      setIsApplying(false);
     }
-  }, [selectedApplicantForStatusChange]);
+  }, [applicantToApply]);
 
-  // Handle cancel status change
-  const handleCancelStatusChange = useCallback(() => {
-    setIsStatusPopupOpen(false);
-    setSelectedApplicantForStatusChange(null);
+  // Handle cancel apply
+  const handleCancelApply = useCallback(() => {
+    setIsApplyConfirmationOpen(false);
+    setApplicantToApply(null);
   }, []);
 
   // Memoize renderCell functions to prevent recreation
@@ -425,19 +507,15 @@ const ApplicantTracker = () => {
     </div>
   ), []);
 
-  const renderStatusCell = useCallback((params: GridRenderCellParams<Applicant>) => (
-    <span
-      style={{
-        color: params.value === "Active" ? COLORS.success : COLORS.textMuted,
-      }}
-    >
-      {params.value}
+  const renderAppliedDateCell = useCallback((params: GridRenderCellParams<Applicant>) => (
+    <span className="text-sm" style={{ color: COLORS.textDark }}>
+      {params.row.appliedDate ? formatDateValue(params.row.appliedDate) : "-"}
     </span>
   ), []);
 
-  const renderCreatedDateCell = useCallback((params: GridRenderCellParams<Applicant>) => (
+  const renderLastUpdatedDateCell = useCallback((params: GridRenderCellParams<Applicant>) => (
     <span className="text-sm" style={{ color: COLORS.textDark }}>
-      {formatDateValue(params.row.createdAt)}
+      {params.row.lastUpdatedDate ? formatDateValue(params.row.lastUpdatedDate) : "-"}
     </span>
   ), []);
 
@@ -453,36 +531,102 @@ const ApplicantTracker = () => {
     return params.row.intake;
   }, []);
 
+  // Render status cell similar to University Application Summary
+  const renderStatusCell = useCallback((params: GridRenderCellParams<Applicant>) => {
+    const status = params.value?.toLowerCase() || "";
+    const isOfferReceived = status === "offer received";
+    const isApply = status === "apply";
+    
+    if (isApply) {
+      return (
+        <Button
+          variant="ghost"
+          size="sm"
+          rounded
+          onClick={(e) => {
+            e.stopPropagation();
+            handleApplyClick(params.row);
+          }}
+          style={{
+            backgroundColor: `${COLORS.textMuted}20`,
+            color: COLORS.textMuted,
+            cursor: "pointer",
+          }}
+        >
+          {params.value}
+        </Button>
+      );
+    }
+    
+    return (
+      <span
+        className="px-3 py-1 rounded-full text-xs font-medium"
+        style={{
+          backgroundColor: isOfferReceived 
+            ? `${COLORS.success}20` 
+            : `${COLORS.accent}20`,
+          color: isOfferReceived 
+            ? COLORS.success 
+            : COLORS.accent,
+        }}
+      >
+        {params.value}
+      </span>
+    );
+  }, []);
+
+  // Render stage cell similar to status cell
+  const renderStageCell = useCallback((params: GridRenderCellParams<Applicant>) => {
+    const stage = params.value?.toLowerCase() || "";
+    const isOfferReceived = stage === "offer received";
+    
+    return (
+      <span
+        className="px-3 py-1 rounded-full text-xs font-medium"
+        style={{
+          backgroundColor: isOfferReceived 
+            ? `${COLORS.success}20` 
+            : `${COLORS.accent}20`,
+          color: isOfferReceived 
+            ? COLORS.success 
+            : COLORS.accent,
+        }}
+      >
+        {params.value}
+      </span>
+    );
+  }, []);
+
   const renderActionsCell = useCallback((params: GridRenderCellParams<Applicant>) => (
-    <div className="flex items-center gap-3">
-      <Tooltip title={t("applicantTracker.view", "View")} arrow>
+    <div className="flex items-center gap-2">
+      <Tooltip title={t("applicantDetailView.applicationStatusHistory", "Application Status History")} arrow>
         <button
-          onClick={() => handleView(params.row.applicantId)}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleViewStatusHistory(params.row);
+          }}
           className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
           style={{ color: COLORS.accent }}
-          aria-label={t("applicantTracker.view", "View")}
+          aria-label={t("applicantDetailView.applicationStatusHistory", "Application Status History")}
         >
-          <Eye className="w-5 h-5" />
+          <Calendar className="w-5 h-5" />
         </button>
       </Tooltip>
-      <Tooltip title={t("applicantTracker.changeStatus", "Change Status")} arrow>
+      <Tooltip title={t("applicantDetailView.updateApplicationStatus", "Update Application Status")} arrow>
         <button
-          onClick={() => handleStatusToggle(params.row)}
-          className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
-          style={{
-            color: params.row.status === "Active" ? COLORS.error : COLORS.success,
+          onClick={(e) => {
+            e.stopPropagation();
+            handleUpdateStatus(params.row);
           }}
-          aria-label={
-            params.row.status === "Active"
-              ? t("applicantTracker.deactivate", "Deactivate")
-              : t("applicantTracker.activate", "Activate")
-          }
+          className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
+          style={{ color: COLORS.accent }}
+          aria-label={t("applicantDetailView.updateApplicationStatus", "Update Application Status")}
         >
-          <ToggleStatus className="w-5 h-5" />
+          <Edit className="w-5 h-5" />
         </button>
       </Tooltip>
     </div>
-  ), [t, handleView, handleStatusToggle]);
+  ), [t, handleViewStatusHistory, handleUpdateStatus]);
 
   // Table columns - memoized to prevent recreation
   const columns: GridColDef[] = useMemo(() => [
@@ -502,6 +646,13 @@ const ApplicantTracker = () => {
       renderCell: renderApplicantNameCell,
     },
     {
+      field: "university",
+      headerName: t("applicantTracker.university", "University"),
+      flex: 1.3,
+      minWidth: 150,
+      sortable: true,
+    },
+    {
       field: "course",
       headerName: t("applicantTracker.course", "Course"),
       flex: 1.2,
@@ -510,24 +661,19 @@ const ApplicantTracker = () => {
     },
     {
       field: "applicantStage",
-      headerName: t("applicantTracker.applicantStage", "Applicant Stage"),
+      headerName: t("applicantTracker.applicationStage", "Application Stage"),
       flex: 1.2,
       minWidth: 150,
       sortable: true,
+      renderCell: renderStageCell,
     },
     {
       field: "applicantStatus",
-      headerName: t("applicantTracker.applicantStatus", "Applicant Status"),
+      headerName: t("applicantTracker.applicationStatus", "Application Status"),
       flex: 1.2,
       minWidth: 150,
       sortable: true,
-    },
-    {
-      field: "enrollmentType",
-      headerName: t("applicantTracker.enrollmentType", "Enrollment Type"),
-      flex: 1.3,
-      minWidth: 180,
-      sortable: true,
+      renderCell: renderStatusCell,
     },
     {
       field: "intakeYear",
@@ -538,20 +684,20 @@ const ApplicantTracker = () => {
       renderCell: renderIntakeYearCell,
     },
     {
-      field: "status",
-      headerName: t("applicantTracker.status", "Status"),
-      flex: 0.8,
-      minWidth: 100,
-      sortable: true,
-      renderCell: renderStatusCell,
-    },
-    {
-      field: "createdDate",
-      headerName: t("applicantTracker.createdDate", "Created Date"),
+      field: "appliedDate",
+      headerName: t("applicantTracker.appliedDate", "Applied Date"),
       flex: 1.2,
       minWidth: 150,
       sortable: true,
-      renderCell: renderCreatedDateCell,
+      renderCell: renderAppliedDateCell,
+    },
+    {
+      field: "lastUpdatedDate",
+      headerName: t("applicantTracker.lastUpdatedDate", "Last Updated Date"),
+      flex: 1.2,
+      minWidth: 150,
+      sortable: true,
+      renderCell: renderLastUpdatedDateCell,
     },
     {
       field: "actions",
@@ -561,7 +707,7 @@ const ApplicantTracker = () => {
       sortable: false,
       renderCell: renderActionsCell,
     },
-  ], [t, renderApplicantNameCell, renderStatusCell, renderCreatedDateCell, renderIntakeYearCell, renderActionsCell]);
+  ], [t, renderApplicantNameCell, renderAppliedDateCell, renderLastUpdatedDateCell, renderIntakeYearCell, renderStageCell, renderStatusCell, renderActionsCell, handleApplyClick]);
 
   return (
     <Layout userName="Admin" userRole="Abroad Agency">
@@ -581,7 +727,8 @@ const ApplicantTracker = () => {
             <div className="w-full md:w-72">
               <SearchBar
                 onSearch={handleSearch}
-                placeholder={t("applicantTracker.searchPlaceholder", "Search Applicants...")}
+                placeholder={t("applicantTracker.searchPlaceholder", "Search Applications...")}
+                tooltip={t("applicantTracker.searchPlaceholder", "Search Applications...")}
               />
             </div>
             <Link to={ROUTES.CREATE_APPLICANT}>
@@ -597,23 +744,27 @@ const ApplicantTracker = () => {
           selectedAdmin={selectedAdmin}
           selectedManager={selectedManager}
           selectedCounselor={selectedCounselor}
+          selectedUniversity={selectedUniversity}
+          selectedCourse={selectedCourse}
           selectedApplicantStages={selectedApplicantStages}
-          selectedStatus={selectedStatus}
           selectedIntake={selectedIntake}
-          selectedEnrollmentType={selectedEnrollmentType}
           selectedAgencyPartner={selectedAgencyPartner}
-          startDate={startDate}
-          endDate={endDate}
+          appliedFromDate={appliedFromDate}
+          appliedToDate={appliedToDate}
+          lastUpdatedFromDate={lastUpdatedFromDate}
+          lastUpdatedToDate={lastUpdatedToDate}
           onAdminChange={setSelectedAdmin}
           onManagerChange={setSelectedManager}
           onCounselorChange={setSelectedCounselor}
+          onUniversityChange={setSelectedUniversity}
+          onCourseChange={setSelectedCourse}
           onApplicantStagesChange={setSelectedApplicantStages}
-          onStatusChange={setSelectedStatus}
           onIntakeChange={setSelectedIntake}
-          onEnrollmentTypeChange={setSelectedEnrollmentType}
           onAgencyPartnerChange={setSelectedAgencyPartner}
-          onStartDateChange={setStartDate}
-          onEndDateChange={setEndDate}
+          onAppliedFromDateChange={setAppliedFromDate}
+          onAppliedToDateChange={setAppliedToDate}
+          onLastUpdatedFromDateChange={setLastUpdatedFromDate}
+          onLastUpdatedToDateChange={setLastUpdatedToDate}
           onApplyFilters={handleApplyFilters}
           onClearFilters={handleClearFilters}
         />
@@ -630,15 +781,157 @@ const ApplicantTracker = () => {
           sortingMode="client"
         />
 
-        {/* Status Change Confirmation Popup */}
-        <StatusChangePopup
-          isOpen={isStatusPopupOpen}
-          item={selectedApplicantForStatusChange}
-          isChanging={isChangingStatus}
-          onClose={handleCancelStatusChange}
-          onConfirm={handleConfirmStatusChange}
-          nameKey="applicantName"
+        {/* Application Status Change Popup (reusing from University Application Summary) */}
+        <Popup
+          isOpen={isApplicationStatusPopupOpen}
+          onClose={handleCancelApplicationStatusChange}
+          title={t("applicantDetailView.updateApplicationStatus", "Update Application Status")}
+          size="md"
+          closeOnOverlayClick={!isChangingApplicationStatus}
+          closeOnEscape={!isChangingApplicationStatus}
+          footer={
+            <div className="flex items-center justify-end gap-3">
+              <Button
+                variant="cancel"
+                size="sm"
+                onClick={handleCancelApplicationStatusChange}
+                disabled={isChangingApplicationStatus}
+                rounded
+              >
+                {t("common.cancel", "Cancel")}
+              </Button>
+              <Button
+                variant="accent"
+                size="sm"
+                onClick={handleConfirmApplicationStatusChange}
+                isLoading={isChangingApplicationStatus}
+                rounded
+              >
+                {t("applicantDetailView.updateStatus", "Update Status")}
+              </Button>
+            </div>
+          }
+        >
+          <div className="py-2">
+            {selectedApplicant && (
+              <div className="space-y-4">
+                {/* Current Status Dropdown */}
+                <div>
+                  <Select
+                    label={t("applicantDetailView.currentStatus", "Current Status")}
+                    options={applicantStatusOptions}
+                    value={newApplicationStatus}
+                    onChange={handleApplicationStatusChange}
+                    placeholder={t("applicantDetailView.selectStatus", "Select Status")}
+                    fullWidth
+                    searchable
+                    searchPlaceholder={t("applicantDetailView.searchStatus", "Search Status...")}
+                  />
+                </div>
+
+                {/* Notes Textarea */}
+                <div>
+                  <label
+                    className="block text-sm font-medium mb-1.5"
+                    style={{ color: COLORS.textDark }}
+                  >
+                    {t("applicantTracker.notes", "Notes")}
+                  </label>
+                  <textarea
+                    value={applicationNotes}
+                    onChange={(e) => handleApplicationNotesChange(e.target.value)}
+                    placeholder={t("applicantDetailView.addNotesPlaceholder", "Add any additional notes or comments")}
+                    className="w-full px-4 py-3 rounded-lg resize-none"
+                    rows={4}
+                    style={{
+                      border: `1px solid ${COLORS.border}`,
+                      color: COLORS.textDark,
+                      backgroundColor: COLORS.surface,
+                      fontSize: typography.fontSize.small,
+                    }}
+                  />
+                </div>
+
+                {/* Notify Student Checkbox */}
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={notifyStudent}
+                    onChange={handleNotifyStudentChange}
+                  />
+                  <label
+                    className="text-sm cursor-pointer"
+                    style={{ color: COLORS.textDark }}
+                    onClick={() => handleNotifyStudentChange(!notifyStudent)}
+                  >
+                    {t("applicantDetailView.sendEmailNotification", "Send email notification to student")}
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
+        </Popup>
+
+        {/* Application Status History Popup (reusing from University Application Summary) */}
+        <ApplicationStatusHistoryPopup
+          isOpen={isStatusHistoryPopupOpen}
+          applicationId={selectedApplicantForHistory?.id || null}
+          universityName={selectedApplicantForHistory?.applicantName || ""}
+          statusHistory={statusHistory}
+          onClose={handleCloseStatusHistory}
         />
+
+        {/* Apply Confirmation Popup */}
+        <ConfirmationPopup
+          isOpen={isApplyConfirmationOpen}
+          title={t("applicantDetailView.confirmApply", "Confirm Application")}
+          isLoading={isApplying}
+          onClose={handleCancelApply}
+          onConfirm={handleConfirmApply}
+        >
+          {applicantToApply && (
+            <div className="space-y-3">
+              <p className="text-sm text-slate-600">
+                {t(
+                  "applicantDetailView.confirmApplyMessage",
+                  "Are you sure you want to apply for {{university}}? This will set the status to 'Application Submitted' and set the applied date to today.",
+                  {
+                    university: applicantToApply.university || applicantToApply.applicantName,
+                  }
+                )}
+              </p>
+              <div className="text-sm space-y-1">
+                <div>
+                  <span className="font-medium" style={{ color: COLORS.textDark }}>
+                    {t("applicantTracker.applicantName", "Applicant Name")}:{" "}
+                  </span>
+                  <span style={{ color: COLORS.textMuted }}>
+                    {applicantToApply.applicantName}
+                  </span>
+                </div>
+                {applicantToApply.university && (
+                  <div>
+                    <span className="font-medium" style={{ color: COLORS.textDark }}>
+                      {t("applicantTracker.university", "University")}:{" "}
+                    </span>
+                    <span style={{ color: COLORS.textMuted }}>
+                      {applicantToApply.university}
+                    </span>
+                  </div>
+                )}
+                {applicantToApply.course && (
+                  <div>
+                    <span className="font-medium" style={{ color: COLORS.textDark }}>
+                      {t("applicantTracker.course", "Course")}:{" "}
+                    </span>
+                    <span style={{ color: COLORS.textMuted }}>
+                      {applicantToApply.course}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </ConfirmationPopup>
       </div>
     </Layout>
   );

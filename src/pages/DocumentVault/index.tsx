@@ -203,7 +203,8 @@ const DocumentVault = () => {
             <SearchBar
               value={searchQuery}
               onChange={setSearchQuery}
-              placeholder={t("documentVault.searchApplicants", "Search Applicants ID, Name...")}
+              placeholder={t("documentVault.searchPlaceholder", "Search Document Name, ID...")}
+              tooltip={t("documentVault.searchPlaceholder", "Search Document Name, ID...")}
             />
           </div>
         </div>

@@ -73,18 +73,23 @@ const Layout = ({
     navigate(ROUTES.LOGIN);
   };
 
+  // Check if we came from Dashboard (for applicant detail view)
+  const locationState = location.state as { from?: string } | null;
+  const isFromDashboard = locationState?.from === "dashboard";
+  const isApplicantDetailPage = location.pathname.startsWith("/applicant-tracker") && location.pathname !== ROUTES.APPLICANT_TRACKER;
+
   const sidebarItems = [
     {
       label: "Dashboard",
       path: ROUTES.DASHBOARD,
       icon: <Dashboard className="h-5 w-5" />,
-      isActive: location.pathname === ROUTES.DASHBOARD,
+      isActive: location.pathname === ROUTES.DASHBOARD || (isApplicantDetailPage && isFromDashboard),
     },
     {
-      label: "Applicant Tracker",
+      label: "Application Tracker",
       path: ROUTES.APPLICANT_TRACKER,
       icon: <Applicant className="h-5 w-5" />,
-      isActive: location.pathname.startsWith(ROUTES.APPLICANT_TRACKER),
+      isActive: (location.pathname.startsWith(ROUTES.APPLICANT_TRACKER) || location.pathname.startsWith("/applicant-tracker")) && !(isApplicantDetailPage && isFromDashboard),
     },
     {
       label: "Country & University Directory",

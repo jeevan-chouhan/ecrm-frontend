@@ -113,9 +113,9 @@ const ApplicantDetailView = () => {
     return notes !== originalNotes;
   }, [notes, originalNotes]);
 
-  // Handle back navigation
+  // Handle back navigation - navigate to dashboard
   const handleBack = useCallback(() => {
-    navigate(ROUTES.APPLICANT_TRACKER);
+    navigate(ROUTES.DASHBOARD);
   }, [navigate]);
 
   // Handle edit applicant - navigate to create applicant flow with applicantId
