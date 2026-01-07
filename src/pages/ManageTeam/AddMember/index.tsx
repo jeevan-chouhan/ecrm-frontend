@@ -229,6 +229,12 @@ const AddMember = () => {
       const dialCode = memberData.countryCode?.replace("+", "") || "91";
       const fullPhone = `${dialCode}${memberData.contactNumber || ""}`;
       
+      // Get admin ID from assignedAdmins array (first item)
+      const adminId = memberData.assignedAdmins?.[0]?.id?.toString() || "";
+      
+      // Get manager ID from assignedManagers array (first item)
+      const managerId = memberData.assignedManagers?.[0]?.id?.toString() || "";
+      
       return {
         name: memberData.name || "",
         email: memberData.email || "",
@@ -236,8 +242,8 @@ const AddMember = () => {
         countryCode: memberData.countryCode || "+91",
         contactNumber: fullPhone,
         role: memberData.role?.toLowerCase() || "",
-        adminId: memberData.assignedAdminId?.toString() || "",
-        managerId: memberData.assignedManagerId?.toString() || "",
+        adminId,
+        managerId,
         assignedCountries: memberData.assignedCountries?.map((c: { id: number }) => c.id.toString()) || [],
         assignedUniversities: memberData.assignedUniversities?.map((u: { id: number }) => u.id.toString()) || [],
       };
@@ -538,10 +544,13 @@ const AddMember = () => {
                 options={roleOptions}
                 value={formik.values.role}
                 onChange={(value) => {
+                  const previousRole = formik.values.role;
                   formik.setFieldValue("role", value);
-                  // Reset admin/manager when role changes
-                  formik.setFieldValue("adminId", "");
-                  formik.setFieldValue("managerId", "");
+                  // Only reset admin/manager when role actually changes (not on initial load)
+                  if (previousRole && previousRole !== value) {
+                    formik.setFieldValue("adminId", "");
+                    formik.setFieldValue("managerId", "");
+                  }
                 }}
                 placeholder={t("manageTeam.selectRole", "Select Role")}
                 error={hasAttemptedSubmit && formik.errors.role ? formik.errors.role : undefined}

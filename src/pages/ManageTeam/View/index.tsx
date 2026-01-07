@@ -43,10 +43,11 @@ const ViewMember = () => {
   // Get user from Redux (decoded from token)
   const { user } = useAppSelector((state) => state.auth);
   
-  // Get initial status from navigation state
-  const initialStatus = (location.state?.memberStatus?.toUpperCase() as "ACTIVE" | "INACTIVE") || "ACTIVE";
+  // Get member data from navigation state (passed from list page)
+  const memberDataFromList = location.state?.memberData;
+  const initialStatus = (memberDataFromList?.status?.toUpperCase() as "ACTIVE" | "INACTIVE") || "ACTIVE";
   
-  // State for member details
+  // State for member details (from API - for applicant counts, subordinates etc.)
   const [memberDetails, setMemberDetails] = useState<UserDetailsData | null>(null);
   const [memberStatus, setMemberStatus] = useState<"ACTIVE" | "INACTIVE">(initialStatus);
   const [isDeactivatePopupOpen, setIsDeactivatePopupOpen] = useState(false);
@@ -116,10 +117,10 @@ const ViewMember = () => {
     })) || []
   , [memberDetails?.enrolledApplicantsByUniversity]);
 
-  // Memoized member name
+  // Memoized member name - prefer data from list, fallback to API response
   const memberName = useMemo(() => 
-    memberDetails?.personalData?.email?.split("@")[0] || `Member #${memberId}`
-  , [memberDetails?.personalData?.email, memberId]);
+    memberDataFromList?.name || memberDetails?.personalData?.email?.split("@")[0] || `Member #${memberId}`
+  , [memberDataFromList?.name, memberDetails?.personalData?.email, memberId]);
 
   // Memoized handlers
   const handleBack = useCallback(() => {
@@ -270,14 +271,14 @@ const ViewMember = () => {
             padding="md"
             shadow="sm"
           >
-            {/* Email, Contact Number & Role */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-4">
+            {/* Row 1: Email & Contact Number */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4">
               <div className="min-w-0 space-y-1">
                 <label className="text-xs font-medium tracking-wide" style={{ color: COLORS.textMuted }}>
                   {t("manageTeam.email", "Email")}
                 </label>
-                <p className="text-sm font-medium truncate" style={{ color: COLORS.textDark }} title={personalData.email || ""}>
-                  {personalData.email || "-"}
+                <p className="text-sm font-medium truncate" style={{ color: COLORS.textDark }} title={memberDataFromList?.email || personalData.email || ""}>
+                  {memberDataFromList?.email || personalData.email || "-"}
                 </p>
               </div>
               <div className="min-w-0 space-y-1">
@@ -285,42 +286,102 @@ const ViewMember = () => {
                   {t("manageTeam.contactNumber", "Contact Number")}
                 </label>
                 <p className="text-sm font-medium" style={{ color: COLORS.textDark }}>
-                  {personalData.contactNumber || "-"}
+                  {memberDataFromList?.countryCode ? `${memberDataFromList.countryCode} ` : ""}{memberDataFromList?.contactNumber || personalData.contactNumber || "-"}
                 </p>
               </div>
+            </div>
+
+            {/* Row 2: Role & Assigned Admin */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4">
               <div className="min-w-0 space-y-1">
                 <label className="text-xs font-medium tracking-wide" style={{ color: COLORS.textMuted }}>
                   {t("manageTeam.role", "Role")}
                 </label>
                 <p className="text-sm font-medium" style={{ color: COLORS.textDark }}>
-                  {getRoleDisplayName(personalData.role)}
+                  {getRoleDisplayName(memberDataFromList?.role || personalData.role)}
+                </p>
+              </div>
+              <div className="min-w-0 space-y-1">
+                <label className="text-xs font-medium tracking-wide" style={{ color: COLORS.textMuted }}>
+                  {t("manageTeam.assignedAdmin", "Assigned Admin")}
+                </label>
+                <p className="text-sm font-medium" style={{ color: COLORS.textDark }}>
+                  {memberDataFromList?.assignedAdmins?.map((a: { id: number; name: string }) => a.name).join(", ") || 
+                   personalData.assignedAdminName || 
+                   memberDetails?.assignedAdmins?.map((a: { id: number; name: string }) => a.name).join(", ") || "-"}
                 </p>
               </div>
             </div>
 
-            {/* Assigned Admin/Manager Info */}
-            {(personalData.assignedAdminName || personalData.assignedManagerName) && (
+            {/* Assigned Manager (if exists) */}
+            {(memberDataFromList?.assignedManagers?.length > 0 || personalData.assignedManagerName || memberDetails?.assignedManagers?.length) && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4">
-                {personalData.assignedAdminName && (
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium tracking-wide" style={{ color: COLORS.textMuted }}>
-                      {t("manageTeam.assignedAdmin", "Assigned Admin")}
-                    </label>
-                    <p className="text-sm font-medium" style={{ color: COLORS.textDark }}>
-                      {personalData.assignedAdminName}
-                    </p>
-                  </div>
-                )}
-                {personalData.assignedManagerName && (
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium tracking-wide" style={{ color: COLORS.textMuted }}>
-                      {t("manageTeam.assignedManager", "Assigned Manager")}
-                    </label>
-                    <p className="text-sm font-medium" style={{ color: COLORS.textDark }}>
-                      {personalData.assignedManagerName}
-                    </p>
-                  </div>
-                )}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium tracking-wide" style={{ color: COLORS.textMuted }}>
+                    {t("manageTeam.assignedManager", "Assigned Manager")}
+                  </label>
+                  <p className="text-sm font-medium" style={{ color: COLORS.textDark }}>
+                    {memberDataFromList?.assignedManagers?.map((m: { id: number; name: string }) => m.name).join(", ") || 
+                     personalData.assignedManagerName || 
+                     memberDetails?.assignedManagers?.map((m: { id: number; name: string }) => m.name).join(", ") || "-"}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Assigned Countries - check list data first, then API response */}
+            {((memberDataFromList?.assignedCountries && memberDataFromList.assignedCountries.length > 0) ||
+              (memberDetails?.assignedCountries && memberDetails.assignedCountries.length > 0) || 
+              (personalData.assignedCountries && personalData.assignedCountries.length > 0)) && (
+              <div className="mb-4">
+                <label className="text-xs font-medium tracking-wide mb-2 block" style={{ color: COLORS.textMuted }}>
+                  {t("manageTeam.assignedCountry", "Assigned Country")}
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {(memberDataFromList?.assignedCountries || memberDetails?.assignedCountries || personalData.assignedCountries || []).map((country: { id: number; name: string }) => (
+                    <span
+                      key={country.id}
+                      className="text-xs px-3 py-1.5 rounded-full"
+                      style={{
+                        backgroundColor: COLORS.accent + "15",
+                        color: COLORS.accent,
+                        border: `1px solid ${COLORS.accent}30`,
+                      }}
+                    >
+                      {country.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Assigned Universities - check list data first, then API response (remove duplicates by name) */}
+            {((memberDataFromList?.assignedUniversities && memberDataFromList.assignedUniversities.length > 0) ||
+              (memberDetails?.assignedUniversities && memberDetails.assignedUniversities.length > 0) || 
+              (personalData.assignedUniversities && personalData.assignedUniversities.length > 0)) && (
+              <div className="mb-4">
+                <label className="text-xs font-medium tracking-wide mb-2 block" style={{ color: COLORS.textMuted }}>
+                  {t("manageTeam.assignedUniversity", "Assigned University")}
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {(memberDataFromList?.assignedUniversities || memberDetails?.assignedUniversities || personalData.assignedUniversities || [])
+                    .filter((university: { id: number; name: string }, index: number, self: Array<{ id: number; name: string }>) => 
+                      index === self.findIndex((u) => u.name === university.name)
+                    )
+                    .map((university: { id: number; name: string }) => (
+                      <span
+                        key={university.id}
+                        className="text-xs px-3 py-1.5 rounded-full"
+                        style={{
+                          backgroundColor: COLORS.success + "15",
+                          color: COLORS.success,
+                          border: `1px solid ${COLORS.success}30`,
+                        }}
+                      >
+                        {university.name}
+                      </span>
+                    ))}
+                </div>
               </div>
             )}
 

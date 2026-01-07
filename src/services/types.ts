@@ -117,8 +117,11 @@ export interface UserListItem {
   contactNumber: string;
   countryCode: string;
   status: string;
-  assignedAdminId?: number | null;
-  assignedManagerId?: number | null;
+  adminName?: string | null;
+  managerName?: string | null;
+  // API returns as array
+  assignedAdmins?: Array<{ id: number; name: string }>;
+  assignedManagers?: Array<{ id: number; name: string }>;
   assignedCountries?: Array<{ id: number; name: string }>;
   assignedUniversities?: Array<{ id: number; name: string }>;
   createdAt?: string;
@@ -182,6 +185,8 @@ export interface UserPersonalData {
   contactNumber: string;
   assignedAdminName: string | null;
   assignedManagerName: string | null;
+  assignedCountries?: Array<{ id: number; name: string }>;
+  assignedUniversities?: Array<{ id: number; name: string }>;
 }
 
 export interface UserSubordinate {
@@ -209,6 +214,11 @@ export interface UserDetailsData {
   subordinates: UserSubordinate[];
   applicantCount: UserApplicantCount;
   enrolledApplicantsByUniversity: EnrolledApplicantsByUniversity[];
+  // These may be at top level or inside personalData depending on API
+  assignedCountries?: Array<{ id: number; name: string }>;
+  assignedUniversities?: Array<{ id: number; name: string }>;
+  assignedAdmins?: Array<{ id: number; name: string }>;
+  assignedManagers?: Array<{ id: number; name: string }>;
 }
 
 export type UserDetailsResponse = ApiResponse<UserDetailsData>;
