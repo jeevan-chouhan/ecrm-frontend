@@ -15,21 +15,33 @@ import storage from "redux-persist/lib/storage";
 import loaderReducer from "./slices/loader/loaderSlice";
 import toastReducer from "./slices/toast/toastSlice";
 import authReducer from "./slices/auth/authSlice";
+import manageTeamReducer from "./slices/manageTeam/manageTeamSlice";
+
+// Persist configuration for manageTeam - only persist filter/sort/pagination, not members data
+const manageTeamPersistConfig = {
+  key: "manageTeam",
+  storage,
+  whitelist: ["pagination", "sort", "filter"], // Only persist these, not members/isLoading/error
+};
+
+// Create persisted manageTeam reducer
+const persistedManageTeamReducer = persistReducer(manageTeamPersistConfig, manageTeamReducer);
 
 // Combine all reducers
 const rootReducer = combineReducers({
   loader: loaderReducer,
   toast: toastReducer,
   auth: authReducer,
+  manageTeam: persistedManageTeamReducer,
 });
 
-// Persist configuration
+// Root persist configuration
 const persistConfig = {
   key: "root",
   version: 1,
   storage,
-  blacklist: ["loader", "toast"], // Don't persist transient UI states
-  whitelist: ["auth"], // Persist auth state
+  blacklist: ["loader", "toast", "manageTeam"], // Don't persist these at root level (manageTeam has its own config)
+  whitelist: ["auth"], // Persist auth state at root level
 };
 
 // Create persisted reducer

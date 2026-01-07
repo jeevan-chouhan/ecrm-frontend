@@ -42,6 +42,7 @@ import ArrowLeftIcon from "./ArrowLeft.svg?react";
 import MinusIcon from "./Minus.svg?react";
 import UserMinusIcon from "./UserMinus.svg?react";
 import ToggleStatusIcon from "./ToggleStatus.svg?react";
+import ToggleOnIcon from "./ToggleOn.svg?react";
 import SuccessCircleIcon from "./SuccessCircle.svg?react";
 import ErrorCircleIcon from "./ErrorCircle.svg?react";
 import WarningCircleIcon from "./WarningCircle.svg?react";
@@ -88,6 +89,7 @@ export const ArrowLeft = ArrowLeftIcon;
 export const Minus = MinusIcon;
 export const UserMinus = UserMinusIcon;
 export const ToggleStatus = ToggleStatusIcon;
+export const ToggleOn = ToggleOnIcon;
 export const SuccessCircle = SuccessCircleIcon;
 export const ErrorCircle = ErrorCircleIcon;
 export const WarningCircle = WarningCircleIcon;
@@ -135,6 +137,7 @@ export const icons = {
   Minus: MinusIcon,
   UserMinus: UserMinusIcon,
   ToggleStatus: ToggleStatusIcon,
+  ToggleOn: ToggleOnIcon,
   SuccessCircle: SuccessCircleIcon,
   ErrorCircle: ErrorCircleIcon,
   WarningCircle: WarningCircleIcon,

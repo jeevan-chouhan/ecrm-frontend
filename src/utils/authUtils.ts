@@ -1,5 +1,6 @@
 import type { UserData } from "../services/types";
 import { ROUTES } from "../constants/routes";
+import { base64UrlToBase64 } from "./regex";
 
 /**
  * Authentication utility functions
@@ -13,7 +14,7 @@ import { ROUTES } from "../constants/routes";
 export const decodeToken = (token: string): UserData | null => {
   try {
     const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const base64 = base64UrlToBase64(base64Url);
     const jsonPayload = decodeURIComponent(
       atob(base64)
         .split("")
@@ -30,6 +31,7 @@ export const decodeToken = (token: string): UserData | null => {
       countryCode: decoded.countryCode,
       isPrimaryAdmin: decoded.isPrimaryAdmin,
       isPasswordChanged: decoded.isPasswordChanged,
+      agencyId: decoded.agencyId ?? null,
     };
   } catch {
     return null;
@@ -44,7 +46,7 @@ export const decodeToken = (token: string): UserData | null => {
 export const isTokenExpired = (token: string): boolean => {
   try {
     const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const base64 = base64UrlToBase64(base64Url);
     const jsonPayload = JSON.parse(atob(base64));
     const exp = jsonPayload.exp * 1000; // Convert to milliseconds
     return Date.now() >= exp;
@@ -61,7 +63,7 @@ export const isTokenExpired = (token: string): boolean => {
 export const getTokenExpiration = (token: string): number | null => {
   try {
     const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const base64 = base64UrlToBase64(base64Url);
     const jsonPayload = JSON.parse(atob(base64));
     return jsonPayload.exp * 1000; // Convert to milliseconds
   } catch {
@@ -120,10 +122,18 @@ export const clearAuthData = (): void => {
 };
 
 /**
- * Redirect to login page after clearing auth data
+ * Clear all local storage data (including redux-persist)
+ */
+export const clearAllStorage = (): void => {
+  localStorage.clear();
+  sessionStorage.clear();
+};
+
+/**
+ * Redirect to login page after clearing all storage
  */
 export const redirectToLogin = (): void => {
-  clearAuthData();
+  clearAllStorage();
   window.location.href = ROUTES.LOGIN;
 };
 

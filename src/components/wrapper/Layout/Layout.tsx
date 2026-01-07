@@ -18,6 +18,7 @@ import { COLORS, ROUTES, APP_CONFIG } from "../../../constants";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { clearCredentials } from "../../../redux/slices/auth/authSlice";
 import { addToast } from "../../../redux/slices/toast/toastSlice";
+import { resetManageTeamState } from "../../../redux/slices/manageTeam/manageTeamSlice";
 
 interface LayoutProps {
   children: ReactNode;
@@ -58,6 +59,9 @@ const Layout = ({
     // Clear Redux auth state (this also clears localStorage)
     dispatch(clearCredentials());
     
+    // Reset manageTeam state on logout
+    dispatch(resetManageTeamState());
+    
     // Show logout success toast
     dispatch(
       addToast({
@@ -77,6 +81,13 @@ const Layout = ({
   const locationState = location.state as { from?: string } | null;
   const isFromDashboard = locationState?.from === "dashboard";
   const isApplicantDetailPage = location.pathname.startsWith("/applicant-tracker") && location.pathname !== ROUTES.APPLICANT_TRACKER;
+  // Handle sidebar item click - reset manageTeam state when navigating away
+  const handleSidebarItemClick = (path: string) => {
+    // Only reset if navigating away from ManageTeam routes
+    if (!path.startsWith(ROUTES.MANAGE_TEAM)) {
+      dispatch(resetManageTeamState());
+    }
+  };
 
   const sidebarItems = [
     {
@@ -142,6 +153,7 @@ const Layout = ({
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
         mobileOpen={mobileMenuOpen}
         onMobileClose={() => setMobileMenuOpen(false)}
+        onItemClick={handleSidebarItemClick}
       />
 
       {/* Main Content */}

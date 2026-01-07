@@ -15,7 +15,7 @@ import {
 } from "../../components";
 import { COLORS, ROUTES, applicantStatusOptions, typography, mockApplicants, type Applicant } from "../../constants";
 import { Plus, Calendar, Edit } from "../../assets";
-import { formatDateValue, normalizeDateToStartOfDay, normalizeDateToEndOfDay } from "../../utils";
+import { formatDateValue,toSlug, normalizeDateToStartOfDay, normalizeDateToEndOfDay } from "../../utils";
 import ApplicantTrackerFilters from "./ApplicantTrackerFilters";
 import ApplicationStatusHistoryPopup from "./ApplicantDetail/ApplicationStatusHistoryPopup";
 import type { ApplicationStatusHistory } from "./ApplicantDetail/types";
@@ -149,7 +149,7 @@ const ApplicantTracker = () => {
 
       // Applicant Stage filter
       if (appliedApplicantStages.length > 0) {
-        const applicantStageKey = applicant.applicantStage.toLowerCase().replace(/\s+/g, "-");
+        const applicantStageKey = toSlug(applicant.applicantStage);
         if (!appliedApplicantStages.includes(applicantStageKey)) {
           return false;
         }

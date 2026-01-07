@@ -1,5 +1,6 @@
 export { default as api } from "./api";
 export { default as authService } from "./authService";
+export { default as userService } from "./userService";
 export { ENDPOINTS } from "./endpoints";
 
 // Export all types from types.ts
@@ -18,5 +19,33 @@ export type {
   UserData,
   OtpVerificationState,
   ResetPasswordState,
+  UserListParams,
+  UserListItem,
+  UserListResponse,
+  PaginatedData,
+  CountryItem,
+  UniversityItem,
+  UniversityParams,
+  CountriesResponse,
+  UniversitiesResponse,
+  UserDetailsParams,
+  UserPersonalData,
+  UserSubordinate,
+  UserApplicantCount,
+  EnrolledApplicantsByUniversity,
+  UserDetailsData,
+  UserDetailsResponse,
+  AddMemberPayload,
+  AddMemberResponse,
+  UpdateMemberParams,
+  UpdateMemberPayload,
+  UpdateMemberResponse,
+  AdminItem,
+  AdminListResponse,
+  ManagerItem,
+  ManagerListResponse,
+  UpdateStatusParams,
+  UpdateStatusData,
+  UpdateStatusResponse,
 } from "./types";
 

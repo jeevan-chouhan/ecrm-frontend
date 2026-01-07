@@ -4,7 +4,7 @@ import type { GridColDef } from "@mui/x-data-grid";
 import { Layout, SearchBar, DataTable, Button, Popup, Input, PhoneInput } from "../../components";
 import { COLORS, typography } from "../../constants";
 import { Edit, Trash } from "../../assets";
-import { isValidEmail } from "../../utils/regex";
+import { isValidEmail, extractDigits, isValidDecimalInput } from "../../utils/regex";
 
 // Agency Partner interface
 interface AgencyPartner {
@@ -100,7 +100,7 @@ const AgencyPartner = () => {
     // Contact Number validation
     if (!formData.contactNo) {
       errors.contactNo = t("validation.required", "This field is required");
-    } else if (formData.contactNo.replace(/\D/g, "").length < 10) {
+    } else if (extractDigits(formData.contactNo).length < 10) {
       errors.contactNo = t("validation.invalidPhone", "Please enter a valid phone number");
     }
 
@@ -407,7 +407,7 @@ const AgencyPartner = () => {
               onChange={(e) => {
                 const value = e.target.value;
                 // Allow empty, numbers, and decimal numbers only
-                if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                if (isValidDecimalInput(value)) {
                   handleInputChange("commissionPercentage", value);
                 }
               }}

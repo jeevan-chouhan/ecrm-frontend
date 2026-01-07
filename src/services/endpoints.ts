@@ -14,6 +14,23 @@ export const ENDPOINTS = {
     UPDATE_PASSWORD: "/auth/update-password",
   },
 
+  // Users Endpoints
+  USERS: {
+    LIST: "/users/userList",
+    DETAILS: "/users/userDetails",
+    REGISTER: "users/register",
+    UPDATE: "/users/update-userDetails",
+    UPDATE_STATUS: "/users/update-userStatus",
+  },
+
+  // Agency Endpoints
+  AGENCIES: {
+    COUNTRIES: "/agencies/countries",
+    UNIVERSITIES: "/agencies/universities",
+    ADMINS: "/agencies/admins",
+    MANAGERS: "/agencies/managers",
+  },
+
 //   // User Endpoints
 //   USER: {
 //     PROFILE: "/user/profile",

@@ -22,6 +22,7 @@ interface SidebarProps {
   onToggleCollapse?: () => void;
   mobileOpen?: boolean;
   onMobileClose?: () => void;
+  onItemClick?: (path: string) => void; // Callback when sidebar item is clicked
 }
 
 const Sidebar = ({
@@ -33,6 +34,7 @@ const Sidebar = ({
   onToggleCollapse,
   mobileOpen = false,
   onMobileClose,
+  onItemClick,
 }: SidebarProps) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
@@ -108,14 +110,17 @@ const Sidebar = ({
                 const isActive = item.isActive;
 
                 // Use NavLink for items with path
-                if (item.path) {
+                  if (item.path) {
                   return (
                     <li key={index}>
                       <NavLink
                         to={item.path}
                         onMouseEnter={() => setHoveredIndex(index)}
                         onMouseLeave={() => setHoveredIndex(null)}
-                        onClick={onMobileClose}
+                        onClick={() => {
+                          onMobileClose?.();
+                          onItemClick?.(item.path!);
+                        }}
                         title={collapsed ? item.label : undefined}
                         className={`
                           w-full flex items-center gap-3 px-3 py-2.5 rounded-full

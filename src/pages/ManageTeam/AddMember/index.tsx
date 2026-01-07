@@ -1,25 +1,34 @@
-import { useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useFormik } from "formik";
-import * as Yup from "yup";
 import { Layout, Button, Input, Select, PhoneInput, MultiSelect } from "../../../components";
 import { ArrowLeft } from "../../../assets";
 import {
   COLORS,
   ROUTES,
   roleOptions,
-  adminOptions,
-  managerOptions,
-  countryOptions,
-  universityOptions,
-  mockTeamMembers,
 } from "../../../constants";
+import { userService } from "../../../services";
+import type { 
+  CountryItem, 
+  UniversityItem, 
+  AddMemberPayload, 
+  UpdateMemberPayload,
+  AdminItem,
+  ManagerItem,
+} from "../../../services";
+import { handleApiError, getTeamMemberSchema } from "../../../utils";
+import { useAppSelector, useAppDispatch } from "../../../redux/hooks";
+import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
+import { addToast } from "../../../redux/slices/toast/toastSlice";
 
 // Form values interface
 export interface AddMemberFormValues {
   name: string;
   email: string;
+  password: string;
+  countryCode: string;
   contactNumber: string;
   role: string;
   adminId: string;
@@ -32,6 +41,8 @@ export interface AddMemberFormValues {
 const defaultInitialValues: AddMemberFormValues = {
   name: "",
   email: "",
+  password: "",
+  countryCode: "+91",
   contactNumber: "",
   role: "",
   adminId: "",
@@ -43,180 +54,407 @@ const defaultInitialValues: AddMemberFormValues = {
 const AddMember = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
+  const dispatch = useAppDispatch();
   const { memberId } = useParams<{ memberId: string }>();
+
+  // Get user from Redux (for agencyId)
+  const { user } = useAppSelector((state) => state.auth);
+
+  // Get member data from navigation state (for edit mode)
+  const memberData = location.state?.memberData;
 
   // Check if we're in edit mode
   const isEditMode = Boolean(memberId);
 
-  // Find member data for edit mode
-  const memberData = useMemo(() => {
-    if (!memberId) return null;
-    return mockTeamMembers.find((m) => m.id === memberId) || null;
-  }, [memberId]);
+  // State for countries and universities from API
+  const [countries, setCountries] = useState<CountryItem[]>([]);
+  const [universities, setUniversities] = useState<UniversityItem[]>([]);
+  const [isLoadingCountries, setIsLoadingCountries] = useState(false);
+  const [isLoadingUniversities, setIsLoadingUniversities] = useState(false);
 
-  // Helper function to find country value by label
-  const getCountryValueByLabel = (label: string): string | null => {
-    const country = countryOptions.find(
-      (c) => c.label.toLowerCase() === label.toLowerCase()
-    );
-    return country?.value || null;
-  };
+  // State for admins and managers from API
+  const [admins, setAdmins] = useState<AdminItem[]>([]);
+  const [managers, setManagers] = useState<ManagerItem[]>([]);
+  const [isLoadingAdmins, setIsLoadingAdmins] = useState(false);
+  const [isLoadingManagers, setIsLoadingManagers] = useState(false);
+  
+  // Track if form has been submitted (to show validation errors)
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
-  // Helper function to find university value by label
-  const getUniversityValueByLabel = (label: string): string | null => {
-    const university = universityOptions.find(
-      (u) => u.label.toLowerCase() === label.toLowerCase()
-    );
-    return university?.value || null;
-  };
+  // Ref to prevent duplicate API calls
+  const hasFetchedCountries = useRef(false);
+  const hasFetchedAdmins = useRef(false);
+  const hasFetchedManagers = useRef(false);
 
-  // Get original country and university values for edit mode (these will be disabled)
-  const originalCountryValue = useMemo(() => {
-    if (isEditMode && memberData?.country) {
-      return getCountryValueByLabel(memberData.country);
+  // Convert API data to dropdown options
+  const countryOptions = useMemo(() => 
+    countries.map((country) => ({
+      value: country.id.toString(),
+      label: country.name,
+    })), [countries]);
+
+  const universityOptions = useMemo(() => 
+    universities.map((uni) => ({
+      value: uni.id.toString(),
+      label: uni.name,
+    })), [universities]);
+
+  // Convert admin/manager data to dropdown options
+  const adminOptions = useMemo(() => 
+    admins.map((admin) => ({
+      value: admin.id.toString(),
+      label: admin.name,
+    })), [admins]);
+
+  const managerOptions = useMemo(() => 
+    managers.map((manager) => ({
+      value: manager.id.toString(),
+      label: manager.name,
+    })), [managers]);
+
+  // Fetch countries from API
+  const fetchCountries = useCallback(async () => {
+    if (!user?.agencyId || hasFetchedCountries.current) return;
+    
+    hasFetchedCountries.current = true;
+    setIsLoadingCountries(true);
+    dispatch(showLoader());
+    
+    try {
+      const response = await userService.getCountries(user.agencyId);
+      // Handle response formats: [...], { data: [...] } or { status: "success", data: [...] }
+      if (Array.isArray(response)) {
+        setCountries(response);
+      } else if (response.data) {
+        setCountries(response.data);
+      }
+    } catch (error: any) {
+      hasFetchedCountries.current = false; // Allow retry on error
+      dispatch(addToast({ type: "error", message: error.message || "Failed to fetch countries" }));
+    } finally {
+      setIsLoadingCountries(false);
+      dispatch(hideLoader());
     }
-    return null;
-  }, [isEditMode, memberData]);
+  }, [user?.agencyId, dispatch]);
 
-  const originalUniversityValue = useMemo(() => {
-    if (isEditMode && memberData?.university) {
-      return getUniversityValueByLabel(memberData.university);
+  // Fetch universities from API
+  const fetchUniversities = useCallback(async (countryId: number | null = null) => {
+    setIsLoadingUniversities(true);
+    
+    try {
+      const response = await userService.getUniversities({
+        agencyId: user?.agencyId ?? null,
+        countryId,
+      });
+      // Handle response formats: [...], { data: [...] } or { status: "success", data: [...] }
+      if (Array.isArray(response)) {
+        setUniversities(response);
+      } else if (response.data) {
+        setUniversities(response.data);
+      }
+    } catch (error: any) {
+      dispatch(addToast({ type: "error", message: error.message || "Failed to fetch universities" }));
+    } finally {
+      setIsLoadingUniversities(false);
     }
-    return null;
-  }, [isEditMode, memberData]);
+  }, [user?.agencyId, dispatch]);
+
+  // Fetch admins from API
+  const fetchAdmins = useCallback(async () => {
+    if (!user?.agencyId || hasFetchedAdmins.current) return;
+    
+    hasFetchedAdmins.current = true;
+    setIsLoadingAdmins(true);
+    
+    try {
+      const response = await userService.getAdmins(user.agencyId);
+      // Handle response formats: [...] or { data: [...] }
+      if (Array.isArray(response)) {
+        setAdmins(response);
+      } else if ((response as any).data) {
+        setAdmins((response as any).data);
+      }
+    } catch (error: any) {
+      hasFetchedAdmins.current = false;
+      dispatch(addToast({ type: "error", message: error.message || "Failed to fetch admins" }));
+    } finally {
+      setIsLoadingAdmins(false);
+    }
+  }, [user?.agencyId, dispatch]);
+
+  // Fetch managers from API
+  const fetchManagers = useCallback(async () => {
+    if (!user?.agencyId || hasFetchedManagers.current) return;
+    
+    hasFetchedManagers.current = true;
+    setIsLoadingManagers(true);
+    
+    try {
+      const response = await userService.getManagers(user.agencyId);
+      // Handle response formats: [...] or { data: [...] }
+      if (Array.isArray(response)) {
+        setManagers(response);
+      } else if ((response as any).data) {
+        setManagers((response as any).data);
+      }
+    } catch (error: any) {
+      hasFetchedManagers.current = false;
+      dispatch(addToast({ type: "error", message: error.message || "Failed to fetch managers" }));
+    } finally {
+      setIsLoadingManagers(false);
+    }
+  }, [user?.agencyId, dispatch]);
+
+  // Fetch countries, admins, managers on mount
+  useEffect(() => {
+    fetchCountries();
+    fetchAdmins();
+    // fetchManagers();
+  }, [fetchCountries, fetchAdmins, fetchManagers]);
+
+  // Fetch universities when in edit mode with assigned countries
+  useEffect(() => {
+    if (isEditMode && memberData?.assignedCountries?.length > 0) {
+      // Fetch universities for the first assigned country
+      const countryId = memberData.assignedCountries[0].id;
+      fetchUniversities(countryId);
+    }
+  }, [isEditMode, memberData, fetchUniversities]);
 
   // Prepare initial values based on mode
   const initialValues = useMemo<AddMemberFormValues>(() => {
     if (isEditMode && memberData) {
-      // Get country and university values from member data
-      const countryValue = getCountryValueByLabel(memberData.country);
-      const universityValue = getUniversityValueByLabel(memberData.university);
+      // Build phone number with country code for react-phone-input-2
+      const dialCode = memberData.countryCode?.replace("+", "") || "91";
+      const fullPhone = `${dialCode}${memberData.contactNumber || ""}`;
       
       return {
         name: memberData.name || "",
         email: memberData.email || "",
-        contactNumber: memberData.mobileNo?.replace("+", "") || "",
+        password: "", // Password not needed for edit
+        countryCode: memberData.countryCode || "+91",
+        contactNumber: fullPhone,
         role: memberData.role?.toLowerCase() || "",
-        adminId: "", // In real app, get from member data
-        managerId: "", // In real app, get from member data
-        assignedCountries: countryValue ? [countryValue] : [],
-        assignedUniversities: universityValue ? [universityValue] : [],
+        adminId: memberData.assignedAdminId?.toString() || "",
+        managerId: memberData.assignedManagerId?.toString() || "",
+        assignedCountries: memberData.assignedCountries?.map((c: { id: number }) => c.id.toString()) || [],
+        assignedUniversities: memberData.assignedUniversities?.map((u: { id: number }) => u.id.toString()) || [],
       };
     }
     return defaultInitialValues;
   }, [isEditMode, memberData]);
 
-  // Dynamic validation schema based on role
-  const getValidationSchema = (role: string) => {
-    const baseSchema = {
-      name: Yup.string()
-        .trim()
-        .min(2, t("validation.nameMinLength", "Name must be at least 2 characters"))
-        .required(t("validation.nameRequired", "Name is required")),
-      email: Yup.string()
-        .trim()
-        .email(t("validation.invalidEmail", "Please enter a valid email"))
-        .required(t("validation.emailRequired", "Email is required")),
-      contactNumber: Yup.string()
-        .min(8, t("validation.contactMinLength", "Contact number must be at least 8 digits"))
-        .required(t("validation.contactRequired", "Contact number is required")),
-      role: Yup.string().required(t("validation.roleRequired", "Role is required")),
-      assignedCountries: Yup.array()
-        .min(1, t("validation.countryRequired", "At least one country is required"))
-        .required(t("validation.assignedCountryRequired", "Assigned country is required")),
-      assignedUniversities: Yup.array()
-        .min(1, t("validation.universityRequired", "At least one university is required"))
-        .required(t("validation.assignedUniversityRequired", "Assigned university is required")),
-    };
-
-    // Role-based validation
-    if (role === "counselor") {
-      return Yup.object().shape({
-        ...baseSchema,
-        managerId: Yup.string().required(t("validation.managerRequired", "Manager is required")),
-      });
-    } else if (role === "manager" || role === "billing") {
-      return Yup.object().shape({
-        ...baseSchema,
-        adminId: Yup.string().required(t("validation.adminRequired", "Admin is required")),
-      });
-    }
-    
-    // Admin/Primary Admin - no admin/manager field required
-    return Yup.object().shape(baseSchema);
-  };
+  // Get validation schema based on role
+  const getValidationSchema = useCallback((role: string) => {
+    return getTeamMemberSchema(t, { role, isEditMode });
+  }, [isEditMode, t]);
 
   // Formik hook
   const formik = useFormik<AddMemberFormValues>({
     initialValues,
-    validationSchema: getValidationSchema(initialValues.role),
+    // Use validate function for dynamic validation based on current role
+    validate: (values) => {
+      try {
+        getValidationSchema(values.role).validateSync(values, { abortEarly: false });
+        return {};
+      } catch (err: any) {
+        const errors: Record<string, string> = {};
+        if (err.inner) {
+          err.inner.forEach((error: any) => {
+            if (error.path && !errors[error.path]) {
+              errors[error.path] = error.message;
+            }
+          });
+        }
+        return errors;
+      }
+    },
     enableReinitialize: true,
     validateOnBlur: true,
     validateOnChange: true,
-    onSubmit: (values) => {
-      if (isEditMode) {
-        console.log("Update member:", memberId, values);
-      } else {
-        console.log("Add member:", values);
+    onSubmit: async (values) => {
+      // Extract phone number without country code
+      // react-phone-input-2 stores full number like "919876543210" for +91 9876543210
+      const dialCode = values.countryCode.replace("+", ""); // Remove + to get "91"
+      const phoneNumber = values.contactNumber.startsWith(dialCode) 
+        ? values.contactNumber.slice(dialCode.length) 
+        : values.contactNumber;
+
+      // Handle edit mode
+      if (isEditMode && memberId) {
+        const updatePayload: UpdateMemberPayload = {
+          name: values.name,
+          email: values.email,
+          countryCode: values.countryCode,
+          contactNumber: phoneNumber,
+          role: values.role.toUpperCase(),
+          assignedCountries: values.assignedCountries.map((countryValue) => {
+            const country = countries.find((c) => c.id.toString() === countryValue);
+            return { id: parseInt(countryValue), name: country?.name || "" };
+          }),
+          assignedUniversities: values.assignedUniversities.map((uniValue) => {
+            const university = universities.find((u) => u.id.toString() === uniValue);
+            return { id: parseInt(uniValue), name: university?.name || "" };
+          }),
+        };
+
+        dispatch(showLoader());
+        try {
+          const response = await userService.updateMember(
+            { userId: parseInt(memberId), agencyId: user?.agencyId || 0 },
+            updatePayload
+          );
+          if (response.status === "success") {
+            dispatch(addToast({ type: "success", message: t("manageTeam.memberUpdatedSuccess", "Team member updated successfully") }));
+            navigate(ROUTES.MANAGE_TEAM);
+          }
+        } catch (error: any) {
+          const { message } = handleApiError(error);
+          dispatch(addToast({ type: "error", message }));
+        } finally {
+          dispatch(hideLoader());
+        }
+        return;
       }
-      navigate(ROUTES.MANAGE_TEAM);
+
+      // Build payload for API
+      const payload: AddMemberPayload = {
+        name: values.name,
+        email: values.email,
+        password: values.password,
+        countryCode: values.countryCode,
+        contactNumber: phoneNumber,
+        role: values.role.toUpperCase(),
+        agencyId: { id: user?.agencyId || 0 },
+        assignedCountries: values.assignedCountries.map((countryValue) => {
+          const country = countries.find((c) => c.id.toString() === countryValue);
+          return { id: parseInt(countryValue), name: country?.name || "" };
+        }),
+        assignedUniversities: values.assignedUniversities.map((uniValue) => {
+          const university = universities.find((u) => u.id.toString() === uniValue);
+          return { id: parseInt(uniValue), name: university?.name || "" };
+        }),
+      };
+
+      // Add assigned_admin for manager, counselor, billing roles (mandatory)
+      // For admin/primary_admin roles, assigned_admin should be null
+      const role = values.role.toLowerCase();
+      if (role === "manager" || role === "counselor" || role === "billing") {
+        if (values.adminId) {
+          payload.assigned_admin = { id: parseInt(values.adminId) };
+        }
+      } else {
+        // For admin/primary_admin - send null
+        payload.assigned_admin = null;
+      }
+
+      // Add assigned_manager for counsellor role
+      if (role === "counselor" && values.managerId) {
+        payload.assigned_manager = { id: parseInt(values.managerId) };
+      } else {
+        payload.assigned_manager = null;
+      }
+
+      dispatch(showLoader());
+      try {
+        const response = await userService.addMember(payload);
+        if (response.status === "success") {
+          dispatch(addToast({ type: "success", message: t("manageTeam.memberAddedSuccess", "Team member added successfully") }));
+          navigate(ROUTES.MANAGE_TEAM);
+        }
+      } catch (error: any) {
+        const { message } = handleApiError(error);
+        dispatch(addToast({ type: "error", message }));
+      } finally {
+        dispatch(hideLoader());
+      }
     },
   });
 
+  // Touched fields for validation
+  const allTouchedFields: Record<string, boolean> = useMemo(() => ({
+    name: true,
+    email: true,
+    password: true,
+    countryCode: true,
+    contactNumber: true,
+    role: true,
+    adminId: true,
+    managerId: true,
+    assignedCountries: true,
+    assignedUniversities: true,
+  }), []);
+
   // Handle form submit with touch all fields
-  const handleFormSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate with current role's schema
+    // Mark that user has attempted to submit (to show validation errors)
+    setHasAttemptedSubmit(true);
+    
+    await formik.setTouched(allTouchedFields, true);
     const errors = await formik.validateForm();
     
-    // Touch all fields to show validation errors
-    const touchedFields: Record<string, boolean> = {
-      name: true,
-      email: true,
-      contactNumber: true,
-      role: true,
-      adminId: true,
-      managerId: true,
-      assignedCountries: true,
-      assignedUniversities: true,
-    };
-    await formik.setTouched(touchedFields, true);
-    
-    // Check if form is valid
     if (Object.keys(errors).length === 0) {
       formik.submitForm();
     }
-  };
+    // Errors will show below each field automatically
+  }, [formik, allTouchedFields]);
 
   // Handle back navigation
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     navigate(ROUTES.MANAGE_TEAM);
-  };
+  }, [navigate]);
 
-  // Check if role requires admin field (Manager, Billing)
-  const showAdminField = formik.values.role === "manager" || formik.values.role === "billing";
+  // Check if role requires admin field (Manager, Counselor, Billing)
+  const showAdminField = formik.values.role === "manager" || formik.values.role === "counselor" || formik.values.role === "billing";
   
   // Check if role requires manager field (Counselor)
   const showManagerField = formik.values.role === "counselor";
 
+  // Check if all mandatory fields are filled
+  const isMandatoryFieldsFilled = useMemo(() => {
+    const { name, email, password, contactNumber, role, adminId, managerId, assignedCountries, assignedUniversities } = formik.values;
+    
+    // Base mandatory fields
+    const baseFieldsFilled = 
+      name.trim() !== "" &&
+      email.trim() !== "" &&
+      contactNumber.trim() !== "" &&
+      role !== "" &&
+      assignedCountries.length > 0 &&
+      assignedUniversities.length > 0;
+    
+    // Password is mandatory only in add mode
+    const passwordFilled = isEditMode || password.trim() !== "";
+    
+    // Admin is mandatory for manager, counselor, billing
+    const adminFilled = !showAdminField || adminId !== "";
+    
+    // Manager is mandatory for counselor
+    const managerFilled = !showManagerField || managerId !== "";
+    
+    return baseFieldsFilled && passwordFilled && adminFilled && managerFilled;
+  }, [formik.values, isEditMode, showAdminField, showManagerField]);
+
   // Validate field error based on current role
   const getAdminError = () => {
-    if (showAdminField && formik.submitCount > 0 && formik.errors.adminId) {
+    if (showAdminField && hasAttemptedSubmit && formik.errors.adminId) {
       return formik.errors.adminId;
     }
     return undefined;
   };
 
   const getManagerError = () => {
-    if (showManagerField && formik.submitCount > 0 && formik.errors.managerId) {
+    if (showManagerField && hasAttemptedSubmit && formik.errors.managerId) {
       return formik.errors.managerId;
     }
     return undefined;
   };
 
   return (
-    <Layout userName="Admin" userRole="Abroad Agency">
+    <Layout userName={user?.name || "Admin"} userRole={user?.role || "User"}>
       <div className="bg-white rounded-lg shadow-sm p-6 md:p-8 min-h-[calc(100vh-140px)]">
         {/* Header with Back Button and Title */}
         <div className="flex items-center gap-4 mb-6">
@@ -247,8 +485,7 @@ const AddMember = () => {
                 placeholder={t("manageTeam.enterName", "Enter Name")}
                 value={formik.values.name}
                 onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.submitCount > 0 && formik.errors.name ? formik.errors.name : undefined}
+                error={hasAttemptedSubmit && formik.errors.name ? formik.errors.name : undefined}
                 fullWidth
               />
               <Input
@@ -258,23 +495,44 @@ const AddMember = () => {
                 type="email"
                 value={formik.values.email}
                 onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.submitCount > 0 && formik.errors.email ? formik.errors.email : undefined}
+                error={hasAttemptedSubmit && formik.errors.email ? formik.errors.email : undefined}
                 fullWidth
               />
             </div>
 
-            {/* Row 2: Contact Number, Role */}
+            {/* Row 2: Password, Contact Number */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {!isEditMode && (
+                <Input
+                  name="password"
+                  label={<>{t("manageTeam.password", "Password")} <span style={{ color: COLORS.error }}>*</span></>}
+                  placeholder={t("manageTeam.enterPassword", "Enter Password")}
+                  type="password"
+                  value={formik.values.password}
+                  onChange={formik.handleChange}
+                  error={hasAttemptedSubmit && formik.errors.password ? formik.errors.password : undefined}
+                  showPasswordToggle
+                  fullWidth
+                />
+              )}
               <PhoneInput
                 label={<>{t("manageTeam.contactNumber", "Contact Number")} <span style={{ color: COLORS.error }}>*</span></>}
                 placeholder={t("manageTeam.contactNumber", "Contact Number")}
                 value={formik.values.contactNumber}
-                onChange={(value) => formik.setFieldValue("contactNumber", value)}
-                onBlur={() => formik.setFieldTouched("contactNumber", true)}
-                error={formik.submitCount > 0 && formik.errors.contactNumber ? formik.errors.contactNumber : undefined}
+                onChange={(value, countryData) => {
+                  formik.setFieldValue("contactNumber", value);
+                  // Store country code from selected country
+                  if (countryData?.dialCode) {
+                    formik.setFieldValue("countryCode", `+${countryData.dialCode}`);
+                  }
+                }}
+                error={hasAttemptedSubmit && formik.errors.contactNumber ? formik.errors.contactNumber : undefined}
                 fullWidth
               />
+            </div>
+
+            {/* Row 3: Role and Admin (conditional) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Select
                 label={<>{t("manageTeam.role", "Role")} <span style={{ color: COLORS.error }}>*</span></>}
                 options={roleOptions}
@@ -286,76 +544,85 @@ const AddMember = () => {
                   formik.setFieldValue("managerId", "");
                 }}
                 placeholder={t("manageTeam.selectRole", "Select Role")}
-                error={formik.submitCount > 0 && formik.errors.role ? formik.errors.role : undefined}
+                error={hasAttemptedSubmit && formik.errors.role ? formik.errors.role : undefined}
                 fullWidth
               />
-            </div>
-
-            {/* Row 3: Admin/Manager (conditional) and Assigned Country */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Show Admin field for Manager and Billing roles */}
+              
+              {/* Show Admin field for Manager, Counselor and Billing roles */}
               {showAdminField && (
                 <Select
                   label={<>{t("manageTeam.admin", "Admin")} <span style={{ color: COLORS.error }}>*</span></>}
                   options={adminOptions}
                   value={formik.values.adminId}
                   onChange={(value) => formik.setFieldValue("adminId", value)}
-                  placeholder={t("manageTeam.selectAdmin", "Select Admin")}
+                  placeholder={isLoadingAdmins ? t("common.loading", "Loading...") : t("manageTeam.selectAdmin", "Select Admin")}
                   error={getAdminError()}
                   fullWidth
                   searchable
+                  disabled={isLoadingAdmins}
                 />
               )}
-              
-              {/* Show Manager field for Counselor role */}
-              {showManagerField && (
+            </div>
+
+            {/* Row 4: Manager (conditional for Counselor) */}
+            {showManagerField && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Select
                   label={<>{t("manageTeam.manager", "Manager")} <span style={{ color: COLORS.error }}>*</span></>}
                   options={managerOptions}
                   value={formik.values.managerId}
                   onChange={(value) => formik.setFieldValue("managerId", value)}
-                  placeholder={t("manageTeam.selectManager", "Select Manager")}
+                  placeholder={isLoadingManagers ? t("common.loading", "Loading...") : t("manageTeam.selectManager", "Select Manager")}
                   error={getManagerError()}
                   fullWidth
                   searchable
+                  disabled={isLoadingManagers}
                 />
-              )}
+              </div>
+            )}
 
+            {/* Row 5: Assigned Country and Assigned University */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <MultiSelect
                 label={<>{t("manageTeam.assignedCountry", "Assigned Country")} <span style={{ color: COLORS.error }}>*</span></>}
                 options={countryOptions}
                 value={formik.values.assignedCountries}
-                onChange={(values) => formik.setFieldValue("assignedCountries", values)}
-                onBlur={() => formik.setFieldTouched("assignedCountries", true)}
+                onChange={(values) => {
+                  formik.setFieldValue("assignedCountries", values);
+                  // Clear universities when countries change
+                  formik.setFieldValue("assignedUniversities", []);
+                  setUniversities([]);
+                  // Fetch universities based on last selected country
+                  if (values.length > 0) {
+                    const lastSelectedCountryId = parseInt(values[values.length - 1], 10);
+                    fetchUniversities(lastSelectedCountryId);
+                  }
+                }}
                 placeholder={t("manageTeam.selectAssignedCountry", "Select Assigned Country")}
                 error={
-                  formik.submitCount > 0 && formik.errors.assignedCountries
+                  hasAttemptedSubmit && formik.errors.assignedCountries
                     ? String(formik.errors.assignedCountries)
                     : undefined
                 }
                 fullWidth
                 searchable
-                disabledValues={isEditMode && originalCountryValue ? [originalCountryValue] : []}
+                disabled={isLoadingCountries}
               />
-            </div>
-
-            {/* Row 4: Assigned University */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
               <MultiSelect
                 label={<>{t("manageTeam.assignedUniversity", "Assigned University")} <span style={{ color: COLORS.error }}>*</span></>}
                 options={universityOptions}
                 value={formik.values.assignedUniversities}
                 onChange={(values) => formik.setFieldValue("assignedUniversities", values)}
-                onBlur={() => formik.setFieldTouched("assignedUniversities", true)}
                 placeholder={t("manageTeam.selectAssignedUniversity", "Select Assigned University")}
                 error={
-                  formik.submitCount > 0 && formik.errors.assignedUniversities
+                  hasAttemptedSubmit && formik.errors.assignedUniversities
                     ? String(formik.errors.assignedUniversities)
                     : undefined
                 }
                 fullWidth
                 searchable
-                disabledValues={isEditMode && originalUniversityValue ? [originalUniversityValue] : []}
+                disabled={isLoadingUniversities}
               />
             </div>
           </div>
@@ -365,7 +632,7 @@ const AddMember = () => {
             <Button type="button" variant="cancel" rounded onClick={handleBack}>
               {t("common.cancel", "Cancel")}
             </Button>
-            <Button type="submit" variant="accent" rounded>
+            <Button type="submit" variant="accent" rounded disabled={!isMandatoryFieldsFilled}>
               {isEditMode ? t("common.update", "Update") : t("common.save", "Save")}
             </Button>
           </div>

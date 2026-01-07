@@ -37,3 +37,13 @@ export const getGenderLabel = (value: string | undefined): string => {
   return getLabelFromConstant(value, genderTypes);
 };
 
+/**
+ * Format status to capitalize first letter
+ * @param value - The status value (e.g., "ACTIVE", "INACTIVE")
+ * @returns Formatted status (e.g., "Active", "Inactive") or "N/A" if not found
+ */
+export const formatStatus = (value: string | null | undefined): string => {
+  if (!value) return "N/A";
+  return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+};
+

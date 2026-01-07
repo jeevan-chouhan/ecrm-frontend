@@ -9,6 +9,7 @@ import type { OtpVerificationState } from "../../../services";
 import { useAppDispatch } from "../../../redux/hooks";
 import { addToast } from "../../../redux/slices/toast/toastSlice";
 import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
+import { isSingleDigit, isDigitsOnly } from "../../../utils";
 
 const OTP_LENGTH = 6;
 const RESEND_TIMER = 300; // 5 minutes in seconds
@@ -59,8 +60,8 @@ const OtpVerification = () => {
   const handleChange = (index: number, value: string) => {
     if (error) setError("");
 
-    // Only allow digits
-    if (value && !/^\d$/.test(value)) return;
+    // Only allow single digit
+    if (value && !isSingleDigit(value)) return;
 
     const newOtp = [...otp];
     newOtp[index] = value;
@@ -82,7 +83,7 @@ const OtpVerification = () => {
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData("text").slice(0, OTP_LENGTH);
-    if (!/^\d+$/.test(pastedData)) return;
+    if (!isDigitsOnly(pastedData)) return;
 
     const newOtp = [...otp];
     pastedData.split("").forEach((char, index) => {

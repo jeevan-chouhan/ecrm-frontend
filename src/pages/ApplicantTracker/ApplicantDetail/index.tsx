@@ -5,7 +5,7 @@ import type { GridPaginationModel } from "@mui/x-data-grid";
 import { Layout, Button, StatusChangePopup, ConfirmationPopup } from "../../../components";
 import { COLORS, ROUTES, applicationStatusOptions } from "../../../constants";
 import { ArrowLeft } from "../../../assets";
-import { formatDate } from "../../../utils";
+import { formatDate, toSlug } from "../../../utils";
 import type { ApplicantDetail, UniversityApplication, ApplicationStatusHistory } from "./types";
 import { mockApplicantDetail } from "../../../constants";
 import ApplicantHeader from "./ApplicantHeader";
@@ -147,7 +147,7 @@ const ApplicantDetailView = () => {
     const statusValue = applicationStatusOptions.find(
       (opt) => opt.label === application.status || 
                opt.label.toLowerCase() === application.status.toLowerCase()
-    )?.value || application.status.toLowerCase().replace(/\s+/g, "-").replace(/\//g, "-");
+    )?.value || toSlug(application.status);
     setNewApplicationStatus(statusValue);
     setApplicationNotes("");
     setNotifyStudent(true);

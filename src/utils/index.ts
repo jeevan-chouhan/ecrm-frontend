@@ -3,4 +3,5 @@ export * from "./validationSchemas";
 export * from "./dateUtils";
 export * from "./commonUtils";
 export * from "./authUtils";
+export * from "./errorHandler";
 

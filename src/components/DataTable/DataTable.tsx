@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { DataGrid } from "@mui/x-data-grid";
-import type { GridColDef, GridRowsProp, GridPaginationModel, GridRowSelectionModel, GridRowId } from "@mui/x-data-grid";
+import type { GridColDef, GridRowsProp, GridPaginationModel, GridRowSelectionModel, GridRowId, GridSortModel } from "@mui/x-data-grid";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { COLORS, typography } from "../../constants";
 
@@ -31,6 +31,8 @@ interface DataTableProps {
   rowCount?: number;
   paginationMode?: "client" | "server";
   sortingMode?: "client" | "server";
+  sortModel?: GridSortModel;
+  onSortModelChange?: (model: GridSortModel) => void;
   className?: string;
   height?: number | string; // Fixed height for table with scroll
   rowSelectionModel?: GridRowId[];
@@ -130,6 +132,8 @@ const DataTable = ({
   rowCount,
   paginationMode = "client",
   sortingMode = "client",
+  sortModel,
+  onSortModelChange,
   className = "",
   height,
   rowSelectionModel,
@@ -179,6 +183,8 @@ const DataTable = ({
           rowCount={rowCount}
           paginationMode={paginationMode}
           sortingMode={sortingMode}
+          sortModel={sortModel}
+          onSortModelChange={onSortModelChange}
           rowSelectionModel={rowSelectionModel ? toSelectionModel(rowSelectionModel) : undefined}
           onRowSelectionModelChange={onRowSelectionModelChange ? (model: GridRowSelectionModel) => {
             onRowSelectionModelChange(fromSelectionModel(model));
@@ -200,5 +206,5 @@ const DataTable = ({
 };
 
 export default DataTable;
-export type { GridRowId, GridColDef } from "@mui/x-data-grid";
+export type { GridRowId, GridColDef, GridSortModel } from "@mui/x-data-grid";
 
