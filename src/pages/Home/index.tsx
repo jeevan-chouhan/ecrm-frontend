@@ -67,8 +67,7 @@ const Home = () => {
                   color: COLORS.textDark,
                 }}
               >
-                Streamline Student Applications with Edu
-                <span style={{ color: COLORS.accent }}>_Immigration_</span>CRM
+                Streamline Student Applications with E-CRM
               </h1>
               <p
                 className="text-base md:text-lg mb-8 leading-relaxed"
