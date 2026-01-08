@@ -261,26 +261,19 @@ export const mockTeamMemberDetail: TeamMemberDetail = {
 // Applicant Tracker - Constants
 // ==========================================
 
-// Applicant stage options
+// Applicant stage options - exact values from the application stage table
 export const applicantStageOptions: SelectOption[] = [
-  { value: "lead", label: "Lead" },
-  { value: "application-in-progress", label: "Application In Progress" },
-  { value: "application-submitted", label: "Application Submitted" },
-  { value: "offer-awaiting", label: "Offer Awaiting" },
-  { value: "offer-received", label: "Offer Received" },
-  { value: "offer-status", label: "Offer Status" },
-  { value: "deposits", label: "Deposits" },
-  { value: "application-rejected", label: "Application Rejected" },
-  { value: "application-accepted", label: "Application Accepted" },
-  { value: "visa", label: "Visa" },
-  { value: "applicant-rejecting", label: "Applicant Rejecting" },
-  { value: "applicant-status", label: "Applicant Status" },
-];
-
-// Applicant status options
-export const applicantStatusOptions: SelectOption[] = [
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
+  { value: "LEAD_WALK_IN", label: "Lead/Walk in" },
+  { value: "APPLICATION_SUBMITTED", label: "Application Submitted" },
+  { value: "OFFER_AWAITING", label: "Offer Awaiting" },
+  { value: "OFFER_RECEIVED", label: "Offer Received" },
+  { value: "OFFER_STATUS", label: "Offer Status" },
+  { value: "DEPOSIT", label: "Deposit" },
+  { value: "APPLICATION_REJECTED", label: "Application Rejected" },
+  { value: "APPLICATION_ACCEPTED", label: "Application Accepted" },
+  { value: "VISA", label: "Visa" },
+  { value: "APPLICANT_REJECTING", label: "Applicant Rejecting" },
+  { value: "FINAL_STATUS", label: "Final Status" },
 ];
 
 // Agency partner options
@@ -290,27 +283,48 @@ export const agencyPartnerOptions: SelectOption[] = [
   { value: "study-abroad", label: "Study Abroad" },
 ];
 
-// Application status options for university applications
+// Applicant status options - for active/inactive status (used in applicant overview and status changes)
+export const applicantStatusOptions: SelectOption[] = [
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+];
+
+// Application status options - all statuses from all application stages
 export const applicationStatusOptions: SelectOption[] = [
-  { value: "application-submitted", label: "Application Submitted" },
-  { value: "document-pending", label: "Document Pending" },
-  { value: "application-applicant-declined", label: "Application/Applicant Declined" },
-  { value: "awaiting-conditional-offer", label: "Awaiting Conditional Offer" },
-  { value: "awaiting-unconditional-offer", label: "Awaiting Unconditional Offer" },
-  { value: "received-conditional-offer", label: "Received Conditional Offer" },
-  { value: "offer-received", label: "Offer Received" },
-  { value: "offer-accepted", label: "Offer Accepted" },
-  { value: "offer-rejected", label: "Offer Rejected" },
-  { value: "awaiting-deposit", label: "Awaiting Deposit" },
-  { value: "deposit-paid", label: "Deposit Paid" },
-  { value: "application-rejected-not-paid", label: "Application Rejected Not Paid" },
-  { value: "application-rejected-paid", label: "Application Rejected Paid" },
-  { value: "application-accepted", label: "Application Accepted" },
-  { value: "applied-for-visa", label: "Applied For Visa" },
-  { value: "visa-approved", label: "Visa Approved" },
-  { value: "visa-rejected", label: "Visa Rejected" },
-  { value: "student-deferring", label: "Student Deferring" },
-  { value: "student-declining", label: "Student Declining" },
-  { value: "enrolled", label: "Enrolled" },
-  { value: "not-enrolled-rejected", label: "Not Enrolled / Rejected" },
+  // Lead / Walk-in
+  { value: "LEAD", label: "Lead" },
+  { value: "APPLICATION_INCOMPLETE", label: "Application Incomplete" },
+  { value: "DOCUMENT_PENDING", label: "Document Pending" },
+  { value: "APPLICATION_APPLICANT_DECLINED", label: "Application/Applicant Declined" },
+  // Application Submitted
+  { value: "UNDER_UNIVERSITY_REVIEW", label: "Under University Review" },
+  // Offer Awaiting
+  { value: "AWAITING_CONDITIONAL_OFFER", label: "Awaiting Conditional offer" },
+  { value: "AWAITING_UNCONDITIONAL_OFFER", label: "Awaiting Unconditional offer" },
+  { value: "AWAITING_UNCONDITIONAL_OFFER_DOCUMENT", label: "Awaiting Unconditional offer Document" },
+  // Offer Received
+  { value: "RECEIVED_CONDITIONAL_OFFER", label: "Received Conditional offer" },
+  { value: "RECEIVED_UNCONDITIONAL_OFFER", label: "Received Unconditional offer" },
+  { value: "OFFER_RECEIVED", label: "Offer Received" },
+  // Offer Status
+  { value: "OFFER_ACCEPTED", label: "Offer Accepted" },
+  { value: "OFFER_REJECTED", label: "Offer Rejected" },
+  // Deposit
+  { value: "AWAITING_DEPOSIT", label: "Awaiting Deposit" },
+  { value: "DEPOSIT_PAID", label: "Deposit Paid" },
+  // Application Rejected
+  { value: "REJECTED_NOT_PAID", label: "Rejected Not Paid" },
+  { value: "REJECTED_PAID", label: "Rejected Paid" },
+  // Application Accepted
+  { value: "APPLICATION_ACCEPTED_PAID", label: "Application Accepted (paid)" },
+  // Visa
+  { value: "APPLIED_FOR_VISA", label: "Applied for Visa" },
+  { value: "VISA_APPROVED", label: "Visa Approved" },
+  { value: "VISA_REJECTED", label: "Visa Rejected" },
+  // Applicant Rejecting
+  { value: "STUDENT_DEFERRING", label: "Student Deferring" },
+  { value: "STUDENT_DECLINING", label: "Student Declining" },
+  // Final Status
+  { value: "ENROLLED", label: "Enrolled" },
+  { value: "NOT_ENROLLED", label: "Not Enrolled" },
 ];

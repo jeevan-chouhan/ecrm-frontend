@@ -41,6 +41,12 @@ const Select = ({
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const selectedOption = options.find((opt) => opt.value === value);
+  
+  // Find placeholder option (usually the first option with empty value)
+  const placeholderOption = options.find((opt) => opt.value === "" || opt.value === null || opt.value === undefined);
+  
+  // Determine display text: use selected option label, or placeholder option label, or fallback to placeholder prop
+  const displayText = selectedOption?.label || (value === "" || value === null || value === undefined ? placeholderOption?.label : null) || placeholder;
 
   const filteredOptions = searchable
     ? options.filter((opt) =>
@@ -150,9 +156,9 @@ const Select = ({
           )}
           <span 
             className="block truncate pr-6"
-            style={{ color: selectedOption ? COLORS.textDark : COLORS.textMuted }}
+            style={{ color: selectedOption && selectedOption.value !== "" ? COLORS.textDark : COLORS.textMuted }}
           >
-            {selectedOption?.label || placeholder}
+            {displayText}
           </span>
           <span className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
             <ChevronDown

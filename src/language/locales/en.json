@@ -110,7 +110,7 @@
     "title": "Dashboard",
     "addApplicant": "Add Applicant",
     "applicantOverview": "Applicant Overview",
-    "applicantId": "Applicant ID",
+    "applicantId": "ID",
     "applicantName": "Name",
     "contactNumber": "Contact Number",
     "email": "Email",
@@ -146,8 +146,8 @@
     "tableCountry": "Country",
     "tableTotalApplicants": "Total Applicants",
     "tableLeads": "Leads",
-    "tableInProgressApplicants": "In Progress Applicants",
-    "tableEnrolledApplicants": "Enrolled Applicants"
+    "tableInProgressApplicants": "In Progress Applications",
+    "tableEnrolledApplicants": "Enrolled Applications"
   },
   "users": {
     "title": "Users",
@@ -415,7 +415,7 @@
     "applicantStageCount": "Applicant Stage (i.e. selected filter)",
     "noOfApplicants": "No. Of Applicants",
     "addApplicant": "Add Applicant",
-    "applicantId": "Applicant Id",
+    "applicantId": "ID",
     "applicantName": "Applicant Name",
     "contactNo": "Contact Number",
     "course": "Course",
@@ -533,7 +533,7 @@
   },
   "documentVault": {
     "title": "Document Vault",
-    "applicantId": "Applicant Id",
+    "applicantId": "ID",
     "applicantName": "Applicant Name",
     "passportNo": "Passport No.",
     "enrollmentType": "Enrollment Type",

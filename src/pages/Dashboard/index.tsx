@@ -164,7 +164,7 @@ const Dashboard = () => {
     },
     {
       field: "inProgressApplicants",
-      headerName: t("dashboard.tableInProgressApplicants", "In Progress Applicants"),
+      headerName: t("dashboard.tableInProgressApplicants", "In Progress Applications"),
       flex: 1,
       minWidth: 200,
       sortable: true,
@@ -173,7 +173,7 @@ const Dashboard = () => {
     },
     {
       field: "enrolledApplicants",
-      headerName: t("dashboard.tableEnrolledApplicants", "Enrolled Applicants"),
+      headerName: t("dashboard.tableEnrolledApplicants", "Enrolled Applications"),
       flex: 1,
       minWidth: 180,
       sortable: true,

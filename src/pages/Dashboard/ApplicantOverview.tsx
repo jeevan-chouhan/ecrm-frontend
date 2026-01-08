@@ -275,7 +275,7 @@ const ApplicantOverview = ({
   const columns: GridColDef[] = useMemo(() => [
     {
       field: "applicantId",
-      headerName: t("dashboard.applicantId", "Applicant ID"),
+      headerName: t("dashboard.applicantId", "ID"),
       flex: 0.8,
       minWidth: 120,
       sortable: true,
