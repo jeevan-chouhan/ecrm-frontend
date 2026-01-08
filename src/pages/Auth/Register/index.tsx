@@ -117,18 +117,16 @@ const Register = () => {
                     fullWidth
                   />
 
-                  {/* Upload Logo */}
-                  <FileUpload
-                    label={t("auth.uploadLogo")}
-                    value={formik.values.logo}
-                    onChange={handleLogoChange}
-                    onRemove={handleLogoRemove}
-                    accept="image/*"
-                    maxSizeMB={2}
-                    showPreview
-                    multiple={false}
-                    supportedFormats="PNG, JPG, JPEG"
-                    dismissible={false}
+                  {/* Brand Name - Mandatory */}
+                  <Input
+                    label={<>{t("auth.brandName")} <span style={{ color: COLORS.error }}>*</span></>}
+                    placeholder={t("auth.enterBrandName")}
+                    name="brandName"
+                    value={formik.values.brandName}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.brandName ? formik.errors.brandName : undefined}
+                    fullWidth
                   />
                 </div>
 
@@ -169,15 +167,18 @@ const Register = () => {
                     fullWidth
                   />
 
-                  {/* Brand Name */}
-                  <Input
-                    label={t("auth.brandName")}
-                    placeholder={t("auth.enterBrandName")}
-                    name="brandName"
-                    value={formik.values.brandName}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    fullWidth
+                  {/* Upload Logo */}
+                  <FileUpload
+                    label={t("auth.uploadLogo")}
+                    value={formik.values.logo}
+                    onChange={handleLogoChange}
+                    onRemove={handleLogoRemove}
+                    accept="image/*"
+                    maxSizeMB={2}
+                    showPreview
+                    multiple={false}
+                    supportedFormats="PNG, JPG, JPEG"
+                    dismissible={false}
                   />
                 </div>
               </div>
@@ -235,6 +236,7 @@ const Register = () => {
                   disabled={
                     !formik.values.agencyName ||
                     !formik.values.fullName ||
+                    !formik.values.brandName ||
                     !formik.values.email ||
                     !formik.values.password ||
                     !formik.values.confirmPassword ||

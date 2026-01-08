@@ -22,6 +22,7 @@ export const getRegisterSchema = (t: TranslationFunction) =>
   Yup.object().shape({
     agencyName: Yup.string().required(t("validation.agencyNameRequired")),
     fullName: Yup.string().required(t("validation.fullNameRequired")),
+    brandName: Yup.string().required(t("validation.brandNameRequired")),
     email: Yup.string()
       .required(t("validation.emailRequired"))
       .matches(REGEX.EMAIL, t("validation.emailInvalid")),

@@ -7,8 +7,8 @@ import { ArrowLeft } from "../../../assets";
 import {
   COLORS,
   ROUTES,
-  roleOptions,
 } from "../../../constants";
+import { useFilteredRoleOptions } from "../../../hooks";
 import { userService } from "../../../services";
 import type { 
   CountryItem, 
@@ -86,6 +86,9 @@ const AddMember = () => {
   const hasFetchedCountries = useRef(false);
   const hasFetchedAdmins = useRef(false);
   const hasFetchedManagers = useRef(false);
+
+  // Get filtered role options based on user's permissions
+  const filteredRoleOptions = useFilteredRoleOptions();
 
   // Convert API data to dropdown options
   const countryOptions = useMemo(() => 
@@ -541,7 +544,7 @@ const AddMember = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Select
                 label={<>{t("manageTeam.role", "Role")} <span style={{ color: COLORS.error }}>*</span></>}
-                options={roleOptions}
+                options={filteredRoleOptions}
                 value={formik.values.role}
                 onChange={(value) => {
                   const previousRole = formik.values.role;

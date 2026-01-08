@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Close } from "../../../assets";
+import { ChevronLeft, ChevronRight, Close, LogoImage } from "../../../assets";
 import { COLORS, componentSpecs, APP_CONFIG } from "../../../constants";
 import Button from "../../Button/Button";
 
@@ -74,12 +74,11 @@ const Sidebar = ({
             <div className="flex items-center gap-3">
               {logo || (
                 <>
-                  <div
-                    className="h-9 w-9 rounded-lg flex items-center justify-center font-bold text-sm shrink-0"
-                    style={{ backgroundColor: COLORS.accent, color: COLORS.textWhite }}
-                  >
-                    E
-                  </div>
+                  <img
+                    src={LogoImage}
+                    alt="AgencyOS Logo"
+                    className="h-9 w-9 rounded-lg object-contain shrink-0"
+                  />
                   {!collapsed && (
                     <span
                       className="text-lg font-bold whitespace-nowrap"
