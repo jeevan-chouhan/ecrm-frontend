@@ -66,16 +66,19 @@ export const yesNoOptions: SelectOption[] = [
 ];
 
 // ==========================================
-// Enums
+// User Roles
 // ==========================================
 
-export enum UserRole {
-  PRIMARY_ADMIN = "PRIMARY_ADMIN",
-  ADMIN = "ADMIN",
-  MANAGER = "MANAGER",
-  COUNSELLOR = "COUNSELLOR",
-  BILLING = "BILLING",
-}
+export const UserRole = {
+  PRIMARY_ADMIN: "PRIMARY_ADMIN",
+  ADMIN: "ADMIN",
+  MANAGER: "MANAGER",
+  COUNSELLOR: "COUNSELLOR",
+  BILLING: "BILLING",
+} as const;
+
+// Type for UserRole values
+export type UserRoleType = typeof UserRole[keyof typeof UserRole];
 
 // Role display names mapping
 export const ROLE_DISPLAY_NAMES: Record<string, string> = {

@@ -41,7 +41,7 @@ const ManageTeam = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  
+  const [showCount , SetShowCount] = useState(0);
   // Get user from Redux (decoded from token)
   const { user } = useAppSelector((state) => state.auth);
   
@@ -50,7 +50,14 @@ const ManageTeam = () => {
   
   // Local state for search input (for debounce) - sync with persisted filter
   const [searchInput, setSearchInput] = useState(() => filter.search);
-  
+   // Stats counts from API
+  const [statsCounts, setStatsCounts] = useState({
+    totalAdmins: 0,
+    totalManagers: 0,
+    totalCounselors: 0,
+  });
+  const [loadingStats, setLoadingStats] = useState(true);
+
   // Local state for status popup
   const [statusPopup, setStatusPopup] = useState<{
     isOpen: boolean;
@@ -65,6 +72,44 @@ const ManageTeam = () => {
   // Update userRef when user changes
   userRef.current = user;
   
+   useEffect(() => {
+    const fetchStatsCounts = async () => {
+      setLoadingStats(true);
+      try {
+        // TODO: Replace with actual API call
+        // const response = await fetch('/api/team/stats');
+        // if (!response.ok) throw new Error('Failed to fetch stats');
+        // const data = await response.json();
+        // setStatsCounts({
+        //   totalAdmins: data.totalAdmins || 0,
+        //   totalManagers: data.totalManagers || 0,
+        //   totalCounselors: data.totalCounselors || 0,
+        // });
+
+        // Mock API response for now
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        setStatsCounts({
+          totalAdmins: 3,
+          totalManagers: 3,
+          totalCounselors: 6,
+        });
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.error("Error fetching team stats:", error);
+        }
+        // Set default values on error
+        setStatsCounts({
+          totalAdmins: 0,
+          totalManagers: 0,
+          totalCounselors: 0,
+        });
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    fetchStatsCounts();
+  }, []);
   // Sync search input with persisted filter on initial mount only
   useEffect(() => {
     if (isInitialMount.current && filter.search) {
@@ -101,6 +146,10 @@ const ManageTeam = () => {
 
       if (response.status === "success" && response.data) {
         dispatch(setMembers(response.data));
+        // Check if response.data is PaginatedData (has totalElements)
+        if ('totalElements' in response.data) {
+          SetShowCount(response.data.totalElements);
+        }
       } else {
         dispatch(setError(response.message || "Failed to fetch team members"));
         dispatch(addToast({ type: "error", message: response.message || "Failed to fetch team members" }));
@@ -152,7 +201,7 @@ const ManageTeam = () => {
   }, [dispatch]);
 
   const handleView = useCallback((member: UserListItem) => {
-    navigate(`${ROUTES.MANAGE_TEAM}/${member.id}`, { state: { memberStatus: member.status } });
+    navigate(`${ROUTES.MANAGE_TEAM}/${member.id}`, { state: { memberData: member } });
   }, [navigate]);
 
   const handleEdit = useCallback((member: UserListItem) => {
@@ -327,7 +376,7 @@ const ManageTeam = () => {
               className="text-lg font-medium"
               style={{ color: COLORS.textMuted }}
             >
-              ({members.length})
+              ({showCount})
             </span>
           </div>
 
@@ -371,6 +420,78 @@ const ManageTeam = () => {
                 {t("manageTeam.addMember", "Add Member")}
               </Button>
             </div>
+            
+          </div>
+
+          
+        </div>
+
+         {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          {/* Total Admins Card */}
+          <div
+            className="bg-white rounded-lg shadow-sm p-6"
+            style={{
+              border: `1px solid ${COLORS.border}`,
+              backgroundColor: COLORS.surface,
+            }}
+          >
+            <p
+              className="text-sm font-medium mb-2"
+              style={{ color: COLORS.textMuted }}
+            >
+              {t("manageTeam.totalAdmins", "Total Admins")}
+            </p>
+            <p
+              className="text-3xl font-bold"
+              style={{ color: COLORS.textDark }}
+            >
+              {loadingStats ? "-" : statsCounts.totalAdmins}
+            </p>
+          </div>
+
+          {/* Managers Card */}
+          <div
+            className="bg-white rounded-lg shadow-sm p-6"
+            style={{
+              border: `1px solid ${COLORS.border}`,
+              backgroundColor: COLORS.surface,
+            }}
+          >
+            <p
+              className="text-sm font-medium mb-2"
+              style={{ color: COLORS.textMuted }}
+            >
+              {t("manageTeam.totalManagers", "Total Managers")}
+            </p>
+            <p
+              className="text-3xl font-bold"
+              style={{ color: COLORS.textDark }}
+            >
+              {loadingStats ? "-" : statsCounts.totalManagers}
+            </p>
+          </div>
+
+          {/* Counselors Card */}
+          <div
+            className="bg-white rounded-lg shadow-sm p-6"
+            style={{
+              border: `1px solid ${COLORS.border}`,
+              backgroundColor: COLORS.surface,
+            }}
+          >
+            <p
+              className="text-sm font-medium mb-2"
+              style={{ color: COLORS.textMuted }}
+            >
+              {t("manageTeam.totalCounselors", "Total Counselors")}
+            </p>
+            <p
+              className="text-3xl font-bold"
+              style={{ color: COLORS.textDark }}
+            >
+              {loadingStats ? "-" : statsCounts.totalCounselors}
+            </p>
           </div>
         </div>
 
@@ -389,6 +510,9 @@ const ManageTeam = () => {
           onSortModelChange={handleSortModelChange}
         />
       </div>
+
+
+      
 
       {/* Status Change Confirmation Popup */}
       <Popup

@@ -33,6 +33,7 @@ const variantStyles: Record<ChipVariant, { background: string; color: string }> 
   },
 };
 
+
 const sizeStyles = {
   sm: "text-xs px-2 py-0.5",
   md: "text-sm px-3 py-1",
