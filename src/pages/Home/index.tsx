@@ -67,7 +67,7 @@ const Home = () => {
                   color: COLORS.textDark,
                 }}
               >
-                Streamline Student Applications with E-CRM
+                Streamline Student Applications with AgencyOS
               </h1>
               <p
                 className="text-base md:text-lg mb-8 leading-relaxed"

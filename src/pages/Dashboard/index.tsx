@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
@@ -11,6 +11,7 @@ import {
 } from "../../components";
 import type { DateRange } from "../../components";
 import { COLORS, ROUTES } from "../../constants";
+import { useAppSelector } from "../../redux/hooks";
 import ApplicantOverview from "./ApplicantOverview";
 
 // Mock data for table
@@ -60,6 +61,27 @@ const teamOverviewData = [
 const Dashboard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { accessToken, user } = useAppSelector((state) => state.auth);
+
+  // Decode and log access token on dashboard load
+  useEffect(() => {
+    if (accessToken) {
+      try {
+        // JWT token has 3 parts: header.payload.signature
+        const tokenParts = accessToken.split('.');
+        if (tokenParts.length === 3) {
+          const decodedPayload = JSON.parse(atob(tokenParts[1]));
+          console.log('=== Dashboard - Decoded Access Token ===');
+          console.log('Token:', accessToken);
+          console.log('Decoded Payload:', decodedPayload);
+          console.log('User from Redux:', user);
+          console.log('=========================================');
+        }
+      } catch (decodeError) {
+        console.error('Failed to decode token:', decodeError);
+      }
+    }
+  }, [accessToken, user]);
 
   // Filter states
   const [selectedAdmin, setSelectedAdmin] = useState("");

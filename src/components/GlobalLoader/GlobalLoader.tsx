@@ -1,5 +1,5 @@
 import { useAppSelector } from "../../redux/hooks";
-import { Spinner } from "../../assets";
+import LogoImage  from "../../assets/LogoImage.png";
 import { COLORS } from "../../constants";
 
 const GlobalLoader = () => {
@@ -13,13 +13,35 @@ const GlobalLoader = () => {
       style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
     >
       <div
-        className="flex flex-col items-center gap-4 p-8 rounded-2xl"
+        className="flex flex-col items-center gap-4 p-8"
       >
-        <Spinner className="h-12 w-12" style={{ color: COLORS.accent }} />
+        {/* Logo with spinning border around it */}
+        <div className="relative">
+          {/* Spinning ring around logo */}
+          <div
+            className="absolute inset-0 rounded-full animate-spin"
+            style={{
+              width: "88px",
+              height: "88px",
+              top: "-8px",
+              left: "-8px",
+              border: `3px solid transparent`,
+              borderTopColor: COLORS.accent,
+              borderRightColor: COLORS.accent,
+              animationDuration: "1s",
+            }}
+          />
+          {/* Logo Image in center */}
+          <img
+            src={LogoImage}
+            alt="AgencyOS Logo"
+            className="h-18 w-18 object-contain rounded-lg"
+            style={{ width: "72px", height: "72px" }}
+          />
+        </div>
         {loadingText && (
           <p
-            className="text-sm font-medium"
-            style={{ color: COLORS.textDark }}
+            className="text-sm font-medium text-white"
           >
             {loadingText}
           </p>

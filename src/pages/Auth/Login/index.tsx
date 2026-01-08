@@ -66,6 +66,24 @@ const Login = () => {
         });
 
         if (response.status === "success" && response.data) {
+          // Decode and log the access token
+          const accessToken = response.data.accessToken;
+          if (accessToken) {
+            try {
+              // JWT token has 3 parts: header.payload.signature
+              const tokenParts = accessToken.split('.');
+              if (tokenParts.length === 3) {
+                const decodedPayload = JSON.parse(atob(tokenParts[1]));
+                console.log('=== Decoded Access Token ===');
+                console.log('Token:', accessToken);
+                console.log('Decoded Payload:', decodedPayload);
+                console.log('============================');
+              }
+            } catch (decodeError) {
+              console.error('Failed to decode token:', decodeError);
+            }
+          }
+
           // Handle remember me functionality
           if (values.rememberMe) {
             localStorage.setItem(REMEMBER_EMAIL_KEY, values.email);

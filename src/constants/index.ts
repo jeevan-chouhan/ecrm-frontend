@@ -8,10 +8,10 @@ export * from "./mockData";
 // App Configuration
 // ==========================================
 export const APP_CONFIG = {
-  name: "E-CRM",
-  fullName: "Education CRM",
+  name: "AgencyOS",
+  fullName: "Agency Operating System",
   tagline: "Your Immigration Partner",
-  copyright: (year: number = new Date().getFullYear()) => `© ${year} E-CRM. All Rights Reserved.`,
+  copyright: (year: number = new Date().getFullYear()) => `© ${year} AgencyOS. All Rights Reserved.`,
 } as const;
 
 // ==========================================

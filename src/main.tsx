@@ -13,20 +13,14 @@ import App from './App.tsx'
 import { GlobalLoader, Toast } from './components/index.ts'
 import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from './context'
-import Spinner from './assets/Spinner.tsx'
-// Loading fallback component
-const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <Spinner className="h-12 w-12 animate-spin text-purple-600" />
-  </div>
-);
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <BrowserRouter>
           <AuthProvider>
-            <Suspense fallback={<PageLoader />}>
+            <Suspense fallback={<GlobalLoader />}>
               <GlobalLoader />
               <Toast />
               <App />
