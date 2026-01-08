@@ -1,21 +1,20 @@
 import { useMemo, memo } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Select, MultiSelect, DatePicker, IntakeSelector } from "../../components";
+import { Button, Select, MultiSelect, DatePicker, IntakeSelector, type SelectOption } from "../../components";
 import {
-  adminOptions,
-  managerOptions,
   applicantStageOptions,
   agencyPartnerOptions,
-  universityOptions,
 } from "../../constants";
-import { counselors, courses } from "../../constants/mockData";
 
 interface ApplicantTrackerFiltersProps {
+  adminOptions: SelectOption[];
+  managerOptions: SelectOption[];
+  counselorOptions: SelectOption[];
+  universityOptions: SelectOption[];
   selectedAdmin: string;
   selectedManager: string;
   selectedCounselor: string;
   selectedUniversity: string;
-  selectedCourse: string;
   selectedApplicantStages: string[];
   selectedIntake: string;
   selectedAgencyPartner: string;
@@ -27,7 +26,6 @@ interface ApplicantTrackerFiltersProps {
   onManagerChange: (value: string) => void;
   onCounselorChange: (value: string) => void;
   onUniversityChange: (value: string) => void;
-  onCourseChange: (value: string) => void;
   onApplicantStagesChange: (values: string[]) => void;
   onIntakeChange: (value: string) => void;
   onAgencyPartnerChange: (value: string) => void;
@@ -40,11 +38,14 @@ interface ApplicantTrackerFiltersProps {
 }
 
 const ApplicantTrackerFilters = ({
+  adminOptions,
+  managerOptions,
+  counselorOptions,
+  universityOptions,
   selectedAdmin,
   selectedManager,
   selectedCounselor,
   selectedUniversity,
-  selectedCourse,
   selectedApplicantStages,
   selectedIntake,
   selectedAgencyPartner,
@@ -56,7 +57,6 @@ const ApplicantTrackerFilters = ({
   onManagerChange,
   onCounselorChange,
   onUniversityChange,
-  onCourseChange,
   onApplicantStagesChange,
   onIntakeChange,
   onAgencyPartnerChange,
@@ -73,27 +73,23 @@ const ApplicantTrackerFilters = ({
   const adminOptionsWithPlaceholder = useMemo(() => [
     { value: "", label: t("applicantTracker.selectAdmin", "Select Admin") },
     ...adminOptions,
-  ], [t]);
+  ], [t, adminOptions]);
 
   const managerOptionsWithPlaceholder = useMemo(() => [
     { value: "", label: t("applicantTracker.selectManager", "Select Manager") },
     ...managerOptions,
-  ], [t]);
+  ], [t, managerOptions]);
 
   const counselorOptionsWithPlaceholder = useMemo(() => [
     { value: "", label: t("applicantTracker.selectCounselor", "Select Counselor") },
-    ...counselors,
-  ], [t]);
+    ...counselorOptions,
+  ], [t, counselorOptions]);
 
   const universityOptionsWithPlaceholder = useMemo(() => [
     { value: "", label: t("applicantTracker.selectUniversity", "Select University") },
     ...universityOptions,
-  ], [t]);
+  ], [t, universityOptions]);
 
-  const courseOptionsWithPlaceholder = useMemo(() => [
-    { value: "", label: t("applicantTracker.selectCourse", "Select Course") },
-    ...courses,
-  ], [t]);
 
   const agencyPartnerOptionsWithPlaceholder = useMemo(() => [
     { value: "", label: t("applicantTracker.selectAgencyPartner", "Agency Partner") },
@@ -111,7 +107,7 @@ const ApplicantTrackerFilters = ({
       {/* First Row - Filter Dropdowns */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Admin Select */}
-        <div className="w-[200px] applicant-tracker-filter-placeholder">
+        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px] applicant-tracker-filter-placeholder">
           <Select
             label={t("applicantTracker.adminLabel", "Admin")}
             options={adminOptionsWithPlaceholder}
@@ -122,7 +118,7 @@ const ApplicantTrackerFilters = ({
         </div>
 
         {/* Manager Select */}
-        <div className="w-[200px] applicant-tracker-filter-placeholder">
+        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px] applicant-tracker-filter-placeholder">
           <Select
             label={t("applicantTracker.managerLabel", "Manager")}
             options={managerOptionsWithPlaceholder}
@@ -133,7 +129,7 @@ const ApplicantTrackerFilters = ({
         </div>
 
         {/* Counselor Select */}
-        <div className="w-[200px] applicant-tracker-filter-placeholder">
+        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px] applicant-tracker-filter-placeholder">
           <Select
             label={t("applicantTracker.counselorLabel", "Counselor")}
             options={counselorOptionsWithPlaceholder}
@@ -144,7 +140,7 @@ const ApplicantTrackerFilters = ({
         </div>
 
         {/* University Select */}
-        <div className="w-[200px] applicant-tracker-filter-placeholder">
+        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px] applicant-tracker-filter-placeholder">
           <Select
             label={t("applicantTracker.universityLabel", "University")}
             options={universityOptionsWithPlaceholder}
@@ -154,19 +150,8 @@ const ApplicantTrackerFilters = ({
           />
         </div>
 
-        {/* Course Select */}
-        <div className="w-[200px] applicant-tracker-filter-placeholder">
-          <Select
-            label={t("applicantTracker.courseLabel", "Course")}
-            options={courseOptionsWithPlaceholder}
-            value={selectedCourse}
-            onChange={onCourseChange}
-            searchable
-          />
-        </div>
-
         {/* Applicant Stage MultiSelect */}
-        <div className="w-[200px]">
+        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px]">
           <MultiSelect
             label={t("applicantTracker.applicantStageLabel", "Applicant Stage")}
             options={applicantStageOptions}
@@ -178,12 +163,13 @@ const ApplicantTrackerFilters = ({
         </div>
 
         {/* Intake Select */}
-        <div className="w-[200px]">
+        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px]">
           <IntakeSelector
             label={t("applicantTracker.intakeLabel", "Intake")}
             value={selectedIntake}
             onChange={onIntakeChange}
             placeholder={t("applicantTracker.selectIntake", "Select Intake")}
+            fullWidth
           />
         </div>
       </div>
@@ -191,7 +177,7 @@ const ApplicantTrackerFilters = ({
       {/* Second Row - Agency Partner, Date Pickers and Buttons */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Agency Partner Select */}
-        <div className="w-[200px] applicant-tracker-filter-placeholder">
+        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px] applicant-tracker-filter-placeholder">
           <Select
             label={t("applicantTracker.agencyPartnerLabel", "Agency Partner")}
             options={agencyPartnerOptionsWithPlaceholder}
@@ -202,52 +188,57 @@ const ApplicantTrackerFilters = ({
         </div>
 
         {/* Applied From Date Picker */}
-        <div className="w-[200px]">
+        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px]">
           <DatePicker
             label={t("applicantTracker.appliedFromDateLabel", "Applied From Date")}
             value={appliedFromDate}
             onChange={onAppliedFromDateChange}
             placeholder={t("applicantTracker.appliedFromDate", "Applied From Date")}
+            fullWidth
           />
         </div>
 
         {/* Applied To Date Picker */}
-        <div className="w-[200px]">
+        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px]">
           <DatePicker
             label={t("applicantTracker.appliedToDateLabel", "Applied To Date")}
             value={appliedToDate}
             onChange={onAppliedToDateChange}
             placeholder={t("applicantTracker.appliedToDate", "Applied To Date")}
+            fullWidth
           />
         </div>
 
         {/* Last Updated From Date Picker */}
-        <div className="w-[200px]">
+        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px]">
           <DatePicker
             label={t("applicantTracker.lastUpdatedFromDateLabel", "Last Updated From Date")}
             value={lastUpdatedFromDate}
             onChange={onLastUpdatedFromDateChange}
             placeholder={t("applicantTracker.lastUpdatedFromDate", "Last Updated From Date")}
+            fullWidth
           />
         </div>
 
         {/* Last Updated To Date Picker */}
-        <div className="w-[200px]">
+        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px]">
           <DatePicker
             label={t("applicantTracker.lastUpdatedToDateLabel", "Last Updated To Date")}
             value={lastUpdatedToDate}
             onChange={onLastUpdatedToDateChange}
             placeholder={t("applicantTracker.lastUpdatedToDate", "Last Updated To Date")}
+            fullWidth
           />
         </div>
 
         {/* Filter Buttons - aligned with inputs */}
-        <div className="flex items-end gap-3 pt-6">
+        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-auto lg:w-auto flex items-end gap-3 pt-0 sm:pt-6">
           <Button 
             variant="accent" 
             size="sm" 
             rounded 
             onClick={onApplyFilters}
+            className="w-full sm:w-auto"
             style={{ minWidth: "100px" }}
           >
             {t("applicantTracker.applyFilter", "Apply")}
@@ -257,6 +248,7 @@ const ApplicantTrackerFilters = ({
             size="sm" 
             rounded 
             onClick={onClearFilters}
+            className="w-full sm:w-auto"
             style={{ minWidth: "100px" }}
           >
             {t("applicantTracker.clearFilter", "Clear Filter")}

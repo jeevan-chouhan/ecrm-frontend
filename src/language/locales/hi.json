@@ -110,7 +110,7 @@
     "title": "डैशबोर्ड",
     "addApplicant": "आवेदक जोड़ें",
     "applicantOverview": "आवेदक अवलोकन",
-    "applicantId": "आवेदक आईडी",
+    "applicantId": "आईडी",
     "applicantName": "नाम",
     "contactNumber": "संपर्क नंबर",
     "email": "ईमेल",
@@ -146,8 +146,8 @@
     "tableCountry": "देश",
     "tableTotalApplicants": "कुल आवेदक",
     "tableLeads": "लीड्स",
-    "tableInProgressApplicants": "प्रगति में आवेदक",
-    "tableEnrolledApplicants": "नामांकित आवेदक"
+    "tableInProgressApplicants": "प्रगति में आवेदन",
+    "tableEnrolledApplicants": "नामांकित आवेदन"
   },
   "users": {
     "title": "उपयोगकर्ता",
@@ -409,7 +409,7 @@
     "applicantStageCount": "आवेदक स्टेज (यानी चयनित फ़िल्टर)",
     "noOfApplicants": "आवेदकों की संख्या",
     "addApplicant": "आवेदक जोड़ें",
-    "applicantId": "आवेदक आईडी",
+    "applicantId": "आईडी",
     "applicantName": "आवेदक नाम",
     "contactNo": "संपर्क नंबर",
     "course": "कोर्स",
@@ -527,7 +527,7 @@
   },
   "documentVault": {
     "title": "दस्तावेज़ वॉल्ट",
-    "applicantId": "आवेदक आईडी",
+    "applicantId": "आईडी",
     "applicantName": "आवेदक नाम",
     "passportNo": "पासपोर्ट नंबर",
     "enrollmentType": "नामांकन प्रकार",

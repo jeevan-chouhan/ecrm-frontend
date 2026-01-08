@@ -1,6 +1,7 @@
 export { default as api } from "./api";
 export { default as authService } from "./authService";
 export { default as userService } from "./userService";
+export { default as applicantService } from "./applicantService";
 export { ENDPOINTS } from "./endpoints";
 
 // Export all types from types.ts
@@ -44,8 +45,13 @@ export type {
   AdminListResponse,
   ManagerItem,
   ManagerListResponse,
+  CounselorItem,
+  CounselorListResponse,
   UpdateStatusParams,
   UpdateStatusData,
   UpdateStatusResponse,
+  ApplicationsListParams,
+  ApplicationListItem,
+  ApplicationsListResponse,
 } from "./types";
 
