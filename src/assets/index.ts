@@ -48,6 +48,9 @@ import ErrorCircleIcon from "./ErrorCircle.svg?react";
 import WarningCircleIcon from "./WarningCircle.svg?react";
 import InfoCircleIcon from "./InfoCircle.svg?react";
 
+// Logo Image
+import LogoImagePng from "./LogoImage.png";
+
 // Export icons as named exports (same names as before)
 export const Dashboard = DashboardIcon;
 export const Settings = SettingsIcon;
@@ -94,6 +97,7 @@ export const SuccessCircle = SuccessCircleIcon;
 export const ErrorCircle = ErrorCircleIcon;
 export const WarningCircle = WarningCircleIcon;
 export const InfoCircle = InfoCircleIcon;
+export const LogoImage = LogoImagePng;
 
 // Also export as icons object for alternative usage
 export const icons = {

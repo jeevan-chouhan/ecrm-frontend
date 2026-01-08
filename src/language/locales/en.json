@@ -319,6 +319,7 @@
     "confirmPasswordRequired": "Confirm Password Is Required",
     "agencyNameRequired": "Agency Name Is Required",
     "fullNameRequired": "Full Name Is Required",
+    "brandNameRequired": "Brand Name Is Required",
     "phoneRequired": "Phone Number Is Required",
     "phoneInvalid": "Invalid Phone Number",
     "agreeToTermsRequired": "You Must Agree To Terms And Conditions",
