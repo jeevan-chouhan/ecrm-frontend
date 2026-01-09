@@ -284,6 +284,14 @@ export interface ManagerItem {
 
 export type ManagerListResponse = ManagerItem[];
 
+export interface CounselorItem {
+  id: number;
+  name: string;
+  email?: string; // Optional as new API doesn't return email
+}
+
+export type CounselorListResponse = CounselorItem[];
+
 // ==========================================
 // Update User Status Types
 // ==========================================
@@ -299,4 +307,36 @@ export interface UpdateStatusData {
 }
 
 export type UpdateStatusResponse = ApiResponse<UpdateStatusData>;
+
+// ==========================================
+// Applications List Types
+// ==========================================
+
+export interface ApplicationsListParams {
+  agencyId: number | null;
+  assignedAdminId: number | null; // Optional: for filtering by specific admin
+  assignedManagerId: number | null; // Optional: for filtering by specific manager
+  assignedCounselorId: number | null; // Optional: for filtering by specific counselor
+  search: string | null;
+  page: number | null;
+  size: number | null;
+  sortBy: string | null;
+  asc: boolean | null;
+}
+
+export interface ApplicationListItem {
+  preferenceId: number;
+  applicantId: number;
+  applicantName: string;
+  contactNumber: string;
+  course: string;
+  applicantStage: string;
+  applicantStatus: string;
+  appliedDate: string | null;
+  universityName: string;
+  desiredIntake: string;
+  updatedAt: string | null;
+}
+
+export type ApplicationsListResponse = ApiResponse<PaginatedData<ApplicationListItem>>;
 

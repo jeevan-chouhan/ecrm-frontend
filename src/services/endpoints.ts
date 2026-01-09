@@ -29,6 +29,12 @@ export const ENDPOINTS = {
     UNIVERSITIES: "/agencies/universities",
     ADMINS: "/agencies/admins",
     MANAGERS: "/agencies/managers",
+    COUNSELORS: "/agencies/counselors",
+  },
+
+  // Applicants Endpoints
+  APPLICANTS: {
+    APPLICATIONS_LIST: "/applicants/applicationsList",
   },
 
 //   // User Endpoints

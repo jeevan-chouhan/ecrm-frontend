@@ -1,5 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import type { GridColDef, GridPaginationModel, GridRenderCellParams } from "@mui/x-data-grid";
 import { Tooltip } from "@mui/material";
@@ -13,28 +12,255 @@ import {
   Checkbox,
   ConfirmationPopup,
 } from "../../components";
-import { COLORS, ROUTES, applicantStatusOptions, typography, mockApplicants, type Applicant } from "../../constants";
-import { Plus, Calendar, Edit } from "../../assets";
-import { formatDateValue,toSlug, normalizeDateToStartOfDay, normalizeDateToEndOfDay } from "../../utils";
+import { COLORS, applicationStatusOptions, typography, type Applicant } from "../../constants";
+import { Calendar, Edit } from "../../assets";
+import { formatDateValue, handleApiError } from "../../utils";
 import ApplicantTrackerFilters from "./ApplicantTrackerFilters";
 import ApplicationStatusHistoryPopup from "./ApplicantDetail/ApplicationStatusHistoryPopup";
 import type { ApplicationStatusHistory } from "./ApplicantDetail/types";
+import { applicantService, userService } from "../../services";
+import type { ApplicationListItem, AdminItem, ManagerItem, CounselorItem, UniversityItem } from "../../services";
+import type { SelectOption } from "../../components";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { addToast } from "../../redux/slices/toast/toastSlice";
+import { showLoader, hideLoader } from "../../redux/slices/loader/loaderSlice";
 
 const ApplicantTracker = () => {
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
+
+  // Get user from Redux (decoded from token)
+  const { user } = useAppSelector((state) => state.auth);
 
   // Applicants state - will be updated from API
-  const [applicants, setApplicants] = useState<Applicant[]>(mockApplicants);
+  const [applicants, setApplicants] = useState<Applicant[]>([]);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Total count from API
+  const [totalCount, setTotalCount] = useState(0);
+
+  // Pagination state - must be declared before fetchApplications
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
+    pageSize: 10,
+  });
+
+  // Applied filter states (used for API calls and filtering) - must be declared before fetchApplications
+  const [appliedAdmin, setAppliedAdmin] = useState("");
+  const [appliedManager, setAppliedManager] = useState("");
+  const [appliedCounselor, setAppliedCounselor] = useState("");
+
+  // Filter options from API
+  const [adminOptions, setAdminOptions] = useState<SelectOption[]>([]);
+  const [managerOptions, setManagerOptions] = useState<SelectOption[]>([]);
+  const [counselorOptions, setCounselorOptions] = useState<SelectOption[]>([]);
+  const [universityOptions, setUniversityOptions] = useState<SelectOption[]>([]);
+  
+
+  // Loading state
+  const isLoadingRef = useRef(false);
+  const userRef = useRef(user);
+  const hasFetchedFilterOptionsRef = useRef(false);
+  const isLoadingFilterOptionsRef = useRef(false);
+  
+  // Update userRef when user changes
+  userRef.current = user;
+
+  /**
+   * Map API response to Applicant type
+   */
+  const mapApplicationListItemToApplicant = useCallback((item: ApplicationListItem): Applicant => {
+    return {
+      id: item.preferenceId.toString(),
+      applicantId: item.applicantId.toString(),
+      applicantName: item.applicantName,
+      contactNo: item.contactNumber,
+      university: item.universityName,
+      course: item.course,
+      applicantStage: item.applicantStage,
+      applicantStatus: item.applicantStatus,
+      appliedDate: item.appliedDate ? new Date(item.appliedDate) : undefined,
+      lastUpdatedDate: item.updatedAt ? new Date(item.updatedAt) : undefined,
+      intake: item.desiredIntake,
+    };
+  }, []);
+
+  /**
+   * Fetch applications from API
+   */
+  const fetchApplications = useCallback(async () => {
+    const currentUser = userRef.current;
+    
+    // Don't fetch if user is not loaded yet or already loading
+    if (!currentUser || isLoadingRef.current) {
+      return;
+    }
+
+    isLoadingRef.current = true;
+    dispatch(showLoader());
+
+    try {
+      // Get applied filter values (convert to numbers if needed) - these are optional filters
+      const assignedAdminIdValue = appliedAdmin ? parseInt(appliedAdmin) : null;
+      const assignedManagerIdValue = appliedManager ? parseInt(appliedManager) : null;
+      const assignedCounselorIdValue = appliedCounselor ? parseInt(appliedCounselor) : null;
+
+      const response = await applicantService.getApplicationsList({
+        agencyId: currentUser.agencyId ?? null,
+        assignedAdminId: assignedAdminIdValue,
+        assignedManagerId: assignedManagerIdValue,
+        assignedCounselorId: assignedCounselorIdValue,
+        search: searchQuery || null,
+        page: paginationModel.page,
+        size: paginationModel.pageSize,
+        sortBy: null, // TODO: Add sorting support
+        asc: null,
+      });
+
+      if (response.status === "success" && response.data) {
+        // Map API response to Applicant type
+        const mappedApplicants = response.data.content.map(mapApplicationListItemToApplicant);
+        setApplicants(mappedApplicants);
+        setTotalCount(response.data.totalElements);
+      } else {
+        dispatch(addToast({ 
+          type: "error", 
+          message: response.message || "Failed to fetch applications" 
+        }));
+      }
+    } catch (error: any) {
+      const { message } = handleApiError(error, "Failed to fetch applications");
+      dispatch(addToast({ type: "error", message }));
+    } finally {
+      isLoadingRef.current = false;
+      dispatch(hideLoader());
+    }
+  }, [
+    dispatch, 
+    searchQuery, 
+    paginationModel.page, 
+    paginationModel.pageSize, 
+    mapApplicationListItemToApplicant,
+    appliedAdmin,
+    appliedManager,
+    appliedCounselor,
+  ]);
+
+  // Debounced search effect
+  useEffect(() => {
+    if (!user) return;
+    
+    const timer = setTimeout(() => {
+      fetchApplications();
+    }, 500);
+    
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
+
+  /**
+   * Fetch filter options (admins, managers, counselors, universities) from API
+   */
+  const fetchFilterOptions = useCallback(async () => {
+    if (!user?.agencyId) {
+      return;
+    }
+
+    // Use ref to prevent multiple simultaneous calls
+    if (isLoadingFilterOptionsRef.current) {
+      return;
+    }
+
+    isLoadingFilterOptionsRef.current = true;
+    try {
+      
+      // Fetch filter options independently so one failure doesn't break the other
+      // Use userService.getAdmins() to match the working implementation in AddMember form
+      const [adminsResult, universitiesResult] = await Promise.allSettled([
+        userService.getAdmins(user.agencyId),
+        applicantService.getUniversities(user.agencyId),
+      ]);
+
+      // Process admins response
+      if (adminsResult.status === 'fulfilled') {
+        const adminsResponse = adminsResult.value;
+        
+        // Handle response formats: [...] or { data: [...] } (matching AddMember form implementation)
+        let admins: AdminItem[] = [];
+        if (Array.isArray(adminsResponse)) {
+          admins = adminsResponse;
+        } else if ((adminsResponse as any)?.data) {
+          admins = (adminsResponse as any).data;
+        }
+        
+        // Convert to SelectOption format (matching AddMember form implementation)
+        const adminOptionsData = admins.map((admin: AdminItem) => ({
+          value: admin.id.toString(),
+          label: admin.name,
+        }));
+        
+        setAdminOptions(adminOptionsData);
+      } else {
+        dispatch(addToast({ type: "error", message: "Failed to fetch admins" }));
+      }
+
+      // Process universities response
+      if (universitiesResult.status === 'fulfilled') {
+        const universitiesResponse = universitiesResult.value;
+        
+        // Handle response formats: [...] or { data: [...] }
+        let universities: UniversityItem[] = [];
+        if (Array.isArray(universitiesResponse)) {
+          universities = universitiesResponse;
+        } else if ((universitiesResponse as any)?.data) {
+          universities = (universitiesResponse as any).data;
+        }
+        
+        // Convert to SelectOption format
+        const universityOptionsData = universities.map((university: UniversityItem) => ({
+          value: university.id.toString(),
+          label: university.name,
+        }));
+        
+        setUniversityOptions(universityOptionsData);
+      } else {
+        dispatch(addToast({ type: "error", message: "Failed to fetch universities" }));
+      }
+
+      // Counselors will be fetched when manager is selected
+      // Keep empty array initially
+      setCounselorOptions([]);
+    } catch (error: any) {
+      const { message } = handleApiError(error, "Failed to fetch filter options");
+      dispatch(addToast({ type: "error", message }));
+    } finally {
+      isLoadingFilterOptionsRef.current = false;
+    }
+  }, [user?.agencyId, dispatch]);
+
+  // Fetch filter options when user is loaded (only once)
+  useEffect(() => {
+    // Only fetch if we have agencyId and haven't fetched yet
+    if (user?.agencyId && !hasFetchedFilterOptionsRef.current) {
+      hasFetchedFilterOptionsRef.current = true;
+      fetchFilterOptions();
+    }
+    
+    // Reset the ref if agencyId changes (user switches agency)
+    return () => {
+      if (!user?.agencyId) {
+        hasFetchedFilterOptionsRef.current = false;
+      }
+    };
+  }, [user?.agencyId, fetchFilterOptions]);
 
   // Temporary filter states (for UI selection)
   const [selectedAdmin, setSelectedAdmin] = useState("");
   const [selectedManager, setSelectedManager] = useState("");
   const [selectedCounselor, setSelectedCounselor] = useState("");
   const [selectedUniversity, setSelectedUniversity] = useState("");
-  const [selectedCourse, setSelectedCourse] = useState("");
   const [selectedApplicantStages, setSelectedApplicantStages] = useState<string[]>([]);
   const [selectedIntake, setSelectedIntake] = useState("");
   const [selectedAgencyPartner, setSelectedAgencyPartner] = useState("");
@@ -43,28 +269,118 @@ const ApplicantTracker = () => {
   const [lastUpdatedFromDate, setLastUpdatedFromDate] = useState<Date | null>(null);
   const [lastUpdatedToDate, setLastUpdatedToDate] = useState<Date | null>(null);
 
-  // Applied filter states (used for API calls and filtering)
-  const [appliedAdmin, setAppliedAdmin] = useState("");
-  const [appliedManager, setAppliedManager] = useState("");
-  const [appliedCounselor, setAppliedCounselor] = useState("");
-  const [appliedUniversity, setAppliedUniversity] = useState("");
-  const [appliedCourse, setAppliedCourse] = useState("");
-  const [appliedApplicantStages, setAppliedApplicantStages] = useState<string[]>([]);
-  const [appliedIntake, setAppliedIntake] = useState("");
-  const [appliedAgencyPartner, setAppliedAgencyPartner] = useState("");
-  const [appliedAppliedFromDate, setAppliedAppliedFromDate] = useState<Date | null>(null);
-  const [appliedAppliedToDate, setAppliedAppliedToDate] = useState<Date | null>(null);
-  const [appliedLastUpdatedFromDate, setAppliedLastUpdatedFromDate] = useState<Date | null>(null);
-  const [appliedLastUpdatedToDate, setAppliedLastUpdatedToDate] = useState<Date | null>(null);
+  // Applied filter states (used for API calls and filtering) - additional filters
+  // These are kept for future API integration when backend supports these filters
+  const [_appliedUniversity, setAppliedUniversity] = useState("");
+  const [_appliedApplicantStages, setAppliedApplicantStages] = useState<string[]>([]);
+  const [_appliedIntake, setAppliedIntake] = useState("");
+  const [_appliedAgencyPartner, setAppliedAgencyPartner] = useState("");
+  const [_appliedAppliedFromDate, setAppliedAppliedFromDate] = useState<Date | null>(null);
+  const [_appliedAppliedToDate, setAppliedAppliedToDate] = useState<Date | null>(null);
+  const [_appliedLastUpdatedFromDate, setAppliedLastUpdatedFromDate] = useState<Date | null>(null);
+  const [_appliedLastUpdatedToDate, setAppliedLastUpdatedToDate] = useState<Date | null>(null);
 
-  // Pagination state
-  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-    page: 0,
-    pageSize: 10,
-  });
+  // Total count comes from API response
 
-  // Total count will be calculated from filteredApplicants
-  // TODO: Replace with actual API call - this should come from API response
+  // Fetch managers when admin is selected
+  const fetchManagers = useCallback(async (adminId: string | null) => {
+    if (!user?.agencyId || !adminId) {
+      // Clear managers if no admin selected
+      setManagerOptions([]);
+      return;
+    }
+
+    try {
+      const managersResponse = await applicantService.getManagers(
+        user.agencyId,
+        adminId
+      );
+
+      // Convert managers to SelectOption format
+      // API returns array directly: [{id, name, email}, ...]
+      const managers = Array.isArray(managersResponse) ? managersResponse : [];
+      setManagerOptions(
+        managers.map((manager: ManagerItem) => ({
+          value: manager.id.toString(),
+          label: manager.name,
+        }))
+      );
+    } catch (error: any) {
+      const { message } = handleApiError(error, "Failed to fetch managers");
+      dispatch(addToast({ type: "error", message }));
+      setManagerOptions([]);
+    }
+  }, [user?.agencyId, dispatch]);
+
+  // Fetch counselors when manager is selected
+  const fetchCounselors = useCallback(async (managerId: string | null) => {
+    if (!user?.agencyId || !managerId) {
+      // Clear counselors if no manager selected
+      setCounselorOptions([]);
+      return;
+    }
+
+    try {
+      const counselorsResponse = await applicantService.getCounselors(
+        user.agencyId,
+        managerId
+      );
+
+      // Convert counselors to SelectOption format
+      // API returns array directly: [{id, name, email}, ...]
+      const counselors = Array.isArray(counselorsResponse) ? counselorsResponse : [];
+      setCounselorOptions(
+        counselors.map((counselor: CounselorItem) => ({
+          value: counselor.id.toString(),
+          label: counselor.name,
+        }))
+      );
+    } catch (error: any) {
+      const { message } = handleApiError(error, "Failed to fetch counselors");
+      dispatch(addToast({ type: "error", message }));
+      setCounselorOptions([]);
+    }
+  }, [user?.agencyId, dispatch]);
+
+  // Fetch managers when admin is selected
+  useEffect(() => {
+    if (user?.agencyId && selectedAdmin) {
+      // Reset manager and counselor when admin changes
+      setSelectedManager("");
+      setSelectedCounselor("");
+      setCounselorOptions([]);
+      fetchManagers(selectedAdmin);
+    } else {
+      // Clear managers when admin is cleared
+      setManagerOptions([]);
+      // Also clear selected manager and counselor when admin is cleared
+      setSelectedManager("");
+      setSelectedCounselor("");
+      setCounselorOptions([]);
+    }
+  }, [selectedAdmin, user?.agencyId, fetchManagers]);
+
+  // Fetch counselors when manager is selected
+  useEffect(() => {
+    if (user?.agencyId && selectedManager) {
+      // Reset counselor when manager changes
+      setSelectedCounselor("");
+      fetchCounselors(selectedManager);
+    } else {
+      // Clear counselors when manager is cleared
+      setCounselorOptions([]);
+      // Also clear selected counselor when manager is cleared
+      setSelectedCounselor("");
+    }
+  }, [selectedManager, user?.agencyId, fetchCounselors]);
+
+  // Initial fetch when user is loaded or when dependencies change
+  useEffect(() => {
+    if (user) {
+      fetchApplications();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, paginationModel.page, paginationModel.pageSize, appliedAdmin, appliedManager, appliedCounselor]);
 
   // Application status change popup state (reusing from University Application Summary)
   const [isApplicationStatusPopupOpen, setIsApplicationStatusPopupOpen] = useState(false);
@@ -84,132 +400,11 @@ const ApplicantTracker = () => {
   const [isApplying, setIsApplying] = useState(false);
   const [applicantToApply, setApplicantToApply] = useState<Applicant | null>(null);
 
-  // Memoize normalized dates to prevent recreation on every filter
-  const normalizedAppliedFromDate = useMemo(
-    () => normalizeDateToStartOfDay(appliedAppliedFromDate),
-    [appliedAppliedFromDate]
-  );
+  // Normalized dates - kept for future API integration when backend supports date filters
+  // These will be computed when needed for API calls
 
-  const normalizedAppliedToDate = useMemo(
-    () => normalizeDateToEndOfDay(appliedAppliedToDate),
-    [appliedAppliedToDate]
-  );
-
-  const normalizedLastUpdatedFromDate = useMemo(
-    () => normalizeDateToStartOfDay(appliedLastUpdatedFromDate),
-    [appliedLastUpdatedFromDate]
-  );
-
-  const normalizedLastUpdatedToDate = useMemo(
-    () => normalizeDateToEndOfDay(appliedLastUpdatedToDate),
-    [appliedLastUpdatedToDate]
-  );
-
-  // Memoize search query lowercase transformation
-  const searchLower = useMemo(() => searchQuery.toLowerCase(), [searchQuery]);
-
-  // Filter applicants based on search and applied filters
-  const filteredApplicants = useMemo(() => {
-    return applicants.filter((applicant) => {
-      // Search filter
-      if (searchQuery) {
-        const matchesSearch =
-          applicant.applicantId.toLowerCase().includes(searchLower) ||
-          applicant.applicantName.toLowerCase().includes(searchLower) ||
-          applicant.contactNo.toLowerCase().includes(searchLower) ||
-          applicant.course.toLowerCase().includes(searchLower);
-        if (!matchesSearch) return false;
-      }
-
-      // Admin filter
-      if (appliedAdmin && applicant.adminId !== appliedAdmin) return false;
-
-      // Manager filter
-      if (appliedManager && applicant.managerId !== appliedManager) return false;
-
-      // Counselor filter
-      if (appliedCounselor && applicant.counselorId !== appliedCounselor) return false;
-
-      // University filter
-      if (appliedUniversity && applicant.university !== appliedUniversity) return false;
-
-      // Course filter
-      if (appliedCourse) {
-        // Map course values from mock data to course option values
-        // Mock data has "Master - Computers", "Bachelor - Engineering", "Master - Business"
-        // Course options have "computer-science", "engineering", "business-administration", etc.
-        const courseMapping: Record<string, string> = {
-          "Master - Computers": "computer-science",
-          "Bachelor - Engineering": "engineering",
-          "Master - Business": "business-administration",
-        };
-        const mappedCourse = courseMapping[applicant.course] || applicant.course.toLowerCase().replace(/\s+/g, "-").replace(/-/g, "-");
-        if (mappedCourse !== appliedCourse) return false;
-      }
-
-      // Applicant Stage filter
-      if (appliedApplicantStages.length > 0) {
-        const applicantStageKey = toSlug(applicant.applicantStage);
-        if (!appliedApplicantStages.includes(applicantStageKey)) {
-          return false;
-        }
-      }
-
-      // Intake filter
-      if (appliedIntake && applicant.intake !== appliedIntake) return false;
-
-      // Agency Partner filter
-      if (appliedAgencyPartner && applicant.agencyPartner !== appliedAgencyPartner) {
-        return false;
-      }
-
-      // Applied Date filters - filter by appliedDate
-      if (normalizedAppliedFromDate || normalizedAppliedToDate) {
-        if (!applicant.appliedDate) return false;
-        
-        // Normalize applicant date to start of day for comparison
-        const applicantDate = new Date(applicant.appliedDate);
-        applicantDate.setHours(0, 0, 0, 0);
-        
-        if (normalizedAppliedFromDate && applicantDate < normalizedAppliedFromDate) return false;
-        if (normalizedAppliedToDate && applicantDate > normalizedAppliedToDate) return false;
-      }
-
-      // Last Updated Date filters - filter by lastUpdatedDate
-      if (normalizedLastUpdatedFromDate || normalizedLastUpdatedToDate) {
-        if (!applicant.lastUpdatedDate) return false;
-        
-        // Normalize applicant date to start of day for comparison
-        const applicantDate = new Date(applicant.lastUpdatedDate);
-        applicantDate.setHours(0, 0, 0, 0);
-        
-        if (normalizedLastUpdatedFromDate && applicantDate < normalizedLastUpdatedFromDate) return false;
-        if (normalizedLastUpdatedToDate && applicantDate > normalizedLastUpdatedToDate) return false;
-      }
-
-      return true;
-    });
-  }, [
-    searchQuery,
-    searchLower,
-    normalizedAppliedFromDate,
-    normalizedAppliedToDate,
-    normalizedLastUpdatedFromDate,
-    normalizedLastUpdatedToDate,
-    appliedAdmin,
-    appliedManager,
-    appliedCounselor,
-    appliedUniversity,
-    appliedCourse,
-    appliedApplicantStages,
-    appliedIntake,
-    appliedAgencyPartner,
-    applicants,
-  ]);
-
-  // Total count - calculated from filtered applicants
-  // TODO: In real implementation, totalCount should come from API response
-  const totalCount = useMemo(() => filteredApplicants.length, [filteredApplicants.length]);
+  // Filter applicants - API handles filtering, so we use applicants directly
+  // Note: Additional filters (admin, manager, counselor, etc.) can be added to API call when backend supports them
 
   // Handle apply filters - triggers API call
   const handleApplyFilters = useCallback(() => {
@@ -218,7 +413,6 @@ const ApplicantTracker = () => {
     setAppliedManager(selectedManager);
     setAppliedCounselor(selectedCounselor);
     setAppliedUniversity(selectedUniversity);
-    setAppliedCourse(selectedCourse);
     setAppliedApplicantStages(selectedApplicantStages);
     setAppliedIntake(selectedIntake);
     setAppliedAgencyPartner(selectedAgencyPartner);
@@ -230,26 +424,10 @@ const ApplicantTracker = () => {
     // Reset pagination to first page
     setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
 
-    // TODO: Make API call here with applied filters
-    // Example:
-    // fetchApplicants({
-    //   admin: appliedAdmin,
-    //   manager: appliedManager,
-    //   counselor: appliedCounselor,
-    //   applicantStages: appliedApplicantStages,
-    //   intake: appliedIntake,
-    //   agencyPartner: appliedAgencyPartner,
-    //   appliedFromDate: appliedAppliedFromDate,
-    //   appliedToDate: appliedAppliedToDate,
-    //   lastUpdatedFromDate: appliedLastUpdatedFromDate,
-    //   lastUpdatedToDate: appliedLastUpdatedToDate,
-    //   page: 0,
-    //   pageSize: paginationModel.pageSize,
-    // }).then(response => {
-    //   setTotalCount(response.totalCount);
-    //   // Update applicants data
-    // });
-  }, [selectedAdmin, selectedManager, selectedCounselor, selectedUniversity, selectedCourse, selectedApplicantStages, selectedIntake, selectedAgencyPartner, appliedFromDate, appliedToDate, lastUpdatedFromDate, lastUpdatedToDate, paginationModel.pageSize]);
+    // Trigger API call with applied filters
+    // Note: Additional filters can be added to fetchApplications when backend supports them
+    fetchApplications();
+  }, [selectedAdmin, selectedManager, selectedCounselor, selectedUniversity, selectedApplicantStages, selectedIntake, selectedAgencyPartner, appliedFromDate, appliedToDate, lastUpdatedFromDate, lastUpdatedToDate, paginationModel.pageSize, fetchApplications]);
 
   // Handle clear filters
   const handleClearFilters = useCallback(() => {
@@ -258,7 +436,6 @@ const ApplicantTracker = () => {
     setSelectedManager("");
     setSelectedCounselor("");
     setSelectedUniversity("");
-    setSelectedCourse("");
     setSelectedApplicantStages([]);
     setSelectedIntake("");
     setSelectedAgencyPartner("");
@@ -272,7 +449,6 @@ const ApplicantTracker = () => {
     setAppliedManager("");
     setAppliedCounselor("");
     setAppliedUniversity("");
-    setAppliedCourse("");
     setAppliedApplicantStages([]);
     setAppliedIntake("");
     setAppliedAgencyPartner("");
@@ -284,12 +460,9 @@ const ApplicantTracker = () => {
     // Reset pagination
     setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
 
-    // TODO: Make API call to fetch all applicants
-    // fetchApplicants({ page: 0, pageSize: paginationModel.pageSize })
-    //   .then(response => {
-    //     setTotalCount(response.totalCount);
-    //   });
-  }, [paginationModel.pageSize]);
+    // Trigger API call to fetch all applicants
+    fetchApplications();
+  }, [paginationModel.pageSize, fetchApplications]);
 
   // Handle search with debounce (SearchBar handles this internally)
   const handleSearch = useCallback((value: string) => {
@@ -297,12 +470,17 @@ const ApplicantTracker = () => {
     setPaginationModel((prev) => ({ page: 0, pageSize: prev.pageSize }));
   }, []);
 
+  // Handle pagination change
+  const handlePaginationModelChange = useCallback((model: GridPaginationModel) => {
+    setPaginationModel(model);
+  }, []);
+
 
   // Handle update status (reusing from University Application Summary)
   const handleUpdateStatus = useCallback((applicant: Applicant) => {
     setSelectedApplicant(applicant);
     // Map the applicant status to the constant value format
-    const statusValue = applicantStatusOptions.find(
+    const statusValue = applicationStatusOptions.find(
       (opt) => opt.label === applicant.status || 
                opt.label.toLowerCase() === applicant.status?.toLowerCase()
     )?.value || applicant.status?.toLowerCase() || "active";
@@ -330,7 +508,7 @@ const ApplicantTracker = () => {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Get the label for the status value
-      const statusLabel = applicantStatusOptions.find(
+      const statusLabel = applicationStatusOptions.find(
         (opt) => opt.value === newApplicationStatus
       )?.label || newApplicationStatus;
 
@@ -408,8 +586,8 @@ const ApplicantTracker = () => {
         },
         {
           id: "2",
-          statusName: applicant.status === "Active" ? "Inactive" : "Active",
-          notes: `Previous status: ${applicant.status === "Active" ? "Inactive" : "Active"}`,
+          statusName: (applicant.status === "Active") ? "Inactive" : "Active",
+          notes: `Previous status: ${(applicant.status === "Active") ? "Inactive" : "Active"}`,
           time: applicant.createdAt ? new Date(applicant.createdAt).toISOString() : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
         },
       ];
@@ -419,7 +597,6 @@ const ApplicantTracker = () => {
       setStatusHistory(mockHistory);
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error("Error fetching status history:", error);
       }
       setStatusHistory([]);
     }
@@ -481,7 +658,6 @@ const ApplicantTracker = () => {
       setApplicantToApply(null);
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error("Error applying for application:", error);
       }
       // TODO: Show error toast notification
     } finally {
@@ -632,7 +808,7 @@ const ApplicantTracker = () => {
   const columns: GridColDef[] = useMemo(() => [
     {
       field: "applicantId",
-      headerName: t("applicantTracker.applicantId", "Applicant Id"),
+      headerName: t("applicantTracker.applicantId", "ID"),
       flex: 0.8,
       minWidth: 100,
       sortable: true,
@@ -710,7 +886,7 @@ const ApplicantTracker = () => {
   ], [t, renderApplicantNameCell, renderAppliedDateCell, renderLastUpdatedDateCell, renderIntakeYearCell, renderStageCell, renderStatusCell, renderActionsCell, handleApplyClick]);
 
   return (
-    <Layout userName="Admin" userRole="Abroad Agency">
+    <Layout userName={user?.name || "Admin"} userRole={user?.role || "User"}>
       <div
         className="bg-white rounded-lg shadow-sm p-4 md:p-6 space-y-6"
         style={{ backgroundColor: COLORS.surface }}
@@ -731,21 +907,19 @@ const ApplicantTracker = () => {
                 tooltip={t("applicantTracker.searchPlaceholder", "Search Applications...")}
               />
             </div>
-            <Link to={ROUTES.CREATE_APPLICANT}>
-              <Button variant="accent" leftIcon={<Plus className="w-5 h-5" />} rounded>
-                {t("applicantTracker.addApplicant", "Add Applicant")}
-              </Button>
-            </Link>
           </div>
         </div>
 
         {/* Filters Row */}
         <ApplicantTrackerFilters
+          adminOptions={adminOptions}
+          managerOptions={managerOptions}
+          counselorOptions={counselorOptions}
+          universityOptions={universityOptions}
           selectedAdmin={selectedAdmin}
           selectedManager={selectedManager}
           selectedCounselor={selectedCounselor}
           selectedUniversity={selectedUniversity}
-          selectedCourse={selectedCourse}
           selectedApplicantStages={selectedApplicantStages}
           selectedIntake={selectedIntake}
           selectedAgencyPartner={selectedAgencyPartner}
@@ -757,7 +931,6 @@ const ApplicantTracker = () => {
           onManagerChange={setSelectedManager}
           onCounselorChange={setSelectedCounselor}
           onUniversityChange={setSelectedUniversity}
-          onCourseChange={setSelectedCourse}
           onApplicantStagesChange={setSelectedApplicantStages}
           onIntakeChange={setSelectedIntake}
           onAgencyPartnerChange={setSelectedAgencyPartner}
@@ -771,13 +944,13 @@ const ApplicantTracker = () => {
 
         {/* DataTable */}
         <DataTable
-          rows={filteredApplicants}
+          rows={applicants}
           columns={columns}
-          pageSize={paginationModel.pageSize}
           pageSizeOptions={[5, 10, 25, 50]}
+          paginationMode="server"
           paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          paginationMode="client"
+          onPaginationModelChange={handlePaginationModelChange}
+          rowCount={totalCount}
           sortingMode="client"
         />
 
@@ -819,7 +992,7 @@ const ApplicantTracker = () => {
                 <div>
                   <Select
                     label={t("applicantDetailView.currentStatus", "Current Status")}
-                    options={applicantStatusOptions}
+                    options={applicationStatusOptions}
                     value={newApplicationStatus}
                     onChange={handleApplicationStatusChange}
                     placeholder={t("applicantDetailView.selectStatus", "Select Status")}

@@ -146,10 +146,10 @@ export interface Applicant {
   course: string;
   applicantStage: string;
   applicantStatus: string;
-  passportNo: string;
-  enrollmentType: string;
-  notes: string;
-  status: "Active" | "Inactive";
+  passportNo?: string;
+  enrollmentType?: string;
+  notes?: string;
+  status?: "Active" | "Inactive";
   createdAt?: Date | string;
   appliedDate?: Date | string;
   lastUpdatedDate?: Date | string;
