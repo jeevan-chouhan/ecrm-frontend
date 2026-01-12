@@ -1,42 +1,47 @@
-import { memo, useMemo } from "react";
+import { memo, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Popup } from "../../../components";
 import { COLORS } from "../../../constants";
-import { formatDate } from "../../../utils";
+import { formatDate, getApplicationStatusLabel } from "../../../utils";
 import type { ApplicationStatusHistory } from "./types";
 import ScrollableContainer from "./ScrollableContainer";
+
+interface StatusHistoryData {
+  history: ApplicationStatusHistory[];
+  universityName: string;
+  applicantName: string;
+}
 
 interface ApplicationStatusHistoryPopupProps {
   isOpen: boolean;
   applicationId: string | null;
-  universityName: string;
-  statusHistory: ApplicationStatusHistory[];
+  statusHistoryData: StatusHistoryData | null;
+  isLoading?: boolean;
   onClose: () => void;
 }
 
 const ApplicationStatusHistoryPopup = ({
   isOpen,
   applicationId,
-  universityName,
-  statusHistory,
+  statusHistoryData,
+  isLoading = false,
   onClose,
 }: ApplicationStatusHistoryPopupProps) => {
   const { t } = useTranslation();
 
-  // Sort status history by time (newest first) - reverse the array
+  // Extract data from statusHistoryData object
+  const statusHistory = statusHistoryData?.history || [];
+  const applicantName = statusHistoryData?.applicantName || "";
+  const universityName = statusHistoryData?.universityName || "";
+
+  // API already returns data with latest entry first, so no sorting needed
+  // Just use the data directly for optimal performance
   const sortedStatusHistory = useMemo(() => {
-    if (!statusHistory || statusHistory.length === 0) return [];
-    
-    // Create a copy and sort by time (newest first)
-    return [...statusHistory].sort((a, b) => {
-      const dateA = new Date(a.time).getTime();
-      const dateB = new Date(b.time).getTime();
-      return dateB - dateA; // Descending order (newest first)
-    });
+    return statusHistory;
   }, [statusHistory]);
 
-  // Format time to show date and time
-  const formatDateTime = (dateString: string): string => {
+  // Memoized format function to prevent recreation on every render
+  const formatDateTime = useCallback((dateString: string): string => {
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) {
@@ -49,7 +54,7 @@ const ApplicationStatusHistoryPopup = ({
     } catch {
       return dateString;
     }
-  };
+  }, []);
 
   return (
     <Popup
@@ -63,18 +68,38 @@ const ApplicationStatusHistoryPopup = ({
       <div className="py-2">
         {applicationId && (
           <div className="space-y-4">
+            {/* Applicant Name */}
+            {applicantName && (
+              <div className="mb-4">
+                <p className="text-sm font-medium" style={{ color: COLORS.textMuted }}>
+                  {t("applicantDetailView.applicantName", "Applicant Name")}:
+                </p>
+                <p className="text-base font-semibold" style={{ color: COLORS.textDark }}>
+                  {applicantName}
+                </p>
+              </div>
+            )}
+
             {/* University Name */}
-            <div className="mb-4">
-              <p className="text-sm font-medium" style={{ color: COLORS.textMuted }}>
-                {t("applicantDetailView.university", "University")}:
-              </p>
-              <p className="text-base font-semibold" style={{ color: COLORS.textDark }}>
-                {universityName}
-              </p>
-            </div>
+            {universityName && (
+              <div className="mb-4">
+                <p className="text-sm font-medium" style={{ color: COLORS.textMuted }}>
+                  {t("applicantDetailView.university", "University")}:
+                </p>
+                <p className="text-base font-semibold" style={{ color: COLORS.textDark }}>
+                  {universityName}
+                </p>
+              </div>
+            )}
 
             {/* Status History List */}
-            {sortedStatusHistory && sortedStatusHistory.length > 0 ? (
+            {isLoading && sortedStatusHistory.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-sm" style={{ color: COLORS.textMuted }}>
+                  {t("common.loading", "Loading...")}
+                </p>
+              </div>
+            ) : sortedStatusHistory && sortedStatusHistory.length > 0 ? (
               <ScrollableContainer
                 maxHeight="500px"
                 className="space-y-4 pr-2"
@@ -100,7 +125,7 @@ const ApplicationStatusHistoryPopup = ({
                           className="text-sm font-semibold"
                           style={{ color: COLORS.textDark }}
                         >
-                          {historyItem.statusName}
+                          {getApplicationStatusLabel(historyItem.statusName)}
                         </p>
                       </div>
 
@@ -122,13 +147,18 @@ const ApplicationStatusHistoryPopup = ({
                         </div>
                       )}
 
-                      {/* Time */}
+                      {/* Time and Created By */}
                       <div>
                         <p
                           className="text-xs"
                           style={{ color: COLORS.textMuted }}
                         >
                           {formatDateTime(historyItem.time)}
+                          {historyItem.createdBy && (
+                            <span className="ml-2">
+                              • {t("applicantDetailView.createdBy", "Created by")} {historyItem.createdBy}
+                            </span>
+                          )}
                         </p>
                       </div>
                     </div>

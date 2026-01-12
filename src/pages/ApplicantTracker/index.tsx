@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef, startTransition } from "react";
 import { useTranslation } from "react-i18next";
 import type { GridColDef, GridPaginationModel, GridRenderCellParams } from "@mui/x-data-grid";
 import { Tooltip } from "@mui/material";
@@ -14,7 +14,7 @@ import {
 } from "../../components";
 import { COLORS, applicationStatusOptions, typography, type Applicant } from "../../constants";
 import { Calendar, Edit } from "../../assets";
-import { formatDateValue, handleApiError } from "../../utils";
+import { formatDateValue, handleApiError, getApplicationStatusLabel, getApplicationStageLabel } from "../../utils";
 import ApplicantTrackerFilters from "./ApplicantTrackerFilters";
 import ApplicationStatusHistoryPopup from "./ApplicantDetail/ApplicationStatusHistoryPopup";
 import type { ApplicationStatusHistory } from "./ApplicantDetail/types";
@@ -157,8 +157,7 @@ const ApplicantTracker = () => {
     }, 500);
     
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery]);
+  }, [searchQuery, fetchApplications, user]);
 
   /**
    * Fetch filter options (admins, managers, counselors, universities) from API
@@ -379,8 +378,7 @@ const ApplicantTracker = () => {
     if (user) {
       fetchApplications();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, paginationModel.page, paginationModel.pageSize, appliedAdmin, appliedManager, appliedCounselor]);
+  }, [user, paginationModel.page, paginationModel.pageSize, appliedAdmin, appliedManager, appliedCounselor, fetchApplications]);
 
   // Application status change popup state (reusing from University Application Summary)
   const [isApplicationStatusPopupOpen, setIsApplicationStatusPopupOpen] = useState(false);
@@ -393,7 +391,12 @@ const ApplicantTracker = () => {
   // Status history popup state (reusing from University Application Summary)
   const [isStatusHistoryPopupOpen, setIsStatusHistoryPopupOpen] = useState(false);
   const [selectedApplicantForHistory, setSelectedApplicantForHistory] = useState<Applicant | null>(null);
-  const [statusHistory, setStatusHistory] = useState<ApplicationStatusHistory[]>([]);
+  const [statusHistoryData, setStatusHistoryData] = useState<{
+    history: ApplicationStatusHistory[];
+    universityName: string;
+    applicantName: string;
+  } | null>(null);
+  const [isLoadingStatusHistory, setIsLoadingStatusHistory] = useState(false);
 
   // Apply functionality state
   const [isApplyConfirmationOpen, setIsApplyConfirmationOpen] = useState(false);
@@ -408,7 +411,7 @@ const ApplicantTracker = () => {
 
   // Handle apply filters - triggers API call
   const handleApplyFilters = useCallback(() => {
-    // Apply the selected filters
+    // Batch state updates using functional updates to prevent multiple re-renders
     setAppliedAdmin(selectedAdmin);
     setAppliedManager(selectedManager);
     setAppliedCounselor(selectedCounselor);
@@ -421,16 +424,16 @@ const ApplicantTracker = () => {
     setAppliedLastUpdatedFromDate(lastUpdatedFromDate);
     setAppliedLastUpdatedToDate(lastUpdatedToDate);
     
-    // Reset pagination to first page
-    setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
+    // Reset pagination to first page - use functional update
+    setPaginationModel((prev) => ({ page: 0, pageSize: prev.pageSize }));
 
-    // Trigger API call with applied filters
-    // Note: Additional filters can be added to fetchApplications when backend supports them
-    fetchApplications();
-  }, [selectedAdmin, selectedManager, selectedCounselor, selectedUniversity, selectedApplicantStages, selectedIntake, selectedAgencyPartner, appliedFromDate, appliedToDate, lastUpdatedFromDate, lastUpdatedToDate, paginationModel.pageSize, fetchApplications]);
+    // Note: fetchApplications will be triggered by the useEffect that watches appliedAdmin, appliedManager, appliedCounselor
+    // No need to call it explicitly here as it will be called automatically when state updates
+  }, [selectedAdmin, selectedManager, selectedCounselor, selectedUniversity, selectedApplicantStages, selectedIntake, selectedAgencyPartner, appliedFromDate, appliedToDate, lastUpdatedFromDate, lastUpdatedToDate]);
 
   // Handle clear filters
   const handleClearFilters = useCallback(() => {
+    // Batch state updates - React 18+ automatically batches these
     // Clear selected filters
     setSelectedAdmin("");
     setSelectedManager("");
@@ -457,12 +460,11 @@ const ApplicantTracker = () => {
     setAppliedLastUpdatedFromDate(null);
     setAppliedLastUpdatedToDate(null);
 
-    // Reset pagination
-    setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
+    // Reset pagination - use functional update
+    setPaginationModel((prev) => ({ page: 0, pageSize: prev.pageSize }));
 
-    // Trigger API call to fetch all applicants
-    fetchApplications();
-  }, [paginationModel.pageSize, fetchApplications]);
+    // Note: fetchApplications will be triggered by the useEffect that watches appliedAdmin, appliedManager, appliedCounselor
+  }, []);
 
   // Handle search with debounce (SearchBar handles this internally)
   const handleSearch = useCallback((value: string) => {
@@ -495,50 +497,47 @@ const ApplicantTracker = () => {
     if (!selectedApplicant || !newApplicationStatus) return;
 
     setIsChangingApplicationStatus(true);
+    dispatch(showLoader());
 
     try {
-      // TODO: Replace with actual API call
-      // const response = await updateApplicantStatus(selectedApplicant.id, {
-      //   status: newApplicationStatus,
-      //   notes: applicationNotes,
-      //   notifyStudent,
-      // });
-      
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Call Update Application Status API
+      const response = await applicantService.updateApplicationStatus({
+        applicantId: parseInt(selectedApplicant.applicantId),
+        applicationPrefId: parseInt(selectedApplicant.id), // id is preferenceId
+        applicationStatus: newApplicationStatus,
+        notes: applicationNotes || "",
+        isMailSendToStudent: notifyStudent,
+      });
 
-      // Get the label for the status value
-      const statusLabel = applicationStatusOptions.find(
-        (opt) => opt.value === newApplicationStatus
-      )?.label || newApplicationStatus;
+      if (response.status === "success") {
+        // Show success toast
+        dispatch(
+          addToast({
+            type: "success",
+            message: response.message || "Application status updated successfully",
+          })
+        );
 
-      // Update the applicant in the state
-      setApplicants((prevApplicants) =>
-        prevApplicants.map((app) =>
-          app.id === selectedApplicant.id
-            ? { 
-                ...app, 
-                status: statusLabel as "Active" | "Inactive",
-                lastUpdatedDate: new Date(),
-              }
-            : app
-        )
-      );
+        // Refetch applications to get updated data
+        await fetchApplications();
 
-      setIsApplicationStatusPopupOpen(false);
-      setSelectedApplicant(null);
-      setNewApplicationStatus("");
-      setApplicationNotes("");
-      setNotifyStudent(true);
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error("Error changing applicant status:", error);
+        // Batch popup state cleanup
+        setIsApplicationStatusPopupOpen(false);
+        setSelectedApplicant(null);
+        setNewApplicationStatus("");
+        setApplicationNotes("");
+        setNotifyStudent(true);
+      } else {
+        throw new Error(response.message || "Failed to update application status");
       }
-      // TODO: Show error toast notification
+    } catch (error: any) {
+      const { message } = handleApiError(error, "Failed to update application status");
+      dispatch(addToast({ type: "error", message }));
     } finally {
       setIsChangingApplicationStatus(false);
+      dispatch(hideLoader());
     }
-  }, [selectedApplicant, newApplicationStatus, applicationNotes, notifyStudent]);
+  }, [selectedApplicant, newApplicationStatus, applicationNotes, notifyStudent, fetchApplications, dispatch]);
 
   // Handle cancel application status change
   const handleCancelApplicationStatusChange = useCallback(() => {
@@ -564,49 +563,65 @@ const ApplicantTracker = () => {
     setNotifyStudent(notify);
   }, []);
 
-  // Handle view status history (reusing from University Application Summary)
+  // Handle view status history - optimized with React 18 patterns
   const handleViewStatusHistory = useCallback(async (applicant: Applicant) => {
+    // Open popup immediately - urgent update
     setSelectedApplicantForHistory(applicant);
     setIsStatusHistoryPopupOpen(true);
+    setIsLoadingStatusHistory(true);
+    
+    // Clear previous data - non-urgent, can use transition
+    startTransition(() => {
+      setStatusHistoryData(null);
+    });
 
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/applicants/${applicant.id}/status-history`);
-      // if (!response.ok) throw new Error("Failed to fetch status history");
-      // const data = await response.json();
-      // setStatusHistory(data.history || []);
+      // Call Status History API
+      const response = await applicantService.getStatusHistory({
+        applicantId: parseInt(applicant.applicantId),
+        applicationPrefId: parseInt(applicant.id), // id is preferenceId
+      });
 
-      // Mock status history data for now
-      const mockHistory: ApplicationStatusHistory[] = [
-        {
-          id: "1",
-          statusName: applicant.status || "Active",
-          notes: `Status changed to ${applicant.status || "Active"}`,
-          time: applicant.lastUpdatedDate ? new Date(applicant.lastUpdatedDate).toISOString() : new Date().toISOString(),
-        },
-        {
-          id: "2",
-          statusName: (applicant.status === "Active") ? "Inactive" : "Active",
-          notes: `Previous status: ${(applicant.status === "Active") ? "Inactive" : "Active"}`,
-          time: applicant.createdAt ? new Date(applicant.createdAt).toISOString() : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-      ];
+      if (response.status === "success" && response.data && response.data.length > 0) {
+        // Get the first item from the data array
+        const apiData = response.data[0];
+        
+        // Pre-compute all data transformations and create single state object
+        const mappedHistory: ApplicationStatusHistory[] = apiData.historyStatusListList.map((item) => ({
+          id: item.historyId.toString(),
+          statusName: item.applicationStatus,
+          notes: item.notes || "",
+          time: item.createdAt,
+          createdBy: item.createdBy || "",
+        }));
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      setStatusHistory(mockHistory);
-    } catch (error) {
-      if (import.meta.env.DEV) {
+        // Single state update with all data - more efficient
+        setStatusHistoryData({
+          history: mappedHistory,
+          universityName: apiData.universityName || "",
+          applicantName: apiData.applicantName || "",
+        });
+        setIsLoadingStatusHistory(false);
+      } else {
+        throw new Error(response.message || "Failed to fetch status history");
       }
-      setStatusHistory([]);
+    } catch (error: any) {
+      const { message } = handleApiError(error, "Failed to fetch status history");
+      dispatch(addToast({ type: "error", message }));
+      
+      // Update error state synchronously
+      setStatusHistoryData(null);
+      setIsLoadingStatusHistory(false);
     }
-  }, []);
+  }, [dispatch]);
 
-  // Handle close status history
+  // Handle close status history - batch state updates
   const handleCloseStatusHistory = useCallback(() => {
+    // React 18+ automatically batches these state updates
     setIsStatusHistoryPopupOpen(false);
     setSelectedApplicantForHistory(null);
-    setStatusHistory([]);
+    setStatusHistoryData(null);
+    setIsLoadingStatusHistory(false);
   }, []);
 
   // Handle apply click
@@ -620,50 +635,41 @@ const ApplicantTracker = () => {
     if (!applicantToApply) return;
 
     setIsApplying(true);
+    dispatch(showLoader());
 
     try {
-      const currentDate = new Date();
-      const newStatus = "Application Submitted";
+      // Call Apply API
+      const response = await applicantService.applyApplication({
+        applicantId: parseInt(applicantToApply.applicantId),
+        applicationPrefId: parseInt(applicantToApply.id), // id is preferenceId
+      });
 
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/applicants/${applicantToApply.id}/apply`, {
-      //   method: "PUT",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({
-      //     status: newStatus,
-      //     appliedDate: currentDate,
-      //   }),
-      // });
-      // if (!response.ok) throw new Error("Failed to apply");
+      if (response.status === "success" && response.data) {
+        // Show success toast
+        dispatch(
+          addToast({
+            type: "success",
+            message: response.message || "Application applied successfully",
+          })
+        );
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+        // Refetch applications to get updated data
+        await fetchApplications();
 
-      // Update the applicant in the state
-      setApplicants((prevApplicants) =>
-        prevApplicants.map((app) =>
-          app.id === applicantToApply.id
-            ? {
-                ...app,
-                applicantStatus: newStatus,
-                applicantStage: "Application Submitted",
-                appliedDate: currentDate,
-                lastUpdatedDate: currentDate,
-              }
-            : app
-        )
-      );
-
-      setIsApplyConfirmationOpen(false);
-      setApplicantToApply(null);
-    } catch (error) {
-      if (import.meta.env.DEV) {
+        // Batch popup state cleanup
+        setIsApplyConfirmationOpen(false);
+        setApplicantToApply(null);
+      } else {
+        throw new Error(response.message || "Failed to apply application");
       }
-      // TODO: Show error toast notification
+    } catch (error: any) {
+      const { message } = handleApiError(error, "Failed to apply application");
+      dispatch(addToast({ type: "error", message }));
     } finally {
       setIsApplying(false);
+      dispatch(hideLoader());
     }
-  }, [applicantToApply]);
+  }, [applicantToApply, fetchApplications, dispatch]);
 
   // Handle cancel apply
   const handleCancelApply = useCallback(() => {
@@ -672,46 +678,82 @@ const ApplicantTracker = () => {
   }, []);
 
   // Memoize renderCell functions to prevent recreation
-  const renderApplicantNameCell = useCallback((params: GridRenderCellParams<Applicant>) => (
-    <div className="flex flex-col gap-1">
-      <span className="font-medium text-sm" style={{ color: COLORS.textDark }}>
-        {params.row.applicantName}
-      </span>
-      <span className="text-xs" style={{ color: COLORS.textMuted }}>
-        {params.row.contactNo}
-      </span>
-    </div>
-  ), []);
+  const renderApplicantNameCell = useCallback((params: GridRenderCellParams<Applicant>) => {
+    if (!params.row.applicantName) {
+      return (
+        <span className="text-sm" style={{ color: COLORS.textMuted }}>
+          -
+        </span>
+      );
+    }
+    return (
+      <div className="flex flex-col gap-1">
+        <span className="font-medium text-sm" style={{ color: COLORS.textDark }}>
+          {params.row.applicantName}
+        </span>
+        <span className="text-xs" style={{ color: COLORS.textMuted }}>
+          {params.row.contactNo || "-"}
+        </span>
+      </div>
+    );
+  }, []);
 
   const renderAppliedDateCell = useCallback((params: GridRenderCellParams<Applicant>) => (
-    <span className="text-sm" style={{ color: COLORS.textDark }}>
+    <span className="text-sm" style={{ color: params.row.appliedDate ? COLORS.textDark : COLORS.textMuted }}>
       {params.row.appliedDate ? formatDateValue(params.row.appliedDate) : "-"}
     </span>
   ), []);
 
   const renderLastUpdatedDateCell = useCallback((params: GridRenderCellParams<Applicant>) => (
-    <span className="text-sm" style={{ color: COLORS.textDark }}>
+    <span className="text-sm" style={{ color: params.row.lastUpdatedDate ? COLORS.textDark : COLORS.textMuted }}>
       {params.row.lastUpdatedDate ? formatDateValue(params.row.lastUpdatedDate) : "-"}
     </span>
   ), []);
 
   const renderIntakeYearCell = useCallback((params: GridRenderCellParams<Applicant>) => {
-    if (!params.row.intake) return "-";
+    if (!params.row.intake) {
+      return (
+        <span className="text-sm" style={{ color: COLORS.textMuted }}>
+          -
+        </span>
+      );
+    }
     // Format intake like "jan-2026" to "Jan 2026" or just "2026"
     const intakeParts = params.row.intake.split("-");
     if (intakeParts.length === 2) {
       const month = intakeParts[0].charAt(0).toUpperCase() + intakeParts[0].slice(1);
       const year = intakeParts[1];
-      return `${month} ${year}`;
+      return (
+        <span className="text-sm" style={{ color: COLORS.textDark }}>
+          {`${month} ${year}`}
+        </span>
+      );
     }
-    return params.row.intake;
+    return (
+      <span className="text-sm" style={{ color: COLORS.textDark }}>
+        {params.row.intake}
+      </span>
+    );
   }, []);
+
+  const renderUniversityCell = useCallback((params: GridRenderCellParams<Applicant>) => (
+    <span className="text-sm" style={{ color: params.value ? COLORS.textDark : COLORS.textMuted }}>
+      {params.value || "-"}
+    </span>
+  ), []);
+
+  const renderCourseCell = useCallback((params: GridRenderCellParams<Applicant>) => (
+    <span className="text-sm" style={{ color: params.value ? COLORS.textDark : COLORS.textMuted }}>
+      {params.value || "-"}
+    </span>
+  ), []);
 
   // Render status cell similar to University Application Summary
   const renderStatusCell = useCallback((params: GridRenderCellParams<Applicant>) => {
     const status = params.value?.toLowerCase() || "";
-    const isOfferReceived = status === "offer received";
-    const isApply = status === "apply";
+    const statusLabel = getApplicationStatusLabel(params.value);
+    const isOfferReceived = statusLabel.toLowerCase() === "offer received";
+    const isApply = !params.value || status === "" || status === "apply";
     
     if (isApply) {
       return (
@@ -729,7 +771,7 @@ const ApplicantTracker = () => {
             cursor: "pointer",
           }}
         >
-          {params.value}
+          Apply
         </Button>
       );
     }
@@ -746,15 +788,22 @@ const ApplicantTracker = () => {
             : COLORS.accent,
         }}
       >
-        {params.value}
+        {statusLabel}
       </span>
     );
-  }, []);
+  }, [handleApplyClick]);
 
   // Render stage cell similar to status cell
   const renderStageCell = useCallback((params: GridRenderCellParams<Applicant>) => {
-    const stage = params.value?.toLowerCase() || "";
-    const isOfferReceived = stage === "offer received";
+    if (!params.value) {
+      return (
+        <span className="text-sm" style={{ color: COLORS.textMuted }}>
+          -
+        </span>
+      );
+    }
+    const stageLabel = getApplicationStageLabel(params.value);
+    const isOfferReceived = stageLabel.toLowerCase() === "offer received";
     
     return (
       <span
@@ -768,7 +817,7 @@ const ApplicantTracker = () => {
             : COLORS.accent,
         }}
       >
-        {params.value}
+        {stageLabel}
       </span>
     );
   }, []);
@@ -827,6 +876,7 @@ const ApplicantTracker = () => {
       flex: 1.3,
       minWidth: 150,
       sortable: true,
+      renderCell: renderUniversityCell,
     },
     {
       field: "course",
@@ -834,6 +884,7 @@ const ApplicantTracker = () => {
       flex: 1.2,
       minWidth: 150,
       sortable: true,
+      renderCell: renderCourseCell,
     },
     {
       field: "applicantStage",
@@ -883,7 +934,7 @@ const ApplicantTracker = () => {
       sortable: false,
       renderCell: renderActionsCell,
     },
-  ], [t, renderApplicantNameCell, renderAppliedDateCell, renderLastUpdatedDateCell, renderIntakeYearCell, renderStageCell, renderStatusCell, renderActionsCell, handleApplyClick]);
+  ], [t, renderApplicantNameCell, renderUniversityCell, renderCourseCell, renderAppliedDateCell, renderLastUpdatedDateCell, renderIntakeYearCell, renderStageCell, renderStatusCell, renderActionsCell]);
 
   return (
     <Layout userName={user?.name || "Admin"} userRole={user?.role || "User"}>
@@ -1048,8 +1099,8 @@ const ApplicantTracker = () => {
         <ApplicationStatusHistoryPopup
           isOpen={isStatusHistoryPopupOpen}
           applicationId={selectedApplicantForHistory?.id || null}
-          universityName={selectedApplicantForHistory?.applicantName || ""}
-          statusHistory={statusHistory}
+          statusHistoryData={statusHistoryData}
+          isLoading={isLoadingStatusHistory}
           onClose={handleCloseStatusHistory}
         />
 
@@ -1066,7 +1117,7 @@ const ApplicantTracker = () => {
               <p className="text-sm text-slate-600">
                 {t(
                   "applicantDetailView.confirmApplyMessage",
-                  "Are you sure you want to apply for {{university}}? This will set the status to 'Application Submitted' and set the applied date to today.",
+                  "Are you sure you want to apply for {{university}}? This will set the status to 'Lead' and set the applied date to today.",
                   {
                     university: applicantToApply.university || applicantToApply.applicantName,
                   }

@@ -458,7 +458,7 @@
     "addNotesPlaceholder": "Add Any Additional Notes Or Comments",
     "sendEmailNotification": "Send Email Notification To Student",
     "confirmApply": "Confirm Application",
-    "confirmApplyMessage": "Are You Sure You Want To Apply For {{university}}? This Will Set The Status To 'Application Submitted' And Set The Applied Date To Today.",
+    "confirmApplyMessage": "Are You Sure You Want To Apply For {{university}}? This Will Set The Status To 'Lead' And Set The Applied Date To Today.",
     "no": "No.",
     "university": "University",
     "country": "Country",
@@ -597,5 +597,40 @@
     "selectYear": "Select Year",
     "searchMonth": "Search Month...",
     "searchYear": "Search Year..."
+  },
+  "reportAnalysis": {
+    "title": "Report & Analysis",
+    "tabs": {
+      "teamOverview": "Team Overview",
+      "overallCounts": "Overall Counts",
+      "graphs": "Graphs"
+    },
+    "teamOverview": {
+      "title": "Team Overview",
+      "adminLabel": "Admin",
+      "managerLabel": "Manager",
+      "counselorLabel": "Counselor",
+      "enrollmentTypeLabel": "Enrollment Type",
+      "dateRangeLabel": "Date Range",
+      "selectDateRange": "Select Date Range",
+      "applyFilter": "Apply",
+      "clearFilter": "Clear Filter",
+      "tableId": "ID",
+      "tableManager": "Manager",
+      "tableCounselor": "Counselor",
+      "tableCountry": "Country",
+      "tableTotalApplicants": "Total Applicants",
+      "tableLeads": "Leads",
+      "tableInProgressApplications": "In Progress Applications",
+      "tableEnrolledApplications": "Enrolled Applications"
+    },
+    "overallCounts": {
+      "title": "Overall Counts",
+      "description": "View Overall Statistics And Counts"
+    },
+    "graphs": {
+      "title": "Graphs",
+      "description": "View Analytics And Visual Reports"
+    }
   }
 }

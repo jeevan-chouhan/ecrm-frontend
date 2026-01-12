@@ -263,7 +263,7 @@ export const mockTeamMemberDetail: TeamMemberDetail = {
 
 // Applicant stage options - exact values from the application stage table
 export const applicantStageOptions: SelectOption[] = [
-  { value: "LEAD_WALK_IN", label: "Lead/Walk in" },
+  { value: "LEAD", label: "Lead" },
   { value: "APPLICATION_SUBMITTED", label: "Application Submitted" },
   { value: "OFFER_AWAITING", label: "Offer Awaiting" },
   { value: "OFFER_RECEIVED", label: "Offer Received" },
@@ -295,7 +295,8 @@ export const applicationStatusOptions: SelectOption[] = [
   { value: "LEAD", label: "Lead" },
   { value: "APPLICATION_INCOMPLETE", label: "Application Incomplete" },
   { value: "DOCUMENT_PENDING", label: "Document Pending" },
-  { value: "APPLICATION_APPLICANT_DECLINED", label: "Application/Applicant Declined" },
+  { value: "APPLICATION_DECLINED", label: "Application Declined" },
+  { value: "APPLICANT_DECLINED", label: "Applicant Declined" },
   // Application Submitted
   { value: "UNDER_UNIVERSITY_REVIEW", label: "Under University Review" },
   // Offer Awaiting

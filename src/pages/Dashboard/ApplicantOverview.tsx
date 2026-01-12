@@ -39,8 +39,6 @@ const ApplicantOverview = ({
     pageSize: 10,
   });
 
-  // Calculate if we need internal scrolling (more than 10 records per page)
-  const needsInternalScrolling = paginationModel.pageSize > 10;
 
   // Filter applicants based on applied search and filters
   const filteredApplicants = useMemo(() => {
@@ -422,7 +420,6 @@ const ApplicantOverview = ({
         onPaginationModelChange={setPaginationModel}
         paginationMode="client"
         sortingMode="client"
-        height={needsInternalScrolling ? 600 : undefined}
       />
 
       {/* Status Change Confirmation Popup */}
