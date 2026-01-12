@@ -13,6 +13,12 @@ import type {
   ManagerItem,
   CounselorItem,
   UniversityItem,
+  ApplyApplicationParams,
+  ApplyApplicationResponse,
+  UpdateApplicationStatusPayload,
+  UpdateApplicationStatusResponse,
+  StatusHistoryParams,
+  StatusHistoryResponse,
 } from "./types";
 
 /**
@@ -207,6 +213,62 @@ const applicantService = {
     const result: CounselorItem[] = Array.isArray(response.data) ? response.data : [];
     
     return result;
+  },
+
+  /**
+   * Apply for an application (submit application to university)
+   * @param params - Apply application parameters (applicantId, applicationPrefId)
+   * @returns Apply application response
+   */
+  applyApplication: async (
+    params: ApplyApplicationParams
+  ): Promise<ApplyApplicationResponse> => {
+    const queryParams = createQueryParams({
+      applicantId: params.applicantId,
+      applicationPrefId: params.applicationPrefId,
+    });
+
+    const url = `${ENDPOINTS.APPLICANTS.APPLY}?${queryParams.toString()}`;
+
+    const response = await api.post<ApplyApplicationResponse>(url);
+
+    return response.data;
+  },
+
+  /**
+   * Update application status
+   * @param payload - Update application status payload
+   * @returns Update application status response
+   */
+  updateApplicationStatus: async (
+    payload: UpdateApplicationStatusPayload
+  ): Promise<UpdateApplicationStatusResponse> => {
+    const response = await api.put<UpdateApplicationStatusResponse>(
+      ENDPOINTS.APPLICANTS.UPDATE_APPLICATION_STATUS,
+      payload
+    );
+
+    return response.data;
+  },
+
+  /**
+   * Get application status history
+   * @param params - Status history parameters (applicantId, applicationPrefId)
+   * @returns Status history response
+   */
+  getStatusHistory: async (
+    params: StatusHistoryParams
+  ): Promise<StatusHistoryResponse> => {
+    const queryParams = createQueryParams({
+      applicantId: params.applicantId,
+      applicationPrefId: params.applicationPrefId,
+    });
+
+    const url = `${ENDPOINTS.APPLICANTS.STATUS_HISTORY}?${queryParams.toString()}`;
+
+    const response = await api.get<StatusHistoryResponse>(url);
+
+    return response.data;
   },
 };
 

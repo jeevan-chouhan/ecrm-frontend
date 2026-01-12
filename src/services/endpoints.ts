@@ -35,6 +35,9 @@ export const ENDPOINTS = {
   // Applicants Endpoints
   APPLICANTS: {
     APPLICATIONS_LIST: "/applicants/applicationsList",
+    APPLY: "/applicants/apply",
+    UPDATE_APPLICATION_STATUS: "/applicants/update-applicationStatus",
+    STATUS_HISTORY: "/applicants/statusHistory",
   },
 
 //   // User Endpoints

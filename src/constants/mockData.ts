@@ -702,3 +702,61 @@ export const mockApplicantDetail: ApplicantDetail = {
   notes: "talked about university preference",
 };
 
+// ==========================================
+// Team Overview Mock Data
+// ==========================================
+
+export interface TeamOverviewItem {
+  id: string;
+  manager: string;
+  counselor: string;
+  country: string;
+  totalApplicants: number;
+  leads: number;
+  inProgressApplicants: number;
+  enrolledApplicants: number;
+}
+
+export const mockTeamOverviewData: TeamOverviewItem[] = [
+  {
+    id: "01",
+    manager: "Ben",
+    counselor: "Roger Fredrick",
+    country: "Australia",
+    totalApplicants: 12,
+    leads: 9,
+    inProgressApplicants: 3,
+    enrolledApplicants: 10,
+  },
+  {
+    id: "02",
+    manager: "Ben",
+    counselor: "Sam Roy",
+    country: "Canada",
+    totalApplicants: 8,
+    leads: 6,
+    inProgressApplicants: 2,
+    enrolledApplicants: 10,
+  },
+  {
+    id: "03",
+    manager: "John",
+    counselor: "Alice Smith",
+    country: "UK",
+    totalApplicants: 15,
+    leads: 10,
+    inProgressApplicants: 5,
+    enrolledApplicants: 8,
+  },
+  {
+    id: "04",
+    manager: "John",
+    counselor: "Bob Wilson",
+    country: "USA",
+    totalApplicants: 20,
+    leads: 12,
+    inProgressApplicants: 4,
+    enrolledApplicants: 12,
+  },
+];
+

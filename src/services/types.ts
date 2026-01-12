@@ -340,3 +340,62 @@ export interface ApplicationListItem {
 
 export type ApplicationsListResponse = ApiResponse<PaginatedData<ApplicationListItem>>;
 
+// Apply Application Types
+export interface ApplyApplicationParams {
+  applicantId: number | string;
+  applicationPrefId: number | string;
+}
+
+export interface ApplyApplicationData {
+  applicantId: number;
+  applicationPreferenceId: number;
+  applicationStatus: string;
+  applicationStage: string;
+}
+
+export type ApplyApplicationResponse = ApiResponse<ApplyApplicationData>;
+
+// Update Application Status Types
+export interface UpdateApplicationStatusPayload {
+  applicantId: number;
+  applicationPrefId: number;
+  applicationStatus: string;
+  notes: string;
+  isMailSendToStudent: boolean;
+}
+
+export interface UpdateApplicationStatusData {
+  applicantId: number;
+  applicationPreferenceId: number;
+  applicationStatus: string;
+  notes?: string;
+  isMailSendToStudent: boolean;
+}
+
+export type UpdateApplicationStatusResponse = ApiResponse<UpdateApplicationStatusData>;
+
+// Application Status History Types
+export interface StatusHistoryParams {
+  applicantId: number | string;
+  applicationPrefId: number | string;
+}
+
+export interface StatusHistoryItem {
+  historyId: number;
+  applicantId: number;
+  applicationPreferenceId: number;
+  applicationStatus: string;
+  applicationStage: string;
+  notes: string;
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface StatusHistoryData {
+  historyStatusListList: StatusHistoryItem[];
+  universityName: string;
+  applicantName: string;
+}
+
+export type StatusHistoryResponse = ApiResponse<StatusHistoryData[]>;
+
