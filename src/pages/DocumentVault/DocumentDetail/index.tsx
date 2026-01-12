@@ -8,7 +8,6 @@ import {
   ArrowLeft,
   File,
   Download,
-  Plus,
   Eye,
   Close,
 } from "../../../assets";
