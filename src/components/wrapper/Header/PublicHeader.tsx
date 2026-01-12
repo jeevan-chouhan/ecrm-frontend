@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ROUTES, COLORS, APP_CONFIG } from "../../../constants";
-import { Menu, Close } from "../../../assets";
+import { Menu, Close, LogoImage } from "../../../assets";
 import Button from "../../Button/Button";
 
 interface PublicHeaderProps {
@@ -39,6 +39,11 @@ const PublicHeader = ({
     >
       {/* Logo */}
       <Link to="/" className="flex items-center gap-2">
+        <img
+          src={LogoImage}
+          alt="AgencyOS Logo"
+          className="h-9 w-9 rounded-lg object-contain"
+        />
         <span
           className="text-lg md:text-xl font-bold tracking-tight"
           style={{

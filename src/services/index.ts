@@ -63,5 +63,9 @@ export type {
   StatusHistoryItem,
   StatusHistoryData,
   StatusHistoryResponse,
+  ApplicantOverviewParams,
+  ApplicantOverviewItem,
+  ApplicantOverviewData,
+  ApplicantOverviewResponse,
 } from "./types";
 

@@ -16,6 +16,8 @@ import type {
   AdminListResponse,
   ManagerListResponse,
   UpdateStatusResponse,
+  ApplicantOverviewParams,
+  ApplicantOverviewResponse,
 } from "./types";
 
 /**
@@ -169,6 +171,41 @@ const userService = {
 
     const response = await api.patch<UpdateStatusResponse>(
       `${ENDPOINTS.USERS.UPDATE_STATUS}?${queryParams.toString()}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Get applicant overview data for dashboard
+   * @param params - Query parameters
+   * @returns Promise with applicant overview response
+   */
+  getApplicantOverview: async (params: ApplicantOverviewParams): Promise<ApplicantOverviewResponse> => {
+    const queryParams = new URLSearchParams({
+      agencyId: params.agencyId?.toString() ?? "",
+      assignedAdminId: params.assignedAdminId?.toString() ?? "",
+      assignedManagerId: params.assignedManagerId?.toString() ?? "",
+    });
+
+    // Optional params - only append if they have values
+    const optionalParams: Record<string, string | number | boolean | null | undefined> = {
+      search: params.search,
+      status: params.status !== "all" ? params.status : null,
+      enrollmentType: params.enrollmentType,
+      page: params.page,
+      size: params.size,
+      sortBy: params.sortBy,
+      asc: params.asc,
+    };
+
+    Object.entries(optionalParams).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && value !== "") {
+        queryParams.append(key, value.toString());
+      }
+    });
+
+    const response = await api.get<ApplicantOverviewResponse>(
+      `${ENDPOINTS.APPLICANTS.OVERVIEW}?${queryParams.toString()}`
     );
     return response.data;
   },

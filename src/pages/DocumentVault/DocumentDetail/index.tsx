@@ -8,7 +8,6 @@ import {
   ArrowLeft,
   File,
   Download,
-  Plus,
   Eye,
   Close,
 } from "../../../assets";
@@ -472,7 +471,6 @@ const DocumentDetail = () => {
             variant="accent"
             size="sm"
             rounded
-            leftIcon={<Plus className="h-4 w-4" />}
             onClick={handleAddDocument}
           >
             {t("documentVault.addDocument", "Add Document")}

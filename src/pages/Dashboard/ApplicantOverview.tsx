@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState, memo } from "react";
+import { useMemo, useCallback, useState, useEffect, useRef, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { GridColDef, GridPaginationModel, GridRenderCellParams } from "@mui/x-data-grid";
@@ -8,84 +8,141 @@ import { COLORS, ROUTES, typography, enrollmentTypes, statusFilterOptions } from
 import { Eye, ToggleStatus } from "../../assets";
 import { formatDateValue } from "../../utils/dateUtils";
 import { getEnrollmentTypeLabel } from "../../utils/commonUtils";
-import { mockApplicantOverviewData, type ApplicantOverviewItem } from "../../constants/mockData";
+import { userService } from "../../services";
+import type { ApplicantOverviewItem } from "../../services";
+import { useAppSelector, useAppDispatch } from "../../redux/hooks";
+import { showLoader, hideLoader } from "../../redux/slices/loader/loaderSlice";
+import { addToast } from "../../redux/slices/toast/toastSlice";
+import {
+  setApplicants,
+  setPage,
+  setPageSize,
+  setSearch,
+  setStatusFilter,
+  setEnrollmentTypeFilter,
+  clearFilters,
+  updateApplicantStatus,
+} from "../../redux/slices/dashboard/dashboardSlice";
+import type { ApplicantOverviewRow } from "../../redux/slices/dashboard/dashboardSlice";
+import { handleApiError } from "../../utils";
 
-interface ApplicantOverviewProps {
-  applicants?: ApplicantOverviewItem[];
-  loading?: boolean;
-  totalCount?: number; // Total count from API response
-}
+// Transform API data to table format
+const transformApiData = (items: ApplicantOverviewItem[]): ApplicantOverviewRow[] => {
+  return items.map((item) => {
+    // Parse applicantName to extract name and contact number
+    // Format: "Rahul Sharma (+91 9876543210)"
+    const nameMatch = item.applicantName.match(/^(.+?)\s*\(([^)]+)\)$/);
+    const name = nameMatch ? nameMatch[1].trim() : item.applicantName;
+    const contactNo = nameMatch ? nameMatch[2].trim() : "";
 
-const ApplicantOverview = ({ 
-  applicants = mockApplicantOverviewData, 
-  loading = false,
-}: ApplicantOverviewProps) => {
+    return {
+      id: item.applicantId,
+      applicantId: item.applicantId,
+      applicantName: name,
+      contactNo: contactNo,
+      email: item.email,
+      notes: item.notes || "",
+      status: item.status === "ACTIVE" ? "Active" : "Inactive",
+      enrollmentType: item.enrollmentType,
+      createdAt: item.createdAt,
+    };
+  });
+};
+
+const ApplicantOverview = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
 
-  // Search and filter states (selected - what user is choosing)
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedEnrollmentType, setSelectedEnrollmentType] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("");
+  // Get dashboard state from Redux
+  const { applicants, pagination, filter } = useAppSelector((state) => state.dashboard);
 
-  // Applied filter states (what's actually being used for filtering)
-  const [appliedSearchQuery, setAppliedSearchQuery] = useState("");
-  const [appliedEnrollmentType, setAppliedEnrollmentType] = useState("");
-  const [appliedStatus, setAppliedStatus] = useState("");
-
-  // Pagination state
-  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-    page: 0,
-    pageSize: 10,
-  });
-
-
-  // Filter applicants based on applied search and filters
-  const filteredApplicants = useMemo(() => {
-    return applicants.filter((applicant) => {
-      // Search filter (name and contact number)
-      if (appliedSearchQuery) {
-        const searchLower = appliedSearchQuery.toLowerCase();
-        const matchesSearch =
-          applicant.applicantName.toLowerCase().includes(searchLower) ||
-          applicant.contactNo.toLowerCase().includes(searchLower);
-        if (!matchesSearch) return false;
-      }
-
-      // Enrollment type filter
-      if (appliedEnrollmentType && applicant.enrollmentType !== appliedEnrollmentType) {
-        return false;
-      }
-
-      // Status filter
-      if (appliedStatus) {
-        const applicantStatusLower = applicant.status.toLowerCase();
-        if (applicantStatusLower !== appliedStatus) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  }, [applicants, appliedSearchQuery, appliedEnrollmentType, appliedStatus]);
-
-  // Calculate display count - always show filtered count (not total count)
-  const displayCount = filteredApplicants.length;
+  // Local state for input fields (for controlled inputs with debounce)
+  const [searchInput, setSearchInput] = useState(() => filter.search);
+  const [selectedEnrollmentType, setSelectedEnrollmentType] = useState(() => filter.enrollmentType);
+  const [selectedStatus, setSelectedStatus] = useState(() => filter.status);
 
   // Status change popup state
   const [isStatusPopupOpen, setIsStatusPopupOpen] = useState(false);
-  const [selectedApplicantForStatusChange, setSelectedApplicantForStatusChange] = useState<ApplicantOverviewItem | null>(null);
+  const [selectedApplicantForStatusChange, setSelectedApplicantForStatusChange] = useState<ApplicantOverviewRow | null>(null);
   const [isChangingStatus, setIsChangingStatus] = useState(false);
 
+  // Refs
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isInitialMount = useRef(true);
+
+  // Sync local state when Redux filter changes (e.g., from persist)
+  useEffect(() => {
+    if (isInitialMount.current) {
+      setSearchInput(filter.search);
+      setSelectedEnrollmentType(filter.enrollmentType);
+      setSelectedStatus(filter.status);
+      isInitialMount.current = false;
+    }
+  }, [filter.search, filter.enrollmentType, filter.status]);
+
+  // Fetch applicant overview data
+  const fetchApplicantOverview = useCallback(async () => {
+    if (!user?.agencyId) return;
+
+    try {
+      dispatch(showLoader());
+
+      const response = await userService.getApplicantOverview({
+        agencyId: user.agencyId,
+        assignedAdminId: null,
+        assignedManagerId: null,
+        search: filter.search || null,
+        status: filter.status || null,
+        enrollmentType: filter.enrollmentType || null,
+        page: pagination.page,
+        size: pagination.size,
+      });
+
+      if (response.status === "success" && response.data) {
+        // Transform API data to table format
+        const transformedApplicants = transformApiData(response.data.content);
+        
+        dispatch(setApplicants({
+          applicants: transformedApplicants,
+          totalElements: response.data.totalElements,
+          totalPages: response.data.totalPages,
+          first: response.data.first,
+          last: response.data.last,
+        }));
+      }
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      dispatch(addToast({ type: "error", message: typeof errorMessage === 'string' ? errorMessage : 'An error occurred' }));
+    } finally {
+      dispatch(hideLoader());
+    }
+  }, [user?.agencyId, filter.search, filter.status, filter.enrollmentType, pagination.page, pagination.size, dispatch]);
+
+  // Fetch data on mount and when filters/pagination change
+  useEffect(() => {
+    fetchApplicantOverview();
+  }, [fetchApplicantOverview]);
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+    };
+  }, []);
+
   // Handle view applicant
-  const handleView = useCallback((applicantId: string) => {
-    navigate(ROUTES.APPLICANT_DETAIL.replace(":applicantId", applicantId), {
+  const handleView = useCallback((applicantId: number) => {
+    navigate(ROUTES.APPLICANT_DETAIL.replace(":applicantId", applicantId.toString()), {
       state: { from: "dashboard" },
     });
   }, [navigate]);
 
   // Handle status toggle
-  const handleStatusToggle = useCallback((applicant: ApplicantOverviewItem) => {
+  const handleStatusToggle = useCallback((applicant: ApplicantOverviewRow) => {
     setSelectedApplicantForStatusChange(applicant);
     setIsStatusPopupOpen(true);
   }, []);
@@ -96,14 +153,12 @@ const ApplicantOverview = ({
 
     try {
       setIsChangingStatus(true);
-      // const newStatus = selectedApplicantForStatusChange.status === "Active" ? "Inactive" : "Active";
-
       // TODO: Make API call to update status
-      // await updateApplicantStatus(selectedApplicantForStatusChange.id, newStatus);
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Update local state (will be replaced with API refetch)
-      // In production, refetch data from API after status change
+      // Update local state
+      const newStatus = selectedApplicantForStatusChange.status === "Active" ? "Inactive" : "Active";
+      dispatch(updateApplicantStatus({ id: selectedApplicantForStatusChange.id, status: newStatus }));
 
       setIsStatusPopupOpen(false);
       setSelectedApplicantForStatusChange(null);
@@ -114,7 +169,7 @@ const ApplicantOverview = ({
     } finally {
       setIsChangingStatus(false);
     }
-  }, [selectedApplicantForStatusChange]);
+  }, [selectedApplicantForStatusChange, dispatch]);
 
   // Handle cancel status change
   const handleCancelStatusChange = useCallback(() => {
@@ -122,29 +177,51 @@ const ApplicantOverview = ({
     setSelectedApplicantForStatusChange(null);
   }, []);
 
-  // Handle search
-  const handleSearch = useCallback((value: string) => {
-    setSearchQuery(value);
-  }, []);
+  // Handle search with debounce - auto-trigger API
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchInput(value);
+    
+    // Clear previous debounce timer
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+    
+    // Set new debounce timer (500ms delay)
+    searchDebounceRef.current = setTimeout(() => {
+      dispatch(setSearch(value));
+    }, 500);
+  }, [dispatch]);
 
-  // Handle apply filters
+  // Handle apply filters (for enrollment type and status)
   const handleApplyFilters = useCallback(() => {
-    setAppliedSearchQuery(searchQuery);
-    setAppliedEnrollmentType(selectedEnrollmentType);
-    setAppliedStatus(selectedStatus);
-    setPaginationModel((prev) => ({ page: 0, pageSize: prev.pageSize }));
-  }, [searchQuery, selectedEnrollmentType, selectedStatus]);
+    dispatch(setSearch(searchInput));
+    dispatch(setStatusFilter(selectedStatus));
+    dispatch(setEnrollmentTypeFilter(selectedEnrollmentType));
+  }, [dispatch, searchInput, selectedStatus, selectedEnrollmentType]);
 
   // Handle clear filters
   const handleClearFilters = useCallback(() => {
-    setSearchQuery("");
+    setSearchInput("");
     setSelectedEnrollmentType("");
     setSelectedStatus("");
-    setAppliedSearchQuery("");
-    setAppliedEnrollmentType("");
-    setAppliedStatus("");
-    setPaginationModel((prev) => ({ page: 0, pageSize: prev.pageSize }));
-  }, []);
+    dispatch(clearFilters());
+  }, [dispatch]);
+
+  // Handle pagination change
+  const handlePaginationChange = useCallback((model: GridPaginationModel) => {
+    if (model.page !== pagination.page) {
+      dispatch(setPage(model.page));
+    }
+    if (model.pageSize !== pagination.size) {
+      dispatch(setPageSize(model.pageSize));
+    }
+  }, [dispatch, pagination.page, pagination.size]);
+
+  // Pagination model for DataTable
+  const paginationModel: GridPaginationModel = useMemo(() => ({
+    page: pagination.page,
+    pageSize: pagination.size,
+  }), [pagination.page, pagination.size]);
 
   // Enrollment type options with placeholder
   const enrollmentTypeOptionsWithPlaceholder = useMemo(() => {
@@ -163,7 +240,7 @@ const ApplicantOverview = ({
   }, [t]);
 
   // Memoize renderCell functions to prevent recreation
-  const renderApplicantNameCell = useCallback((params: GridRenderCellParams<ApplicantOverviewItem>) => (
+  const renderApplicantNameCell = useCallback((params: GridRenderCellParams<ApplicantOverviewRow>) => (
     <div className="flex flex-col gap-1">
       <span className="font-medium text-sm" style={{ color: COLORS.textDark }}>
         {params.row.applicantName}
@@ -174,7 +251,7 @@ const ApplicantOverview = ({
     </div>
   ), []);
 
-  const renderEmailCell = useCallback((params: GridRenderCellParams<ApplicantOverviewItem>) => (
+  const renderEmailCell = useCallback((params: GridRenderCellParams<ApplicantOverviewRow>) => (
     <span
       style={{
         color: COLORS.textDark,
@@ -185,20 +262,27 @@ const ApplicantOverview = ({
     </span>
   ), []);
 
-  const renderNotesCell = useCallback((params: GridRenderCellParams<ApplicantOverviewItem>) => (
-    <span
-      style={{
-        color: COLORS.textDark,
-        fontSize: typography.fontSize.small,
-      }}
-      className="truncate block"
-      title={params.row.notes}
-    >
-      {params.row.notes || "-"}
-    </span>
-  ), []);
+  const renderNotesCell = useCallback((params: GridRenderCellParams<ApplicantOverviewRow>) => {
+    const notes = params.row.notes;
+    const hasNotes = notes && notes.trim().length > 0;
+    
+    return (
+      <Tooltip title={hasNotes ? notes : t("dashboard.noNotes", "No notes")} arrow>
+        <span
+          style={{
+            color: hasNotes ? COLORS.textDark : COLORS.textMuted,
+            fontSize: typography.fontSize.small,
+            fontStyle: hasNotes ? "normal" : "italic",
+          }}
+          className="truncate block cursor-default"
+        >
+          {hasNotes ? notes : t("dashboard.noNotes", "No notes")}
+        </span>
+      </Tooltip>
+    );
+  }, [t]);
 
-  const renderStatusCell = useCallback((params: GridRenderCellParams<ApplicantOverviewItem>) => (
+  const renderStatusCell = useCallback((params: GridRenderCellParams<ApplicantOverviewRow>) => (
     <span
       className="px-3 py-1 rounded-full text-xs font-medium"
       style={{
@@ -216,7 +300,7 @@ const ApplicantOverview = ({
     </span>
   ), []);
 
-  const renderEnrollmentTypeCell = useCallback((params: GridRenderCellParams<ApplicantOverviewItem>) => (
+  const renderEnrollmentTypeCell = useCallback((params: GridRenderCellParams<ApplicantOverviewRow>) => (
     <span
       style={{
         color: COLORS.textDark,
@@ -227,7 +311,7 @@ const ApplicantOverview = ({
     </span>
   ), []);
 
-  const renderCreatedDateCell = useCallback((params: GridRenderCellParams<ApplicantOverviewItem>) => (
+  const renderCreatedDateCell = useCallback((params: GridRenderCellParams<ApplicantOverviewRow>) => (
     <span
       style={{
         color: COLORS.textDark,
@@ -238,8 +322,8 @@ const ApplicantOverview = ({
     </span>
   ), []);
 
-  const renderActionsCell = useCallback((params: GridRenderCellParams<ApplicantOverviewItem>) => (
-    <div className="flex items-center gap-3">
+  const renderActionsCell = useCallback((params: GridRenderCellParams<ApplicantOverviewRow>) => (
+    <div className="flex items-center justify-center gap-3 w-full h-full">
       <Tooltip title={t("dashboard.viewApplicant", "View")} arrow>
         <button
           onClick={() => handleView(params.row.applicantId)}
@@ -332,6 +416,8 @@ const ApplicantOverview = ({
       flex: 0.8,
       minWidth: 120,
       sortable: false,
+      align: "center",
+      headerAlign: "center",
       renderCell: renderActionsCell,
     },
   ], [t, renderApplicantNameCell, renderEmailCell, renderEnrollmentTypeCell, renderNotesCell, renderStatusCell, renderCreatedDateCell, renderActionsCell]);
@@ -346,7 +432,7 @@ const ApplicantOverview = ({
           fontWeight: typography.fontWeight.semibold,
         }}
       >
-        {t("dashboard.applicantOverview", "Applicant Overview")} ({displayCount})
+        {t("dashboard.applicantOverview", "Applicant Overview")} ({pagination.totalElements})
       </h2>
 
       {/* Filters and Search */}
@@ -361,8 +447,8 @@ const ApplicantOverview = ({
         <div className="w-56 pt-6">
           <SearchBar
             placeholder={t("dashboard.searchApplicants", "Search By Name, Email Or Contact...")}
-            value={searchQuery}
-            onChange={handleSearch}
+            value={searchInput}
+            onChange={handleSearchChange}
             tooltip={t("dashboard.searchApplicants", "Search By Name, Email Or Contact...")}
           />
         </div>
@@ -411,14 +497,14 @@ const ApplicantOverview = ({
       </div>
 
       <DataTable
-        rows={filteredApplicants}
+        rows={applicants}
         columns={columns}
-        loading={loading}
-        pageSize={paginationModel.pageSize}
+        pageSize={pagination.size}
         pageSizeOptions={[5, 10, 25, 50]}
         paginationModel={paginationModel}
-        onPaginationModelChange={setPaginationModel}
-        paginationMode="client"
+        onPaginationModelChange={handlePaginationChange}
+        paginationMode="server"
+        rowCount={pagination.totalElements}
         sortingMode="client"
       />
 
@@ -436,4 +522,3 @@ const ApplicantOverview = ({
 };
 
 export default memo(ApplicantOverview);
-

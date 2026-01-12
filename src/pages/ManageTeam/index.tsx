@@ -13,7 +13,7 @@ import {
 } from "../../components";
 import type { GridColDef, GridSortModel } from "../../components";
 import type { GridPaginationModel } from "@mui/x-data-grid";
-import { Eye, Edit, Plus, ToggleStatus, ToggleOn } from "../../assets";
+import { Eye, Edit, ToggleStatus, ToggleOn } from "../../assets";
 import {
   COLORS,
   ROUTES,
@@ -413,7 +413,7 @@ const ManageTeam = () => {
               <Button
                 variant="accent"
                 rounded
-                leftIcon={<Plus className="h-4 w-4" />}
+                // leftIcon={<Plus className="h-4 w-4" />}
                 onClick={handleAddMember}
                 className="w-full sm:w-auto whitespace-nowrap"
               >
