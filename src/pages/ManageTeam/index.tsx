@@ -13,7 +13,7 @@ import {
 } from "../../components";
 import type { GridColDef, GridSortModel } from "../../components";
 import type { GridPaginationModel } from "@mui/x-data-grid";
-import { Eye, Edit, Plus, ToggleStatus, ToggleOn } from "../../assets";
+import { Eye, Edit, ToggleStatus, ToggleOn } from "../../assets";
 import {
   COLORS,
   ROUTES,
