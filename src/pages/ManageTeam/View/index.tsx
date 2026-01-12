@@ -110,10 +110,10 @@ const ViewMember = () => {
 
   // Memoized university rows for DataTable
   const universityRows = useMemo(() => 
-    memberDetails?.enrolledApplicantsByUniversity?.map((uni) => ({
-      id: uni.universityId,
-      name: uni.universityName,
-      count: uni.count,
+    memberDetails?.enrolledApplicantsByUniversity?.map((uni, index) => ({
+      id: uni.universityId ?? uni.id ?? index + 1,
+      name: uni.universityName ?? uni.name ?? "",
+      count: uni.count ?? uni.applicantCount ?? 0,
     })) || []
   , [memberDetails?.enrolledApplicantsByUniversity]);
 
@@ -399,7 +399,7 @@ const ViewMember = () => {
                       style={{ backgroundColor: COLORS.surface }}
                     >
                       <span className="text-sm font-medium" style={{ color: COLORS.textDark }}>{sub.name}</span>
-                      <span 
+                      {/* <span 
                         className="text-xs px-2 py-1 rounded-full"
                         style={{ 
                           backgroundColor: COLORS.accent + "20", 
@@ -407,7 +407,7 @@ const ViewMember = () => {
                         }}
                       >
                         {getRoleDisplayName(sub.role)}
-                      </span>
+                      </span> */}
                     </div>
                   ))}
                 </div>

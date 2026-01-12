@@ -204,9 +204,13 @@ export interface UserApplicantCount {
 }
 
 export interface EnrolledApplicantsByUniversity {
-  universityId: number;
-  universityName: string;
-  count: number;
+  universityId?: number;
+  universityName?: string;
+  count?: number;
+  // Alternative format from some API responses
+  id?: number;
+  name?: string;
+  applicantCount?: number;
 }
 
 export interface UserDetailsData {
