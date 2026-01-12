@@ -37,6 +37,7 @@ const ManageTeamAdd = lazy(() => import("./pages/ManageTeam/AddMember"));
 const ManageTeamView = lazy(() => import("./pages/ManageTeam/View"));
 const ReportAnalysis = lazy(() => import("./pages/ReportAnalysis"));
 const Settings = lazy(() => import("./pages/Settings"));
+const SupportFeedback = lazy(() => import("./pages/SupportFeedback"));
 const Profile = lazy(() => import("./pages/Profile"));
 
 // ==========================================
@@ -77,6 +78,7 @@ const protectedRoutes: RouteConfig[] = [
   { path: ROUTES.MANAGE_TEAM_VIEW, element: <ManageTeamView /> },
   { path: ROUTES.REPORT_ANALYSIS, element: <ReportAnalysis /> },
   { path: ROUTES.SETTINGS, element: <Settings /> },
+  { path: ROUTES.SUPPORT_FEEDBACK, element: <SupportFeedback /> },
   { path: ROUTES.PROFILE, element: <Profile /> },
 ];
 

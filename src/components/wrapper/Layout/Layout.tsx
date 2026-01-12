@@ -13,6 +13,7 @@ import {
   Team,
   Report,
   Settings,
+  InfoCircle,
 } from "../../../assets";
 import { COLORS, ROUTES, APP_CONFIG } from "../../../constants";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
@@ -137,6 +138,12 @@ const Layout = ({
       path: ROUTES.SETTINGS,
       icon: <Settings className="h-5 w-5" />,
       isActive: location.pathname === ROUTES.SETTINGS,
+    },
+    {
+      label: "Support & Feedback",
+      path: ROUTES.SUPPORT_FEEDBACK,
+      icon: <InfoCircle className="h-5 w-5" />,
+      isActive: location.pathname === ROUTES.SUPPORT_FEEDBACK,
     },
   ];
 

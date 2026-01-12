@@ -472,7 +472,6 @@ const DocumentDetail = () => {
             variant="accent"
             size="sm"
             rounded
-            leftIcon={<Plus className="h-4 w-4" />}
             onClick={handleAddDocument}
           >
             {t("documentVault.addDocument", "Add Document")}
