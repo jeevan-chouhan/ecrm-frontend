@@ -53,5 +53,15 @@ export type {
   ApplicationsListParams,
   ApplicationListItem,
   ApplicationsListResponse,
+  ApplyApplicationParams,
+  ApplyApplicationData,
+  ApplyApplicationResponse,
+  UpdateApplicationStatusPayload,
+  UpdateApplicationStatusData,
+  UpdateApplicationStatusResponse,
+  StatusHistoryParams,
+  StatusHistoryItem,
+  StatusHistoryData,
+  StatusHistoryResponse,
 } from "./types";
 

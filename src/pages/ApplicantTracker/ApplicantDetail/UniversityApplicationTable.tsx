@@ -5,6 +5,7 @@ import { Tooltip } from "@mui/material";
 import { DataTable, Button } from "../../../components";
 import { COLORS } from "../../../constants";
 import { Edit, Calendar } from "../../../assets";
+import { getApplicationStatusLabel, getApplicationStageLabel } from "../../../utils";
 import type { UniversityApplication } from "./types";
 
 interface UniversityApplicationTableProps {
@@ -42,8 +43,15 @@ const UniversityApplicationTable = ({
   ), []);
 
   const renderStageCell = useCallback((params: GridRenderCellParams<UniversityApplication>) => {
-    const stage = params.value?.toLowerCase() || "";
-    const isOfferReceived = stage === "offer received";
+    if (!params.value) {
+      return (
+        <span className="text-sm" style={{ color: COLORS.textMuted }}>
+          -
+        </span>
+      );
+    }
+    const stageLabel = getApplicationStageLabel(params.value);
+    const isOfferReceived = stageLabel.toLowerCase() === "offer received";
     
     return (
       <span
@@ -57,15 +65,16 @@ const UniversityApplicationTable = ({
             : COLORS.accent,
         }}
       >
-        {params.value}
+        {stageLabel}
       </span>
     );
   }, []);
 
   const renderStatusCell = useCallback((params: GridRenderCellParams<UniversityApplication>) => {
-    const status = params.value.toLowerCase();
-    const isOfferReceived = status === "offer received";
-    const isApply = status === "apply";
+    const status = params.value?.toLowerCase() || "";
+    const statusLabel = getApplicationStatusLabel(params.value);
+    const isOfferReceived = statusLabel.toLowerCase() === "offer received";
+    const isApply = status === "apply" || !params.value || status === "";
     
     if (isApply) {
       return (
@@ -83,7 +92,7 @@ const UniversityApplicationTable = ({
             cursor: "pointer",
           }}
         >
-          {params.value}
+          Apply
         </Button>
       );
     }
@@ -100,7 +109,7 @@ const UniversityApplicationTable = ({
             : COLORS.accent,
         }}
       >
-        {params.value}
+        {statusLabel}
       </span>
     );
   }, [onApply]);

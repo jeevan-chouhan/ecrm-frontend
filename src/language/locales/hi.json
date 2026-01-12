@@ -451,7 +451,7 @@
     "addNotesPlaceholder": "कोई अतिरिक्त नोट्स या टिप्पणियां जोड़ें",
     "sendEmailNotification": "छात्र को ईमेल सूचना भेजें",
     "confirmApply": "आवेदन की पुष्टि करें",
-    "confirmApplyMessage": "क्या आप वाकई {{university}} के लिए आवेदन करना चाहते हैं? यह स्थिति को 'आवेदन जमा' पर सेट करेगा और आवेदन तिथि को आज की तारीख पर सेट करेगा।",
+    "confirmApplyMessage": "क्या आप वाकई {{university}} के लिए आवेदन करना चाहते हैं? यह स्थिति को 'लीड' पर सेट करेगा और आवेदन तिथि को आज की तारीख पर सेट करेगा।",
     "no": "नं.",
     "university": "विश्वविद्यालय",
     "country": "देश",
@@ -590,5 +590,40 @@
     "selectYear": "वर्ष चुनें",
     "searchMonth": "महीना खोजें...",
     "searchYear": "वर्ष खोजें..."
+  },
+  "reportAnalysis": {
+    "title": "रिपोर्ट और विश्लेषण",
+    "tabs": {
+      "teamOverview": "टीम अवलोकन",
+      "overallCounts": "कुल गणना",
+      "graphs": "ग्राफ़"
+    },
+    "teamOverview": {
+      "title": "टीम अवलोकन",
+      "adminLabel": "एडमिन",
+      "managerLabel": "मैनेजर",
+      "counselorLabel": "काउंसलर",
+      "enrollmentTypeLabel": "नामांकन प्रकार",
+      "dateRangeLabel": "तिथि सीमा",
+      "selectDateRange": "तिथि सीमा चुनें",
+      "applyFilter": "लागू करें",
+      "clearFilter": "फ़िल्टर साफ़ करें",
+      "tableId": "आईडी",
+      "tableManager": "मैनेजर",
+      "tableCounselor": "काउंसलर",
+      "tableCountry": "देश",
+      "tableTotalApplicants": "कुल आवेदक",
+      "tableLeads": "लीड्स",
+      "tableInProgressApplications": "प्रगति में आवेदन",
+      "tableEnrolledApplications": "नामांकित आवेदन"
+    },
+    "overallCounts": {
+      "title": "कुल गणना",
+      "description": "कुल आंकड़े और गणना देखें"
+    },
+    "graphs": {
+      "title": "ग्राफ़",
+      "description": "विश्लेषण और दृश्य रिपोर्ट देखें"
+    }
   }
 }

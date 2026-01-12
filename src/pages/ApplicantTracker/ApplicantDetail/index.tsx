@@ -1,13 +1,16 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, startTransition } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { GridPaginationModel } from "@mui/x-data-grid";
 import { Layout, Button, StatusChangePopup, ConfirmationPopup } from "../../../components";
 import { COLORS, ROUTES, applicationStatusOptions } from "../../../constants";
 import { ArrowLeft } from "../../../assets";
-import { formatDate, toSlug } from "../../../utils";
+import { formatDate, toSlug, handleApiError } from "../../../utils";
 import type { ApplicantDetail, UniversityApplication, ApplicationStatusHistory } from "./types";
 import { mockApplicantDetail } from "../../../constants";
+import { applicantService } from "../../../services";
+import { useAppDispatch } from "../../../redux/hooks";
+import { addToast } from "../../../redux/slices/toast/toastSlice";
 import ApplicantHeader from "./ApplicantHeader";
 import UniversityApplicationTable from "./UniversityApplicationTable";
 import ApplicantCards from "./ApplicantCards";
@@ -18,6 +21,7 @@ import ApplicationStatusHistoryPopup from "./ApplicationStatusHistoryPopup";
 const ApplicantDetailView = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const { applicantId } = useParams<{ applicantId: string }>();
 
   // State
@@ -48,10 +52,15 @@ const ApplicantDetailView = () => {
   const [isApplying, setIsApplying] = useState(false);
   const [applicationToApply, setApplicationToApply] = useState<UniversityApplication | null>(null);
   
-  // Status history popup state
+  // Status history popup state - using single object for better performance
   const [isStatusHistoryPopupOpen, setIsStatusHistoryPopupOpen] = useState(false);
   const [selectedApplicationForHistory, setSelectedApplicationForHistory] = useState<UniversityApplication | null>(null);
-  const [statusHistory, setStatusHistory] = useState<ApplicationStatusHistory[]>([]);
+  const [statusHistoryData, setStatusHistoryData] = useState<{
+    history: ApplicationStatusHistory[];
+    universityName: string;
+    applicantName: string;
+  } | null>(null);
+  const [isLoadingStatusHistory, setIsLoadingStatusHistory] = useState(false);
 
   // Fetch applicant data
   useEffect(() => {
@@ -384,70 +393,67 @@ const ApplicantDetailView = () => {
     setNotifyStudent(notify);
   }, []);
 
-  // Handle view status history
+  // Handle view status history - optimized with React 18 patterns
   const handleViewStatusHistory = useCallback(async (application: UniversityApplication) => {
+    if (!applicantId) return;
+
+    // Open popup immediately - urgent update
     setSelectedApplicationForHistory(application);
     setIsStatusHistoryPopupOpen(true);
+    setIsLoadingStatusHistory(true);
+    
+    // Clear previous data - non-urgent, can use transition
+    startTransition(() => {
+      setStatusHistoryData(null);
+    });
 
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/applications/${application.id}/status-history`);
-      // if (!response.ok) throw new Error("Failed to fetch status history");
-      // const data = await response.json();
-      // setStatusHistory(data.history || []);
+      // Call Status History API
+      const response = await applicantService.getStatusHistory({
+        applicantId: parseInt(applicantId),
+        applicationPrefId: parseInt(application.id), // application.id is preferenceId
+      });
 
-      // Mock status history data for now
-      // In production, this will come from the API
-      const mockHistory: ApplicationStatusHistory[] = [
-        {
-          id: "1",
-          statusName: "Application Submitted",
-          notes: "Application submitted successfully with all required documents.",
-          time: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days ago
-        },
-        {
-          id: "2",
-          statusName: "Document Pending",
-          notes: "Waiting for transcript verification.",
-          time: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(), // 25 days ago
-        },
-        {
-          id: "3",
-          statusName: "Awaiting Conditional offer",
-          notes: "Application under review by admissions committee.",
-          time: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(), // 20 days ago
-        },
-        {
-          id: "4",
-          statusName: "Received Conditional offer",
-          notes: "Conditional offer received. Student needs to meet language requirements.",
-          time: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(), // 15 days ago
-        },
-        {
-          id: "5",
-          statusName: "Offer Received",
-          notes: "Final offer received. All conditions met.",
-          time: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
-        },
-      ];
+      if (response.status === "success" && response.data && response.data.length > 0) {
+        // Get the first item from the data array
+        const apiData = response.data[0];
+        
+        // Pre-compute all data transformations and create single state object
+        const mappedHistory: ApplicationStatusHistory[] = apiData.historyStatusListList.map((item) => ({
+          id: item.historyId.toString(),
+          statusName: item.applicationStatus,
+          notes: item.notes || "",
+          time: item.createdAt,
+          createdBy: item.createdBy || "",
+        }));
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      setStatusHistory(mockHistory);
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error("Error fetching status history:", error);
+        // Single state update with all data - more efficient
+        setStatusHistoryData({
+          history: mappedHistory,
+          universityName: apiData.universityName || "",
+          applicantName: apiData.applicantName || "",
+        });
+        setIsLoadingStatusHistory(false);
+      } else {
+        throw new Error(response.message || "Failed to fetch status history");
       }
-      setStatusHistory([]);
-      // TODO: Show error toast notification
+    } catch (error: any) {
+      const { message } = handleApiError(error, "Failed to fetch status history");
+      dispatch(addToast({ type: "error", message }));
+      
+      // Update error state synchronously
+      setStatusHistoryData(null);
+      setIsLoadingStatusHistory(false);
     }
-  }, []);
+  }, [applicantId, dispatch]);
 
-  // Handle close status history popup
+  // Handle close status history popup - batch state updates
   const handleCloseStatusHistory = useCallback(() => {
+    // React 18+ automatically batches these state updates
     setIsStatusHistoryPopupOpen(false);
     setSelectedApplicationForHistory(null);
-    setStatusHistory([]);
+    setStatusHistoryData(null);
+    setIsLoadingStatusHistory(false);
   }, []);
 
   if (loading) {
@@ -556,7 +562,7 @@ const ApplicantDetailView = () => {
               <p className="text-sm text-slate-600">
                 {t(
                   "applicantDetailView.confirmApplyMessage",
-                  "Are you sure you want to apply for {{university}}? This will set the status to 'Application Submitted' and set the applied date to today.",
+                  "Are you sure you want to apply for {{university}}? This will set the status to 'Lead' and set the applied date to today.",
                   {
                     university: applicationToApply.university,
                   }
@@ -588,8 +594,8 @@ const ApplicantDetailView = () => {
         <ApplicationStatusHistoryPopup
           isOpen={isStatusHistoryPopupOpen}
           applicationId={selectedApplicationForHistory?.id || null}
-          universityName={selectedApplicationForHistory?.university || ""}
-          statusHistory={statusHistory}
+          statusHistoryData={statusHistoryData}
+          isLoading={isLoadingStatusHistory}
           onClose={handleCloseStatusHistory}
         />
       </div>

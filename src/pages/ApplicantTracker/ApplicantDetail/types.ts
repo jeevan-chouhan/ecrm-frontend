@@ -82,6 +82,7 @@ export interface ApplicationStatusHistory {
   statusName: string;
   notes: string;
   time: string; // ISO date string
+  createdBy?: string; // Name of the user who created the status change
 }
 
 export interface ApplicantDetail {
