@@ -413,7 +413,7 @@ const ManageTeam = () => {
               <Button
                 variant="accent"
                 rounded
-                leftIcon={<Plus className="h-4 w-4" />}
+                // leftIcon={<Plus className="h-4 w-4" />}
                 onClick={handleAddMember}
                 className="w-full sm:w-auto whitespace-nowrap"
               >

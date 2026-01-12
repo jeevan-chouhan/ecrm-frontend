@@ -20,6 +20,7 @@ import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { clearCredentials } from "../../../redux/slices/auth/authSlice";
 import { addToast } from "../../../redux/slices/toast/toastSlice";
 import { resetManageTeamState } from "../../../redux/slices/manageTeam/manageTeamSlice";
+import { resetDashboardState } from "../../../redux/slices/dashboard/dashboardSlice";
 
 interface LayoutProps {
   children: ReactNode;
@@ -60,8 +61,9 @@ const Layout = ({
     // Clear Redux auth state (this also clears localStorage)
     dispatch(clearCredentials());
     
-    // Reset manageTeam state on logout
+    // Reset manageTeam and dashboard state on logout
     dispatch(resetManageTeamState());
+    dispatch(resetDashboardState());
     
     // Show logout success toast
     dispatch(
@@ -82,11 +84,15 @@ const Layout = ({
   const locationState = location.state as { from?: string } | null;
   const isFromDashboard = locationState?.from === "dashboard";
   const isApplicantDetailPage = location.pathname.startsWith("/applicant-tracker") && location.pathname !== ROUTES.APPLICANT_TRACKER;
-  // Handle sidebar item click - reset manageTeam state when navigating away
+  // Handle sidebar item click - reset state when navigating away
   const handleSidebarItemClick = (path: string) => {
-    // Only reset if navigating away from ManageTeam routes
+    // Reset manageTeam state if navigating away from ManageTeam routes
     if (!path.startsWith(ROUTES.MANAGE_TEAM)) {
       dispatch(resetManageTeamState());
+    }
+    // Reset dashboard state if navigating away from Dashboard
+    if (path !== ROUTES.DASHBOARD) {
+      dispatch(resetDashboardState());
     }
   };
 

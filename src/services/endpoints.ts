@@ -34,6 +34,7 @@ export const ENDPOINTS = {
 
   // Applicants Endpoints
   APPLICANTS: {
+    OVERVIEW: "/applicants/overview",
     APPLICATIONS_LIST: "/applicants/applicationsList",
     APPLY: "/applicants/apply",
     UPDATE_APPLICATION_STATUS: "/applicants/update-applicationStatus",

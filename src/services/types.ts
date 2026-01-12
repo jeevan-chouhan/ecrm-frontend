@@ -399,3 +399,45 @@ export interface StatusHistoryData {
 
 export type StatusHistoryResponse = ApiResponse<StatusHistoryData[]>;
 
+// ==========================================
+// Applicant Overview Types
+// ==========================================
+
+export interface ApplicantOverviewParams {
+  agencyId: number | null;
+  assignedAdminId?: number | null;
+  assignedManagerId?: number | null;
+  search?: string | null;
+  status?: string | null;
+  enrollmentType?: string | null;
+  page?: number | null;
+  size?: number | null;
+  sortBy?: string | null;
+  asc?: boolean | null;
+}
+
+export interface ApplicantOverviewItem {
+  applicantId: number;
+  applicantName: string;
+  email: string;
+  enrollmentType: string;
+  notes: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface ApplicantOverviewData {
+  content: ApplicantOverviewItem[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+  numberOfElements: number;
+  nextPage: number | null;
+  prevPage: number | null;
+}
+
+export type ApplicantOverviewResponse = ApiResponse<ApplicantOverviewData>;
+

@@ -48,15 +48,15 @@ export const MONTH_SHORT_NAMES = [
 ] as const;
 
 export const enrollmentTypes: SelectOption[] = [
-  { value: "walk-in", label: "Walk-in" },
-  { value: "referred-to-agency", label: "Referred to Agency Partner" },
-  { value: "referred-by-agency", label: "Referred by Agency Partner" },
+  { value: "WALK_IN", label: "Walk-in" },
+  { value: "REFFERED_TO_AGENCY", label: "Referred to Agency Partner" },
+  { value: "REFFERED_BY_AGENCY", label: "Referred by Agency Partner" }, 
 ];
 
 export const genderTypes: SelectOption[] = [
-  { value: "male", label: "Male" },
-  { value: "female", label: "Female" },
-  { value: "other", label: "Other" },
+  { value: "MALE", label: "Male" },
+  { value: "FEMALE", label: "Female" },
+  { value: "OTHER", label: "Other" },
 ];
 
 // Yes/No options
@@ -121,8 +121,8 @@ export interface RoleGroup {
 // Status filter options for dropdown
 export const statusFilterOptions: SelectOption[] = [
   { value: "all", label: "All" },
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "INACTIVE", label: "Inactive" },
 ];
 
 // Mock data for team members (flat list for table)
