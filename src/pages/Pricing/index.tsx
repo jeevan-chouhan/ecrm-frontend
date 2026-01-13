@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import PublicLayout from "../../components/wrapper/PublicLayout";
 import { Layout, Button } from "../../components";
 import { COLORS, ROUTES } from "../../constants";
@@ -16,11 +16,11 @@ interface PricingPlan {
   badge?: string;
   badgeColor?: string;
   description: string;
-  price: string;
-  priceSubtext: string;
+  monthlyPrice: string;
+  monthlySubtext: string;
+  annualPrice: string;
+  annualSubtext: string;
   studentLimit: string;
-  trialText?: string;
-  bonusText?: string;
   features: PlanFeature[];
   buttonText: string;
 }
@@ -30,17 +30,19 @@ const pricingPlans: PricingPlan[] = [
     id: "pro",
     name: "Agency Pro",
     badge: "Most Popular",
-    badgeColor: COLORS.badgeGold,    description: "Designed for growing teams needing collaboration and automation.",
-    price: "$50",
-    priceSubtext: "/month billed monthly",
+    badgeColor: COLORS.badgeGold,
+    description: "Designed for growing teams needing collaboration and automation.",
+    monthlyPrice: "$50",
+    monthlySubtext: "/month billed monthly",
+    annualPrice: "$420",
+    annualSubtext: "/year billed annually",
     studentLimit: "Up to 50 Students",
-    trialText: "✓ 14-Day Free Trial",
     features: [
       { text: "Manual student data entry", included: true },
       { text: "Internal document upload", included: true },
       { text: "Visa status tracking", included: true },
       { text: "Magic links for visa updates & document upload", included: true },
-      { text: "Sub-Agent portal with restricted access", included: true },
+      { text: "Sub-Agent Portal for collaboration", included: true },
       { text: "Morning War Room financial alert modal", included: true },
       { text: "Improved commission visibility", included: true },
       { text: "Faster operational workflows", included: true },
@@ -54,13 +56,13 @@ const pricingPlans: PricingPlan[] = [
     badge: "Best Value",
     badgeColor: COLORS.badgePurple,
     description: "For established agencies requiring unlimited scale and priority support.",
-    price: "$420",
-    priceSubtext: "/year billed annually",
+    monthlyPrice: "$250",
+    monthlySubtext: "/month billed monthly",
+    annualPrice: "$2388",
+    annualSubtext: "/year billed annually (2 months free)",
     studentLimit: "Unlimited Students",
-    bonusText: "2 months free (12+2 months)",
     features: [
       { text: "All Pro features", included: true },
-      { text: "Unlimited student capacity", included: true },
       { text: "Fastest & optimized workflows", included: true },
       { text: "Priority Support Badge", included: true },
       { text: "Priority response time", included: true },
@@ -74,6 +76,7 @@ const pricingPlans: PricingPlan[] = [
 
 const Pricing = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   
   // Check if accessed from settings (protected route)
@@ -85,8 +88,8 @@ const Pricing = () => {
 
   const handleButtonClick = (plan: PricingPlan) => {
     setSelectedPlan(plan.id);
-    console.log("Selected plan:", plan.name);
-    // Handle plan selection logic here
+    // Navigate to register page with selected plan
+    navigate(ROUTES.REGISTER, { state: { selectedPlan: plan.id, planName: plan.name } });
   };
 
   // Wrapper component based on route
@@ -114,7 +117,7 @@ const Pricing = () => {
               Explore features included in your current plan. Upgrade anytime to unlock more capabilities.
             </p>
             <p className="text-xs" style={{ color: COLORS.textMuted }}>
-              * Taxes will be over and above the payment as per the GST laws.
+              * Prices exclude applicable taxes (VAT/GST/Sales Tax), which will be calculated at checkout.
             </p>
           </div>
 
@@ -166,38 +169,37 @@ const Pricing = () => {
                   {plan.description}
                 </p>
 
-                {/* Price */}
-                <div className="mb-2">
+                {/* Monthly Price */}
+                <div className="mb-1">
                   <span
-                    className="text-4xl font-bold"
+                    className="text-3xl font-bold"
                     style={{ color: COLORS.textDark }}
                   >
-                    {plan.price}
+                    {plan.monthlyPrice}
                   </span>
                   <span
-                    className="text-base ml-1"
+                    className="text-sm ml-1"
                     style={{ color: COLORS.textMuted }}
                   >
-                    {plan.priceSubtext}
+                    {plan.monthlySubtext}
                   </span>
                 </div>
                 
-                {/* Bonus text */}
-                {plan.bonusText && (
-                  <p className="text-sm font-medium mb-2" style={{ color: COLORS.success }}>
-                    {plan.bonusText}
-                  </p>
-                )}
-
-                {/* Trial text */}
-                {plan.trialText && (
-                  <p
-                    className="text-sm font-medium mb-4"
-                    style={{ color: COLORS.success }}
+                {/* Annual Price */}
+                <div className="mb-4">
+                  <span
+                    className="text-3xl font-bold"
+                    style={{ color: COLORS.textDark }}
                   >
-                    {plan.trialText}
-                  </p>
-                )}
+                    {plan.annualPrice}
+                  </span>
+                  <span
+                    className="text-sm ml-1"
+                    style={{ color: COLORS.textMuted }}
+                  >
+                    {plan.annualSubtext}
+                  </span>
+                </div>
 
                 {/* Divider */}
                 <div

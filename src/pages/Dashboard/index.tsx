@@ -6,10 +6,17 @@ import { COLORS, ROUTES } from "../../constants";
 import { useAppSelector } from "../../redux/hooks";
 import ApplicantOverview from "./ApplicantOverview";
 
+// Maximum applicants limit
+const MAX_APPLICANTS = 49;
+
 const Dashboard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { accessToken, user } = useAppSelector((state) => state.auth);
+  const { pagination } = useAppSelector((state) => state.dashboard);
+
+  // Check if applicant limit is reached
+  const isApplicantLimitReached = pagination.totalElements >= MAX_APPLICANTS;
 
   // Decode and log access token on dashboard load (for debugging)
   useEffect(() => {
@@ -49,7 +56,14 @@ const Dashboard = () => {
           >
             {t("dashboard.title", "Dashboard")}
           </h1>
-          <Button variant="accent" size="md" rounded onClick={handleAddApplicant}>
+          <Button 
+            variant="accent" 
+            size="md" 
+            rounded 
+            onClick={handleAddApplicant}
+            disabled={isApplicantLimitReached}
+            title={isApplicantLimitReached ? t("dashboard.applicantLimitReached", "Applicant limit (50) reached. Upgrade your plan to add more.") : undefined}
+          >
             {t("dashboard.addApplicant", "Add Applicant")}
           </Button>
         </div>

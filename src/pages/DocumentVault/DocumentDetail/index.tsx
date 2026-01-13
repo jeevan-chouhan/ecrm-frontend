@@ -1,9 +1,10 @@
 import { useState, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Layout, Card, Button, Popup, DataTable } from "../../../components";
 import type { GridColDef, GridRowId } from "../../../components";
 import { COLORS } from "../../../constants";
+import { getEnrollmentTypeLabel } from "../../../utils/commonUtils";
 import {
   ArrowLeft,
   File,
@@ -13,6 +14,15 @@ import {
 } from "../../../assets";
 import UploadDocView from "./UploadDocView";
 import type { ViewerFile } from "./UploadDocView";
+
+// Interface for navigation state from DocumentVault
+interface LocationState {
+  applicantName?: string;
+  contactNo?: string;
+  email?: string;
+  enrollmentType?: string;
+  status?: string;
+}
 
 // Document type icons mapping
 const documentIcons: Record<string, string> = {
@@ -37,22 +47,6 @@ interface DocumentItem {
   isNew?: boolean;
 }
 
-// Mock applicants data
-const applicantsData: Record<string, { name: string; applicantId: string; stage: string; enrollmentType: string }> = {
-  "S324": {
-    name: "Jane Doe",
-    applicantId: "S324",
-    stage: "Application Submitted",
-    enrollmentType: "Walk-in",
-  },
-  "S342": {
-    name: "Rayn",
-    applicantId: "S342",
-    stage: "Document Submission",
-    enrollmentType: "Agency Partner - IDP",
-  },
-};
-
 // Mock documents data
 const initialDocuments: DocumentItem[] = [
   { id: "1", name: "Passport", type: "passport", uploaded: false, verified: false },
@@ -67,6 +61,7 @@ const initialDocuments: DocumentItem[] = [
 const DocumentDetail = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { applicantId } = useParams<{ applicantId: string }>();
   const [documents, setDocuments] = useState<DocumentItem[]>(initialDocuments);
   const [selectedDocs, setSelectedDocs] = useState<GridRowId[]>([]);
@@ -77,8 +72,15 @@ const DocumentDetail = () => {
   const [approvePopupOpen, setApprovePopupOpen] = useState(false);
   const [approvingDocId, setApprovingDocId] = useState<string | null>(null);
 
-  // Get applicant data
-  const applicantData = applicantsData[applicantId || "S324"] || applicantsData["S324"];
+  // Get applicant data from navigation state
+  const locationState = location.state as LocationState | null;
+  const applicantData = {
+    name: locationState?.applicantName || "",
+    applicantId: applicantId || "",
+    stage: "Application Submitted",
+    enrollmentType: locationState?.enrollmentType || "",
+    status: locationState?.status || "",
+  };
 
   // Stats
   const totalDocuments = documents.length;
@@ -414,7 +416,7 @@ const DocumentDetail = () => {
               ID: {applicantData.applicantId}
             </p>
             <p className="text-sm" style={{ color: COLORS.accent }}>
-              Enrollment Type - {applicantData.enrollmentType}
+              Enrollment Type - {getEnrollmentTypeLabel(applicantData.enrollmentType)}
             </p>
           </div>
         </div>

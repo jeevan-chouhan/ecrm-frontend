@@ -7,7 +7,7 @@ import { DataTable, StatusChangePopup, SearchBar, Select, Button } from "../../c
 import { COLORS, ROUTES, typography, enrollmentTypes, statusFilterOptions } from "../../constants";
 import { Eye, ToggleStatus } from "../../assets";
 import { formatDateValue } from "../../utils/dateUtils";
-import { getEnrollmentTypeLabel } from "../../utils/commonUtils";
+import { getEnrollmentTypeLabel, cleanContactNumber } from "../../utils/commonUtils";
 import { userService } from "../../services";
 import type { ApplicantOverviewItem } from "../../services";
 import { useAppSelector, useAppDispatch } from "../../redux/hooks";
@@ -33,7 +33,8 @@ const transformApiData = (items: ApplicantOverviewItem[]): ApplicantOverviewRow[
     // Format: "Rahul Sharma (+91 9876543210)"
     const nameMatch = item.applicantName.match(/^(.+?)\s*\(([^)]+)\)$/);
     const name = nameMatch ? nameMatch[1].trim() : item.applicantName;
-    const contactNo = nameMatch ? nameMatch[2].trim() : "";
+    const rawContactNo = nameMatch ? nameMatch[2].trim() : "";
+    const contactNo = cleanContactNumber(rawContactNo);
 
     return {
       id: item.applicantId,

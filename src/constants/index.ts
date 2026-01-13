@@ -186,7 +186,7 @@ export interface TeamMemberDetail {
 
 // Role options for dropdown
 export const roleOptions: SelectOption[] = [
-  { value: "admin-primary", label: "Primary Admin" },
+  { value: "primaryAdmin", label: "Primary Admin" },
   { value: "admin", label: "Admin" },
   { value: "manager", label: "Manager" },
   { value: "counselor", label: "Counselor" },

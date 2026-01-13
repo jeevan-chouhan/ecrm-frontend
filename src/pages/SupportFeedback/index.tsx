@@ -166,7 +166,7 @@ const SupportFeedback = () => {
             rounded
             onClick={handleOpenSubmitModal}
           >
-            {t("supportFeedback.addQuery", "Add Query")}
+            {t("supportFeedback.raiseQuery", "Raise Query")}
           </Button>
         </div>
 
@@ -184,7 +184,7 @@ const SupportFeedback = () => {
       <Popup
         isOpen={isSubmitModalOpen}
         onClose={handleCloseSubmitModal}
-        title={t("supportFeedback.addQuery", "Add Query")}
+        title={t("supportFeedback.raiseQuery", "Raise Query")}
         size="xl"
       >
         <form onSubmit={formik.handleSubmit} className="space-y-4">
@@ -230,7 +230,7 @@ const SupportFeedback = () => {
               rounded
               disabled={formik.isSubmitting}
             >
-              {t("common.save", "Save")}
+              {t("common.submit", "Submit")}
             </Button>
           </div>
         </form>
