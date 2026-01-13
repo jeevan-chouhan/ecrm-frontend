@@ -592,7 +592,7 @@
     "verify": "Verify",
     "approve": "Approve",
     "noDocuments": "No Documents Found",
-    "searchPlaceholder": "Search Document Name, ID...",
+    "searchPlaceholder": "Search Applicant Name, ID, Email...",
     "cannotPreview": "This File Type Cannot Be Previewed Directly.",
     "addDocument": "Add Document",
     "approveDocument": "Approve Document",

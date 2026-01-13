@@ -7,7 +7,7 @@ import { useLoggedInUserInfo } from "./useLoggedInUserInfo";
  * Custom hook to get filtered role options based on user's permissions
  * 
  * Logic:
- * - isPrimaryAdmin = true → Admin, Manager, Counselor, Billing
+ * - isPrimaryAdmin = true → Primary Admin, Admin, Manager, Counselor, Billing
  * - isPrimaryAdmin = false && role = ADMIN → Manager, Counselor, Billing
  * - isPrimaryAdmin = false && role = MANAGER → Counselor, Billing
  * 
@@ -20,9 +20,9 @@ export const useFilteredRoleOptions = (): SelectOption[] => {
     if (!loggedInUser) return [];
 
     if (loggedInUser.isPrimary) {
-      // Primary Admin can create: Admin, Manager, Counselor, Billing
+      // Primary Admin can create: Primary Admin, Admin, Manager, Counselor, Billing
       return roleOptions.filter(option => 
-        ["admin", "manager", "counselor", "billing"].includes(option.value)
+        ["primaryAdmin", "admin", "manager", "counselor", "billing"].includes(option.value)
       );
     } else if (loggedInUser.isAdmin) {
       // Admin can create: Manager, Counselor, Billing

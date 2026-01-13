@@ -21,6 +21,7 @@ import { clearCredentials } from "../../../redux/slices/auth/authSlice";
 import { addToast } from "../../../redux/slices/toast/toastSlice";
 import { resetManageTeamState } from "../../../redux/slices/manageTeam/manageTeamSlice";
 import { resetDashboardState } from "../../../redux/slices/dashboard/dashboardSlice";
+import { resetDocumentVaultState } from "../../../redux/slices/documentVault/documentVaultSlice";
 
 interface LayoutProps {
   children: ReactNode;
@@ -69,9 +70,10 @@ const Layout = ({
     // Clear Redux auth state (this also clears localStorage)
     dispatch(clearCredentials());
     
-    // Reset manageTeam and dashboard state on logout
+    // Reset manageTeam, dashboard and documentVault state on logout
     dispatch(resetManageTeamState());
     dispatch(resetDashboardState());
+    dispatch(resetDocumentVaultState());
     
     // Show logout success toast
     dispatch(
@@ -101,6 +103,10 @@ const Layout = ({
     // Reset dashboard state if navigating away from Dashboard
     if (path !== ROUTES.DASHBOARD) {
       dispatch(resetDashboardState());
+    }
+    // Reset documentVault state if navigating away from DocumentVault routes
+    if (!path.startsWith(ROUTES.DOCUMENT_VAULT)) {
+      dispatch(resetDocumentVaultState());
     }
   };
 

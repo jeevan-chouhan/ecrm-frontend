@@ -85,3 +85,28 @@ export const getApplicationStageLabel = (stageValue: string | null | undefined):
   return applicationStageMap.get(stageValue) || stageValue;
 };
 
+/**
+ * Clean contact number by removing duplicate country code
+ * e.g., "+91 917897897899" -> "+91 7897897899"
+ * @param contactNo - The contact number string (e.g., "+91 917897897899")
+ * @returns Cleaned contact number without duplicate country code
+ */
+export const cleanContactNumber = (contactNo: string): string => {
+  if (!contactNo) return "";
+  
+  // Match pattern: +XX XXNUMBER where XX is the country code that repeats
+  const match = contactNo.match(/^(\+\d+)\s+(\d+)$/);
+  if (match) {
+    const countryCode = match[1]; // e.g., "+91"
+    const number = match[2]; // e.g., "917897897899"
+    const countryDigits = countryCode.replace("+", ""); // e.g., "91"
+    
+    // If number starts with country code digits, remove them
+    if (number.startsWith(countryDigits)) {
+      return `${countryCode} ${number.slice(countryDigits.length)}`;
+    }
+  }
+  
+  return contactNo;
+};
+
