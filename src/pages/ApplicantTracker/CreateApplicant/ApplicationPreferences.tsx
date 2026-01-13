@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback, useEffect } from "react";
+import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useTranslation } from "react-i18next";
@@ -8,20 +8,30 @@ import PreferenceForm from "./PreferenceForm";
 import PreferenceCard from "./PreferenceCard";
 import type { PreferenceItem, ApplicationPreferencesFormData } from "./types";
 import { useDataChangeTracking, useFormSync, usePreferenceLogic } from "./hooks";
+import { applicantService } from "../../../services";
+import { useAppDispatch } from "../../../redux/hooks";
+import { addToast } from "../../../redux/slices/toast/toastSlice";
+import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
+import { handleApiError } from "../../../utils";
 
 interface ApplicationPreferencesProps {
   initialValues: ApplicationPreferencesFormData;
   onUpdate: (data: ApplicationPreferencesFormData) => void;
   onSaveAndNext?: () => void;
   onBack?: () => void;
+  applicantId?: number | string | null; // Current applicant ID (required for API)
 }
 
-const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack }: ApplicationPreferencesProps) => {
+const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack, applicantId }: ApplicationPreferencesProps) => {
   const { t, i18n } = useTranslation();
+  const dispatch = useAppDispatch();
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
   const [isFormValid, setIsFormValid] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [shouldNavigateNext, setShouldNavigateNext] = useState(false);
+  const isSubmittingRef = useRef(false); // Prevent duplicate submissions
 
   // Reusable preference validation schema
   const getPreferenceSchema = useCallback(() => {
@@ -72,6 +82,29 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
     );
   };
 
+  // Map program value to API course type
+  const mapProgramToCourseType = useCallback((program: string): string => {
+    const programMap: Record<string, string> = {
+      "ug": "BACHELOR",
+      "pg": "MASTER",
+      "phd": "PHD",
+      "diploma": "DIPLOMA",
+    };
+    return programMap[program.toLowerCase()] || program.toUpperCase();
+  }, []);
+
+  // Convert form preference to API payload format
+  const convertPreferenceToApiFormat = useCallback((pref: PreferenceItem) => {
+    return {
+      desiredCountryId: parseInt(pref.desiredCountry) || 0,
+      desiredUniversityId: parseInt(pref.desiredUniversity) || 0,
+      desiredCourseType: mapProgramToCourseType(pref.program),
+      desiredCampusId: parseInt(pref.desiredCampus) || 0,
+      desiredCourseId: parseInt(pref.course) || 0,
+      desiredIntake: pref.desiredIntake, // Format: "YYYY-MM"
+    };
+  }, [mapProgramToCourseType]);
+
   // Ensure we have at least one preference (empty if none exist)
   // Use JSON.stringify to detect deep changes in the preferences array
   const initialPreferencesKey = useMemo(() => 
@@ -94,50 +127,91 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
     enableReinitialize: true,
     validationSchema,
     onSubmit: async (values) => {
+      // Prevent duplicate submissions
+      if (isSubmittingRef.current) {
+        return;
+      }
+
+      // Check if applicantId is available
+      if (!applicantId) {
+        dispatch(
+          addToast({
+            type: "error",
+            message: t("applicant.applicantIdRequired", "Please save personal details first to get applicant ID"),
+          })
+        );
+        return;
+      }
+
+      isSubmittingRef.current = true;
+      setIsSaving(true);
+      dispatch(showLoader());
+
       try {
-        // Create payload object - only include saved preferences
-        const savedPreferences = values.preferences.filter((pref) => pref.saved && isPreferenceComplete(pref));
-        const payload = {
-          preferences: savedPreferences.map((pref) => ({
-            desiredCountry: pref.desiredCountry,
-            program: pref.program,
-            desiredUniversity: pref.desiredUniversity,
-            desiredCampus: pref.desiredCampus,
-            course: pref.course,
-            desiredIntake: pref.desiredIntake,
-            assignCounselor: pref.assignCounselor,
-            agencyPartnerName: pref.agencyPartnerName,
-          })),
-        };
-
-        // TODO: Replace with actual API endpoint
-        // const response = await fetch("/api/applicant/preferences", {
-        //   method: "POST",
-        //   headers: {
-        //     "Content-Type": "application/json",
-        //   },
-        //   body: JSON.stringify(payload),
-        // });
-        // const result = await response.json();
-
         // Only call API if data has changed since last save
-        if (hasDataChanged) {
-          if (import.meta.env.DEV) {
-            console.log("Payload ready for API:", payload);
-            console.log("API endpoint: POST /api/applicant/preferences");
-          }
-          
-          // Mark data as saved
-          markAsSaved({ preferences: [...values.preferences] });
-        } else {
+        // This prevents duplicate API calls when clicking Save and then Save & Next with same data
+        if (!hasDataChanged) {
           if (import.meta.env.DEV) {
             console.log("No changes detected. Skipping API call.");
           }
+          
+          // Mark data as saved (in case it wasn't marked before)
+          markAsSaved({ preferences: [...values.preferences] });
+          
+          // Still navigate if needed
+          if (shouldNavigateNext && onSaveAndNext) {
+            onSaveAndNext();
+            setShouldNavigateNext(false);
+          }
+          return;
         }
-      } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error("Error saving application preferences:", error);
+
+        // Create payload object - only include saved preferences
+        const savedPreferences = values.preferences.filter((pref) => pref.saved && isPreferenceComplete(pref));
+        
+        if (savedPreferences.length === 0) {
+          dispatch(
+            addToast({
+              type: "error",
+              message: t("validation.atLeastOnePreferenceRequired", "At least one complete preference is required"),
+            })
+          );
+          return;
         }
+
+        // Convert to API format
+        const payload = savedPreferences.map(convertPreferenceToApiFormat);
+
+        // Call API
+        const response = await applicantService.createApplicationPreferences(applicantId, payload);
+
+        if (response.status === "success" && response.data) {
+          // Show success toast
+          dispatch(
+            addToast({
+              type: "success",
+              message: response.message || t("applicant.preferencesSaved", "Application preferences saved successfully"),
+            })
+          );
+
+          // Mark data as saved
+          markAsSaved({ preferences: [...values.preferences] });
+
+          // Navigate to next tab if "Save & Next" was clicked
+          if (shouldNavigateNext && onSaveAndNext) {
+            onSaveAndNext();
+            setShouldNavigateNext(false);
+          }
+        } else {
+          throw new Error(response.message || "Failed to save application preferences");
+        }
+      } catch (error: any) {
+        const { message } = handleApiError(error, "Failed to save application preferences");
+        dispatch(addToast({ type: "error", message }));
+      } finally {
+        isSubmittingRef.current = false;
+        setIsSaving(false);
+        dispatch(hideLoader());
       }
     },
   });
@@ -186,10 +260,11 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
     }
   }, [initialPreferencesKey]); // Re-run when initialValues change
 
-  // Check form validity - at least one complete preference required
+  // Check form validity - at least one complete preference required (saved or not)
+  // This allows Save & Next to work even if preferences aren't saved yet (they'll be saved first)
   useEffect(() => {
     const completePreferences = formik.values.preferences.filter((pref) => 
-      pref.saved && isPreferenceComplete(pref)
+      isPreferenceComplete(pref)
     );
     setIsFormValid(completePreferences.length > 0);
   }, [formik.values.preferences]);
@@ -310,7 +385,9 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
     setDeletingIndex(null);
   }, []);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
+    if (isSaving || isSubmittingRef.current) return;
+
     // Save all unsaved preferences first
     const unsavedPreferences = formik.values.preferences.filter((pref) => !pref.saved);
     
@@ -348,6 +425,12 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
 
       // If there are validation errors, don't proceed with form submission
       if (hasErrors) {
+        dispatch(
+          addToast({
+            type: "error",
+            message: t("validation.pleaseFillRequiredFields", "Please fill all required fields"),
+          })
+        );
         return;
       }
     }
@@ -357,40 +440,80 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
       setEditingIndex(null);
     }
 
+    setShouldNavigateNext(false);
     // Submit the form (which will call API with saved preferences)
-    formik.handleSubmit();
-  };
+    await formik.submitForm();
+  }, [isSaving, formik, editingIndex, getPreferenceSchema, markAllFieldsAsTouched, handleValidationErrors, dispatch, t]);
 
-  const handleSaveAndNextClick = async () => {
+  const handleSaveAndNextClick = useCallback(async () => {
+    if (isSaving || isSubmittingRef.current) return;
+
     // Check if there are any unsaved preferences
     const unsavedPreferences = formik.values.preferences.filter((pref) => !pref.saved);
     if (unsavedPreferences.length > 0) {
-      // Mark all unsaved preference fields as touched to show errors
+      // Validate and save each unsaved preference first
+      const preferenceSchema = getPreferenceSchema();
+      let hasErrors = false;
+      const updatedPreferences = [...formik.values.preferences];
       const touchedPreferences = formik.values.preferences.map((pref, index) => {
         if (!pref.saved) {
           return markAllFieldsAsTouched();
         }
         return formik.touched.preferences?.[index] || {};
       });
+
+      for (const pref of unsavedPreferences) {
+        const index = formik.values.preferences.findIndex((p) => p.id === pref.id);
+        try {
+          await preferenceSchema.validate(pref, { abortEarly: false });
+          updatedPreferences[index] = {
+            ...updatedPreferences[index],
+            saved: true,
+          };
+        } catch (error) {
+          hasErrors = true;
+          touchedPreferences[index] = markAllFieldsAsTouched();
+          handleValidationErrors(error, index);
+        }
+      }
+
+      formik.setFieldValue("preferences", updatedPreferences);
       formik.setTouched({
         preferences: touchedPreferences as any,
       });
-      return; // Don't proceed if there are unsaved preferences
+
+      if (hasErrors) {
+        dispatch(
+          addToast({
+            type: "error",
+            message: t("validation.pleaseFillRequiredFields", "Please fill all required fields"),
+          })
+        );
+        return;
+      }
     }
 
     // Validate all saved preferences before proceeding
-    const savedPreferences = formik.values.preferences.filter((pref) => pref.saved);
+    const savedPreferences = formik.values.preferences.filter((pref) => pref.saved && isPreferenceComplete(pref));
     if (savedPreferences.length === 0) {
-      // No saved preferences, show error
+      dispatch(
+        addToast({
+          type: "error",
+          message: t("validation.atLeastOnePreferenceRequired", "At least one complete preference is required"),
+        })
+      );
       return;
     }
 
-    // Submit form and then navigate
-    await formik.submitForm();
-    if (onSaveAndNext) {
-      onSaveAndNext();
+    // Close edit mode if any preference was being edited
+    if (editingIndex !== null) {
+      setEditingIndex(null);
     }
-  };
+
+    setShouldNavigateNext(true);
+    // Submit form and then navigate (navigation happens in onSubmit)
+    await formik.submitForm();
+  }, [isSaving, formik, editingIndex, getPreferenceSchema, markAllFieldsAsTouched, handleValidationErrors, isPreferenceComplete, dispatch, t]);
 
 
   const incomplete = getIncompletePreferences();
@@ -486,6 +609,8 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
           type="button" 
           variant="accent" 
           onClick={handleSave} 
+          isLoading={isSaving}
+          disabled={isSaving || !applicantId}
           rounded
           className="w-full sm:w-auto"
         >
@@ -495,7 +620,8 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
           type="button" 
           variant="accent" 
           onClick={handleSaveAndNextClick}
-          disabled={!isFormValid}
+          disabled={!isFormValid || isSaving || !applicantId}
+          isLoading={isSaving}
           rounded
           className="w-full sm:w-auto"
         >

@@ -397,7 +397,6 @@ const ApplicantDetailView = () => {
   const handleViewStatusHistory = useCallback(async (application: UniversityApplication) => {
     if (!applicantId) return;
 
-    // Open popup immediately - urgent update
     setSelectedApplicationForHistory(application);
     setIsStatusHistoryPopupOpen(true);
     setIsLoadingStatusHistory(true);

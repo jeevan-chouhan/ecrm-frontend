@@ -67,5 +67,15 @@ export type {
   ApplicantOverviewItem,
   ApplicantOverviewData,
   ApplicantOverviewResponse,
+  CreatePersonalDetailsPayload,
+  CreatePersonalDetailsResponse,
+  GetPersonalDetailsResponse,
+  UpdatePersonalDetailsPayload,
+  UpdatePersonalDetailsResponse,
+  PersonalDetailsData,
+  ApplicationPreferenceItem,
+  CreateApplicationPreferencesPayload,
+  CreateApplicationPreferencesResponse,
+  ApplicationPreferenceData,
 } from "./types";
 

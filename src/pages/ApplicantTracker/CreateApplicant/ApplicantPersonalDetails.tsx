@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, useCallback, useRef } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useTranslation } from "react-i18next";
@@ -8,6 +8,11 @@ import type { SelectOption } from "../../../components";
 import type { PersonalDetailsFormData } from "./types";
 import { useDataChangeTracking, useFormSync, useFormValidation } from "./hooks";
 import { fileToBase64 } from "./utils/fileUtils";
+import { applicantService } from "../../../services";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { addToast } from "../../../redux/slices/toast/toastSlice";
+import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
+import { handleApiError } from "../../../utils";
 
 interface ApplicantPersonalDetailsProps {
   initialValues: PersonalDetailsFormData;
@@ -15,14 +20,27 @@ interface ApplicantPersonalDetailsProps {
   onSaveAndNext?: () => void;
   onBack?: () => void;
   onReset?: () => void;
+  applicantId?: number | string | null; // Current applicant ID (for update mode)
+  onApplicantIdChange?: (applicantId: number) => void; // Callback when applicantId is created/updated
 }
 
-const ApplicantPersonalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack }: ApplicantPersonalDetailsProps) => {
+const ApplicantPersonalDetails = ({ 
+  initialValues, 
+  onUpdate, 
+  onSaveAndNext, 
+  onBack,
+  applicantId,
+  onApplicantIdChange,
+}: ApplicantPersonalDetailsProps) => {
   const { t, i18n } = useTranslation();
+  const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
   const enrollmentTypeOptions: SelectOption[] = enrollmentTypes;
   const genderOptions: SelectOption[] = genderTypes;
   const [shouldNavigateNext, setShouldNavigateNext] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const isSubmittingRef = useRef(false); // Prevent duplicate submissions
 
   // Validation schema using Yup with i18n messages (memoized to avoid recreation on every render)
   const validationSchema = useMemo(
@@ -44,78 +62,134 @@ const ApplicantPersonalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBa
     [t, i18n.language]
   );
 
+  // Helper function to format profile photo for API
+  const formatProfilePhoto = useCallback(async (file: File | null): Promise<string | null> => {
+    if (!file) {
+      return null;
+    }
+
+    try {
+      // Convert file to base64 data URL
+      const base64DataUrl = await fileToBase64(file);
+      
+      // Format as JSON string with accessUrl (base64) and fileName
+      const profilePhotoJson = JSON.stringify({
+        accessUrl: base64DataUrl, // Backend can process base64 or upload to S3
+        fileName: file.name,
+      });
+
+      return profilePhotoJson;
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error("Error converting file to base64:", error);
+      }
+      throw error;
+    }
+  }, []);
+
+  // Format date to YYYY-MM-DD
+  const formatDate = useCallback((date: Date | null): string => {
+    if (!date) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }, []);
+
   const formik = useFormik<PersonalDetailsFormData>({
     initialValues,
     enableReinitialize: true,
     validationSchema,
     onSubmit: async (values) => {
+      // Prevent duplicate submissions
+      if (isSubmittingRef.current) {
+        return;
+      }
+
+      isSubmittingRef.current = true;
+      setIsSaving(true);
+      dispatch(showLoader());
+
       try {
-        // Convert file to base64 if exists (for future API call)
-        let profilePhotoBase64: string | null = null;
-        if (values.profilePhoto) {
-          profilePhotoBase64 = await fileToBase64(values.profilePhoto);
-        }
-
-        // Create payload object
-        const payload = {
-          profilePhoto: profilePhotoBase64,
-          enrollmentType: values.enrollmentType,
-          name: values.name,
-          dateOfBirth: values.dateOfBirth ? values.dateOfBirth.toISOString() : null,
-          gender: values.gender,
-          countryCode: values.countryCode,
-          contactNumber: values.contactNumber,
-          emailId: values.emailId || null,
-          permanentAddress: values.permanentAddress || null,
-          notes: values.notes || null,
-        };
-
-        // TODO: Replace with actual API call when backend is ready
-        // const response = await fetch("/api/applicant/personal-details", {
-        //   method: "POST",
-        //   headers: {
-        //     "Content-Type": "application/json",
-        //   },
-        //   body: JSON.stringify(payload),
-        // });
-        // if (!response.ok) {
-        //   throw new Error("Failed to save personal details");
-        // }
-        // const result = await response.json();
-
         // Only call API if data has changed since last save
-        if (hasDataChanged) {
-          // Log payload in development only
-          if (import.meta.env.DEV) {
-            console.log("Personal details payload ready for API:", payload);
-            console.log("API endpoint: POST /api/applicant/personal-details");
-          }
-          
-          // Mark data as saved
-          markAsSaved(values);
-        } else {
+        // This prevents duplicate API calls when clicking Save and then Save & Next with same data
+        if (!hasDataChanged) {
           if (import.meta.env.DEV) {
             console.log("No changes detected. Skipping API call.");
           }
+          
+          // Mark data as saved (in case it wasn't marked before)
+          markAsSaved(values);
+          
+          // Still navigate if needed
+          if (shouldNavigateNext && onSaveAndNext) {
+            onSaveAndNext();
+            setShouldNavigateNext(false);
+          }
+          return;
         }
 
-        // Data is already synced to parent state via useEffect
-        // Navigate to next tab if "Save & Next" was clicked (don't reset form)
-        if (shouldNavigateNext && onSaveAndNext) {
-          // Navigate to next tab - form data remains in state
-          onSaveAndNext();
-          setShouldNavigateNext(false);
+        // Format profile photo
+        const profilePhotoJson = await formatProfilePhoto(values.profilePhoto);
+
+        // Create payload object matching API requirements
+        const payload = {
+          name: values.name.trim(),
+          profilePhoto: profilePhotoJson,
+          enrollmentType: values.enrollmentType,
+          dob: formatDate(values.dateOfBirth),
+          gender: values.gender,
+          email: values.emailId.trim(),
+          countryCode: values.countryCode,
+          contactNumber: values.contactNumber.trim(),
+          permanentAddress: values.permanentAddress?.trim() || null,
+          notes: values.notes?.trim() || null,
+          assignedAgencyId: user?.agencyId ?? null,
+        };
+
+        // Call appropriate API based on whether we have applicantId
+        let response;
+        if (applicantId) {
+          // Update existing personal details
+          response = await applicantService.updatePersonalDetails(applicantId, payload);
         } else {
-          // For "Save" button, just log - form data remains
-          if (import.meta.env.DEV) {
-            console.log("Form data saved and synced to state (form not reset)");
+          // Create new personal details
+          response = await applicantService.createPersonalDetails(payload);
+        }
+
+        if (response.status === "success" && response.data) {
+          // Show success toast
+          dispatch(
+            addToast({
+              type: "success",
+              message: response.message || t("applicant.personalDetailsSaved", "Personal details saved successfully"),
+            })
+          );
+
+          // Update applicantId if it was created
+          const newApplicantId = response.data.applicantId;
+          if (newApplicantId && onApplicantIdChange && !applicantId) {
+            onApplicantIdChange(newApplicantId);
           }
+
+          // Mark data as saved
+          markAsSaved(values);
+
+          // Navigate to next tab if "Save & Next" was clicked
+          if (shouldNavigateNext && onSaveAndNext) {
+            onSaveAndNext();
+            setShouldNavigateNext(false);
+          }
+        } else {
+          throw new Error(response.message || "Failed to save personal details");
         }
-      } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error("Error saving personal details:", error);
-        }
-        // You might want to show an error message to the user here
+      } catch (error: any) {
+        const { message } = handleApiError(error, "Failed to save personal details");
+        dispatch(addToast({ type: "error", message }));
+      } finally {
+        isSubmittingRef.current = false;
+        setIsSaving(false);
+        dispatch(hideLoader());
       }
     },
   });
@@ -220,35 +294,41 @@ const ApplicantPersonalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBa
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
+    if (isSaving || isSubmittingRef.current) return;
+    
     setShouldNavigateNext(false);
     // Validate form before submitting
     const isValid = await validateAndMarkTouched();
     if (isValid) {
       await formik.submitForm();
     } else {
-      if (import.meta.env.DEV) {
-        if (import.meta.env.DEV) {
-          console.log("Form validation failed. Please fill all required fields.");
-        }
-      }
+      dispatch(
+        addToast({
+          type: "error",
+          message: t("validation.pleaseFillRequiredFields", "Please fill all required fields"),
+        })
+      );
     }
-  };
+  }, [isSaving, validateAndMarkTouched, formik, dispatch, t]);
 
-  const handleSaveAndNext = async () => {
+  const handleSaveAndNext = useCallback(async () => {
+    if (isSaving || isSubmittingRef.current) return;
+    
     // Validate form before submitting
     const isValid = await validateAndMarkTouched();
     if (isValid) {
       setShouldNavigateNext(true);
       await formik.submitForm();
     } else {
-      if (import.meta.env.DEV) {
-        if (import.meta.env.DEV) {
-          console.log("Form validation failed. Please fill all required fields.");
-        }
-      }
+      dispatch(
+        addToast({
+          type: "error",
+          message: t("validation.pleaseFillRequiredFields", "Please fill all required fields"),
+        })
+      );
     }
-  };
+  }, [isSaving, validateAndMarkTouched, formik, dispatch, t]);
 
   return (
     <div className="space-y-6">
@@ -431,14 +511,23 @@ const ApplicantPersonalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBa
                 {t("common.back")}
               </Button>
             )}
-            <Button type="button" variant="accent" onClick={handleSave} rounded className="w-full sm:w-auto">
+            <Button 
+              type="button" 
+              variant="accent" 
+              onClick={handleSave} 
+              isLoading={isSaving}
+              disabled={isSaving}
+              rounded 
+              className="w-full sm:w-auto"
+            >
               {t("applicant.save")}
             </Button>
             <Button 
               type="button" 
               variant="accent" 
               onClick={handleSaveAndNext}
-              disabled={!isFormValid}
+              disabled={(!isFormValid && hasDataChanged) || isSaving}
+              isLoading={isSaving}
               rounded
               className="w-full sm:w-auto"
             >

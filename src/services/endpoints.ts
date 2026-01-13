@@ -39,6 +39,10 @@ export const ENDPOINTS = {
     APPLY: "/applicants/apply",
     UPDATE_APPLICATION_STATUS: "/applicants/update-applicationStatus",
     STATUS_HISTORY: "/applicants/statusHistory",
+    PERSONAL_DETAILS: "/applicants/personal-details",
+    GET_PERSONAL_DETAILS: (applicantId: number | string) => `/applicants/personal-details/${applicantId}`,
+    UPDATE_PERSONAL_DETAILS: (applicantId: number | string) => `/applicants/personal-details/${applicantId}`,
+    APPLICATION_PREFERENCES: (applicantId: number | string) => `/applicants/application-preferences/${applicantId}`,
   },
 
 //   // User Endpoints

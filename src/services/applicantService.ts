@@ -19,6 +19,13 @@ import type {
   UpdateApplicationStatusResponse,
   StatusHistoryParams,
   StatusHistoryResponse,
+  CreatePersonalDetailsPayload,
+  CreatePersonalDetailsResponse,
+  GetPersonalDetailsResponse,
+  UpdatePersonalDetailsPayload,
+  UpdatePersonalDetailsResponse,
+  CreateApplicationPreferencesPayload,
+  CreateApplicationPreferencesResponse,
 } from "./types";
 
 /**
@@ -267,6 +274,71 @@ const applicantService = {
     const url = `${ENDPOINTS.APPLICANTS.STATUS_HISTORY}?${queryParams.toString()}`;
 
     const response = await api.get<StatusHistoryResponse>(url);
+
+    return response.data;
+  },
+
+  /**
+   * Create applicant personal details
+   * @param payload - Personal details payload
+   * @returns Create personal details response
+   */
+  createPersonalDetails: async (
+    payload: CreatePersonalDetailsPayload
+  ): Promise<CreatePersonalDetailsResponse> => {
+    const response = await api.post<CreatePersonalDetailsResponse>(
+      ENDPOINTS.APPLICANTS.PERSONAL_DETAILS,
+      payload
+    );
+
+    return response.data;
+  },
+
+  /**
+   * Get applicant personal details
+   * @param applicantId - Applicant ID
+   * @returns Get personal details response
+   */
+  getPersonalDetails: async (
+    applicantId: number | string
+  ): Promise<GetPersonalDetailsResponse> => {
+    const url = ENDPOINTS.APPLICANTS.GET_PERSONAL_DETAILS(applicantId);
+
+    const response = await api.get<GetPersonalDetailsResponse>(url);
+
+    return response.data;
+  },
+
+  /**
+   * Update applicant personal details
+   * @param applicantId - Applicant ID
+   * @param payload - Personal details payload
+   * @returns Update personal details response
+   */
+  updatePersonalDetails: async (
+    applicantId: number | string,
+    payload: UpdatePersonalDetailsPayload
+  ): Promise<UpdatePersonalDetailsResponse> => {
+    const url = ENDPOINTS.APPLICANTS.UPDATE_PERSONAL_DETAILS(applicantId);
+
+    const response = await api.put<UpdatePersonalDetailsResponse>(url, payload);
+
+    return response.data;
+  },
+
+  /**
+   * Create applicant application preferences
+   * @param applicantId - Applicant ID
+   * @param payload - Array of application preference items
+   * @returns Create application preferences response
+   */
+  createApplicationPreferences: async (
+    applicantId: number | string,
+    payload: CreateApplicationPreferencesPayload
+  ): Promise<CreateApplicationPreferencesResponse> => {
+    const url = ENDPOINTS.APPLICANTS.APPLICATION_PREFERENCES(applicantId);
+
+    const response = await api.post<CreateApplicationPreferencesResponse>(url, payload);
 
     return response.data;
   },
