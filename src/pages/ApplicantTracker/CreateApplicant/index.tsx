@@ -447,7 +447,7 @@ const CreateApplicant = () => {
   // Show loading state while fetching data
   if (loading) {
     return (
-      <Layout userName="Admin" userRole="Abroad Agency">
+      <Layout>
         <div className="bg-white rounded-lg shadow-sm p-4 md:p-6">
           <div className="flex items-center justify-center min-h-[400px]">
             <p style={{ color: COLORS.textMuted }}>{t("common.loading", "Loading...")}</p>
@@ -458,7 +458,7 @@ const CreateApplicant = () => {
   }
 
   return (
-    <Layout userName="Admin" userRole="Abroad Agency">
+    <Layout>
       <div className="bg-white rounded-lg shadow-sm">
         {/* Header */}
         <div className="p-4 md:p-6 border-b" style={{ borderColor: COLORS.border }}>

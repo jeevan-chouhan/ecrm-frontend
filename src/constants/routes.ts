@@ -27,6 +27,7 @@ export const ROUTES = {
   MANAGE_TEAM_VIEW: "/manage-team/:memberId",
   REPORT_ANALYSIS: "/report-analysis",
   SETTINGS: "/settings",
+  SETTINGS_PRICING: "/settings/pricing",
   SUPPORT_FEEDBACK: "/support-feedback",
   PROFILE: "/profile",
 } as const;

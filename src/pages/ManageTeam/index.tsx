@@ -21,7 +21,7 @@ import {
   UserRole,
 } from "../../constants";
 import { userService } from "../../services";
-import type { UserListItem } from "../../services";
+import type { UserListItem, UserListDataWithCounts, PaginatedData } from "../../services";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { addToast } from "../../redux/slices/toast/toastSlice";
 import { showLoader, hideLoader } from "../../redux/slices/loader/loaderSlice";
@@ -56,7 +56,6 @@ const ManageTeam = () => {
     totalManagers: 0,
     totalCounselors: 0,
   });
-  const [loadingStats, setLoadingStats] = useState(true);
 
   // Local state for status popup
   const [statusPopup, setStatusPopup] = useState<{
@@ -72,44 +71,6 @@ const ManageTeam = () => {
   // Update userRef when user changes
   userRef.current = user;
   
-   useEffect(() => {
-    const fetchStatsCounts = async () => {
-      setLoadingStats(true);
-      try {
-        // TODO: Replace with actual API call
-        // const response = await fetch('/api/team/stats');
-        // if (!response.ok) throw new Error('Failed to fetch stats');
-        // const data = await response.json();
-        // setStatsCounts({
-        //   totalAdmins: data.totalAdmins || 0,
-        //   totalManagers: data.totalManagers || 0,
-        //   totalCounselors: data.totalCounselors || 0,
-        // });
-
-        // Mock API response for now
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        setStatsCounts({
-          totalAdmins: 3,
-          totalManagers: 3,
-          totalCounselors: 6,
-        });
-      } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error("Error fetching team stats:", error);
-        }
-        // Set default values on error
-        setStatsCounts({
-          totalAdmins: 0,
-          totalManagers: 0,
-          totalCounselors: 0,
-        });
-      } finally {
-        setLoadingStats(false);
-      }
-    };
-
-    fetchStatsCounts();
-  }, []);
   // Sync search input with persisted filter on initial mount only
   useEffect(() => {
     if (isInitialMount.current && filter.search) {
@@ -145,10 +106,26 @@ const ManageTeam = () => {
       });
 
       if (response.status === "success" && response.data) {
-        dispatch(setMembers(response.data));
-        // Check if response.data is PaginatedData (has totalElements)
-        if ('totalElements' in response.data) {
-          SetShowCount(response.data.totalElements);
+        // Check for new response structure with nested page and counts
+        if ('page' in response.data && 'counts' in response.data) {
+          const dataWithCounts = response.data as UserListDataWithCounts;
+          // Set members from page.content
+          dispatch(setMembers(dataWithCounts.page));
+          SetShowCount(dataWithCounts.page.totalElements);
+          // Set stats from counts
+          setStatsCounts({
+            totalAdmins: dataWithCounts.counts.totalAdmins || 0,
+            totalManagers: dataWithCounts.counts.totalManagers || 0,
+            totalCounselors: dataWithCounts.counts.totalCounselor || 0,
+          });
+        } else if ('totalElements' in response.data) {
+          // Old response structure with direct PaginatedData
+          const paginatedData = response.data as PaginatedData<UserListItem>;
+          dispatch(setMembers(paginatedData));
+          SetShowCount(paginatedData.totalElements);
+        } else {
+          // Array response
+          dispatch(setMembers(response.data));
         }
       } else {
         dispatch(setError(response.message || "Failed to fetch team members"));
@@ -360,7 +337,7 @@ const ManageTeam = () => {
   ], [t, handleView, handleEdit, handleStatusToggle]);
 
   return (
-    <Layout userName={user?.name || "Admin"} userRole={user?.role || "User"}>
+    <Layout>
       <div className="bg-white rounded-lg shadow-sm p-6 md:p-8 min-h-[calc(100vh-140px)]">
         {/* Header with Search, Status Filter and Add Member Button */}
         <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 mb-6">
@@ -446,7 +423,7 @@ const ManageTeam = () => {
               className="text-3xl font-bold"
               style={{ color: COLORS.textDark }}
             >
-              {loadingStats ? "-" : statsCounts.totalAdmins}
+              {statsCounts.totalAdmins}
             </p>
           </div>
 
@@ -468,7 +445,7 @@ const ManageTeam = () => {
               className="text-3xl font-bold"
               style={{ color: COLORS.textDark }}
             >
-              {loadingStats ? "-" : statsCounts.totalManagers}
+              {statsCounts.totalManagers}
             </p>
           </div>
 
@@ -490,7 +467,7 @@ const ManageTeam = () => {
               className="text-3xl font-bold"
               style={{ color: COLORS.textDark }}
             >
-              {loadingStats ? "-" : statsCounts.totalCounselors}
+              {statsCounts.totalCounselors}
             </p>
           </div>
         </div>

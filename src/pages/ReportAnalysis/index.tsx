@@ -49,7 +49,7 @@ const ReportAnalysis = () => {
   }, [activeTab]);
 
   return (
-    <Layout userName={user?.name || "Admin"} userRole={user?.role || "User"}>
+    <Layout>
       <div className="bg-white rounded-lg shadow-sm">
         {/* Header */}
         <div className="p-4 md:p-6 border-b" style={{ borderColor: COLORS.border }}>

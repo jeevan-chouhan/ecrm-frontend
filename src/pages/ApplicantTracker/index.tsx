@@ -937,7 +937,7 @@ const ApplicantTracker = () => {
   ], [t, renderApplicantNameCell, renderUniversityCell, renderCourseCell, renderAppliedDateCell, renderLastUpdatedDateCell, renderIntakeYearCell, renderStageCell, renderStatusCell, renderActionsCell]);
 
   return (
-    <Layout userName={user?.name || "Admin"} userRole={user?.role || "User"}>
+    <Layout>
       <div
         className="bg-white rounded-lg shadow-sm p-4 md:p-6 space-y-6"
         style={{ backgroundColor: COLORS.surface }}

@@ -134,13 +134,30 @@ export interface PaginatedData<T> {
   totalElements: number;
   totalPages: number;
   size: number;
-  number: number;
+  number?: number;
+  page?: number;
   first: boolean;
   last: boolean;
-  empty: boolean;
+  empty?: boolean;
+  numberOfElements?: number;
+  nextPage?: number | null;
+  prevPage?: number | null;
 }
 
-export type UserListResponse = ApiResponse<PaginatedData<UserListItem> | UserListItem[]>;
+// Team stats counts
+export interface TeamStatsCounts {
+  totalAdmins: number;
+  totalManagers: number;
+  totalCounselor: number;
+}
+
+// User list response with nested page and counts
+export interface UserListDataWithCounts {
+  page: PaginatedData<UserListItem>;
+  counts: TeamStatsCounts;
+}
+
+export type UserListResponse = ApiResponse<UserListDataWithCounts | PaginatedData<UserListItem> | UserListItem[]>;
 
 // ==========================================
 // Agency Types (Countries & Universities)
@@ -444,4 +461,28 @@ export interface ApplicantOverviewData {
 }
 
 export type ApplicantOverviewResponse = ApiResponse<ApplicantOverviewData>;
+
+// ==========================================
+// Update Applicant Status Types
+// ==========================================
+
+export interface UpdateApplicantStatusParams {
+  applicantId: number;
+}
+
+export interface UpdateApplicantStatusPayload {
+  applicantId: number;
+  applicationPrefId: number;
+  applicationStatus: string;
+  notes: string;
+  isMailSendToStudent: boolean;
+}
+
+export interface UpdateApplicantStatusData {
+  applicantId: number;
+  status: string;
+  message: string;
+}
+
+export type UpdateApplicantStatusResponse = ApiResponse<UpdateApplicantStatusData>;
 

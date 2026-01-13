@@ -157,7 +157,7 @@ const ViewMember = () => {
 
   if (!memberDetails) {
     return (
-      <Layout userName={user?.name || "Admin"} userRole={user?.role || "User"}>
+      <Layout>
         <div className="bg-white rounded-lg shadow-sm p-6 md:p-8 min-h-[calc(100vh-140px)] flex items-center justify-center">
           <p style={{ color: COLORS.textMuted }}>Loading...</p>
         </div>
@@ -168,7 +168,7 @@ const ViewMember = () => {
   const { personalData, applicantCount, subordinates } = memberDetails;
 
   return (
-    <Layout userName={user?.name || "Admin"} userRole={user?.role || "User"}>
+    <Layout>
       <div className="bg-white rounded-lg shadow-sm p-6 md:p-8 min-h-[calc(100vh-140px)]">
         {/* Back Button & Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
