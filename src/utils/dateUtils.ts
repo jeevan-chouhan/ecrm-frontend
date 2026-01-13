@@ -110,3 +110,26 @@ export const normalizeDateToEndOfDay = (date: Date | string | null | undefined):
   return normalized;
 };
 
+/**
+ * Formats a date to a readable date-time string (e.g., "Jan 13, 2026, 10:30 AM")
+ * @param date - Date object or date string
+ * @returns Formatted date-time string
+ */
+export const formatDateTime = (date: Date | string): string => {
+  const d = typeof date === "string" ? new Date(date) : date;
+  
+  // Validate date
+  if (isNaN(d.getTime())) {
+    console.warn("Invalid date provided to formatDateTime:", date);
+    return "";
+  }
+  
+  return d.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+

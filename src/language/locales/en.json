@@ -293,8 +293,8 @@
     "planManagementDescription": "Subscription Plans (Free, Premium) Upgrade/Renew",
     "agencyName": "Agency Name",
     "agencyNamePlaceholder": "Abroad Agency",
-    "addCountriesServing": "Add Countries Serving",
-    "addUniversitiesServing": "Add Universities Serving",
+    "addCountriesServing": "Countries Serving",
+    "addUniversitiesServing": "Universities Serving",
     "multiSelectCountries": "Select Countries",
     "multiSelectUniversities": "Select Universities"
   },

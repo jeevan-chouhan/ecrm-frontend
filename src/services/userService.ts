@@ -18,6 +18,9 @@ import type {
   UpdateStatusResponse,
   ApplicantOverviewParams,
   ApplicantOverviewResponse,
+  UpdateApplicantStatusParams,
+  UpdateApplicantStatusPayload,
+  UpdateApplicantStatusResponse,
 } from "./types";
 
 /**
@@ -206,6 +209,26 @@ const userService = {
 
     const response = await api.get<ApplicantOverviewResponse>(
       `${ENDPOINTS.APPLICANTS.OVERVIEW}?${queryParams.toString()}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Update applicant status (toggle active/inactive)
+   * @param params - Query parameters (applicantId)
+   * @param payload - Status update data
+   * @returns Promise with update applicant status response
+   */
+  updateApplicantStatus: async (
+    params: UpdateApplicantStatusParams,
+    payload: UpdateApplicantStatusPayload
+  ): Promise<UpdateApplicantStatusResponse> => {
+    const queryParams = new URLSearchParams();
+    queryParams.append("applicantId", params.applicantId.toString());
+
+    const response = await api.patch<UpdateApplicantStatusResponse>(
+      `${ENDPOINTS.APPLICANTS.UPDATE_APPLICANT_STATUS}?${queryParams.toString()}`,
+      payload
     );
     return response.data;
   },

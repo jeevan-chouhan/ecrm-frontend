@@ -15,7 +15,7 @@ import {
   Settings,
   InfoCircle,
 } from "../../../assets";
-import { COLORS, ROUTES, APP_CONFIG } from "../../../constants";
+import { COLORS, ROUTES, APP_CONFIG, getRoleDisplayName } from "../../../constants";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { clearCredentials } from "../../../redux/slices/auth/authSlice";
 import { addToast } from "../../../redux/slices/toast/toastSlice";
@@ -53,8 +53,16 @@ const Layout = ({
   const { user } = useAppSelector((state) => state.auth);
   
   // Use Redux user data or props
-  const displayName = userName || user?.name || "Admin";
-  const displayRole = userRole || user?.role || "User";
+  const displayName = userName || user?.name;
+  
+  // Format role - show "Primary Admin" if isPrimaryAdmin is true, otherwise use getRoleDisplayName
+  const getFormattedRole = () => {
+    if (userRole) return userRole;
+    if (user?.isPrimaryAdmin) return "Primary Admin";
+    if (user?.role) return getRoleDisplayName(user.role);
+    return "User";
+  };
+  const displayRole = getFormattedRole();
 
   // Handle logout - clear localStorage and Redux state
   const handleLogout = () => {
@@ -140,16 +148,16 @@ const Layout = ({
       isActive: location.pathname === ROUTES.REPORT_ANALYSIS,
     },
     {
-      label: "Settings",
-      path: ROUTES.SETTINGS,
-      icon: <Settings className="h-5 w-5" />,
-      isActive: location.pathname === ROUTES.SETTINGS,
-    },
-    {
       label: "Support & Feedback",
       path: ROUTES.SUPPORT_FEEDBACK,
       icon: <InfoCircle className="h-5 w-5" />,
       isActive: location.pathname === ROUTES.SUPPORT_FEEDBACK,
+    },
+    {
+      label: "Settings",
+      path: ROUTES.SETTINGS,
+      icon: <Settings className="h-5 w-5" />,
+      isActive: location.pathname.startsWith(ROUTES.SETTINGS),
     },
   ];
 

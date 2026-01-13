@@ -38,6 +38,7 @@ export const ENDPOINTS = {
     APPLICATIONS_LIST: "/applicants/applicationsList",
     APPLY: "/applicants/apply",
     UPDATE_APPLICATION_STATUS: "/applicants/update-applicationStatus",
+    UPDATE_APPLICANT_STATUS: "/applicants/update-applicantStatus",
     STATUS_HISTORY: "/applicants/statusHistory",
   },
 

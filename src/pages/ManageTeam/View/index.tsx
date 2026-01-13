@@ -110,10 +110,10 @@ const ViewMember = () => {
 
   // Memoized university rows for DataTable
   const universityRows = useMemo(() => 
-    memberDetails?.enrolledApplicantsByUniversity?.map((uni) => ({
-      id: uni.universityId,
-      name: uni.universityName,
-      count: uni.count,
+    memberDetails?.enrolledApplicantsByUniversity?.map((uni, index) => ({
+      id: uni.universityId ?? uni.id ?? index + 1,
+      name: uni.universityName ?? uni.name ?? "",
+      count: uni.count ?? uni.applicantCount ?? 0,
     })) || []
   , [memberDetails?.enrolledApplicantsByUniversity]);
 
@@ -157,7 +157,7 @@ const ViewMember = () => {
 
   if (!memberDetails) {
     return (
-      <Layout userName={user?.name || "Admin"} userRole={user?.role || "User"}>
+      <Layout>
         <div className="bg-white rounded-lg shadow-sm p-6 md:p-8 min-h-[calc(100vh-140px)] flex items-center justify-center">
           <p style={{ color: COLORS.textMuted }}>Loading...</p>
         </div>
@@ -168,7 +168,7 @@ const ViewMember = () => {
   const { personalData, applicantCount, subordinates } = memberDetails;
 
   return (
-    <Layout userName={user?.name || "Admin"} userRole={user?.role || "User"}>
+    <Layout>
       <div className="bg-white rounded-lg shadow-sm p-6 md:p-8 min-h-[calc(100vh-140px)]">
         {/* Back Button & Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -399,7 +399,7 @@ const ViewMember = () => {
                       style={{ backgroundColor: COLORS.surface }}
                     >
                       <span className="text-sm font-medium" style={{ color: COLORS.textDark }}>{sub.name}</span>
-                      <span 
+                      {/* <span 
                         className="text-xs px-2 py-1 rounded-full"
                         style={{ 
                           backgroundColor: COLORS.accent + "20", 
@@ -407,7 +407,7 @@ const ViewMember = () => {
                         }}
                       >
                         {getRoleDisplayName(sub.role)}
-                      </span>
+                      </span> */}
                     </div>
                   ))}
                 </div>

@@ -458,7 +458,7 @@ const ApplicantDetailView = () => {
 
   if (loading) {
     return (
-      <Layout userName="Admin" userRole="Abroad Agency">
+      <Layout>
         <div className="flex items-center justify-center min-h-[400px]">
           <p style={{ color: COLORS.textMuted }}>{t("common.loading", "Loading...")}</p>
         </div>
@@ -468,7 +468,7 @@ const ApplicantDetailView = () => {
 
   if (!applicant) {
     return (
-      <Layout userName="Admin" userRole="Abroad Agency">
+      <Layout>
         <div className="flex items-center justify-center min-h-[400px]">
           <p style={{ color: COLORS.textMuted }}>
             {t("applicantDetailView.notFound", "Applicant not found")}
@@ -479,7 +479,7 @@ const ApplicantDetailView = () => {
   }
 
   return (
-    <Layout userName="Admin" userRole="Abroad Agency">
+    <Layout>
       <div
         className="bg-white rounded-lg shadow-sm p-4 md:p-6 space-y-6"
         style={{ backgroundColor: COLORS.surface }}
