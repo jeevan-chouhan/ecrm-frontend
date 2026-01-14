@@ -83,5 +83,12 @@ export type {
   UpdateApplicantStatusPayload,
   UpdateApplicantStatusData,
   UpdateApplicantStatusResponse,
+  CompleteDetailsParams,
+  CompleteDetailsPersonal,
+  CompleteDetailsEducational,
+  CompleteDetailsWorkExperience,
+  CompleteDetailsAchievement,
+  CompleteDetailsData,
+  CompleteDetailsResponse,
 } from "./types";
 

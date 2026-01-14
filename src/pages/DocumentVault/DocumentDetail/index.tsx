@@ -9,7 +9,6 @@ import {
   ArrowLeft,
   File,
   Download,
-  Eye,
   Close,
 } from "../../../assets";
 import UploadDocView from "./UploadDocView";
@@ -288,7 +287,6 @@ const DocumentDetail = () => {
                   variant="accent"
                   size="sm"
                   rounded
-                  leftIcon={<Eye className="h-4 w-4" />}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleViewDocument(doc);
@@ -319,14 +317,14 @@ const DocumentDetail = () => {
               </>
             ) : (
               <Button
-                variant="ghost"
+                variant="accent"
                 size="sm"
+                rounded
                 onClick={(e) => {
                   e.stopPropagation();
                   handleUploadClick(doc.id);
                 }}
                 disabled={doc.isNew && !doc.name}
-                style={{ color: COLORS.accent }}
               >
                 {t("documentVault.upload", "Upload")}
               </Button>
@@ -359,18 +357,14 @@ const DocumentDetail = () => {
               </span>
             ) : (
               <Button
-                variant="ghost"
+                variant="accent"
                 size="sm"
+                rounded
                 onClick={(e) => {
                   e.stopPropagation();
                   handleVerifyClick(doc.id);
                 }}
                 disabled={!doc.uploaded}
-                style={{
-                  color: doc.uploaded ? COLORS.accent : COLORS.textMuted,
-                  opacity: doc.uploaded ? 1 : 0.5,
-                  cursor: doc.uploaded ? "pointer" : "not-allowed",
-                }}
               >
                 {t("documentVault.verify", "Verify")}
               </Button>

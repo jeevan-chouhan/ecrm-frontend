@@ -32,6 +32,8 @@ import type {
   UpdateApplicationPreferencePayload,
   UpdateApplicationPreferenceResponse,
   DeleteApplicationPreferenceResponse,
+  CompleteDetailsParams,
+  CompleteDetailsResponse,
 } from "./types";
 
 /**
@@ -459,6 +461,25 @@ const applicantService = {
     const url = ENDPOINTS.APPLICANTS.DELETE_APPLICATION_PREFERENCE(preferenceId, applicantId);
 
     const response = await api.delete<DeleteApplicationPreferenceResponse>(url);
+    return response.data;
+  },
+  
+  /**
+   * Get applicant complete details (personal, educational, work experience, achievements)
+   * @param params - Complete details parameters (agencyId, applicantId)
+   * @returns Complete details response
+   */
+  getCompleteDetails: async (
+    params: CompleteDetailsParams
+  ): Promise<CompleteDetailsResponse> => {
+    const queryParams = createQueryParams({
+      agencyId: params.agencyId,
+      applicantId: params.applicantId,
+    });
+
+    const url = `${ENDPOINTS.APPLICANTS.COMPLETE_DETAILS}?${queryParams.toString()}`;
+
+    const response = await api.get<CompleteDetailsResponse>(url);
 
     return response.data;
   },

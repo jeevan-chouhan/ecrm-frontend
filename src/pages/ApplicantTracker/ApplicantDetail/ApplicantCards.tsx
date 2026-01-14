@@ -97,9 +97,11 @@ const ApplicantCards = ({ applicant }: ApplicantCardsProps) => {
           applicant?.personalDetails ? (
             <PersonalDetailsDisplay data={applicant.personalDetails} />
           ) : (
-            <p className="text-sm" style={{ color: COLORS.textMuted }}>
-              {t("applicantDetailView.personalDetailsContent", "Personal details content will be displayed here.")}
-            </p>
+            <div className="flex items-center justify-center min-h-[120px]">
+              <p className="text-sm text-center" style={{ color: COLORS.textMuted }}>
+                {t("applicantDetailView.noPersonalDetails", "No Personal Details Added Yet.")}
+              </p>
+            </div>
           )
         )}
 
@@ -111,9 +113,11 @@ const ApplicantCards = ({ applicant }: ApplicantCardsProps) => {
           applicant?.educationalDetails ? (
             <EducationalDetailsDisplay data={applicant.educationalDetails} />
           ) : (
-            <p className="text-sm" style={{ color: COLORS.textMuted }}>
-              {t("applicantDetailView.educationalDetailsContent", "Educational background content will be displayed here.")}
-            </p>
+            <div className="flex items-center justify-center min-h-[120px]">
+              <p className="text-sm text-center" style={{ color: COLORS.textMuted }}>
+                {t("applicantDetailView.noEducationalDetails", "No Educational Details Added Yet.")}
+              </p>
+            </div>
           )
         )}
       </div>
@@ -125,12 +129,14 @@ const ApplicantCards = ({ applicant }: ApplicantCardsProps) => {
           "work",
           t("applicant.workExperience", "Work Experience"),
           Applicant,
-          applicant?.workExperience?.experiences ? (
+          applicant?.workExperience?.experiences && applicant.workExperience.experiences.length > 0 ? (
             <WorkExperienceDisplay experiences={applicant.workExperience.experiences} />
           ) : (
-            <p className="text-sm" style={{ color: COLORS.textMuted }}>
-              {t("applicantDetailView.workExperienceContent", "Work experience content will be displayed here.")}
-            </p>
+            <div className="flex items-center justify-center min-h-[120px]">
+              <p className="text-sm text-center" style={{ color: COLORS.textMuted }}>
+                {t("applicantDetailView.noWorkExperience", "No Work Experience Added Yet.")}
+              </p>
+            </div>
           )
         )}
 
@@ -139,12 +145,14 @@ const ApplicantCards = ({ applicant }: ApplicantCardsProps) => {
           "achievements",
           t("applicant.achievements", "Achievements"),
           University,
-          applicant?.achievements?.achievements ? (
+          applicant?.achievements?.achievements && applicant.achievements.achievements.length > 0 ? (
             <AchievementsDisplay achievements={applicant.achievements.achievements} />
           ) : (
-            <p className="text-sm" style={{ color: COLORS.textMuted }}>
-              {t("applicantDetailView.achievementsContent", "Achievements content will be displayed here.")}
-            </p>
+            <div className="flex items-center justify-center min-h-[120px]">
+              <p className="text-sm text-center" style={{ color: COLORS.textMuted }}>
+                {t("applicantDetailView.noAchievements", "No Achievements Added Yet.")}
+              </p>
+            </div>
           )
         )}
       </div>
@@ -154,16 +162,18 @@ const ApplicantCards = ({ applicant }: ApplicantCardsProps) => {
         "documents",
         t("applicantDetailView.viewDocuments", "View Documents"),
         Document,
-        applicant?.documents?.documents ? (
+        applicant?.documents?.documents && applicant.documents.documents.length > 0 ? (
           <DocumentsDisplay
             documents={applicant.documents.documents}
             onView={handleDocumentView}
             onDownload={handleDocumentDownload}
           />
         ) : (
-          <p className="text-sm" style={{ color: COLORS.textMuted }}>
-            {t("applicantDetailView.noDocuments", "No documents available.")}
-          </p>
+          <div className="flex items-center justify-center min-h-[120px]">
+            <p className="text-sm text-center" style={{ color: COLORS.textMuted }}>
+              {t("applicantDetailView.noDocuments", "No Documents Added Yet.")}
+            </p>
+          </div>
         )
       )}
     </div>

@@ -18,7 +18,7 @@ export const ENDPOINTS = {
   USERS: {
     LIST: "/users/userList",
     DETAILS: "/users/userDetails",
-    REGISTER: "users/register",
+    REGISTER: "users/add-member",
     UPDATE: "/users/update-userDetails",
     UPDATE_STATUS: "/users/update-userStatus",
   },
@@ -49,6 +49,7 @@ export const ENDPOINTS = {
     GET_APPLICATION_PREFERENCES: (applicantId: number | string) => `/applicants/application-preferences/${applicantId}`,
     UPDATE_APPLICATION_PREFERENCE: (preferenceId: number | string, applicantId: number | string) => `/applicants/application-preferences/${preferenceId}?applicantId=${applicantId}`,
     DELETE_APPLICATION_PREFERENCE: (preferenceId: number | string, applicantId: number | string) => `/applicants/application-preferences?preferenceId=${preferenceId}&applicantId=${applicantId}`,
+    COMPLETE_DETAILS: "/applicants/complete-details",
   },
 
 //   // User Endpoints

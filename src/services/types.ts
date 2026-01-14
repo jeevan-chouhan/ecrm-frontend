@@ -638,3 +638,72 @@ export interface UpdateApplicantStatusData {
 
 export type UpdateApplicantStatusResponse = ApiResponse<UpdateApplicantStatusData>;
 
+// ==========================================
+// Applicant Complete Details Types
+// ==========================================
+
+export interface CompleteDetailsParams {
+  agencyId: number | string;
+  applicantId: number | string;
+}
+
+export interface CompleteDetailsPersonal {
+  applicantId: number;
+  assignedAgencyId: number;
+  name: string;
+  profilePhoto: string | null;
+  enrollmentType: string | null;
+  countryCode: string;
+  contactNumber: string;
+  email: string;
+  permanentAddress: string;
+  notes: string;
+  dob: string | null;
+  gender: string;
+  message: string;
+}
+
+export interface CompleteDetailsEducational {
+  applicantId: number;
+  highestQualification: string;
+  instituteName: string;
+  universityName: string;
+  courseType: string;
+  fieldType: string;
+  scoreType: string;
+  score: string;
+  passingYear: string | null;
+  message: string;
+}
+
+export interface CompleteDetailsWorkExperience {
+  id: number;
+  applicantId: number;
+  isExperienced: boolean;
+  companyName: string;
+  jobTitle: string;
+  isCurrentlyWorking: boolean;
+  startDate: string | null;
+  endDate: string | null;
+  message: string;
+}
+
+export interface CompleteDetailsAchievement {
+  id: number;
+  applicantId: number;
+  isAchievements: boolean;
+  category: string;
+  description: string;
+  document: string | null;
+  message: string;
+}
+
+export interface CompleteDetailsData {
+  personalDetails: CompleteDetailsPersonal;
+  educationalDetails: CompleteDetailsEducational;
+  workExperiences: CompleteDetailsWorkExperience[];
+  achievements: CompleteDetailsAchievement[];
+}
+
+export type CompleteDetailsResponse = ApiResponse<CompleteDetailsData>;
+
