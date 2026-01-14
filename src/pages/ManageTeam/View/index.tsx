@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { GridColDef } from "@mui/x-data-grid";
@@ -52,6 +52,9 @@ const ViewMember = () => {
   const [memberStatus, setMemberStatus] = useState<"ACTIVE" | "INACTIVE">(initialStatus);
   const [isDeactivatePopupOpen, setIsDeactivatePopupOpen] = useState(false);
 
+  // Ref to track last fetched member ID to prevent duplicate calls
+  const lastFetchedMemberIdRef = useRef<string>("");
+
   // Memoized DataTable columns for universities
   const universityColumns: GridColDef[] = useMemo(() => [
     {
@@ -94,6 +97,8 @@ const ViewMember = () => {
         dispatch(addToast({ type: "error", message: response.message || "Failed to fetch user details" }));
       }
     } catch (error: unknown) {
+      // Reset ref on error to allow retry
+      lastFetchedMemberIdRef.current = "";
       const { message } = handleApiError(error, "Failed to fetch user details");
       dispatch(addToast({ type: "error", message }));
     } finally {
@@ -103,9 +108,15 @@ const ViewMember = () => {
 
   // Fetch user details on mount
   useEffect(() => {
-    if (user && memberId) {
-      fetchUserDetails();
-    }
+    if (!user || !memberId) return;
+    
+    // Skip if already fetched for this member
+    if (lastFetchedMemberIdRef.current === memberId) return;
+    
+    // Mark as fetched BEFORE the async call
+    lastFetchedMemberIdRef.current = memberId;
+    
+    fetchUserDetails();
   }, [user, memberId, fetchUserDetails]);
 
   // Memoized university rows for DataTable

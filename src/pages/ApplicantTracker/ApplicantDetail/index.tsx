@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, startTransition, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { GridPaginationModel } from "@mui/x-data-grid";
 import { Layout, StatusChangePopup, ConfirmationPopup } from "../../../components";
@@ -98,22 +98,60 @@ const transformCompleteDetails = (
   };
 };
 
+// Type for navigation state from dashboard
+interface NavigationState {
+  from?: string;
+  applicantData?: {
+    applicantId: number;
+    applicantName: string;
+    email: string;
+    contactNo: string;
+    enrollmentType: string;
+    status: string;
+    notes: string;
+  };
+}
+
 const ApplicantDetailView = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
   const { applicantId } = useParams<{ applicantId: string }>();
   const { user } = useAppSelector((state) => state.auth);
 
-  // State
-  const [applicant, setApplicant] = useState<ApplicantDetail | null>(null);
+  // Get applicant data from navigation state (passed from dashboard)
+  const locationState = location.state as NavigationState | null;
+  const applicantDataFromDashboard = locationState?.applicantData;
+
+  // State - initialize with data from navigation state if available
+  const [applicant, setApplicant] = useState<ApplicantDetail | null>(() => {
+    if (applicantDataFromDashboard) {
+      return {
+        id: applicantDataFromDashboard.applicantId.toString(),
+        applicantId: applicantDataFromDashboard.applicantId.toString(),
+        applicantName: applicantDataFromDashboard.applicantName,
+        applicantStage: "",
+        enrollmentType: applicantDataFromDashboard.enrollmentType || "",
+        applications: [],
+        notes: applicantDataFromDashboard.notes || "",
+        status: applicantDataFromDashboard.status as "Active" | "Inactive",
+        personalDetails: undefined,
+        educationalDetails: undefined,
+        workExperience: undefined,
+        achievements: undefined,
+        documents: undefined,
+      };
+    }
+    return null;
+  });
   const [loading, setLoading] = useState(false);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
     pageSize: 10,
   });
-  const [notes, setNotes] = useState("");
-  const [originalNotes, setOriginalNotes] = useState("");
+  const [notes, setNotes] = useState(() => applicantDataFromDashboard?.notes || "");
+  const [originalNotes, setOriginalNotes] = useState(() => applicantDataFromDashboard?.notes || "");
   const [isSavingNotes, setIsSavingNotes] = useState(false);
   
   // Status change popup state (for applicant status)
