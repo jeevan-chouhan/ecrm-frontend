@@ -321,9 +321,10 @@ const CreateApplicant = () => {
         onUpdate={updateEducationalDetails}
         onSaveAndNext={handleNextTab}
         onBack={handlePreviousTab}
+        applicantId={applicantId}
       />
     ),
-    [formState.educationalDetails, updateEducationalDetails, handleNextTab, handlePreviousTab]
+    [formState.educationalDetails, updateEducationalDetails, handleNextTab, handlePreviousTab, applicantId]
   );
 
   const workTabContent = useMemo(
@@ -333,9 +334,10 @@ const CreateApplicant = () => {
         onUpdate={updateWorkExperience}
         onSaveAndNext={handleNextTab}
         onBack={handlePreviousTab}
+        applicantId={applicantId}
       />
     ),
-    [formState.workExperience, updateWorkExperience, handleNextTab, handlePreviousTab]
+    [formState.workExperience, updateWorkExperience, handleNextTab, handlePreviousTab, applicantId]
   );
 
   const achievementsTabContent = useMemo(
@@ -345,9 +347,10 @@ const CreateApplicant = () => {
         onUpdate={updateAchievements}
         onBack={handlePreviousTab}
         onSubmit={handleFinalSubmit}
+        applicantId={applicantId}
       />
     ),
-    [formState.achievements, updateAchievements, handlePreviousTab, handleFinalSubmit]
+    [formState.achievements, updateAchievements, handlePreviousTab, handleFinalSubmit, applicantId]
   );
 
   // Render only the active tab content - memoized to prevent unnecessary re-renders

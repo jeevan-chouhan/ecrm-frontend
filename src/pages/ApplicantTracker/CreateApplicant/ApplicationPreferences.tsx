@@ -47,8 +47,9 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
   const [selectedUniversityId, setSelectedUniversityId] = useState<number | string | null>(null);
   const isFetchingCampusesRef = useRef(false);
   const [courseOptions, setCourseOptions] = useState<SelectOption[]>([]);
-  const [selectedCampusId, setSelectedCampusId] = useState<number | string | null>(null);
-  const [selectedCourseType, setSelectedCourseType] = useState<string | null>(null);
+  // Store courses in a map keyed by "campusId-programType" to support multiple preferences with different combinations
+  // Using ref to avoid stale closures in callbacks
+  const courseOptionsMapRef = useRef<Map<string, SelectOption[]>>(new Map());
   const isFetchingCoursesRef = useRef(false);
   const [counselorOptions, setCounselorOptions] = useState<SelectOption[]>([]);
   const hasFetchedCounselorsRef = useRef(false);
@@ -135,7 +136,9 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
     const isAdmin = userRole === "ADMIN" || user?.isPrimaryAdmin === true;
 
     // Build base payload
+    // Note: preferenceId is sent both as a query parameter and in the payload
     const payload: {
+      preferenceId?: number | string;
       desiredCountryId: number;
       desiredUniversityId: number;
       desiredCourseType: string;
@@ -155,6 +158,11 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
       desiredIntake: pref.desiredIntake, // Format: "YYYY-MM"
       assignedAgencyId: user?.agencyId || null,
     };
+
+    // Include preferenceId in payload for PUT operations (when updating existing preference)
+    if (pref.preferenceId) {
+      payload.preferenceId = pref.preferenceId;
+    }
 
     // If counselor is selected, send assignedCounselorId
     if (pref.assignCounselor && pref.assignCounselor !== "") {
@@ -214,24 +222,6 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
       dispatch(showLoader());
 
       try {
-        // Only call API if data has changed since last save
-        // This prevents duplicate API calls when clicking Save and then Save & Next with same data
-        if (!hasDataChanged) {
-          if (import.meta.env.DEV) {
-            console.log("No changes detected. Skipping API call.");
-          }
-          
-          // Mark data as saved (in case it wasn't marked before)
-          markAsSaved({ preferences: [...values.preferences] });
-          
-          // Still navigate if needed
-          if (shouldNavigateNext && onSaveAndNext) {
-            onSaveAndNext();
-            setShouldNavigateNext(false);
-          }
-          return;
-        }
-
         // Separate preferences into updates (have preferenceId) and creates (don't have preferenceId)
         const savedPreferences = values.preferences.filter((pref) => pref.saved && isPreferenceComplete(pref));
         
@@ -263,12 +253,13 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
         });
 
         // If no changes to save, skip API calls
+        // This is the primary check - only call API if there are actual changes or new items
         if (preferencesToUpdate.length === 0 && preferencesToCreate.length === 0) {
           if (import.meta.env.DEV) {
             console.log("No preferences to save - all are unchanged or already saved");
           }
           
-          // Mark data as saved
+          // Mark data as saved (in case it wasn't marked before)
           markAsSaved({ preferences: [...values.preferences] });
           
           // Still navigate if needed
@@ -352,11 +343,6 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
         // Update original preferences ref with current state after save
         originalPreferencesRef.current = updatedPreferences.map(pref => ({ ...pref }));
 
-        // Fetch updated preferences from API after save
-        if (applicantId) {
-          await fetchApplicationPreferences(applicantId);
-        }
-
         // Navigate to next tab if "Save & Next" was clicked
         if (shouldNavigateNext && onSaveAndNext) {
           onSaveAndNext();
@@ -374,7 +360,9 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
   });
 
   // Use reusable hook for data change tracking with custom comparison for arrays
-  const { hasDataChanged, markAsSaved } = useDataChangeTracking<ApplicationPreferencesFormData>(
+  // Note: We use markAsSaved to track when data is saved, but we rely on the specific
+  // preferencesToUpdate/preferencesToCreate checks in onSubmit for accurate change detection
+  const { markAsSaved } = useDataChangeTracking<ApplicationPreferencesFormData>(
     formik.values,
     (lastSavedData, current) => {
       if (!lastSavedData) return true;
@@ -527,11 +515,26 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
 
   // Fetch courses when campus and program type are selected
   const fetchCourses = useCallback(async (campusId: number | string | null, courseType: string | null) => {
-    if (!user?.agencyId || !campusId || !courseType || isFetchingCoursesRef.current) {
+    if (!user?.agencyId || !campusId || !courseType) {
       if (!campusId || !courseType) {
         // Clear courses if no campus or course type selected
         setCourseOptions([]);
       }
+      return;
+    }
+
+    // Create a key for this campus-program combination
+    const key = `${campusId}-${courseType}`;
+
+    // Check if we already have courses for this combination in the map (using ref to avoid stale closure)
+    if (courseOptionsMapRef.current.has(key)) {
+      const existingOptions = courseOptionsMapRef.current.get(key) || [];
+      setCourseOptions(existingOptions);
+      return;
+    }
+
+    // If already fetching, don't fetch again
+    if (isFetchingCoursesRef.current) {
       return;
     }
 
@@ -545,6 +548,11 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
         value: course.id.toString(),
         label: course.name,
       }));
+
+      // Store in map for future use
+      const newMap = new Map(courseOptionsMapRef.current);
+      newMap.set(key, options);
+      courseOptionsMapRef.current = newMap;
 
       setCourseOptions(options);
     } catch (error: any) {
@@ -695,30 +703,51 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
             };
           });
 
-          // Fetch dependent dropdowns for the first preference if available
-          const firstPref = mappedPreferences[0];
-          
-          // Fetch universities if country is selected
-          if (firstPref.desiredCountry && user?.agencyId) {
-            const countryId = parseInt(firstPref.desiredCountry);
-            if (!isNaN(countryId)) {
+          // Fetch dependent dropdowns for all preferences to ensure all options are loaded
+          // Collect unique combinations to avoid duplicate API calls
+          const uniqueCountries = new Set<string>();
+          const uniqueUniversityCountryPairs = new Set<string>();
+          const uniqueCampusUniversityPairs = new Set<string>();
+          const uniqueCourseCampusProgramPairs = new Set<string>();
+
+          mappedPreferences.forEach((pref) => {
+            if (pref.desiredCountry) {
+              uniqueCountries.add(pref.desiredCountry);
+            }
+            if (pref.desiredCountry && pref.desiredUniversity) {
+              uniqueUniversityCountryPairs.add(`${pref.desiredCountry}-${pref.desiredUniversity}`);
+            }
+            if (pref.desiredUniversity && pref.desiredCampus) {
+              uniqueCampusUniversityPairs.add(`${pref.desiredUniversity}-${pref.desiredCampus}`);
+            }
+            if (pref.desiredCampus && pref.program) {
+              uniqueCourseCampusProgramPairs.add(`${pref.desiredCampus}-${pref.program}`);
+            }
+          });
+
+          // Fetch universities for all unique countries
+          for (const countryIdStr of uniqueCountries) {
+            const countryId = parseInt(countryIdStr);
+            if (!isNaN(countryId) && user?.agencyId) {
               await fetchUniversities(countryId);
             }
           }
 
-          // Fetch campuses if university is selected
-          if (firstPref.desiredUniversity && user?.agencyId) {
-            const universityId = parseInt(firstPref.desiredUniversity);
-            if (!isNaN(universityId)) {
+          // Fetch campuses for all unique university-country combinations
+          for (const pair of uniqueCampusUniversityPairs) {
+            const [universityIdStr] = pair.split('-');
+            const universityId = parseInt(universityIdStr);
+            if (!isNaN(universityId) && user?.agencyId) {
               await fetchCampuses(universityId);
             }
           }
 
-          // Fetch courses if campus and program are selected
-          if (firstPref.desiredCampus && firstPref.program && user?.agencyId) {
-            const campusId = parseInt(firstPref.desiredCampus);
-            if (!isNaN(campusId)) {
-              await fetchCourses(campusId, firstPref.program);
+          // Fetch courses for all unique campus-program combinations
+          for (const pair of uniqueCourseCampusProgramPairs) {
+            const [campusIdStr, program] = pair.split('-');
+            const campusId = parseInt(campusIdStr);
+            if (!isNaN(campusId) && program && user?.agencyId) {
+              await fetchCourses(campusId, program);
             }
           }
         } else {
@@ -780,25 +809,34 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
   }, [formik.values.preferences, selectedUniversityId, user?.agencyId, fetchCampuses]);
 
   // Fetch courses when preferences are loaded with existing campus and program (e.g., from initialValues)
+  // Fetch courses for all preferences to ensure all course names are available for display
   useEffect(() => {
-    // Check if there's a campus and program selected in any preference that we haven't fetched courses for
-    const prefWithCampusAndProgram = formik.values.preferences.find(
-      (pref) => pref.desiredCampus && pref.desiredCampus !== "" && pref.program && pref.program !== ""
-    );
+    if (!user?.agencyId) return;
+
+    // Collect all unique campus-program combinations from all preferences
+    const courseCombinations = new Set<string>();
     
-    if (prefWithCampusAndProgram?.desiredCampus && prefWithCampusAndProgram?.program) {
-      const campusIdNum = parseInt(prefWithCampusAndProgram.desiredCampus);
-      const courseType = prefWithCampusAndProgram.program; // program is already the enum value (BACHELOR, MASTER, PHD)
-      
-      if (!isNaN(campusIdNum) && courseType && 
-          (campusIdNum !== selectedCampusId || courseType !== selectedCourseType) && 
-          user?.agencyId) {
-        setSelectedCampusId(campusIdNum);
-        setSelectedCourseType(courseType);
-        fetchCourses(campusIdNum, courseType);
+    formik.values.preferences.forEach((pref) => {
+      if (pref.desiredCampus && pref.desiredCampus !== "" && pref.program && pref.program !== "") {
+        const key = `${pref.desiredCampus}-${pref.program}`;
+        courseCombinations.add(key);
       }
-    }
-  }, [formik.values.preferences, selectedCampusId, selectedCourseType, user?.agencyId, fetchCourses]);
+    });
+
+    // Fetch courses for each unique combination that we don't already have in the map
+    courseCombinations.forEach((combination) => {
+      const [campusIdStr, program] = combination.split('-');
+      const campusIdNum = parseInt(campusIdStr);
+      
+      if (!isNaN(campusIdNum) && program) {
+        // Check if we already have this combination in the map (using ref to avoid stale closure)
+        if (!courseOptionsMapRef.current.has(combination)) {
+          // Fetch courses for this combination (will be stored in the map by fetchCourses)
+          fetchCourses(campusIdNum, program);
+        }
+      }
+    });
+  }, [formik.values.preferences, user?.agencyId, fetchCourses]);
 
   // Check form validity - at least one complete preference required (saved or not)
   // This allows Save & Next to work even if preferences aren't saved yet (they'll be saved first)
@@ -940,7 +978,6 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
       if (value && currentPreference.desiredCampus) {
         const campusIdNum = parseInt(currentPreference.desiredCampus);
         if (!isNaN(campusIdNum) && user?.agencyId) {
-          setSelectedCourseType(value); // program is already the enum value (BACHELOR, MASTER, PHD)
           await fetchCourses(campusIdNum, value);
           
           // Clear course selection when program changes
@@ -948,7 +985,6 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
         }
       } else if (!value) {
         // Clear courses if program is cleared
-        setSelectedCourseType(null);
         setCourseOptions([]);
         await formik.setFieldValue(`preferences[${index}].course`, "");
       }
@@ -959,7 +995,6 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
       if (value && currentPreference.program) {
         const campusIdNum = parseInt(value);
         if (!isNaN(campusIdNum) && user?.agencyId) {
-          setSelectedCampusId(campusIdNum);
           await fetchCourses(campusIdNum, currentPreference.program);
           
           // Clear course selection when campus changes
@@ -967,7 +1002,6 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
         }
       } else if (!value) {
         // Clear courses if campus is cleared
-        setSelectedCampusId(null);
         setCourseOptions([]);
         await formik.setFieldValue(`preferences[${index}].course`, "");
       }
@@ -1133,6 +1167,7 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
           dispatch(addToast({ type: "error", message }));
         } finally {
           isSubmittingRef.current = false;
+          setIsSaving(false);
           dispatch(hideLoader());
         }
       } else {
@@ -1152,6 +1187,8 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
     t,
     onUpdate,
     handleSavePreference,
+    setIsSaving,
+    originalPreferencesRef,
   ]);
 
   const handleDeletePreference = useCallback((index: number) => {
@@ -1248,6 +1285,97 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
     setIsDeletePopupOpen(false);
     setDeletingIndex(null);
   }, []);
+
+  // Handle Add More button - save current preferences to API if complete, then add new one
+  const handleAddPreferenceWithAPI = useCallback(async () => {
+    if (!applicantId) {
+      dispatch(
+        addToast({
+          type: "error",
+          message: t("applicant.applicantIdRequired", "Please save personal details first to get applicant ID"),
+        })
+      );
+      return;
+    }
+
+    if (isSubmittingRef.current) {
+      return;
+    }
+
+    // Check if there are any unsaved complete preferences
+    const unsavedCompletePreferences = formik.values.preferences.filter(
+      (pref: PreferenceItem) => !pref.saved && isPreferenceComplete(pref) && !pref.preferenceId
+    );
+
+    // If there are unsaved complete preferences, save them first
+    if (unsavedCompletePreferences.length > 0) {
+      isSubmittingRef.current = true;
+      setIsSaving(true);
+      dispatch(showLoader());
+
+      try {
+        const preferencesToSave = unsavedCompletePreferences.map(convertPreferenceToApiFormat);
+        const createResponse = await applicantService.createApplicationPreferences(applicantId, preferencesToSave);
+
+        if (createResponse.status === "success" && createResponse.data) {
+          const updatedPreferences = [...formik.values.preferences];
+          let responseIndex = 0;
+
+          for (let i = 0; i < updatedPreferences.length; i++) {
+            const pref = updatedPreferences[i];
+            if (unsavedCompletePreferences.some((p: PreferenceItem) => p.id === pref.id)) {
+              if (createResponse.data[responseIndex]) {
+                const responseData = createResponse.data[responseIndex];
+                updatedPreferences[i] = {
+                  ...pref,
+                  preferenceId: responseData.id || null,
+                  saved: true,
+                };
+                responseIndex++;
+              }
+            }
+          }
+
+          formik.setFieldValue("preferences", updatedPreferences);
+          onUpdate({ preferences: updatedPreferences });
+          originalPreferencesRef.current = updatedPreferences.map(pref => ({ ...pref }));
+
+          dispatch(
+            addToast({
+              type: "success",
+              message: t("applicant.preferencesSaved", "Preferences saved successfully"),
+            })
+          );
+
+          // Now add new preference
+          handleAddPreference();
+        } else {
+          throw new Error(createResponse.message || "Failed to save preferences");
+        }
+      } catch (error: any) {
+        const { message } = handleApiError(error, "Failed to save preferences");
+        dispatch(addToast({ type: "error", message }));
+      } finally {
+        isSubmittingRef.current = false;
+        setIsSaving(false);
+        dispatch(hideLoader());
+      }
+    } else {
+      // No unsaved preferences, just add new one
+      handleAddPreference();
+    }
+  }, [
+    applicantId,
+    formik,
+    isPreferenceComplete,
+    convertPreferenceToApiFormat,
+    dispatch,
+    t,
+    onUpdate,
+    originalPreferencesRef,
+    setIsSaving,
+    handleAddPreference,
+  ]);
 
   const handleSave = useCallback(async () => {
     if (isSaving || isSubmittingRef.current) return;
@@ -1400,7 +1528,7 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
             onFieldChange={updatePreferenceField}
             getFieldError={getFieldError}
             onCancel={() => handleCancelIncompletePreference(firstIncompleteIndex)}
-            onAddMore={handleAddPreference}
+            onAddMore={handleAddPreferenceWithAPI}
             showCancel={incomplete.length > 1 || complete.length > 0}
             showAddMore={true}
             countryOptions={countryOptions}
@@ -1417,7 +1545,9 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
             <Button
               type="button"
               variant="accent"
-              onClick={handleAddPreference}
+              onClick={handleAddPreferenceWithAPI}
+              disabled={!applicantId || isSaving}
+              isLoading={isSaving}
               rounded
             >
               {t("common.addMore")}
@@ -1438,6 +1568,16 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
               const index = formik.values.preferences.findIndex((p) => p.id === preference.id);
               const isEditing = editingIndex === index;
 
+              // Get course options for this specific preference based on its campus and program
+              const preferenceCourseOptions = (() => {
+                if (preference.desiredCampus && preference.program) {
+                  const key = `${preference.desiredCampus}-${preference.program}`;
+                  // Use ref to get the latest map value
+                  return courseOptionsMapRef.current.get(key) || courseOptions;
+                }
+                return courseOptions;
+              })();
+
               return (
                 <PreferenceCard
                   key={preference.id}
@@ -1453,7 +1593,7 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
                   countryOptions={countryOptions}
                   universityOptions={universityOptions}
                   campusOptions={campusOptions}
-                  courseOptions={courseOptions}
+                  courseOptions={preferenceCourseOptions}
                   counselorOptions={counselorOptions}
                 />
               );

@@ -60,6 +60,34 @@ export const genderTypes: SelectOption[] = [
   { value: "OTHER", label: "Other" },
 ];
 
+// Educational Qualifications
+export const highestQualifications: SelectOption[] = [
+  { value: "HIGH_SCHOOL", label: "High School" },
+  { value: "UNDER_GRADUATE", label: "UG (Undergraduate)" },
+  { value: "DIPLOMA", label: "Diploma" },
+  { value: "GRADUATE", label: "Graduate" },
+  { value: "POST_GRADUATE", label: "PG (Post Graduate)" },
+];
+
+// Score Types
+export const scoreTypes: SelectOption[] = [
+  { value: "PERCENTAGE", label: "Percentage" },
+  { value: "CGPA", label: "CGPA" },
+  { value: "GPA", label: "GPA" },
+];
+
+// Achievement Categories
+export const achievementCategories: SelectOption[] = [
+  { value: "ACADEMIC", label: "Academic" },
+  { value: "SPORTS", label: "Sports" },
+  { value: "VOLUNTEER", label: "Volunteer" },
+  { value: "CERTIFICATION", label: "Certification" },
+  { value: "INTERNSHIP", label: "Internship" },
+  { value: "TECHNICAL_PROJECT", label: "Technical Project" },
+  { value: "LEADERSHIP", label: "Leadership" },
+  { value: "CREATIVE", label: "Creative" },
+];
+
 // Yes/No options
 export const yesNoOptions: SelectOption[] = [
   { value: "yes", label: "Yes" },

@@ -17,7 +17,8 @@ export interface ApplicationPreferencesFormData {
 }
 
 export interface WorkExperienceItem {
-  id: string;
+  id: string; // Local ID for tracking
+  workExperienceId?: number | string | null; // API work experience ID (for updates)
   companyName: string;
   jobTitle: string;
   startDate: Date | null;
@@ -32,7 +33,8 @@ export interface WorkExperienceFormData {
 }
 
 export interface AchievementItem {
-  id: string;
+  id: string; // Local ID for tracking
+  achievementId?: number | string | null; // API achievement ID (for updates)
   category: string;
   description: string;
   documents: File | null;

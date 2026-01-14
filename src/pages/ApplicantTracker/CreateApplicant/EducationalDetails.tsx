@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useEffect, useState } from "react";
+import { useMemo, useCallback, useEffect, useState, useRef } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useTranslation } from "react-i18next";
@@ -8,16 +8,28 @@ import type { SelectOption } from "../../../components";
 import { REGEX } from "../../../utils/regex";
 import type { EducationalDetailFormData } from "./types";
 import { useDataChangeTracking, useFormSync, useFormValidation } from "./hooks";
+import { applicantService } from "../../../services";
+import { useAppDispatch } from "../../../redux/hooks";
+import { addToast } from "../../../redux/slices/toast/toastSlice";
+import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
+import { handleApiError } from "../../../utils";
 
 interface EducationalDetailsProps {
   initialValues: EducationalDetailFormData;
   onUpdate: (data: EducationalDetailFormData) => void;
   onSaveAndNext?: () => void;
   onBack?: () => void;
+  applicantId?: number | string | null;
 }
 
-const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack }: EducationalDetailsProps) => {
+const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack, applicantId }: EducationalDetailsProps) => {
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
+  const isSubmittingRef = useRef(false); // Prevent duplicate submissions
+  const isFetchingEducationalDetailsRef = useRef(false); // Prevent duplicate fetches
+  const hasEducationalDetailsRef = useRef(false); // Track if educational details exist (for POST vs PUT)
+  const [isSaving, setIsSaving] = useState(false);
+  const [shouldNavigateNext, setShouldNavigateNext] = useState(false);
 
   const qualificationOptions: SelectOption[] = highestQualifications;
   const scoreTypeOptions: SelectOption[] = scoreTypes;
@@ -31,7 +43,7 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack }: 
       boardUniversity: Yup.string().required(t("validation.boardUniversityRequired")).trim(),
       program: Yup.string(),
       major: Yup.string().when("highestQualification", {
-        is: (val: string) => val === "high-school",
+        is: (val: string) => val === "HIGH_SCHOOL",
         then: (schema) => schema.nullable(), // Optional when High School is selected (field is hidden)
         otherwise: (schema) => schema.nullable(), // Optional for other qualifications
       }),
@@ -54,46 +66,100 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack }: 
     enableReinitialize: true,
     validationSchema,
     onSubmit: async (values) => {
+      // Prevent duplicate submissions
+      if (isSubmittingRef.current) {
+        return;
+      }
+
+      // Check if applicantId is available
+      if (!applicantId) {
+        dispatch(
+          addToast({
+            type: "error",
+            message: t("applicant.applicantIdRequired", "Applicant ID is required. Please save personal details first."),
+          })
+        );
+        return;
+      }
+
+      // Check if data has changed - skip API call if no changes
+      if (!hasDataChanged) {
+        if (import.meta.env.DEV) {
+          console.log("No changes detected. Skipping API call.");
+        }
+        
+        // Mark data as saved
+        markAsSaved(values);
+        
+        // Still navigate if needed
+        if (shouldNavigateNext && onSaveAndNext) {
+          onSaveAndNext();
+          setShouldNavigateNext(false);
+        }
+        return;
+      }
+
+      isSubmittingRef.current = true;
+      setIsSaving(true);
+      dispatch(showLoader());
+
       try {
+        // Format passingYear as YYYY-MM-DD
+        const passingYearFormatted = values.passingYear 
+          ? values.passingYear.toISOString().split('T')[0]
+          : "";
+
+        // Map form fields to API payload format
         const payload = {
+          applicantId: typeof applicantId === 'string' ? parseInt(applicantId) : applicantId,
           highestQualification: values.highestQualification,
-          institutionName: values.institutionName,
-          boardUniversity: values.boardUniversity,
-          program: values.program || null,
-          major: values.major || null,
+          instituteName: values.institutionName, // Map institutionName -> instituteName
+          universityName: values.boardUniversity, // Map boardUniversity -> universityName
+          courseType: values.program || null, // Map program -> courseType
+          fieldType: values.major || null, // Map major -> fieldType
           scoreType: values.scoreType,
           score: values.score,
-          passingYear: values.passingYear ? values.passingYear.toISOString() : null,
+          passingYear: passingYearFormatted,
         };
 
-        // TODO: Replace with actual API endpoint
-        // const response = await fetch("/api/applicant/educational-details", {
-        //   method: "POST",
-        //   headers: {
-        //     "Content-Type": "application/json",
-        //   },
-        //   body: JSON.stringify(payload),
-        // });
-        // const result = await response.json();
+        // Call appropriate API based on whether educational details already exist
+        let response;
+        if (hasEducationalDetailsRef.current) {
+          // Update existing educational details
+          response = await applicantService.updateEducationalDetails(payload);
+        } else {
+          // Create new educational details
+          response = await applicantService.createEducationalDetails(payload);
+          hasEducationalDetailsRef.current = true; // Mark that educational details now exist
+        }
 
-        // Only call API if data has changed since last save
-        if (hasDataChanged) {
-          if (import.meta.env.DEV) {
-            console.log("Payload ready for API:", payload);
-            console.log("API endpoint: POST /api/applicant/educational-details");
-          }
-          
+        if (response.status === "success") {
           // Mark data as saved
           markAsSaved(values);
-        } else {
-          if (import.meta.env.DEV) {
-            console.log("No changes detected. Skipping API call.");
+
+          // Show success toast
+          dispatch(
+            addToast({
+              type: "success",
+              message: response.message || t("applicant.educationalDetailsSaved", "Educational details saved successfully"),
+            })
+          );
+
+          // Navigate to next tab if "Save & Next" was clicked
+          if (shouldNavigateNext && onSaveAndNext) {
+            onSaveAndNext();
+            setShouldNavigateNext(false);
           }
+        } else {
+          throw new Error(response.message || "Failed to save educational details");
         }
-      } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error("Error saving educational details:", error);
-        }
+      } catch (error: any) {
+        const { message } = handleApiError(error, "Failed to save educational details");
+        dispatch(addToast({ type: "error", message }));
+      } finally {
+        isSubmittingRef.current = false;
+        setIsSaving(false);
+        dispatch(hideLoader());
       }
     },
   });
@@ -165,24 +231,102 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack }: 
     }
   );
 
-  const handleSave = () => {
-    formik.handleSubmit();
-  };
-
-  const handleSaveAndNextClick = async () => {
-    const isValid = await validateAndMarkTouched();
-    if (!isValid) {
+  const handleSave = async () => {
+    // Prevent duplicate calls
+    if (isSubmittingRef.current || isSaving) {
       return;
     }
 
-    await formik.submitForm();
-    if (onSaveAndNext) {
-      onSaveAndNext();
+    setShouldNavigateNext(false);
+    const isValid = await validateAndMarkTouched();
+    if (isValid) {
+      await formik.submitForm();
+    } else {
+      dispatch(
+        addToast({
+          type: "error",
+          message: t("validation.pleaseFillRequiredFields", "Please fill all required fields"),
+        })
+      );
     }
   };
 
+  const handleSaveAndNextClick = async () => {
+    // Prevent duplicate calls
+    if (isSubmittingRef.current || isSaving) {
+      return;
+    }
+
+    const isValid = await validateAndMarkTouched();
+    if (!isValid) {
+      dispatch(
+        addToast({
+          type: "error",
+          message: t("validation.pleaseFillRequiredFields", "Please fill all required fields"),
+        })
+      );
+      return;
+    }
+
+    setShouldNavigateNext(true);
+    await formik.submitForm();
+  };
+
+  // Fetch educational details when applicantId is available (edit mode or back navigation)
+  const fetchEducationalDetails = useCallback(async (id: number | string) => {
+    if (isFetchingEducationalDetailsRef.current) {
+      return;
+    }
+
+    isFetchingEducationalDetailsRef.current = true;
+    dispatch(showLoader());
+
+    try {
+      const response = await applicantService.getEducationalDetails(id);
+
+      if (response.status === "success" && response.data) {
+        const data = response.data;
+        
+        // Map API response to EducationalDetailFormData
+        const educationalDetails: EducationalDetailFormData = {
+          highestQualification: data.highestQualification || "",
+          institutionName: data.instituteName || "", // Map instituteName -> institutionName
+          boardUniversity: data.universityName || "", // Map universityName -> boardUniversity
+          program: data.courseType || "", // Map courseType -> program
+          major: data.fieldType || "", // Map fieldType -> major
+          scoreType: data.scoreType || "",
+          score: data.score || "",
+          passingYear: data.passingYear ? new Date(data.passingYear + "T00:00:00") : null, // Add time to avoid timezone issues
+        };
+
+        // Update form state with fetched data
+        formik.setValues(educationalDetails, false);
+        onUpdate(educationalDetails);
+        markAsSaved(educationalDetails);
+        hasEducationalDetailsRef.current = true; // Mark that educational details exist
+      } else {
+        // No educational details found - this is fine, user can create new ones
+        hasEducationalDetailsRef.current = false;
+      }
+    } catch (error: any) {
+      const { message } = handleApiError(error, "Failed to fetch educational details");
+      dispatch(addToast({ type: "error", message }));
+    } finally {
+      isFetchingEducationalDetailsRef.current = false;
+      dispatch(hideLoader());
+    }
+  }, [dispatch, formik, onUpdate, markAsSaved]);
+
+  // Fetch educational details when applicantId is available
+  useEffect(() => {
+    if (applicantId && !isFetchingEducationalDetailsRef.current) {
+      fetchEducationalDetails(applicantId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [applicantId]); // Only depend on applicantId to avoid infinite loops
+
   // Show Major field for all qualification types except High School
-  const showMajor = formik.values.highestQualification !== "high-school";
+  const showMajor = formik.values.highestQualification !== "HIGH_SCHOOL";
 
   return (
     <div className="space-y-6">
@@ -344,7 +488,9 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack }: 
             <Button 
               type="button" 
               variant="accent" 
-              onClick={handleSave} 
+              onClick={handleSave}
+              disabled={isSaving || !applicantId}
+              isLoading={isSaving}
               rounded
               className="w-full sm:w-auto"
             >
@@ -354,7 +500,8 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack }: 
               type="button" 
               variant="accent" 
               onClick={handleSaveAndNextClick}
-              disabled={!isFormValid}
+              disabled={!isFormValid || isSaving || !applicantId}
+              isLoading={isSaving}
               rounded
               className="w-full sm:w-auto"
             >
