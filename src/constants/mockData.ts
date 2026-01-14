@@ -74,9 +74,9 @@ export const countries: SelectOption[] = [
 ];
 
 export const programs: SelectOption[] = [
-  { value: "ug", label: "Undergraduate (UG)" },
-  { value: "pg", label: "Post Graduation (PG)" },
-  { value: "phd", label: "PhD" },
+  { value: "BACHELOR", label: "Bachelor" },
+  { value: "MASTER", label: "Master" },
+  { value: "PHD", label: "PhD" },
 ];
 
 export const courses: SelectOption[] = [

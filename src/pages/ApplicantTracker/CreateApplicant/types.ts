@@ -1,5 +1,6 @@
 export interface PreferenceItem {
-  id: string;
+  id: string; // Local ID for tracking (e.g., "pref-123456")
+  preferenceId?: number | string | null; // API preference ID (for updates)
   desiredCountry: string;
   program: string;
   desiredUniversity: string;

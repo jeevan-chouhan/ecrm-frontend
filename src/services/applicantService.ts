@@ -13,6 +13,8 @@ import type {
   ManagerItem,
   CounselorItem,
   UniversityItem,
+  CampusItem,
+  CourseItem,
   ApplyApplicationParams,
   ApplyApplicationResponse,
   UpdateApplicationStatusPayload,
@@ -26,6 +28,10 @@ import type {
   UpdatePersonalDetailsResponse,
   CreateApplicationPreferencesPayload,
   CreateApplicationPreferencesResponse,
+  GetApplicationPreferencesResponse,
+  UpdateApplicationPreferencePayload,
+  UpdateApplicationPreferenceResponse,
+  DeleteApplicationPreferenceResponse,
 } from "./types";
 
 /**
@@ -125,13 +131,18 @@ const applicantService = {
   },
 
   /**
-   * Get universities list for an agency
+   * Get universities list for an agency, optionally filtered by country
    * @param agencyId - Agency ID
+   * @param countryId - Optional Country ID to filter universities
    * @returns Promise with universities response (array directly, not wrapped)
    */
-  getUniversities: async (agencyId: number | string | null): Promise<UniversityItem[]> => {
+  getUniversities: async (
+    agencyId: number | string | null,
+    countryId?: number | string | null
+  ): Promise<UniversityItem[]> => {
     const queryParams = createQueryParams({
       agencyId,
+      countryId: countryId || null,
     });
 
     const url = `${ENDPOINTS.AGENCIES.UNIVERSITIES}?${queryParams.toString()}`;
@@ -141,6 +152,61 @@ const applicantService = {
     
     // Response.data is the array directly
     const result: UniversityItem[] = Array.isArray(response.data) ? response.data : [];
+    
+    return result;
+  },
+
+  /**
+   * Get campuses list for an agency and university
+   * @param agencyId - Agency ID
+   * @param universityId - University ID to filter campuses
+   * @returns Promise with campuses response (array directly, not wrapped)
+   */
+  getCampuses: async (
+    agencyId: number | string | null,
+    universityId?: number | string | null
+  ): Promise<CampusItem[]> => {
+    const queryParams = createQueryParams({
+      agencyId,
+      universityId: universityId || null,
+    });
+
+    const url = `${ENDPOINTS.AGENCIES.CAMPUSES}?${queryParams.toString()}`;
+
+    // API returns array directly: [{id, name, ...}, ...]
+    const response = await api.get<CampusItem[]>(url);
+    
+    // Response.data is the array directly
+    const result: CampusItem[] = Array.isArray(response.data) ? response.data : [];
+    
+    return result;
+  },
+
+  /**
+   * Get courses list for an agency, campus, and course type
+   * @param agencyId - Agency ID
+   * @param campusId - Campus ID to filter courses
+   * @param courseType - Course type (BACHELOR, MASTER, PHD)
+   * @returns Promise with courses response (array directly, not wrapped)
+   */
+  getCourses: async (
+    agencyId: number | string | null,
+    campusId?: number | string | null,
+    courseType?: string | null
+  ): Promise<CourseItem[]> => {
+    const queryParams = createQueryParams({
+      agencyId,
+      campusId: campusId || null,
+      courseType: courseType || null,
+    });
+
+    const url = `${ENDPOINTS.AGENCIES.COURSES}?${queryParams.toString()}`;
+
+    // API returns array directly: [{id, name, ...}, ...]
+    const response = await api.get<CourseItem[]>(url);
+    
+    // Response.data is the array directly
+    const result: CourseItem[] = Array.isArray(response.data) ? response.data : [];
     
     return result;
   },
@@ -197,18 +263,21 @@ const applicantService = {
   },
 
   /**
-   * Get counselor list for an agency, filtered by manager
+   * Get counselor list for an agency, filtered by manager or admin
    * @param agencyId - Agency ID
-   * @param managerId - Manager ID to filter counselors
+   * @param assignedManagerId - Manager ID to filter counselors (if user is MANAGER)
+   * @param assignedAdminId - Admin ID to filter counselors (if user is ADMIN)
    * @returns Promise with counselor list response (array directly, not wrapped)
    */
   getCounselors: async (
     agencyId: number | string | null,
-    managerId: number | string | null
+    assignedManagerId?: number | string | null,
+    assignedAdminId?: number | string | null
   ): Promise<CounselorListResponse> => {
     const queryParams = createQueryParams({
       agencyId,
-      assignedManagerId: managerId,
+      assignedManagerId: assignedManagerId || null,
+      assignedAdminId: assignedAdminId || null,
     });
 
     const url = `${ENDPOINTS.AGENCIES.COUNSELORS}?${queryParams.toString()}`;
@@ -327,6 +396,21 @@ const applicantService = {
   },
 
   /**
+   * Get applicant application preferences
+   * @param applicantId - Applicant ID
+   * @returns Get application preferences response
+   */
+  getApplicationPreferences: async (
+    applicantId: number | string
+  ): Promise<GetApplicationPreferencesResponse> => {
+    const url = ENDPOINTS.APPLICANTS.GET_APPLICATION_PREFERENCES(applicantId);
+
+    const response = await api.get<GetApplicationPreferencesResponse>(url);
+
+    return response.data;
+  },
+
+  /**
    * Create applicant application preferences
    * @param applicantId - Applicant ID
    * @param payload - Array of application preference items
@@ -339,6 +423,42 @@ const applicantService = {
     const url = ENDPOINTS.APPLICANTS.APPLICATION_PREFERENCES(applicantId);
 
     const response = await api.post<CreateApplicationPreferencesResponse>(url, payload);
+
+    return response.data;
+  },
+
+  /**
+   * Update applicant application preference
+   * @param preferenceId - Preference ID
+   * @param applicantId - Applicant ID
+   * @param payload - Single application preference item
+   * @returns Update application preference response
+   */
+  updateApplicationPreference: async (
+    preferenceId: number | string,
+    applicantId: number | string,
+    payload: UpdateApplicationPreferencePayload
+  ): Promise<UpdateApplicationPreferenceResponse> => {
+    const url = ENDPOINTS.APPLICANTS.UPDATE_APPLICATION_PREFERENCE(preferenceId, applicantId);
+
+    const response = await api.put<UpdateApplicationPreferenceResponse>(url, payload);
+
+    return response.data;
+  },
+
+  /**
+   * Delete applicant application preference
+   * @param preferenceId - Preference ID
+   * @param applicantId - Applicant ID
+   * @returns Delete application preference response
+   */
+  deleteApplicationPreference: async (
+    preferenceId: number | string,
+    applicantId: number | string
+  ): Promise<DeleteApplicationPreferenceResponse> => {
+    const url = ENDPOINTS.APPLICANTS.DELETE_APPLICATION_PREFERENCE(preferenceId, applicantId);
+
+    const response = await api.delete<DeleteApplicationPreferenceResponse>(url);
 
     return response.data;
   },

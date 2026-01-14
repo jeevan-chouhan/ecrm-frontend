@@ -27,6 +27,8 @@ export const ENDPOINTS = {
   AGENCIES: {
     COUNTRIES: "/agencies/countries",
     UNIVERSITIES: "/agencies/universities",
+    CAMPUSES: "/agencies/campuses",
+    COURSES: "/agencies/courses",
     ADMINS: "/agencies/admins",
     MANAGERS: "/agencies/managers",
     COUNSELORS: "/agencies/counselors",
@@ -43,6 +45,9 @@ export const ENDPOINTS = {
     GET_PERSONAL_DETAILS: (applicantId: number | string) => `/applicants/personal-details/${applicantId}`,
     UPDATE_PERSONAL_DETAILS: (applicantId: number | string) => `/applicants/personal-details/${applicantId}`,
     APPLICATION_PREFERENCES: (applicantId: number | string) => `/applicants/application-preferences/${applicantId}`,
+    GET_APPLICATION_PREFERENCES: (applicantId: number | string) => `/applicants/application-preferences/${applicantId}`,
+    UPDATE_APPLICATION_PREFERENCE: (preferenceId: number | string, applicantId: number | string) => `/applicants/application-preferences/${preferenceId}?applicantId=${applicantId}`,
+    DELETE_APPLICATION_PREFERENCE: (preferenceId: number | string, applicantId: number | string) => `/applicants/application-preferences?preferenceId=${preferenceId}&applicantId=${applicantId}`,
   },
 
 //   // User Endpoints
