@@ -47,9 +47,11 @@ interface EmptyStateProps {
 
 export const EmptyState = memo(({ message, className = "" }: EmptyStateProps) => {
   return (
-    <p className={`text-sm ${className}`} style={{ color: COLORS.textMuted }}>
-      {message}
-    </p>
+    <div className={`flex items-center justify-center min-h-[120px] ${className}`}>
+      <p className="text-sm text-center" style={{ color: COLORS.textMuted }}>
+        {message}
+      </p>
+    </div>
   );
 });
 

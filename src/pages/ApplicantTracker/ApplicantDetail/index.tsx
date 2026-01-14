@@ -1,16 +1,16 @@
-import { useState, useMemo, useEffect, useCallback, startTransition } from "react";
+import { useState, useMemo, useEffect, useCallback, startTransition, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { GridPaginationModel } from "@mui/x-data-grid";
-import { Layout, Button, StatusChangePopup, ConfirmationPopup } from "../../../components";
-import { COLORS, ROUTES, applicationStatusOptions } from "../../../constants";
-import { ArrowLeft } from "../../../assets";
+import { Layout, StatusChangePopup, ConfirmationPopup } from "../../../components";
+import { COLORS, ROUTES, applicationStatusOptions, mockApplicantDetail } from "../../../constants";
 import { formatDate, toSlug, handleApiError } from "../../../utils";
-import type { ApplicantDetail, UniversityApplication, ApplicationStatusHistory } from "./types";
-import { mockApplicantDetail } from "../../../constants";
-import { applicantService } from "../../../services";
-import { useAppDispatch } from "../../../redux/hooks";
+import type { ApplicantDetail, UniversityApplication, ApplicationStatusHistory, PersonalDetails, EducationalDetails, WorkExperienceItem, AchievementItem } from "./types";
+import { applicantService, userService } from "../../../services";
+import type { CompleteDetailsData } from "../../../services";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { addToast } from "../../../redux/slices/toast/toastSlice";
+import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
 import ApplicantHeader from "./ApplicantHeader";
 import UniversityApplicationTable from "./UniversityApplicationTable";
 import ApplicantCards from "./ApplicantCards";
@@ -18,11 +18,92 @@ import NotesSection from "./NotesSection";
 import ApplicationStatusPopup from "./ApplicationStatusPopup";
 import ApplicationStatusHistoryPopup from "./ApplicationStatusHistoryPopup";
 
+// Transform API data to component format
+const transformCompleteDetails = (
+  apiData: CompleteDetailsData,
+  applicantId: string
+): Partial<ApplicantDetail> => {
+  const { personalDetails, educationalDetails, workExperiences, achievements } = apiData;
+
+  // Transform personal details
+  const transformedPersonalDetails: PersonalDetails = {
+    profilePhoto: personalDetails.profilePhoto,
+    enrollmentType: personalDetails.enrollmentType || undefined,
+    name: personalDetails.name,
+    dateOfBirth: personalDetails.dob,
+    gender: personalDetails.gender,
+    countryCode: personalDetails.countryCode,
+    contactNumber: personalDetails.contactNumber,
+    emailId: personalDetails.email,
+    permanentAddress: personalDetails.permanentAddress,
+    notes: personalDetails.notes,
+  };
+
+  // Transform educational details
+  const transformedEducationalDetails: EducationalDetails = {
+    highestQualification: educationalDetails.highestQualification,
+    institutionName: educationalDetails.instituteName,
+    boardUniversity: educationalDetails.universityName,
+    program: educationalDetails.courseType,
+    major: educationalDetails.fieldType,
+    scoreType: educationalDetails.scoreType,
+    score: educationalDetails.score,
+    passingYear: educationalDetails.passingYear,
+  };
+
+  // Transform work experiences
+  const transformedWorkExperiences: WorkExperienceItem[] = workExperiences.map((exp) => ({
+    id: exp.id.toString(),
+    companyName: exp.companyName,
+    jobTitle: exp.jobTitle,
+    startDate: exp.startDate,
+    endDate: exp.endDate,
+    currentlyWorking: exp.isCurrentlyWorking,
+  }));
+
+  // Transform achievements
+  const transformedAchievements: AchievementItem[] = achievements.map((ach) => {
+    // Parse document JSON if it exists
+    let documentFileName: string | null = null;
+    if (ach.document) {
+      try {
+        const docData = JSON.parse(ach.document);
+        documentFileName = docData.fileName || null;
+      } catch {
+        // If parsing fails, use the raw string
+        documentFileName = ach.document;
+      }
+    }
+    
+    return {
+      id: ach.id.toString(),
+      category: ach.category,
+      description: ach.description,
+      documents: documentFileName,
+    };
+  });
+
+  return {
+    id: applicantId,
+    applicantId: personalDetails.applicantId.toString(),
+    applicantName: personalDetails.name,
+    applicantStage: "Lead", // Default stage, can be updated from applications
+    enrollmentType: personalDetails.enrollmentType || "",
+    notes: personalDetails.notes || "",
+    status: "Active" as const, // Default, will be updated from status
+    personalDetails: transformedPersonalDetails,
+    educationalDetails: transformedEducationalDetails,
+    workExperience: { experiences: transformedWorkExperiences },
+    achievements: { achievements: transformedAchievements },
+  };
+};
+
 const ApplicantDetailView = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { applicantId } = useParams<{ applicantId: string }>();
+  const { user } = useAppSelector((state) => state.auth);
 
   // State
   const [applicant, setApplicant] = useState<ApplicantDetail | null>(null);
@@ -62,43 +143,74 @@ const ApplicantDetailView = () => {
   } | null>(null);
   const [isLoadingStatusHistory, setIsLoadingStatusHistory] = useState(false);
 
+  // Track which applicantId has been fetched to prevent duplicate calls
+  const fetchedForApplicantId = useRef<string | null>(null);
+  const isMountedRef = useRef(true);
+
+  // Set mounted ref
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   // Fetch applicant data
   useEffect(() => {
-    let isMounted = true;
-    const abortController = new AbortController();
-
     const fetchApplicantDetail = async () => {
+      if (!applicantId || !user?.agencyId) return;
+
+      // Skip if already fetched for this applicantId
+      if (fetchedForApplicantId.current === applicantId) return;
+      
+      // Mark as fetching for this applicantId
+      fetchedForApplicantId.current = applicantId;
+
       setLoading(true);
+      dispatch(showLoader());
+
       try {
-        // TODO: Replace with actual API call
-        // const response = await fetch(`/api/applicants/${applicantId}`, {
-        //   signal: abortController.signal,
-        // });
-        // if (!response.ok) throw new Error("Failed to fetch applicant");
-        // const data = await response.json();
-        
-        // Mock data for now
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        
+        // Fetch complete details from API
+        const response = await applicantService.getCompleteDetails({
+          agencyId: user.agencyId,
+          applicantId: applicantId,
+        });
+
         // Check if component is still mounted before updating state
-        if (!isMounted || abortController.signal.aborted) return;
-        
-        setApplicant(mockApplicantDetail);
-        // Set notes from fetched data (will come from API in production)
-        const fetchedNotes = mockApplicantDetail.notes || "";
-        setNotes(fetchedNotes);
-        setOriginalNotes(fetchedNotes); // Store original notes for comparison
+        if (!isMountedRef.current) return;
+
+        if (response.status === "success" && response.data) {
+          // Transform API data to component format
+          const transformedData = transformCompleteDetails(response.data, applicantId);
+          
+          // Merge with existing applicant data (applications, etc.)
+          setApplicant((prev) => ({
+            ...prev,
+            ...transformedData,
+            applications: prev?.applications || [],
+          } as ApplicantDetail));
+
+          // Set notes from fetched data
+          const fetchedNotes = response.data.personalDetails?.notes || "";
+          setNotes(fetchedNotes);
+          setOriginalNotes(fetchedNotes);
+        } else {
+          // Reset ref on error so it can retry
+          fetchedForApplicantId.current = null;
+          throw new Error(response.message || "Failed to fetch applicant details");
+        }
       } catch (error) {
         if (error instanceof Error && error.name === "AbortError") {
           return; // Ignore abort errors
         }
-        if (import.meta.env.DEV) {
-          console.error("Error fetching applicant detail:", error);
-        }
-        // TODO: Show error toast notification
+        // Reset ref on error so it can retry
+        fetchedForApplicantId.current = null;
+        const { message } = handleApiError(error, "Failed to fetch applicant details");
+        dispatch(addToast({ type: "error", message }));
       } finally {
-        if (isMounted && !abortController.signal.aborted) {
+        if (isMountedRef.current) {
           setLoading(false);
+          dispatch(hideLoader());
         }
       }
     };
@@ -106,13 +218,7 @@ const ApplicantDetailView = () => {
     if (applicantId) {
       fetchApplicantDetail();
     }
-
-    // Cleanup function
-    return () => {
-      isMounted = false;
-      abortController.abort();
-    };
-  }, [applicantId]);
+  }, [applicantId, user?.agencyId, dispatch]);
 
   // Get applications for table (no need for useMemo - just direct access)
   const filteredApplications = applicant?.applications || [];
@@ -340,38 +446,53 @@ const ApplicantDetailView = () => {
 
   // Handle confirm status change
   const handleConfirmStatusChange = useCallback(async () => {
-    if (!applicant) return;
+    if (!applicant || !applicantId) return;
 
     setIsChangingStatus(true);
-    const newStatus = applicant.status === "Active" ? "Inactive" : "Active";
 
     try {
-      // TODO: Replace with actual API call
-      // const response = await updateApplicantStatus(applicant.id, newStatus);
-      
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // Update the applicant in the state
-      setApplicant((prevApplicant) =>
-        prevApplicant
-          ? { ...prevApplicant, status: newStatus as "Active" | "Inactive" }
-          : null
+      // Call API to update applicant status
+      const newStatusValue = applicant.status === "Active" ? "INACTIVE" : "ACTIVE";
+      const response = await userService.updateApplicantStatus(
+        { applicantId: parseInt(applicantId) },
+        {
+          applicantId: parseInt(applicantId),
+          applicationPrefId: 0, // Not required for status toggle
+          applicationStatus: newStatusValue,
+          notes: `Status changed to ${newStatusValue}`,
+          isMailSendToStudent: false,
+        }
       );
 
-      // TODO: After API call, refetch the applicant detail to get updated data
-      // await fetchApplicantDetail();
+      if (response.status === "success") {
+        // Update local state based on API response
+        const newStatus = response.data.status === "ACTIVE" ? "Active" : "Inactive";
+        setApplicant((prevApplicant) =>
+          prevApplicant
+            ? { ...prevApplicant, status: newStatus as "Active" | "Inactive" }
+            : null
+        );
+
+        dispatch(addToast({
+          type: "success",
+          message: t("applicantDetailView.statusUpdateSuccess", "Applicant status updated successfully"),
+        }));
+      }
 
       setIsStatusPopupOpen(false);
     } catch (error) {
+      const errorMessage = handleApiError(error);
+      dispatch(addToast({
+        type: "error",
+        message: typeof errorMessage === "string" ? errorMessage : t("applicantDetailView.statusUpdateError", "Failed to update applicant status"),
+      }));
       if (import.meta.env.DEV) {
         console.error("Error changing status:", error);
       }
-      // TODO: Show error toast notification
     } finally {
       setIsChangingStatus(false);
     }
-  }, [applicant]);
+  }, [applicant, applicantId, dispatch, t]);
 
   // Handle cancel status change
   const handleCancelStatusChange = useCallback(() => {
@@ -455,27 +576,22 @@ const ApplicantDetailView = () => {
     setIsLoadingStatusHistory(false);
   }, []);
 
-  if (loading) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <p style={{ color: COLORS.textMuted }}>{t("common.loading", "Loading...")}</p>
-        </div>
-      </Layout>
-    );
-  }
-
-  if (!applicant) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <p style={{ color: COLORS.textMuted }}>
-            {t("applicantDetailView.notFound", "Applicant not found")}
-          </p>
-        </div>
-      </Layout>
-    );
-  }
+  // Merge applicant data with mock data for applications and documents
+  const displayApplicant: ApplicantDetail = {
+    id: applicant?.id || applicantId || "",
+    applicantId: applicant?.applicantId || applicantId || "",
+    applicantName: applicant?.applicantName || "",
+    applicantStage: applicant?.applicantStage || "",
+    enrollmentType: applicant?.enrollmentType || "",
+    applications: applicant?.applications || mockApplicantDetail.applications,
+    notes: applicant?.notes || "",
+    status: applicant?.status || "Active",
+    personalDetails: applicant?.personalDetails,
+    educationalDetails: applicant?.educationalDetails,
+    workExperience: applicant?.workExperience,
+    achievements: applicant?.achievements,
+    documents: applicant?.documents || mockApplicantDetail.documents,
+  };
 
   return (
     <Layout>
@@ -483,19 +599,10 @@ const ApplicantDetailView = () => {
         className="bg-white rounded-lg shadow-sm p-4 md:p-6 space-y-6"
         style={{ backgroundColor: COLORS.surface }}
       >
-        {/* Back Button */}
-        <Button
-          variant="accent"
-          size="sm"
-          rounded
-          icon={<ArrowLeft className="h-5 w-5" />}
-          onClick={handleBack}
-          className="mb-4"
-        />
-
         {/* Applicant Header */}
         <ApplicantHeader
-          applicant={applicant}
+          applicant={displayApplicant}
+          onBack={handleBack}
           onEdit={handleEdit}
           onStatusToggle={handleStatusToggle}
         />
@@ -512,7 +619,7 @@ const ApplicantDetailView = () => {
         />
 
         {/* Card Sections */}
-        <ApplicantCards applicant={applicant} />
+        <ApplicantCards applicant={displayApplicant} />
 
         {/* Notes Section */}
         <NotesSection
@@ -526,7 +633,7 @@ const ApplicantDetailView = () => {
         {/* Applicant Status Change Confirmation Popup */}
         <StatusChangePopup
           isOpen={isStatusPopupOpen}
-          item={applicant}
+          item={displayApplicant}
           isChanging={isChangingStatus}
           onClose={handleCancelStatusChange}
           onConfirm={handleConfirmStatusChange}

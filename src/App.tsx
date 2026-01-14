@@ -1,8 +1,9 @@
-import { lazy } from "react";
+import { lazy, Suspense } from "react";
 import type { ReactNode } from "react";
 import { Routes, Route } from "react-router-dom";
 import { ROUTES } from "./constants";
 import { ProtectedRoute, PublicRoute } from "./guards";
+import { GlobalLoader } from "./components";
 
 // ==========================================
 // Lazy Loaded Pages
@@ -89,20 +90,22 @@ const protectedRoutes: RouteConfig[] = [
 
 function App() {
   return (
-    <Routes>
-      {/* Public routes - Redirect to dashboard if logged in */}
-      {publicRoutes.map(({ path, element }) => (
-        <Route key={path} path={path} element={<PublicRoute>{element}</PublicRoute>} />
-      ))}
+    <Suspense fallback={<GlobalLoader forceShow />}>
+      <Routes>
+        {/* Public routes - Redirect to dashboard if logged in */}
+        {publicRoutes.map(({ path, element }) => (
+          <Route key={path} path={path} element={<PublicRoute>{element}</PublicRoute>} />
+        ))}
 
-      {/* Protected routes - Require authentication */}
-      {protectedRoutes.map(({ path, element }) => (
-        <Route key={path} path={path} element={<ProtectedRoute>{element}</ProtectedRoute>} />
-      ))}
+        {/* Protected routes - Require authentication */}
+        {protectedRoutes.map(({ path, element }) => (
+          <Route key={path} path={path} element={<ProtectedRoute>{element}</ProtectedRoute>} />
+        ))}
 
-      {/* 404 - Catch all unmatched routes */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+        {/* 404 - Catch all unmatched routes */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
   );
 }
 

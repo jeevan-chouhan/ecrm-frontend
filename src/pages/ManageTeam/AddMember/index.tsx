@@ -370,7 +370,7 @@ const AddMember = () => {
         const response = await userService.addMember(payload);
         if (response.status === "success") {
           dispatch(addToast({ type: "success", message: t("manageTeam.memberAddedSuccess", "Team member added successfully") }));
-          navigate(ROUTES.MANAGE_TEAM);
+      navigate(ROUTES.MANAGE_TEAM);
         }
       } catch (error: any) {
         const { message } = handleApiError(error);
@@ -383,16 +383,16 @@ const AddMember = () => {
 
   // Touched fields for validation
   const allTouchedFields: Record<string, boolean> = useMemo(() => ({
-    name: true,
-    email: true,
+      name: true,
+      email: true,
     password: true,
     countryCode: true,
-    contactNumber: true,
-    role: true,
-    adminId: true,
-    managerId: true,
-    assignedCountries: true,
-    assignedUniversities: true,
+      contactNumber: true,
+      role: true,
+      adminId: true,
+      managerId: true,
+      assignedCountries: true,
+      assignedUniversities: true,
   }), []);
 
   // Handle form submit with touch all fields
@@ -551,15 +551,15 @@ const AddMember = () => {
                   formik.setFieldValue("role", value);
                   // Only reset admin/manager when role actually changes (not on initial load)
                   if (previousRole && previousRole !== value) {
-                    formik.setFieldValue("adminId", "");
-                    formik.setFieldValue("managerId", "");
+                  formik.setFieldValue("adminId", "");
+                  formik.setFieldValue("managerId", "");
                   }
                 }}
                 placeholder={t("manageTeam.selectRole", "Select Role")}
                 error={hasAttemptedSubmit && formik.errors.role ? formik.errors.role : undefined}
                 fullWidth
               />
-              
+
               {/* Show Admin field for Manager, Counselor and Billing roles */}
               {showAdminField && (
                 <Select
@@ -575,9 +575,9 @@ const AddMember = () => {
                 />
               )}
             </div>
-
+              
             {/* Row 4: Manager (conditional for Counselor) */}
-            {showManagerField && (
+              {showManagerField && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Select
                   label={<>{t("manageTeam.manager", "Manager")} <span style={{ color: COLORS.error }}>*</span></>}
@@ -591,7 +591,7 @@ const AddMember = () => {
                   disabled={isLoadingManagers}
                 />
               </div>
-            )}
+              )}
 
             {/* Row 5: Assigned Country and Assigned University */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -620,7 +620,7 @@ const AddMember = () => {
                 searchable
                 disabled={isLoadingCountries}
               />
-              
+
               <MultiSelect
                 label={<>{t("manageTeam.assignedUniversity", "Assigned University")} <span style={{ color: COLORS.error }}>*</span></>}
                 options={universityOptions}

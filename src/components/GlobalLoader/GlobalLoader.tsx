@@ -2,10 +2,15 @@ import { useAppSelector } from "../../redux/hooks";
 import LogoImage  from "../../assets/LogoImage.png";
 import { COLORS } from "../../constants";
 
-const GlobalLoader = () => {
+interface GlobalLoaderProps {
+  forceShow?: boolean;
+}
+
+const GlobalLoader = ({ forceShow = false }: GlobalLoaderProps) => {
   const { isLoading, loadingText } = useAppSelector((state) => state.loader);
 
-  if (!isLoading) return null;
+  // Show loader if forceShow is true (for Suspense) or if Redux state isLoading is true
+  if (!forceShow && !isLoading) return null;
 
   return (
     <div
