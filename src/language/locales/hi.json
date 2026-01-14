@@ -190,6 +190,7 @@
   "applicant": {
     "addApplicant": "आवेदक जोड़ें",
     "editApplicant": "आवेदक संपादित करें",
+    "applicantDetails": "आवेदक विवरण",
     "personalDetails": "व्यक्तिगत विवरण",
     "uploadProfilePhoto": "प्रोफ़ाइल फोटो अपलोड करें",
     "enrollmentType": "नामांकन प्रकार",

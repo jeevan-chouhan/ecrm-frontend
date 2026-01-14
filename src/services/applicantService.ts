@@ -42,10 +42,12 @@ import type {
   CreateWorkExperiencesResponse,
   GetWorkExperiencesResponse,
   UpdateWorkExperienceResponse,
+  DeleteWorkExperienceResponse,
   AchievementItemPayload,
   CreateAchievementsResponse,
   GetAchievementsResponse,
   UpdateAchievementResponse,
+  DeleteAchievementResponse,
 } from "./types";
 
 /**
@@ -593,6 +595,22 @@ const applicantService = {
   },
 
   /**
+   * Delete applicant work experience
+   * @param workExperienceId - Work experience ID
+   * @param applicantId - Applicant ID
+   * @returns Delete work experience response
+   */
+  deleteWorkExperience: async (
+    workExperienceId: number | string,
+    applicantId: number | string
+  ): Promise<DeleteWorkExperienceResponse> => {
+    const url = ENDPOINTS.APPLICANTS.DELETE_WORK_EXPERIENCE(workExperienceId, applicantId);
+
+    const response = await api.delete<DeleteWorkExperienceResponse>(url);
+    return response.data;
+  },
+
+  /**
    * Create applicant achievements
    * @param applicantId - Applicant ID
    * @param payload - Array of achievement items
@@ -640,6 +658,22 @@ const applicantService = {
 
     const response = await api.put<UpdateAchievementResponse>(url, payload);
 
+    return response.data;
+  },
+
+  /**
+   * Delete applicant achievement
+   * @param achievementId - Achievement ID
+   * @param applicantId - Applicant ID
+   * @returns Delete achievement response
+   */
+  deleteAchievement: async (
+    achievementId: number | string,
+    applicantId: number | string
+  ): Promise<DeleteAchievementResponse> => {
+    const url = ENDPOINTS.APPLICANTS.DELETE_ACHIEVEMENT(achievementId, applicantId);
+
+    const response = await api.delete<DeleteAchievementResponse>(url);
     return response.data;
   },
 };

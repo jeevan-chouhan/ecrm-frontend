@@ -31,6 +31,7 @@ const WorkExperience = ({ initialValues, onUpdate, onSaveAndNext, onBack, applic
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [shouldNavigateNext, setShouldNavigateNext] = useState(false);
@@ -740,34 +741,95 @@ const WorkExperience = ({ initialValues, onUpdate, onSaveAndNext, onBack, applic
     setIsDeletePopupOpen(true);
   }, []);
 
-  const handleConfirmDelete = useCallback(() => {
-    if (deletingIndex === null) return;
+  const handleConfirmDelete = useCallback(async () => {
+    if (deletingIndex === null || isDeleting) return;
 
     const indexToDelete = deletingIndex;
     const workExperienceToDelete = formik.values.workExperiences[indexToDelete];
 
-    // Remove the work experience using the hook's remove function
-    const updatedWorkExperiences = formik.values.workExperiences.filter((_, i) => i !== indexToDelete);
-    formik.setFieldValue("workExperiences", updatedWorkExperiences);
-    if (editingIndex === indexToDelete) {
-      setEditingIndex(null);
-    } else if (editingIndex !== null && editingIndex > indexToDelete) {
-      setEditingIndex(editingIndex - 1);
-    }
+    setIsDeleting(true);
+    dispatch(showLoader());
 
-    // Close popup and reset state
-    setIsDeletePopupOpen(false);
-    setDeletingIndex(null);
+    try {
+      // Check if work experience has workExperienceId - if not, just remove from form (new entry)
+      if (!workExperienceToDelete.workExperienceId) {
+        // Remove the work experience from form state (it's a new entry, not saved yet)
+        const updatedWorkExperiences = formik.values.workExperiences.filter((_, i) => i !== indexToDelete);
+        formik.setFieldValue("workExperiences", updatedWorkExperiences);
+        if (editingIndex === indexToDelete) {
+          setEditingIndex(null);
+        } else if (editingIndex !== null && editingIndex > indexToDelete) {
+          setEditingIndex(editingIndex - 1);
+        }
 
-    // TODO: Replace with actual API endpoint
-    // const response = await fetch(`/api/applicant/work-experience/${workExperienceToDelete.id}`, {
-    //   method: "DELETE",
-    // });
-    // const result = await response.json();
-    if (import.meta.env.DEV) {
-      console.log("Delete API call for work experience:", workExperienceToDelete);
+        // Close popup and reset state
+        setIsDeletePopupOpen(false);
+        setDeletingIndex(null);
+        setIsDeleting(false);
+        dispatch(hideLoader());
+        return;
+      }
+
+      if (!applicantId) {
+        dispatch(
+          addToast({
+            type: "error",
+            message: t("applicant.applicantIdMissing", "Applicant ID is missing. Cannot delete work experience."),
+          })
+        );
+        setIsDeletePopupOpen(false);
+        setDeletingIndex(null);
+        setIsDeleting(false);
+        dispatch(hideLoader());
+        return;
+      }
+
+      if (import.meta.env.DEV) {
+        console.log("Calling DELETE API for work experience ID:", workExperienceToDelete.workExperienceId, "applicant ID:", applicantId);
+      }
+      
+      const response = await applicantService.deleteWorkExperience(workExperienceToDelete.workExperienceId, applicantId);
+      
+      if (import.meta.env.DEV) {
+        console.log("DELETE API response:", response);
+      }
+
+      if (response.status === "success") {
+        // Remove the work experience from form state
+        const updatedWorkExperiences = formik.values.workExperiences.filter((_, i) => i !== indexToDelete);
+        formik.setFieldValue("workExperiences", updatedWorkExperiences);
+        if (editingIndex === indexToDelete) {
+          setEditingIndex(null);
+        } else if (editingIndex !== null && editingIndex > indexToDelete) {
+          setEditingIndex(editingIndex - 1);
+        }
+
+        // Update original work experiences ref
+        originalWorkExperiencesRef.current = originalWorkExperiencesRef.current.filter(
+          (we) => we.workExperienceId !== workExperienceToDelete.workExperienceId
+        );
+
+        dispatch(
+          addToast({
+            type: "success",
+            message: t("applicant.workExperienceDeleted", "Work experience deleted successfully"),
+          })
+        );
+      } else {
+        throw new Error(response.message || "Failed to delete work experience");
+      }
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error("Error deleting work experience:", error);
+      }
+      handleApiError(error, dispatch, t);
+    } finally {
+      setIsDeletePopupOpen(false);
+      setDeletingIndex(null);
+      setIsDeleting(false);
+      dispatch(hideLoader());
     }
-  }, [deletingIndex, formik, editingIndex, setEditingIndex]);
+  }, [deletingIndex, formik, editingIndex, setEditingIndex, applicantId, dispatch, t, isDeleting]);
 
   const handleCancelDelete = useCallback(() => {
     setIsDeletePopupOpen(false);

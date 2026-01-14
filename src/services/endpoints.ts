@@ -56,9 +56,11 @@ export const ENDPOINTS = {
     WORK_EXPERIENCES: (applicantId: number | string) => `/applicants/work-experiences?applicantId=${applicantId}`,
     GET_WORK_EXPERIENCES: (applicantId: number | string) => `/applicants/work-experiences?applicantId=${applicantId}`,
     UPDATE_WORK_EXPERIENCE: (workExperienceId: number | string, applicantId: number | string) => `/applicants/work-experiences?workExperienceId=${workExperienceId}&applicantId=${applicantId}`,
+    DELETE_WORK_EXPERIENCE: (workExperienceId: number | string, applicantId: number | string) => `/applicants/work-experiences?workExperienceId=${workExperienceId}&applicantId=${applicantId}`,
     ACHIEVEMENTS: (applicantId: number | string) => `/applicants/achievements?applicantId=${applicantId}`,
     GET_ACHIEVEMENTS: (applicantId: number | string) => `/applicants/achievements?applicantId=${applicantId}`,
     UPDATE_ACHIEVEMENT: (achievementId: number | string, applicantId: number | string) => `/applicants/achievements?achievementId=${achievementId}&applicantId=${applicantId}`,
+    DELETE_ACHIEVEMENT: (achievementId: number | string, applicantId: number | string) => `/applicants/achievements?achievementId=${achievementId}&applicantId=${applicantId}`,
   },
 
 //   // User Endpoints
