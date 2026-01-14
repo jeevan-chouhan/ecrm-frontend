@@ -411,7 +411,6 @@ const ApplicantTracker = () => {
 
   // Handle apply filters - triggers API call
   const handleApplyFilters = useCallback(() => {
-    // Batch state updates using functional updates to prevent multiple re-renders
     setAppliedAdmin(selectedAdmin);
     setAppliedManager(selectedManager);
     setAppliedCounselor(selectedCounselor);
@@ -433,7 +432,6 @@ const ApplicantTracker = () => {
 
   // Handle clear filters
   const handleClearFilters = useCallback(() => {
-    // Batch state updates - React 18+ automatically batches these
     // Clear selected filters
     setSelectedAdmin("");
     setSelectedManager("");

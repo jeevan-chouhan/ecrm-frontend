@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Layout } from "../../../components";
@@ -16,8 +16,11 @@ import type {
   WorkExperienceFormData,
   AchievementFormData,
 } from "./types";
-import type { ApplicantDetail } from "../ApplicantDetail/types";
-import { mockApplicantDetail } from "../../../constants";
+import { applicantService } from "../../../services";
+import { useAppDispatch } from "../../../redux/hooks";
+import { addToast } from "../../../redux/slices/toast/toastSlice";
+import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
+import { handleApiError } from "../../../utils";
 
 type TabType = "personal" | "preferences" | "educational" | "work" | "achievements";
 
@@ -63,159 +66,18 @@ const getInitialFormState = (): ApplicantFormState => ({
   },
 });
 
-// Helper function to map ApplicantDetail to ApplicantFormState
-const mapApplicantDetailToFormState = (applicantDetail: ApplicantDetail): ApplicantFormState => {
-  // Map personal details
-  const personalDetails: PersonalDetailsFormData = {
-    profilePhoto: null, // Will need to fetch separately if needed
-    enrollmentType: applicantDetail.personalDetails?.enrollmentType || "",
-    name: applicantDetail.personalDetails?.name || "",
-    dateOfBirth: applicantDetail.personalDetails?.dateOfBirth
-      ? new Date(applicantDetail.personalDetails.dateOfBirth)
-      : null,
-    gender: applicantDetail.personalDetails?.gender || "",
-    countryCode: applicantDetail.personalDetails?.countryCode || "",
-    contactNumber: applicantDetail.personalDetails?.contactNumber || "",
-    emailId: applicantDetail.personalDetails?.emailId || "",
-    permanentAddress: applicantDetail.personalDetails?.permanentAddress || "",
-    notes: applicantDetail.personalDetails?.notes || applicantDetail.notes || "",
-  };
-
-  // Map application preferences from applications array
-  // Extract program type from course name if possible (e.g., "Masters - Computer Science" -> "pg")
-  const extractProgramFromCourse = (course: string): string => {
-    const courseLower = course.toLowerCase();
-    if (courseLower.includes("masters") || courseLower.includes("master") || courseLower.includes("ms") || courseLower.includes("m.sc")) {
-      return "pg";
-    }
-    if (courseLower.includes("bachelors") || courseLower.includes("bachelor") || courseLower.includes("bs") || courseLower.includes("b.sc") || courseLower.includes("b.tech")) {
-      return "ug";
-    }
-    if (courseLower.includes("phd") || courseLower.includes("ph.d") || courseLower.includes("doctorate")) {
-      return "phd";
-    }
-    if (courseLower.includes("diploma") || courseLower.includes("certificate")) {
-      return "diploma";
-    }
-    return ""; // Return empty if can't determine
-  };
-
-  // Normalize country value to match dropdown options (e.g., "USA" -> "usa")
-  const normalizeCountry = (country: string): string => {
-    if (!country) return "";
-    const countryLower = country.toLowerCase();
-    // Map common country name variations to dropdown values
-    if (countryLower === "usa" || countryLower === "united states" || countryLower === "united states of america") {
-      return "usa";
-    }
-    if (countryLower === "uk" || countryLower === "united kingdom") {
-      return "uk";
-    }
-    // Return lowercase version if it matches a known value, otherwise return as-is
-    return countryLower;
-  };
-
-  // Normalize university value to match dropdown options (e.g., "MIT" -> "mit")
-  const normalizeUniversity = (university: string): string => {
-    if (!university) return "";
-    const universityLower = university.toLowerCase();
-    // Map common university name variations to dropdown values
-    if (universityLower === "mit" || universityLower === "massachusetts institute of technology") {
-      return "mit";
-    }
-    if (universityLower === "stanford" || universityLower === "stanford university") {
-      return "stanford"; // Note: "stanford" might not be in dropdown, but we'll use it
-    }
-    // Return as-is - Select component might have search/filter functionality
-    return university;
-  };
-
-  const preferences = (applicantDetail.applications || []).map((app, index) => {
-    // Check if preference has enough data to be considered "saved"
-    // (campus is optional in existing data, so we check other required fields)
-    const hasEssentialData = !!(
-      app.country &&
-      app.course &&
-      app.intake &&
-      app.university
-    );
-    
-    return {
-      id: app.id || `pref-${index}`,
-      desiredCountry: normalizeCountry(app.country || ""),
-      program: extractProgramFromCourse(app.course || ""), // Try to extract from course name
-      desiredUniversity: normalizeUniversity(app.university || ""),
-      desiredCampus: "", // Not available in UniversityApplication - will need to be filled by user
-      course: app.course || "",
-      desiredIntake: app.intake || "",
-      assignCounselor: app.counselor || "",
-      agencyPartnerName: app.agencyPartner === "-" ? "" : app.agencyPartner || "",
-      saved: hasEssentialData, // Mark as saved if it has essential data, so it shows as a card
-    };
-  });
-
-  // Map educational details
-  const educationalDetails: EducationalDetailFormData = {
-    highestQualification: applicantDetail.educationalDetails?.highestQualification || "",
-    institutionName: applicantDetail.educationalDetails?.institutionName || "",
-    boardUniversity: applicantDetail.educationalDetails?.boardUniversity || "",
-    program: applicantDetail.educationalDetails?.program || "",
-    major: applicantDetail.educationalDetails?.major || "",
-    scoreType: applicantDetail.educationalDetails?.scoreType || "",
-    score: applicantDetail.educationalDetails?.score || "",
-    passingYear: applicantDetail.educationalDetails?.passingYear
-      ? new Date(applicantDetail.educationalDetails.passingYear)
-      : null,
-  };
-
-  // Map work experience
-  const workExperiences = (applicantDetail.workExperience?.experiences || []).map((exp) => ({
-    id: exp.id,
-    companyName: exp.companyName,
-    jobTitle: exp.jobTitle,
-    startDate: exp.startDate ? new Date(exp.startDate) : null,
-    endDate: exp.endDate ? new Date(exp.endDate) : null,
-    currentlyWorking: exp.currentlyWorking,
-    saved: true,
-  }));
-
-  const workExperience: WorkExperienceFormData = {
-    hasWorkExperience: workExperiences.length > 0 ? "yes" : "no",
-    workExperiences,
-  };
-
-  // Map achievements
-  const achievements = (applicantDetail.achievements?.achievements || []).map((ach) => ({
-    id: ach.id,
-    category: ach.category,
-    description: ach.description,
-    documents: null, // Documents are URLs/strings in detail view, not File objects
-    saved: true,
-  }));
-
-  const achievementFormData: AchievementFormData = {
-    hasAchievements: achievements.length > 0 ? "yes" : "no",
-    achievements,
-  };
-
-  return {
-    personalDetails,
-    applicationPreferences: { preferences },
-    educationalDetails,
-    workExperience,
-    achievements: achievementFormData,
-  };
-};
-
 const CreateApplicant = () => {
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const applicantId = searchParams.get("applicantId");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const applicantIdFromUrl = searchParams.get("applicantId");
+  const [applicantId, setApplicantId] = useState<number | string | null>(applicantIdFromUrl);
   const [activeTab, setActiveTab] = useState<TabType>("personal");
   const [formState, setFormState] = useState<ApplicantFormState>(getInitialFormState());
-  const [loading, setLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const hasFetchedPersonalDetailsRef = useRef(false);
+  const isFetchingPersonalDetailsRef = useRef(false);
 
   // Memoize tabs array to prevent recreation on every render
   const tabs: Tab[] = useMemo(() => [
@@ -237,9 +99,18 @@ const CreateApplicant = () => {
   const handlePreviousTab = useCallback(() => {
     const currentIndex = tabs.findIndex((tab) => tab.id === activeTab);
     if (currentIndex > 0) {
-      setActiveTab(tabs[currentIndex - 1].id);
+      const previousTab = tabs[currentIndex - 1].id;
+      setActiveTab(previousTab);
+      
+      // If going back to personal tab and we have applicantId, fetch data if not already fetched
+      // The useEffect will handle the fetch when activeTab changes to "personal"
+      if (previousTab === "personal" && applicantId) {
+        // Reset fetch flag to allow re-fetch if needed (e.g., data might have changed)
+        // hasFetchedPersonalDetailsRef.current = false;
+        // Actually, we don't want to re-fetch unnecessarily, so we'll let the useEffect handle it
+      }
     }
-  }, [activeTab, tabs]);
+  }, [activeTab, tabs, applicantId]);
 
   // Handlers to update form state
   const updatePersonalDetails = useCallback((data: PersonalDetailsFormData) => {
@@ -262,48 +133,98 @@ const CreateApplicant = () => {
     setFormState((prev) => ({ ...prev, achievements: data }));
   }, []);
 
-  // Fetch applicant data when applicantId is present
-  useEffect(() => {
-    if (!applicantId) {
-      setIsEditMode(false);
+  // Fetch personal details when applicantId is present (edit mode or back navigation)
+  const fetchPersonalDetails = useCallback(async (id: number | string) => {
+    if (isFetchingPersonalDetailsRef.current) {
       return;
     }
 
-    setIsEditMode(true);
-    setLoading(true);
+    isFetchingPersonalDetailsRef.current = true;
+    dispatch(showLoader());
 
-    // Simulate API call with mock data
-    const fetchApplicantData = async () => {
-      try {
-        // TODO: Replace with actual API call
-        // const response = await fetch(`/api/applicants/${applicantId}`);
-        // if (!response.ok) throw new Error("Failed to fetch applicant");
-        // const data = await response.json();
+    try {
+      const response = await applicantService.getPersonalDetails(id);
 
-        // Mock data for now
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        // Use mock data - in production, use data from API
-        const applicantData = mockApplicantDetail;
+      if (response.status === "success" && response.data) {
+        const data = response.data;
         
-        // Map the data to form state
-        const mappedFormState = mapApplicantDetailToFormState(applicantData);
-        setFormState(mappedFormState);
-        setLoading(false);
-      } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error("Error fetching applicant data:", error);
-        }
-        // TODO: Show error toast notification
-        // On error, reset to initial state
-        setIsEditMode(false);
-        setFormState(getInitialFormState());
-        setLoading(false);
-      }
-    };
+        // Map API response to PersonalDetailsFormData
+        // Note: API response doesn't include countryCode, permanentAddress, or notes
+        // These will need to be handled separately or stored differently
+        const personalDetails: PersonalDetailsFormData = {
+          profilePhoto: null, // Profile photo would need separate handling if URL is returned
+          enrollmentType: data.enrollmentType || "",
+          name: data.name || "",
+          dateOfBirth: data.dob ? new Date(data.dob + "T00:00:00") : null, // Add time to avoid timezone issues
+          gender: data.gender || "",
+          countryCode: data.countryCode || "",
+          contactNumber: data.contactNumber || "",
+          emailId: data.email || "",
+          permanentAddress: "", // Not in API response
+          notes: "", // Not in API response
+        };
 
-    fetchApplicantData();
-  }, [applicantId]);
+        // Update form state with fetched data
+        setFormState((prev) => ({
+          ...prev,
+          personalDetails,
+        }));
+
+        setIsEditMode(true);
+        hasFetchedPersonalDetailsRef.current = true;
+      } else {
+        throw new Error(response.message || "Failed to fetch personal details");
+      }
+    } catch (error: any) {
+      const { message } = handleApiError(error, "Failed to fetch personal details");
+      dispatch(addToast({ type: "error", message }));
+      
+      // On error, reset to initial state
+      setIsEditMode(false);
+      setFormState(getInitialFormState());
+    } finally {
+      isFetchingPersonalDetailsRef.current = false;
+      dispatch(hideLoader());
+    }
+  }, [dispatch]);
+
+  // Handle applicantId from URL or state changes
+  useEffect(() => {
+    const currentApplicantId = applicantIdFromUrl || applicantId;
+    
+    if (!currentApplicantId) {
+      setIsEditMode(false);
+      hasFetchedPersonalDetailsRef.current = false;
+      return;
+    }
+
+    // Update state if URL changed
+    if (applicantIdFromUrl && applicantIdFromUrl !== applicantId) {
+      setApplicantId(applicantIdFromUrl);
+      hasFetchedPersonalDetailsRef.current = false; // Reset fetch flag when ID changes
+    }
+
+    // Fetch personal details if we have applicantId and are on personal tab
+    // Fetch when:
+    // 1. Component mounts with applicantId and on personal tab
+    // 2. User navigates to personal tab with applicantId
+    if (currentApplicantId && activeTab === "personal" && !hasFetchedPersonalDetailsRef.current) {
+      fetchPersonalDetails(currentApplicantId);
+    }
+  }, [applicantIdFromUrl, applicantId, activeTab, fetchPersonalDetails]);
+
+  // Handle applicantId change callback (when created from API)
+  const handleApplicantIdChange = useCallback((newApplicantId: number) => {
+    setApplicantId(newApplicantId);
+    
+    // Update URL with new applicantId
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set("applicantId", newApplicantId.toString());
+    setSearchParams(newSearchParams, { replace: true });
+    
+    // Mark as edit mode
+    setIsEditMode(true);
+  }, [searchParams, setSearchParams]);
 
   // Final submit handler - submits all form data and redirects
   const handleFinalSubmit = useCallback(async () => {
@@ -373,9 +294,11 @@ const CreateApplicant = () => {
         onUpdate={updatePersonalDetails}
         onSaveAndNext={handleNextTab}
         onReset={resetPersonalDetails}
+        applicantId={applicantId}
+        onApplicantIdChange={handleApplicantIdChange}
       />
     ),
-    [formState.personalDetails, updatePersonalDetails, handleNextTab, resetPersonalDetails]
+    [formState.personalDetails, updatePersonalDetails, handleNextTab, resetPersonalDetails, applicantId, handleApplicantIdChange]
   );
 
   const preferencesTabContent = useMemo(
@@ -385,9 +308,10 @@ const CreateApplicant = () => {
         onUpdate={updateApplicationPreferences}
         onSaveAndNext={handleNextTab}
         onBack={handlePreviousTab}
+        applicantId={applicantId}
       />
     ),
-    [formState.applicationPreferences, updateApplicationPreferences, handleNextTab, handlePreviousTab]
+    [formState.applicationPreferences, updateApplicationPreferences, handleNextTab, handlePreviousTab, applicantId]
   );
 
   const educationalTabContent = useMemo(
@@ -443,19 +367,6 @@ const CreateApplicant = () => {
         return personalTabContent;
     }
   }, [activeTab, personalTabContent, preferencesTabContent, educationalTabContent, workTabContent, achievementsTabContent]);
-
-  // Show loading state while fetching data
-  if (loading) {
-    return (
-      <Layout>
-        <div className="bg-white rounded-lg shadow-sm p-4 md:p-6">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <p style={{ color: COLORS.textMuted }}>{t("common.loading", "Loading...")}</p>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
 
   return (
     <Layout>

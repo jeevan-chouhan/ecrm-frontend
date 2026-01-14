@@ -1,8 +1,9 @@
 import React from "react";
 import { Select, Button, IntakeSelector } from "../../../components";
-import { countries, programs, universities, campuses, courses, counselors, agencyPartners, COLORS } from "../../../constants";
+import { programs, agencyPartners, COLORS } from "../../../constants";
 import { useTranslation } from "react-i18next";
 import type { PreferenceItem } from "./types";
+import type { SelectOption } from "../../../components";
 
 interface PreferenceFormProps {
   preference: PreferenceItem;
@@ -13,6 +14,11 @@ interface PreferenceFormProps {
   onAddMore?: () => void;
   showCancel?: boolean;
   showAddMore?: boolean;
+  countryOptions?: SelectOption[]; // Countries from API
+  universityOptions?: SelectOption[]; // Universities from API (filtered by country)
+  campusOptions?: SelectOption[]; // Campuses from API (filtered by university)
+  courseOptions?: SelectOption[]; // Courses from API (filtered by campus and course type)
+  counselorOptions?: SelectOption[]; // Counselors from API (filtered by user role)
 }
 
 const PreferenceForm = ({
@@ -24,6 +30,11 @@ const PreferenceForm = ({
   onAddMore,
   showCancel = false,
   showAddMore = false,
+  countryOptions = [], // Default to empty array if not provided
+  universityOptions = [], // Default to empty array if not provided
+  campusOptions = [], // Default to empty array if not provided
+  courseOptions = [], // Default to empty array if not provided
+  counselorOptions = [], // Default to empty array if not provided
 }: PreferenceFormProps) => {
   const { t } = useTranslation();
 
@@ -40,7 +51,7 @@ const PreferenceForm = ({
               {t("applicant.desiredCountry")} <span style={{ color: COLORS.error }}>*</span>
             </label>
             <Select
-              options={countries}
+              options={countryOptions}
               value={preference.desiredCountry}
               onChange={(value) => onFieldChange(index, "desiredCountry", value)}
               placeholder={t("applicant.selectCountry")}
@@ -58,13 +69,14 @@ const PreferenceForm = ({
               {t("applicant.desiredUniversity")} <span style={{ color: COLORS.error }}>*</span>
             </label>
             <Select
-              options={universities}
+              options={universityOptions}
               value={preference.desiredUniversity}
               onChange={(value) => onFieldChange(index, "desiredUniversity", value)}
-              placeholder={t("applicant.selectUniversity")}
+              placeholder={preference.desiredCountry ? t("applicant.selectUniversity") : t("applicant.selectCountryFirst", "Please select country first")}
               error={getFieldError(index, "desiredUniversity")}
               fullWidth
               searchable
+              disabled={!preference.desiredCountry}
             />
           </div>
 
@@ -76,13 +88,14 @@ const PreferenceForm = ({
               {t("applicant.desiredCampus")} <span style={{ color: COLORS.error }}>*</span>
             </label>
             <Select
-              options={campuses}
+              options={campusOptions}
               value={preference.desiredCampus}
               onChange={(value) => onFieldChange(index, "desiredCampus", value)}
-              placeholder={t("applicant.selectCampus")}
+              placeholder={preference.desiredUniversity ? t("applicant.selectCampus") : t("applicant.selectUniversityFirst", "Please select university first")}
               error={getFieldError(index, "desiredCampus")}
               fullWidth
               searchable
+              disabled={!preference.desiredUniversity}
             />
           </div>
         </div>
@@ -115,13 +128,14 @@ const PreferenceForm = ({
               {t("applicant.course")} <span style={{ color: COLORS.error }}>*</span>
             </label>
             <Select
-              options={courses}
+              options={courseOptions}
               value={preference.course}
               onChange={(value) => onFieldChange(index, "course", value)}
-              placeholder={t("applicant.selectCourse")}
+              placeholder={preference.desiredCampus && preference.program ? t("applicant.selectCourse") : t("applicant.selectCampusAndProgram", "Please select campus and program first")}
               error={getFieldError(index, "course")}
               fullWidth
               searchable
+              disabled={!preference.desiredCampus || !preference.program}
             />
           </div>
 
@@ -153,7 +167,7 @@ const PreferenceForm = ({
               {t("applicant.assignCounselor")}
             </label>
             <Select
-              options={counselors}
+              options={counselorOptions}
               value={preference.assignCounselor}
               onChange={(value) => onFieldChange(index, "assignCounselor", value)}
               placeholder={t("applicant.selectCounselor")}

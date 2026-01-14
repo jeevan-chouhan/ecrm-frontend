@@ -50,12 +50,13 @@ export const MONTH_SHORT_NAMES = [
 export const enrollmentTypes: SelectOption[] = [
   { value: "WALK_IN", label: "Walk-in" },
   { value: "REFFERED_TO_AGENCY", label: "Referred to Agency Partner" },
-  { value: "REFFERED_BY_AGENCY", label: "Referred by Agency Partner" }, 
+  { value: "REFFERED_BY_AGENCY", label: "Referred by Agency Partner" },
 ];
 
 export const genderTypes: SelectOption[] = [
   { value: "MALE", label: "Male" },
   { value: "FEMALE", label: "Female" },
+  { value: "TRANSGENDER", label: "Transgender" },
   { value: "OTHER", label: "Other" },
 ];
 

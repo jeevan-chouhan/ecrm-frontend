@@ -176,6 +176,20 @@ export interface UniversityItem {
   countryName?: string;
 }
 
+export interface CampusItem {
+  id: number;
+  name: string;
+  universityId?: number;
+  universityName?: string;
+}
+
+export interface CourseItem {
+  id: number;
+  name: string;
+  courseType?: string;
+  campusId?: number;
+}
+
 export interface UniversityParams {
   agencyId: number | null;
   countryId: number | null;
@@ -183,6 +197,8 @@ export interface UniversityParams {
 
 export type CountriesResponse = ApiResponse<CountryItem[]>;
 export type UniversitiesResponse = ApiResponse<UniversityItem[]>;
+export type CampusesResponse = ApiResponse<CampusItem[]>;
+export type CoursesResponse = ApiResponse<CourseItem[]>;
 
 // ==========================================
 // User Details Types
@@ -461,6 +477,142 @@ export interface ApplicantOverviewData {
 }
 
 export type ApplicantOverviewResponse = ApiResponse<ApplicantOverviewData>;
+// Personal Details Types
+// ==========================================
+
+// Create Personal Details Payload
+export interface CreatePersonalDetailsPayload {
+  name: string;
+  profilePhoto?: string | null; // JSON string with accessUrl and fileName, or null
+  enrollmentType: string;
+  dob: string; // Format: "YYYY-MM-DD"
+  gender: string;
+  email: string;
+  countryCode: string;
+  contactNumber: string;
+  permanentAddress?: string | null;
+  notes?: string | null;
+  assignedAgencyId?: number | null; // Agency ID from Redux store
+}
+
+// Update Personal Details Payload (same as create)
+export type UpdatePersonalDetailsPayload = CreatePersonalDetailsPayload;
+
+// Personal Details Data (from API response)
+export interface PersonalDetailsData {
+  applicantId: number;
+  name: string;
+  enrollmentType: string;
+  dob: string; // Format: "YYYY-MM-DD"
+  gender: string;
+  email: string;
+  contactNumber: string;
+  countryCode: string;
+  message?: string;
+}
+
+// Create Personal Details Response
+export type CreatePersonalDetailsResponse = ApiResponse<PersonalDetailsData>;
+
+// Get Personal Details Response
+export type GetPersonalDetailsResponse = ApiResponse<PersonalDetailsData>;
+
+// Update Personal Details Response
+export type UpdatePersonalDetailsResponse = ApiResponse<PersonalDetailsData>;
+
+// ==========================================
+// Application Preferences Types
+// ==========================================
+
+// Application Preference Item (for API payload)
+export interface ApplicationPreferenceItem {
+  desiredCountryId: number;
+  desiredUniversityId: number;
+  desiredCourseType: string; // e.g., "BACHELOR", "MASTER"
+  desiredCampusId: number;
+  desiredCourseId: number;
+  desiredIntake: string; // Format: "YYYY-MM"
+  assignedAgencyId?: number | null; // Agency ID from Redux store
+  assignedCounselorId?: number | null; // Counselor ID if counselor is selected
+  assignedAdminId?: number | null; // Admin ID if user is ADMIN and no counselor selected
+  assignedManagerId?: number | null; // Manager ID if user is MANAGER and no counselor selected
+}
+
+// Create Application Preferences Payload (array of preferences)
+export type CreateApplicationPreferencesPayload = ApplicationPreferenceItem[];
+
+// Application Preference Data (from API response - POST/PUT)
+export interface ApplicationPreferenceData {
+  id?: number; // Preference ID (for updates)
+  applicantId: number;
+  desiredCountryId: number;
+  desiredUniversityId: number;
+  desiredCourseType: string;
+  desiredCampusId: number;
+  desiredCourseId: number;
+  desiredIntake: string;
+  assignedManager: number | null;
+  assignedCounselor: number | null;
+  assignedAgency: number | null;
+  assignedAdmin: number | null;
+  message?: string;
+}
+
+// Application Preference Data (from GET API response - with nested objects)
+export interface ApplicationPreferenceGetData {
+  preferenceId: number; // Preference ID
+  applicantId: number;
+  desiredCountryId: {
+    id: number;
+    name: string;
+  };
+  desiredUniversityId: {
+    id: number;
+    name: string;
+  };
+  desiredCourseType: string;
+  desiredCampusId: {
+    id: number;
+    name: string;
+  };
+  desiredCourseId: {
+    id: number;
+    name: string;
+  };
+  desiredIntake: string;
+  assignedManager: {
+    id: number;
+    name: string;
+  } | number | null;
+  assignedCounselor: {
+    id: number;
+    name: string;
+  } | number | null;
+  assignedAgency: {
+    id: number;
+    name: string;
+  } | number | null;
+  assignedAdmin: {
+    id: number;
+    name: string;
+  } | number | null;
+  message?: string;
+}
+
+// Create Application Preferences Response
+export type CreateApplicationPreferencesResponse = ApiResponse<ApplicationPreferenceData[]>;
+
+// Get Application Preferences Response
+export type GetApplicationPreferencesResponse = ApiResponse<ApplicationPreferenceGetData[]>;
+
+// Update Application Preference Payload (single preference)
+export type UpdateApplicationPreferencePayload = ApplicationPreferenceItem;
+
+// Update Application Preference Response (has nested objects like GET response)
+export type UpdateApplicationPreferenceResponse = ApiResponse<ApplicationPreferenceGetData>;
+
+// Delete Application Preference Response
+export type DeleteApplicationPreferenceResponse = ApiResponse<null>;
 
 // ==========================================
 // Update Applicant Status Types

@@ -1,10 +1,11 @@
 import React, { useMemo } from "react";
 import { Button } from "../../../components";
-import { COLORS, countries, programs, universities, campuses, courses, counselors, agencyPartners } from "../../../constants";
+import { COLORS, programs, agencyPartners } from "../../../constants";
 import { Edit, Trash } from "../../../assets";
 import { useTranslation } from "react-i18next";
 import PreferenceForm from "./PreferenceForm";
 import type { PreferenceItem } from "./types";
+import type { SelectOption } from "../../../components";
 
 // Helper function to format intake value (e.g., "jan-2026" -> "Jan - 2026")
 const formatIntakeDisplay = (intakeValue: string): string => {
@@ -45,6 +46,11 @@ interface PreferenceCardProps {
   onCancel: () => void;
   onFieldChange: (index: number, field: keyof PreferenceItem, value: string) => void;
   getFieldError: (index: number, fieldName: keyof PreferenceItem) => string | undefined;
+  countryOptions?: SelectOption[]; // Countries from API
+  universityOptions?: SelectOption[]; // Universities from API (filtered by country)
+  campusOptions?: SelectOption[]; // Campuses from API (filtered by university)
+  courseOptions?: SelectOption[]; // Courses from API (filtered by campus and course type)
+  counselorOptions?: SelectOption[]; // Counselors from API (filtered by user role)
 }
 
 const PreferenceCard = ({
@@ -57,18 +63,23 @@ const PreferenceCard = ({
   onCancel,
   onFieldChange,
   getFieldError,
+  countryOptions = [], // Default to empty array if not provided
+  universityOptions = [], // Default to empty array if not provided
+  campusOptions = [], // Default to empty array if not provided
+  courseOptions = [], // Default to empty array if not provided
+  counselorOptions = [], // Default to empty array if not provided
 }: PreferenceCardProps) => {
   const { t } = useTranslation();
 
   // Memoize label lookups to prevent recalculation on every render
   const labels = useMemo(() => ({
-    country: countries.find((c) => c.value === preference.desiredCountry)?.label || preference.desiredCountry,
+    country: countryOptions.find((c) => c.value === preference.desiredCountry)?.label || preference.desiredCountry,
     program: programs.find((p) => p.value === preference.program)?.label || preference.program,
-    university: universities.find((u) => u.value === preference.desiredUniversity)?.label || preference.desiredUniversity,
-    campus: campuses.find((c) => c.value === preference.desiredCampus)?.label || preference.desiredCampus,
-    course: courses.find((c) => c.value === preference.course)?.label || preference.course,
+    university: universityOptions.find((u) => u.value === preference.desiredUniversity)?.label || preference.desiredUniversity,
+    campus: campusOptions.find((c) => c.value === preference.desiredCampus)?.label || preference.desiredCampus,
+    course: courseOptions.find((c) => c.value === preference.course)?.label || preference.course,
     intake: formatIntakeDisplay(preference.desiredIntake),
-    counselor: counselors.find((c) => c.value === preference.assignCounselor)?.label || preference.assignCounselor,
+    counselor: counselorOptions.find((c) => c.value === preference.assignCounselor)?.label || preference.assignCounselor,
     agency: agencyPartners.find((a) => a.value === preference.agencyPartnerName)?.label || preference.agencyPartnerName,
   }), [
     preference.desiredCountry,
@@ -79,6 +90,11 @@ const PreferenceCard = ({
     preference.desiredIntake,
     preference.assignCounselor,
     preference.agencyPartnerName,
+    countryOptions,
+    universityOptions,
+    campusOptions,
+    courseOptions,
+    counselorOptions,
   ]);
 
   if (isEditing) {
@@ -94,6 +110,11 @@ const PreferenceCard = ({
           getFieldError={getFieldError}
           showCancel={false}
           showAddMore={false}
+          countryOptions={countryOptions}
+          universityOptions={universityOptions}
+          campusOptions={campusOptions}
+          courseOptions={courseOptions}
+          counselorOptions={counselorOptions}
         />
         <div className="flex gap-2 mt-4 justify-end">
           <Button
