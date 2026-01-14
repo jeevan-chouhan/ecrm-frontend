@@ -779,6 +779,7 @@ export interface WorkExperienceData {
 export type CreateWorkExperiencesResponse = ApiResponse<WorkExperienceData[]>;
 export type GetWorkExperiencesResponse = ApiResponse<WorkExperienceData[]>;
 export type UpdateWorkExperienceResponse = ApiResponse<WorkExperienceData>;
+export type DeleteWorkExperienceResponse = ApiResponse<null>;
 
 
 // ==========================================
@@ -808,3 +809,4 @@ export interface AchievementData {
 export type CreateAchievementsResponse = ApiResponse<AchievementData[]>;
 export type GetAchievementsResponse = ApiResponse<AchievementData[]>;
 export type UpdateAchievementResponse = ApiResponse<AchievementData>;
+export type DeleteAchievementResponse = ApiResponse<null>;

@@ -190,6 +190,7 @@
   "applicant": {
     "addApplicant": "Add Applicant",
     "editApplicant": "Edit Applicant",
+    "applicantDetails": "Applicant Details",
     "personalDetails": "Personal Details",
     "uploadProfilePhoto": "Upload Profile Photo",
     "enrollmentType": "Enrollment Type",

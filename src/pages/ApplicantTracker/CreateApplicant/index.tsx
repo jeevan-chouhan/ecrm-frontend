@@ -266,8 +266,8 @@ const CreateApplicant = () => {
       // Simulate API call success
       await new Promise((resolve) => setTimeout(resolve, 500));
       
-      // After successful API response, redirect to applicant tracker list
-      navigate(ROUTES.APPLICANT_TRACKER);
+      // After successful API response, redirect to dashboard
+      navigate(ROUTES.DASHBOARD);
     } catch (error) {
       // TODO: Show error message to user
       if (import.meta.env.DEV) {
@@ -377,7 +377,7 @@ const CreateApplicant = () => {
         {/* Header */}
         <div className="p-4 md:p-6 border-b" style={{ borderColor: COLORS.border }}>
           <h1 className="text-xl md:text-2xl font-semibold" style={{ color: COLORS.textDark }}>
-            {isEditMode ? t("applicant.editApplicant", "Edit Applicant") : t("applicant.addApplicant", "Add Applicant")}
+            {t("applicant.applicantDetails", "Applicant Details")}
           </h1>
         </div>
 

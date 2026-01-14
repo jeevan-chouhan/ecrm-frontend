@@ -32,6 +32,7 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [shouldNavigateNext, setShouldNavigateNext] = useState(false);
@@ -733,34 +734,95 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
     setIsDeletePopupOpen(true);
   }, []);
 
-  const handleConfirmDelete = useCallback(() => {
-    if (deletingIndex === null) return;
+  const handleConfirmDelete = useCallback(async () => {
+    if (deletingIndex === null || isDeleting) return;
 
     const indexToDelete = deletingIndex;
     const achievementToDelete = formik.values.achievements[indexToDelete];
 
-    // Remove the achievement
-    const updatedAchievements = formik.values.achievements.filter((_, i) => i !== indexToDelete);
-    formik.setFieldValue("achievements", updatedAchievements);
-    if (editingIndex === indexToDelete) {
-      setEditingIndex(null);
-    } else if (editingIndex !== null && editingIndex > indexToDelete) {
-      setEditingIndex(editingIndex - 1);
-    }
+    setIsDeleting(true);
+    dispatch(showLoader());
 
-    // Close popup and reset state
-    setIsDeletePopupOpen(false);
-    setDeletingIndex(null);
+    try {
+      // Check if achievement has achievementId - if not, just remove from form (new entry)
+      if (!achievementToDelete.achievementId) {
+        // Remove the achievement from form state (it's a new entry, not saved yet)
+        const updatedAchievements = formik.values.achievements.filter((_, i) => i !== indexToDelete);
+        formik.setFieldValue("achievements", updatedAchievements);
+        if (editingIndex === indexToDelete) {
+          setEditingIndex(null);
+        } else if (editingIndex !== null && editingIndex > indexToDelete) {
+          setEditingIndex(editingIndex - 1);
+        }
 
-    // TODO: Replace with actual API endpoint
-    // const response = await fetch(`/api/applicant/achievements/${achievementToDelete.id}`, {
-    //   method: "DELETE",
-    // });
-    // const result = await response.json();
-    if (import.meta.env.DEV) {
-      console.log("Delete API call for achievement:", achievementToDelete);
+        // Close popup and reset state
+        setIsDeletePopupOpen(false);
+        setDeletingIndex(null);
+        setIsDeleting(false);
+        dispatch(hideLoader());
+        return;
+      }
+
+      if (!applicantId) {
+        dispatch(
+          addToast({
+            type: "error",
+            message: t("applicant.applicantIdMissing", "Applicant ID is missing. Cannot delete achievement."),
+          })
+        );
+        setIsDeletePopupOpen(false);
+        setDeletingIndex(null);
+        setIsDeleting(false);
+        dispatch(hideLoader());
+        return;
+      }
+
+      if (import.meta.env.DEV) {
+        console.log("Calling DELETE API for achievement ID:", achievementToDelete.achievementId, "applicant ID:", applicantId);
+      }
+      
+      const response = await applicantService.deleteAchievement(achievementToDelete.achievementId, applicantId);
+      
+      if (import.meta.env.DEV) {
+        console.log("DELETE API response:", response);
+      }
+
+      if (response.status === "success") {
+        // Remove the achievement from form state
+        const updatedAchievements = formik.values.achievements.filter((_, i) => i !== indexToDelete);
+        formik.setFieldValue("achievements", updatedAchievements);
+        if (editingIndex === indexToDelete) {
+          setEditingIndex(null);
+        } else if (editingIndex !== null && editingIndex > indexToDelete) {
+          setEditingIndex(editingIndex - 1);
+        }
+
+        // Update original achievements ref
+        originalAchievementsRef.current = originalAchievementsRef.current.filter(
+          (a) => a.achievementId !== achievementToDelete.achievementId
+        );
+
+        dispatch(
+          addToast({
+            type: "success",
+            message: t("applicant.achievementDeleted", "Achievement deleted successfully"),
+          })
+        );
+      } else {
+        throw new Error(response.message || "Failed to delete achievement");
+      }
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error("Error deleting achievement:", error);
+      }
+      handleApiError(error, dispatch, t);
+    } finally {
+      setIsDeletePopupOpen(false);
+      setDeletingIndex(null);
+      setIsDeleting(false);
+      dispatch(hideLoader());
     }
-  }, [deletingIndex, formik, editingIndex, setEditingIndex]);
+  }, [deletingIndex, formik, editingIndex, setEditingIndex, applicantId, dispatch, t, isDeleting]);
 
   const handleCancelDelete = useCallback(() => {
     setIsDeletePopupOpen(false);
