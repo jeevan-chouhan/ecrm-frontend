@@ -117,11 +117,11 @@ const Settings = () => {
 
   const handlePlanManagement = () => {
     // Navigate to plan management page
-    navigate(ROUTES.SETTINGS + "/plans");
+    navigate(ROUTES.SETTINGS_PRICING);
   };
 
   return (
-    <Layout userName="Admin" userRole="Primary Admin">
+    <Layout>
       <div className="space-y-6">
         {/* Page Heading */}
         <h1
@@ -185,7 +185,7 @@ const Settings = () => {
 
           {/* Add Countries Serving */}
           <MultiSelect
-            label={t("settingsPage.addCountriesServing", "Add Countries Serving")}
+            label={t("settingsPage.addCountriesServing", "Countries Serving")}
             options={countryOptions}
             value={selectedCountries}
             onChange={setSelectedCountries}
@@ -197,7 +197,7 @@ const Settings = () => {
 
           {/* Add Universities Serving */}
           <MultiSelect
-            label={t("settingsPage.addUniversitiesServing", "Add Universities Serving")}
+            label={t("settingsPage.addUniversitiesServing", "Universities Serving")}
             options={universityOptions}
             value={selectedUniversities}
             onChange={setSelectedUniversities}

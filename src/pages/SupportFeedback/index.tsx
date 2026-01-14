@@ -7,6 +7,7 @@ import type { GridColDef } from "../../components";
 import { COLORS } from "../../constants";
 import { Eye } from "../../assets";
 import { useLoggedInUserInfo } from "../../hooks";
+import { formatDateTime } from "../../utils/dateUtils";
 
 // Types
 interface Query {
@@ -20,7 +21,6 @@ interface Query {
 }
 
 interface QueryFormValues {
-  submittedTo: string;
   subject: string;
   content: string;
 }
@@ -37,9 +37,6 @@ const SupportFeedback = () => {
 
   // Validation schema
   const validationSchema = useMemo(() => Yup.object({
-    submittedTo: Yup.string()
-      .email(t("validation.invalidEmail", "Please Enter A Valid Email"))
-      .required(t("validation.required", "This Field Is Required")),
     subject: Yup.string()
       .min(3, t("supportFeedback.subjectMinLength", "Subject must be at least 3 characters"))
       .required(t("validation.required", "This Field Is Required")),
@@ -51,7 +48,6 @@ const SupportFeedback = () => {
   // Form
   const formik = useFormik<QueryFormValues>({
     initialValues: {
-      submittedTo: "",
       subject: "",
       content: "",
     },
@@ -61,7 +57,7 @@ const SupportFeedback = () => {
         id: Date.now().toString(),
         submittedBy: loggedInUser?.displayName || "User",
         submittedByEmail: loggedInUser?.email || "",
-        submittedTo: values.submittedTo,
+        submittedTo: "", // Will be set by backend or can be removed
         subject: values.subject,
         content: values.content,
         createdAt: new Date(),
@@ -72,17 +68,6 @@ const SupportFeedback = () => {
       setIsSubmitModalOpen(false);
     },
   });
-
-  // Format date
-  const formatDate = useCallback((date: Date) => {
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }, []);
 
   // Handle view
   const handleView = useCallback((query: Query) => {
@@ -127,12 +112,6 @@ const SupportFeedback = () => {
       ),
     },
     {
-      field: "submittedTo",
-      headerName: t("supportFeedback.submittedTo", "Submitted To"),
-      flex: 1,
-      minWidth: 180,
-    },
-    {
       field: "subject",
       headerName: t("supportFeedback.subject", "Subject"),
       flex: 1,
@@ -145,7 +124,7 @@ const SupportFeedback = () => {
       minWidth: 150,
       renderCell: (params) => (
         <span style={{ color: COLORS.textMuted }}>
-          {formatDate(params.row.createdAt)}
+          {formatDateTime(params.row.createdAt)}
         </span>
       ),
     },
@@ -157,20 +136,21 @@ const SupportFeedback = () => {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="sm"
           onClick={() => handleView(params.row)}
-          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
           title={t("supportFeedback.viewQuery", "View Query")}
         >
           <Eye className="w-5 h-5" style={{ color: COLORS.accent }} />
-        </button>
+        </Button>
       ),
     },
-  ], [t, formatDate, handleView]);
+  ], [t, handleView]);
 
   return (
-    <Layout userName="Admin" userRole="Primary Admin">
+    <Layout>
       <div className="space-y-6">
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -180,17 +160,14 @@ const SupportFeedback = () => {
           >
             {t("supportFeedback.title", "Support & Feedback")}
           </h1>
-          <button
+          <Button
             type="button"
+            variant="accent"
+            rounded
             onClick={handleOpenSubmitModal}
-            className="px-8 py-3 text-sm font-medium rounded-full transition-colors hover:opacity-90"
-            style={{
-              backgroundColor: COLORS.accent,
-              color: COLORS.textWhite,
-            }}
           >
-            {t("supportFeedback.addQuery", "Add Query")}
-          </button>
+            {t("supportFeedback.raiseQuery", "Raise Query")}
+          </Button>
         </div>
 
         {/* Sent Queries DataTable */}
@@ -207,34 +184,11 @@ const SupportFeedback = () => {
       <Popup
         isOpen={isSubmitModalOpen}
         onClose={handleCloseSubmitModal}
-        title={t("supportFeedback.addQuery", "Add Query")}
+        title={t("supportFeedback.raiseQuery", "Raise Query")}
         size="xl"
       >
         <form onSubmit={formik.handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Submitted By - Read Only */}
-            <Input
-              label={t("supportFeedback.submittedBy", "Submitted By")}
-              value={`${loggedInUser?.displayName || "User"} (${loggedInUser?.email || ""})`}
-              disabled
-              fullWidth
-            />
-
-            {/* Submitted To */}
-            <Input
-              label={t("supportFeedback.submittedTo", "Submitted To")}
-              name="submittedTo"
-              type="email"
-              placeholder={t("supportFeedback.enterEmail", "Enter email address")}
-              value={formik.values.submittedTo}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.submittedTo && formik.errors.submittedTo ? formik.errors.submittedTo : undefined}
-              fullWidth
-            />
-          </div>
-
-          {/* Subject - Changed to Input */}
+          {/* Subject */}
           <Input
             label={t("supportFeedback.subject", "Subject")}
             name="subject"
@@ -276,7 +230,7 @@ const SupportFeedback = () => {
               rounded
               disabled={formik.isSubmitting}
             >
-              {t("common.save", "Save")}
+              {t("common.submit", "Submit")}
             </Button>
           </div>
         </form>
@@ -290,76 +244,67 @@ const SupportFeedback = () => {
         size="xl"
       >
         {selectedQuery && (
-          <div className="space-y-4">
-            {/* Submitted By */}
-            <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textMuted }}>
-                {t("supportFeedback.submittedBy", "Submitted By")}
-              </label>
-              <p className="text-sm" style={{ color: COLORS.textDark }}>
-                {selectedQuery.submittedBy} ({selectedQuery.submittedByEmail})
-              </p>
+          <div className="max-h-[70vh] overflow-y-auto">
+            {/* Header Info Section */}
+            <div className="space-y-3 mb-6">
+              {/* Submitted By */}
+              <div>
+                <span className="text-sm" style={{ color: COLORS.textMuted }}>
+                  {t("supportFeedback.submittedBy", "Submitted By")}:
+                </span>
+                <p className="font-semibold" style={{ color: COLORS.textDark }}>
+                  {selectedQuery.submittedBy} ({selectedQuery.submittedByEmail})
+                </p>
+              </div>
             </div>
 
-            {/* Submitted To */}
-            <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textMuted }}>
-                {t("supportFeedback.submittedTo", "Submitted To")}
-              </label>
-              <p className="text-sm" style={{ color: COLORS.textDark }}>
-                {selectedQuery.submittedTo}
-              </p>
-            </div>
-
-            {/* Subject */}
-            <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textMuted }}>
-                {t("supportFeedback.subject", "Subject")}
-              </label>
-              <p className="text-sm" style={{ color: COLORS.textDark }}>
-                {selectedQuery.subject}
-              </p>
-            </div>
-
-            {/* Content */}
-            <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textMuted }}>
-                {t("supportFeedback.content", "Content")}
-              </label>
-              <p 
-                className="text-sm" 
-                style={{ 
-                  color: COLORS.textDark, 
-                  whiteSpace: "pre-wrap"
-                }}
-              >
-                {selectedQuery.content}
-              </p>
-            </div>
-
-            {/* Date */}
-            <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: COLORS.textMuted }}>
-                {t("supportFeedback.submittedOn", "Submitted On")}
-              </label>
-              <p className="text-sm" style={{ color: COLORS.textDark }}>
-                {formatDate(selectedQuery.createdAt)}
-              </p>
+            {/* Timeline Item */}
+            <div className="relative pl-6 border-l-2" style={{ borderColor: COLORS.accent }}>
+              {/* Purple Bullet */}
+              <div 
+                className="absolute -left-[9px] top-0 w-4 h-4 rounded-sm"
+                style={{ backgroundColor: COLORS.accent }}
+              />
+              
+              <div className="pb-4">
+                {/* Subject as Title */}
+                <h3 className="font-semibold text-base mb-2" style={{ color: COLORS.textDark }}>
+                  {selectedQuery.subject}
+                </h3>
+                
+                {/* Content */}
+                <div className="mb-2">
+                  <span className="text-sm" style={{ color: COLORS.textMuted }}>
+                    {t("supportFeedback.content", "Content")}:
+                  </span>
+                  <p 
+                    className="text-sm mt-1" 
+                    style={{ 
+                      color: COLORS.textDark, 
+                      whiteSpace: "pre-wrap"
+                    }}
+                  >
+                    {selectedQuery.content}
+                  </p>
+                </div>
+                
+                {/* Date and Creator */}
+                <p className="text-sm" style={{ color: COLORS.textMuted }}>
+                  {formatDateTime(selectedQuery.createdAt)} • {t("supportFeedback.createdBy", "Created by")} {selectedQuery.submittedBy}
+                </p>
+              </div>
             </div>
 
             {/* Close Button */}
-            <div className="flex justify-end pt-4">
-              <button
+            <div className="flex justify-end pt-4 mt-4 border-t" style={{ borderColor: COLORS.border }}>
+              <Button
                 type="button"
+                variant="cancel"
+                rounded
                 onClick={handleCloseViewModal}
-                className="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
-                style={{
-                  backgroundColor: COLORS.accent,
-                  color: COLORS.textWhite,
-                }}
               >
                 {t("common.close", "Close")}
-              </button>
+              </Button>
             </div>
           </div>
         )}

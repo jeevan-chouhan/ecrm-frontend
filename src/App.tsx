@@ -78,6 +78,7 @@ const protectedRoutes: RouteConfig[] = [
   { path: ROUTES.MANAGE_TEAM_VIEW, element: <ManageTeamView /> },
   { path: ROUTES.REPORT_ANALYSIS, element: <ReportAnalysis /> },
   { path: ROUTES.SETTINGS, element: <Settings /> },
+  { path: ROUTES.SETTINGS_PRICING, element: <Pricing /> },
   { path: ROUTES.SUPPORT_FEEDBACK, element: <SupportFeedback /> },
   { path: ROUTES.PROFILE, element: <Profile /> },
 ];

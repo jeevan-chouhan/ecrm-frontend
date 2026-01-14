@@ -17,6 +17,7 @@ import toastReducer from "./slices/toast/toastSlice";
 import authReducer from "./slices/auth/authSlice";
 import manageTeamReducer from "./slices/manageTeam/manageTeamSlice";
 import dashboardReducer from "./slices/dashboard/dashboardSlice";
+import documentVaultReducer from "./slices/documentVault/documentVaultSlice";
 
 // Persist configuration for manageTeam - only persist filter/sort/pagination, not members data
 const manageTeamPersistConfig = {
@@ -32,11 +33,21 @@ const dashboardPersistConfig = {
   whitelist: ["pagination", "sort", "filter"], // Only persist these, not applicants/isLoading/error
 };
 
+// Persist configuration for documentVault - only persist filter/pagination, not applicants data
+const documentVaultPersistConfig = {
+  key: "documentVault",
+  storage,
+  whitelist: ["pagination", "filter"], // Only persist these, not applicants/isLoading/error
+};
+
 // Create persisted manageTeam reducer
 const persistedManageTeamReducer = persistReducer(manageTeamPersistConfig, manageTeamReducer);
 
 // Create persisted dashboard reducer
 const persistedDashboardReducer = persistReducer(dashboardPersistConfig, dashboardReducer);
+
+// Create persisted documentVault reducer
+const persistedDocumentVaultReducer = persistReducer(documentVaultPersistConfig, documentVaultReducer);
 
 // Combine all reducers
 const rootReducer = combineReducers({
@@ -45,6 +56,7 @@ const rootReducer = combineReducers({
   auth: authReducer,
   manageTeam: persistedManageTeamReducer,
   dashboard: persistedDashboardReducer,
+  documentVault: persistedDocumentVaultReducer,
 });
 
 // Root persist configuration
@@ -52,7 +64,7 @@ const persistConfig = {
   key: "root",
   version: 1,
   storage,
-  blacklist: ["loader", "toast", "manageTeam", "dashboard"], // Don't persist these at root level (they have their own config)
+  blacklist: ["loader", "toast", "manageTeam", "dashboard", "documentVault"], // Don't persist these at root level (they have their own config)
   whitelist: ["auth"], // Persist auth state at root level
 };
 

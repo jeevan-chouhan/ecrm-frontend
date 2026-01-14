@@ -6,14 +6,21 @@ import { COLORS, ROUTES } from "../../constants";
 import { useAppSelector } from "../../redux/hooks";
 import ApplicantOverview from "./ApplicantOverview";
 
+// Maximum applicants limit
+const MAX_APPLICANTS = 49;
+
 const Dashboard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { accessToken, user } = useAppSelector((state) => state.auth);
+  const { pagination } = useAppSelector((state) => state.dashboard);
 
-  // Decode and log access token on dashboard load
+  // Check if applicant limit is reached
+  const isApplicantLimitReached = pagination.totalElements >= MAX_APPLICANTS;
+
+  // Decode and log access token on dashboard load (for debugging)
   useEffect(() => {
-    if (accessToken) {
+    if (import.meta.env.DEV && accessToken) {
       try {
         // JWT token has 3 parts: header.payload.signature
         const tokenParts = accessToken.split('.');
@@ -31,34 +38,12 @@ const Dashboard = () => {
     }
   }, [accessToken, user]);
 
-
-  // TODO: Replace with API call to get applicant overview data
-  // const [applicantOverviewData, setApplicantOverviewData] = useState([]);
-  // const [applicantOverviewTotalCount, setApplicantOverviewTotalCount] = useState(0);
-  // const [applicantOverviewLoading, setApplicantOverviewLoading] = useState(false);
-  
-  // useEffect(() => {
-  //   const fetchApplicantOverview = async () => {
-  //     setApplicantOverviewLoading(true);
-  //     try {
-  //       const response = await fetchApplicantOverviewData();
-  //       setApplicantOverviewData(response.data);
-  //       setApplicantOverviewTotalCount(response.totalCount);
-  //     } catch (error) {
-  //       console.error("Error fetching applicant overview:", error);
-  //     } finally {
-  //       setApplicantOverviewLoading(false);
-  //     }
-  //   };
-  //   fetchApplicantOverview();
-  // }, []);
-
   const handleAddApplicant = () => {
     navigate(ROUTES.CREATE_APPLICANT);
   };
 
   return (
-    <Layout userName="Admin" userRole="Primary Admin">
+    <Layout>
       <div
         className="bg-white rounded-lg shadow-sm p-4 md:p-6 space-y-6"
         style={{ backgroundColor: COLORS.surface }}
@@ -71,7 +56,14 @@ const Dashboard = () => {
           >
             {t("dashboard.title", "Dashboard")}
           </h1>
-          <Button variant="accent" size="md" rounded onClick={handleAddApplicant}>
+          <Button 
+            variant="accent" 
+            size="md" 
+            rounded 
+            onClick={handleAddApplicant}
+            disabled={isApplicantLimitReached}
+            title={isApplicantLimitReached ? t("dashboard.applicantLimitReached", "Applicant limit (50) reached. Upgrade your plan to add more.") : undefined}
+          >
             {t("dashboard.addApplicant", "Add Applicant")}
           </Button>
         </div>

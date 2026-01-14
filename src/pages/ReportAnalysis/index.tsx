@@ -2,7 +2,6 @@ import { useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Layout } from "../../components";
 import { COLORS, typography } from "../../constants";
-import { useAppSelector } from "../../redux/hooks";
 import TeamOverview from "./TeamOverview";
 import OverallCounts from "./OverallCounts";
 import Graphs from "./Graphs";
@@ -16,7 +15,6 @@ interface Tab {
 
 const ReportAnalysis = () => {
   const { t } = useTranslation();
-  const { user } = useAppSelector((state) => state.auth);
   const [activeTab, setActiveTab] = useState<TabType>("teamOverview");
 
   // Memoize tabs array to prevent recreation on every render
@@ -49,7 +47,7 @@ const ReportAnalysis = () => {
   }, [activeTab]);
 
   return (
-    <Layout userName={user?.name || "Admin"} userRole={user?.role || "User"}>
+    <Layout>
       <div className="bg-white rounded-lg shadow-sm">
         {/* Header */}
         <div className="p-4 md:p-6 border-b" style={{ borderColor: COLORS.border }}>

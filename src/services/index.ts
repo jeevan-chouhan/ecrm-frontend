@@ -24,6 +24,8 @@ export type {
   UserListItem,
   UserListResponse,
   PaginatedData,
+  TeamStatsCounts,
+  UserListDataWithCounts,
   CountryItem,
   UniversityItem,
   UniversityParams,
@@ -77,5 +79,9 @@ export type {
   CreateApplicationPreferencesPayload,
   CreateApplicationPreferencesResponse,
   ApplicationPreferenceData,
+  UpdateApplicantStatusParams,
+  UpdateApplicantStatusPayload,
+  UpdateApplicantStatusData,
+  UpdateApplicantStatusResponse,
 } from "./types";
 

@@ -45,7 +45,7 @@ const Profile = () => {
   };
 
   return (
-    <Layout userName="Admin" userRole="Primary Admin">
+    <Layout>
       <div
         className="bg-white rounded-lg shadow-sm p-4 md:p-6"
         style={{ backgroundColor: COLORS.surface }}

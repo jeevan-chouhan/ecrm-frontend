@@ -38,6 +38,10 @@ export const COLORS = {
   info: "#3B82F6",
   infoHover: "#2563EB",
 
+  // Badge Colors
+  badgeGold: "#FFC107",
+  badgePurple: "#9C27B0",
+
   // Document Type Colors
   documentPassport: "#8B5CF6",
   documentTranscript: "#3B82F6",

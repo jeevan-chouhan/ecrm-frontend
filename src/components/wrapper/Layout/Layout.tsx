@@ -15,12 +15,13 @@ import {
   Settings,
   InfoCircle,
 } from "../../../assets";
-import { COLORS, ROUTES, APP_CONFIG } from "../../../constants";
+import { COLORS, ROUTES, APP_CONFIG, getRoleDisplayName } from "../../../constants";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { clearCredentials } from "../../../redux/slices/auth/authSlice";
 import { addToast } from "../../../redux/slices/toast/toastSlice";
 import { resetManageTeamState } from "../../../redux/slices/manageTeam/manageTeamSlice";
 import { resetDashboardState } from "../../../redux/slices/dashboard/dashboardSlice";
+import { resetDocumentVaultState } from "../../../redux/slices/documentVault/documentVaultSlice";
 
 interface LayoutProps {
   children: ReactNode;
@@ -53,17 +54,26 @@ const Layout = ({
   const { user } = useAppSelector((state) => state.auth);
   
   // Use Redux user data or props
-  const displayName = userName || user?.name || "Admin";
-  const displayRole = userRole || user?.role || "User";
+  const displayName = userName || user?.name;
+  
+  // Format role - show "Primary Admin" if isPrimaryAdmin is true, otherwise use getRoleDisplayName
+  const getFormattedRole = () => {
+    if (userRole) return userRole;
+    if (user?.isPrimaryAdmin) return "Primary Admin";
+    if (user?.role) return getRoleDisplayName(user.role);
+    return "User";
+  };
+  const displayRole = getFormattedRole();
 
   // Handle logout - clear localStorage and Redux state
   const handleLogout = () => {
     // Clear Redux auth state (this also clears localStorage)
     dispatch(clearCredentials());
     
-    // Reset manageTeam and dashboard state on logout
+    // Reset manageTeam, dashboard and documentVault state on logout
     dispatch(resetManageTeamState());
     dispatch(resetDashboardState());
+    dispatch(resetDocumentVaultState());
     
     // Show logout success toast
     dispatch(
@@ -93,6 +103,10 @@ const Layout = ({
     // Reset dashboard state if navigating away from Dashboard
     if (path !== ROUTES.DASHBOARD) {
       dispatch(resetDashboardState());
+    }
+    // Reset documentVault state if navigating away from DocumentVault routes
+    if (!path.startsWith(ROUTES.DOCUMENT_VAULT)) {
+      dispatch(resetDocumentVaultState());
     }
   };
 
@@ -140,16 +154,16 @@ const Layout = ({
       isActive: location.pathname === ROUTES.REPORT_ANALYSIS,
     },
     {
-      label: "Settings",
-      path: ROUTES.SETTINGS,
-      icon: <Settings className="h-5 w-5" />,
-      isActive: location.pathname === ROUTES.SETTINGS,
-    },
-    {
       label: "Support & Feedback",
       path: ROUTES.SUPPORT_FEEDBACK,
       icon: <InfoCircle className="h-5 w-5" />,
       isActive: location.pathname === ROUTES.SUPPORT_FEEDBACK,
+    },
+    {
+      label: "Settings",
+      path: ROUTES.SETTINGS,
+      icon: <Settings className="h-5 w-5" />,
+      isActive: location.pathname.startsWith(ROUTES.SETTINGS),
     },
   ];
 

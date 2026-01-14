@@ -369,7 +369,7 @@ const CreateApplicant = () => {
   }, [activeTab, personalTabContent, preferencesTabContent, educationalTabContent, workTabContent, achievementsTabContent]);
 
   return (
-    <Layout userName="Admin" userRole="Abroad Agency">
+    <Layout>
       <div className="bg-white rounded-lg shadow-sm">
         {/* Header */}
         <div className="p-4 md:p-6 border-b" style={{ borderColor: COLORS.border }}>

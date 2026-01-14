@@ -463,7 +463,7 @@ const AddMember = () => {
   };
 
   return (
-    <Layout userName={user?.name || "Admin"} userRole={user?.role || "User"}>
+    <Layout>
       <div className="bg-white rounded-lg shadow-sm p-6 md:p-8 min-h-[calc(100vh-140px)]">
         {/* Header with Back Button and Title */}
         <div className="flex items-center gap-4 mb-6">

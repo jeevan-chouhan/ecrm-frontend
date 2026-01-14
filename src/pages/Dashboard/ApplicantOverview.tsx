@@ -7,7 +7,7 @@ import { DataTable, StatusChangePopup, SearchBar, Select, Button } from "../../c
 import { COLORS, ROUTES, typography, enrollmentTypes, statusFilterOptions } from "../../constants";
 import { Eye, ToggleStatus } from "../../assets";
 import { formatDateValue } from "../../utils/dateUtils";
-import { getEnrollmentTypeLabel } from "../../utils/commonUtils";
+import { getEnrollmentTypeLabel, cleanContactNumber } from "../../utils/commonUtils";
 import { userService } from "../../services";
 import type { ApplicantOverviewItem } from "../../services";
 import { useAppSelector, useAppDispatch } from "../../redux/hooks";
@@ -33,7 +33,8 @@ const transformApiData = (items: ApplicantOverviewItem[]): ApplicantOverviewRow[
     // Format: "Rahul Sharma (+91 9876543210)"
     const nameMatch = item.applicantName.match(/^(.+?)\s*\(([^)]+)\)$/);
     const name = nameMatch ? nameMatch[1].trim() : item.applicantName;
-    const contactNo = nameMatch ? nameMatch[2].trim() : "";
+    const rawContactNo = nameMatch ? nameMatch[2].trim() : "";
+    const contactNo = cleanContactNumber(rawContactNo);
 
     return {
       id: item.applicantId,
@@ -153,23 +154,46 @@ const ApplicantOverview = () => {
 
     try {
       setIsChangingStatus(true);
-      // TODO: Make API call to update status
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      
+      // Call API to update applicant status
+      const newStatusValue = selectedApplicantForStatusChange.status === "Active" ? "INACTIVE" : "ACTIVE";
+      const response = await userService.updateApplicantStatus(
+        { applicantId: selectedApplicantForStatusChange.applicantId },
+        {
+          applicantId: selectedApplicantForStatusChange.applicantId,
+          applicationPrefId: 0, // Not required for status toggle
+          applicationStatus: newStatusValue,
+          notes: `Status changed to ${newStatusValue}`,
+          isMailSendToStudent: false,
+        }
+      );
 
-      // Update local state
-      const newStatus = selectedApplicantForStatusChange.status === "Active" ? "Inactive" : "Active";
-      dispatch(updateApplicantStatus({ id: selectedApplicantForStatusChange.id, status: newStatus }));
+      if (response.status === "success") {
+        // Update local state based on API response
+        const newStatus = response.data.status === "ACTIVE" ? "Active" : "Inactive";
+        dispatch(updateApplicantStatus({ id: selectedApplicantForStatusChange.id, status: newStatus }));
+
+        dispatch(addToast({
+          type: "success",
+          message: t("dashboard.statusUpdateSuccess", "Applicant status updated successfully"),
+        }));
+      }
 
       setIsStatusPopupOpen(false);
       setSelectedApplicantForStatusChange(null);
     } catch (error) {
+      const errorMessage = handleApiError(error);
+      dispatch(addToast({
+        type: "error",
+        message: typeof errorMessage === "string" ? errorMessage : t("dashboard.statusUpdateError", "Failed to update applicant status"),
+      }));
       if (import.meta.env.DEV) {
         console.error("Error changing status:", error);
       }
     } finally {
       setIsChangingStatus(false);
     }
-  }, [selectedApplicantForStatusChange, dispatch]);
+  }, [selectedApplicantForStatusChange, dispatch, t]);
 
   // Handle cancel status change
   const handleCancelStatusChange = useCallback(() => {
@@ -231,10 +255,10 @@ const ApplicantOverview = () => {
     ];
   }, [t]);
 
-  // Status options with placeholder
-  const statusOptionsWithPlaceholder = useMemo(() => {
+  // Status options with All as first option
+  const statusOptionsWithAll = useMemo(() => {
     return [
-      { value: "", label: t("dashboard.selectStatus", "Select Status") },
+      { value: "", label: t("common.all", "All") },
       ...statusFilterOptions.filter((opt) => opt.value !== "all"),
     ];
   }, [t]);
@@ -436,7 +460,7 @@ const ApplicantOverview = () => {
       </h2>
 
       {/* Filters and Search */}
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-col md:flex-row md:flex-wrap md:items-end gap-3">
         <style>{`
           /* Override placeholder colors with opacity for applicant overview filters */
           .applicant-overview-filter-placeholder button > span.block.truncate {
@@ -444,7 +468,7 @@ const ApplicantOverview = () => {
           }
         `}</style>
         {/* Search Bar */}
-        <div className="w-56 pt-6">
+        <div className="w-full md:w-56 pt-6">
           <SearchBar
             placeholder={t("dashboard.searchApplicants", "Search By Name, Email Or Contact...")}
             value={searchInput}
@@ -454,7 +478,7 @@ const ApplicantOverview = () => {
         </div>
 
         {/* Enrollment Type Filter */}
-        <div className="w-56 applicant-overview-filter-placeholder">
+        <div className="w-full md:w-56 applicant-overview-filter-placeholder">
           <Select
             label={t("dashboard.enrollmentTypeLabel", "Type")}
             options={enrollmentTypeOptionsWithPlaceholder}
@@ -465,10 +489,10 @@ const ApplicantOverview = () => {
         </div>
 
         {/* Status Filter */}
-        <div className="w-56 applicant-overview-filter-placeholder">
+        <div className="w-full md:w-56 applicant-overview-filter-placeholder">
           <Select
             label={t("dashboard.status", "Status")}
-            options={statusOptionsWithPlaceholder}
+            options={statusOptionsWithAll}
             value={selectedStatus}
             onChange={setSelectedStatus}
             searchable
@@ -476,7 +500,7 @@ const ApplicantOverview = () => {
         </div>
 
         {/* Apply and Clear Filter Buttons - aligned with inputs */}
-        <div className="flex items-end gap-3 pt-6">
+        <div className="w-full md:w-auto flex items-end gap-3 pt-6">
           <Button
             variant="accent"
             size="sm"
