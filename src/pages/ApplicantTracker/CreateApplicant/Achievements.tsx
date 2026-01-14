@@ -7,24 +7,34 @@ import { COLORS, yesNoOptions } from "../../../constants";
 import AchievementForm from "./AchievementForm";
 import type { AchievementItem, AchievementFormData } from "./types";
 import { fileToBase64 } from "./utils/fileUtils";
-import { useAchievementLogic } from "./hooks";
+import { useAchievementLogic, useDataChangeTracking } from "./hooks";
 import AchievementList from "./components/AchievementList";
+import { applicantService } from "../../../services";
+import { useAppDispatch } from "../../../redux/hooks";
+import { addToast } from "../../../redux/slices/toast/toastSlice";
+import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
+import { handleApiError } from "../../../utils";
 
 interface AchievementsProps {
   initialValues: AchievementFormData;
   onUpdate: (data: AchievementFormData) => void;
   onBack?: () => void;
   onSubmit?: () => void;
+  applicantId?: number | string | null;
 }
 
-const Achievements = ({ initialValues, onUpdate, onBack, onSubmit }: AchievementsProps) => {
+const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }: AchievementsProps) => {
   const { t, i18n } = useTranslation();
+  const dispatch = useAppDispatch();
+  const isSubmittingRef = useRef(false); // Prevent duplicate submissions
+  const isFetchingAchievementsRef = useRef(false); // Prevent duplicate fetches
+  const originalAchievementsRef = useRef<AchievementItem[]>([]); // Store original achievements from GET API
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
   const [isFormValid, setIsFormValid] = useState(false);
-  const [lastSavedData, setLastSavedData] = useState<AchievementFormData | null>(null);
-  const [hasDataChanged, setHasDataChanged] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [shouldNavigateNext, setShouldNavigateNext] = useState(false);
 
   const getEmptyAchievement = (): AchievementItem => ({
     id: `achievement-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
@@ -59,66 +69,339 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit }: Achievement
     [getAchievementSchema, t]
   );
 
+  // Helper function to convert File to API document format (JSON stringified)
+  const convertFileToDocumentFormat = useCallback(async (file: File | null): Promise<string | null> => {
+    if (!file) return null;
+    
+    const base64DataUrl = await fileToBase64(file);
+    
+    // Format as JSON string with accessUrl (base64) and fileName
+    const documentJson = JSON.stringify({
+      accessUrl: base64DataUrl,
+      fileName: file.name,
+    });
+    
+    return documentJson;
+  }, []);
+
+  // Helper function to check if an achievement has changed compared to original
+  const hasAchievementChanged = useCallback((current: AchievementItem, original: AchievementItem | undefined): boolean => {
+    if (!original) return true; // If no original, consider it changed (new achievement)
+    
+    // Compare documents by name and size instead of reference
+    const documentsChanged = 
+      (current.documents === null && original.documents !== null) ||
+      (current.documents !== null && original.documents === null) ||
+      (current.documents !== null && original.documents !== null && 
+       (current.documents.name !== original.documents.name || 
+        current.documents.size !== original.documents.size));
+    
+    return (
+      current.category !== original.category ||
+      current.description !== original.description ||
+      documentsChanged
+    );
+  }, []);
+
   const formik = useFormik<AchievementFormData>({
     initialValues,
     enableReinitialize: true,
     validationSchema,
     onSubmit: async (values) => {
+      // Prevent duplicate submissions
+      if (isSubmittingRef.current) {
+        return;
+      }
+
+      // Check if applicantId is available
+      if (!applicantId) {
+        dispatch(
+          addToast({
+            type: "error",
+            message: t("applicant.applicantIdRequired", "Applicant ID is required. Please save personal details first."),
+          })
+        );
+        return;
+      }
+
+      // If hasAchievements is "no", we don't need to save anything
+      if (values.hasAchievements === "no") {
+        markAsSaved(values);
+        
+        // Still navigate if needed
+        if (shouldNavigateNext && onSubmit) {
+          onSubmit();
+          setShouldNavigateNext(false);
+        }
+        return;
+      }
+
+      isSubmittingRef.current = true;
+      setIsSaving(true);
+      dispatch(showLoader());
+
       try {
-        // Only include saved achievements if hasAchievements is "yes"
-        const savedAchievements = values.hasAchievements === "yes"
-          ? await Promise.all(
-              values.achievements
-                .filter((a) => a.saved && isAchievementComplete(a))
-                .map(async (a) => ({
-                  category: a.category,
-                  description: a.description,
-                  documents: a.documents ? await fileToBase64(a.documents) : null,
-                }))
-            )
-          : [];
+        // Get complete achievements (both saved and unsaved but complete)
+        // First, mark complete achievements as saved if they're not already
+        const updatedAchievements = [...values.achievements];
+        let hasNewCompleteAchievements = false;
 
-        const payload = {
-          hasAchievements: values.hasAchievements,
-          achievements: savedAchievements,
-        };
+        for (let i = 0; i < updatedAchievements.length; i++) {
+          const a = updatedAchievements[i];
+          if (!a.saved && isAchievementComplete(a)) {
+            updatedAchievements[i] = {
+              ...a,
+              saved: true,
+            };
+            hasNewCompleteAchievements = true;
+          }
+        }
 
-        // TODO: Replace with actual API endpoint
-        // const response = await fetch("/api/applicant/achievements", {
-        //   method: "POST",
-        //   headers: {
-        //     "Content-Type": "application/json",
-        //   },
-        //   body: JSON.stringify(payload),
-        // });
-        // const result = await response.json();
+        // Update form state if we marked any as saved
+        if (hasNewCompleteAchievements) {
+          formik.setFieldValue("achievements", updatedAchievements);
+        }
 
-        // Only call API if data has changed since last save
-        if (hasDataChanged) {
+        // Get all complete achievements (now all should be marked as saved)
+        const savedAchievements = updatedAchievements.filter(
+          (a) => a.saved && isAchievementComplete(a)
+        );
+
+        if (savedAchievements.length === 0) {
+          dispatch(
+            addToast({
+              type: "error",
+              message: t("validation.atLeastOneAchievementRequired", "At least one complete achievement is required"),
+            })
+          );
+          isSubmittingRef.current = false;
+          setIsSaving(false);
+          dispatch(hideLoader());
+          return;
+        }
+
+        // Separate achievements into updates (have achievementId) and creates (don't have achievementId)
+        const achievementsToCreate = savedAchievements.filter((a) => !a.achievementId);
+        
+        const achievementsToUpdate = savedAchievements.filter((a) => {
+          if (!a.achievementId) return false; // Skip if no achievementId
+          
+          // Find original achievement by achievementId
+          const original = originalAchievementsRef.current.find(
+            (orig) => orig.achievementId?.toString() === a.achievementId?.toString()
+          );
+          
+          // Only update if achievement has changed
+          return hasAchievementChanged(a, original);
+        });
+
+        // If there are new achievements to create, always call POST API
+        // If there are updates, call PUT API
+        // Only skip if no new items and no changes
+        if (achievementsToUpdate.length === 0 && achievementsToCreate.length === 0) {
           if (import.meta.env.DEV) {
-            console.log("Payload ready for API:", payload);
-            console.log("API endpoint: POST /api/applicant/achievements");
+            console.log("No achievements to save - all are unchanged or already saved");
           }
           
           // Mark data as saved
-          setLastSavedData({ 
-            hasAchievements: values.hasAchievements,
-            achievements: [...values.achievements]
-          });
-          setHasDataChanged(false);
-        } else {
-          if (import.meta.env.DEV) {
-            console.log("No changes detected. Skipping API call.");
+          markAsSaved(values);
+          
+          // Still navigate if needed
+          if (shouldNavigateNext && onSubmit) {
+            onSubmit();
+            setShouldNavigateNext(false);
+          }
+          isSubmittingRef.current = false;
+          setIsSaving(false);
+          dispatch(hideLoader());
+          return;
+        }
+
+        // Update existing achievements using PUT
+        if (achievementsToUpdate.length > 0) {
+          for (const a of achievementsToUpdate) {
+            const documentJson = await convertFileToDocumentFormat(a.documents);
+            
+            const payload = {
+              isAchievements: true,
+              category: a.category,
+              description: a.description,
+              document: documentJson,
+            };
+
+            const response = await applicantService.updateAchievement(
+              a.achievementId!,
+              applicantId,
+              payload
+            );
+
+            if (response.status !== "success") {
+              throw new Error(response.message || "Failed to update achievement");
+            }
           }
         }
-      } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error("Error saving achievements:", error);
+
+        // Create new achievements using POST
+        if (achievementsToCreate.length > 0) {
+          const createPayload = await Promise.all(
+            achievementsToCreate.map(async (a) => {
+              const documentJson = await convertFileToDocumentFormat(a.documents);
+              
+              return {
+                isAchievements: true,
+                category: a.category,
+                description: a.description,
+                document: documentJson,
+              };
+            })
+          );
+
+          const createResponse = await applicantService.createAchievements(applicantId, createPayload);
+
+          if (createResponse.status === "success" && createResponse.data) {
+            // Update achievementId for newly created achievements
+            // Use the updatedAchievements array that we already modified
+            let createIndex = 0;
+            
+            for (let i = 0; i < updatedAchievements.length; i++) {
+              const a = updatedAchievements[i];
+              if (achievementsToCreate.some((ach) => ach.id === a.id)) {
+                if (createResponse.data[createIndex]) {
+                  const responseData = createResponse.data[createIndex];
+                  updatedAchievements[i] = {
+                    ...a,
+                    achievementId: responseData.id || null,
+                    saved: true,
+                  };
+                  createIndex++;
+                }
+              }
+            }
+            
+            formik.setFieldValue("achievements", updatedAchievements);
+            
+            // Update original achievements ref
+            originalAchievementsRef.current = updatedAchievements.map(a => ({ ...a }));
+          } else {
+            throw new Error(createResponse.message || "Failed to create achievements");
+          }
         }
+
+        // Show success toast
+        const successMessage = achievementsToUpdate.length > 0 && achievementsToCreate.length > 0
+          ? t("applicant.achievementsSaved", "Achievements saved successfully")
+          : achievementsToUpdate.length > 0
+          ? t("applicant.achievementsUpdated", "Achievements updated successfully")
+          : t("applicant.achievementsSaved", "Achievements saved successfully");
+
+        dispatch(
+          addToast({
+            type: "success",
+            message: successMessage,
+          })
+        );
+
+        // Mark data as saved and update original achievements
+        // Use the updatedAchievements array that we already modified
+        const finalValues = {
+          ...values,
+          achievements: updatedAchievements,
+        };
+        
+        markAsSaved(finalValues);
+        
+        // Update original achievements ref with current state after save
+        originalAchievementsRef.current = updatedAchievements.map(a => ({ ...a }));
+
+        // Navigate to next tab if "Save & Next" was clicked
+        if (shouldNavigateNext && onSubmit) {
+          onSubmit();
+          setShouldNavigateNext(false);
+        }
+      } catch (error: any) {
+        const { message } = handleApiError(error, "Failed to save achievements");
+        dispatch(addToast({ type: "error", message }));
+      } finally {
+        isSubmittingRef.current = false;
+        setIsSaving(false);
+        dispatch(hideLoader());
       }
     },
   });
 
+  // Helper functions
+  const handleValidationErrors = useCallback((error: unknown, index: number) => {
+    if (error instanceof Yup.ValidationError) {
+      error.inner.forEach((err) => {
+        if (err.path) {
+          formik.setFieldTouched(`achievements[${index}].${err.path}`, true);
+        }
+      });
+    }
+  }, [formik]);
+
+  // Use extracted logic hook
+  const {
+    isAchievementComplete,
+    findAchievementIndex,
+    getIncompleteAchievements,
+    getCompleteAchievements,
+    handleAddAchievement,
+    handleCancelIncompleteAchievement,
+    handleSaveAchievement: handleSaveAchievementLocal,
+    handleEditAchievement,
+    handleCancelEdit,
+    getFieldError,
+    updateAchievementField,
+  } = useAchievementLogic({
+    formik,
+    editingIndex,
+    setEditingIndex,
+    getAchievementSchema,
+    getEmptyAchievement,
+    handleValidationErrors,
+  });
+
+  // Use reusable hook for data change tracking with custom comparison for arrays
+  const { markAsSaved } = useDataChangeTracking<AchievementFormData>(
+    formik.values,
+    (lastSavedData, current) => {
+      if (!lastSavedData) return true;
+      if (lastSavedData.hasAchievements !== current.hasAchievements) {
+        return true;
+      }
+      
+      if (current.hasAchievements === "no") {
+        return false;
+      }
+      
+      const currentSaved = current.achievements.filter((a) => a.saved && isAchievementComplete(a));
+      const lastSaved = lastSavedData.achievements.filter((a) => a.saved && isAchievementComplete(a));
+      
+      if (currentSaved.length !== lastSaved.length) {
+        return true;
+      }
+      
+      return currentSaved.some((currentItem, index) => {
+        const lastItem = lastSaved[index];
+        if (!lastItem) return true;
+        
+        // Compare documents by name and size instead of reference
+        const documentsChanged = 
+          (currentItem.documents === null && lastItem.documents !== null) ||
+          (currentItem.documents !== null && lastItem.documents === null) ||
+          (currentItem.documents !== null && lastItem.documents !== null && 
+           (currentItem.documents.name !== lastItem.documents.name || 
+            currentItem.documents.size !== lastItem.documents.size));
+        
+        return (
+          currentItem.category !== lastItem.category ||
+          currentItem.description !== lastItem.description ||
+          documentsChanged
+        );
+      });
+    }
+  );
 
   // Check form validity - hasAchievements must be selected, and if yes, at least one complete achievement required
   useEffect(() => {
@@ -127,54 +410,8 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit }: Achievement
       (formik.values.hasAchievements === "no" || 
        formik.values.achievements.filter((a) => a.saved && isAchievementComplete(a)).length > 0);
     setIsFormValid(isValid);
-  }, [formik.values.hasAchievements, formik.values.achievements]);
+  }, [formik.values.hasAchievements, formik.values.achievements, isAchievementComplete]);
 
-  // Check if data has changed since last save
-  useEffect(() => {
-    if (lastSavedData === null) {
-      setHasDataChanged(true);
-      return;
-    }
-    
-    if (lastSavedData.hasAchievements !== formik.values.hasAchievements) {
-      setHasDataChanged(true);
-      return;
-    }
-    
-    if (formik.values.hasAchievements === "no") {
-      setHasDataChanged(false);
-      return;
-    }
-    
-    const currentSaved = formik.values.achievements.filter((a) => a.saved && isAchievementComplete(a));
-    const lastSaved = lastSavedData.achievements.filter((a) => a.saved && isAchievementComplete(a));
-    
-    if (currentSaved.length !== lastSaved.length) {
-      setHasDataChanged(true);
-      return;
-    }
-    
-    const hasChanged = currentSaved.some((current, index) => {
-      const last = lastSaved[index];
-      if (!last) return true;
-      
-      // Compare documents by name and size instead of reference
-      const documentsChanged = 
-        (current.documents === null && last.documents !== null) ||
-        (current.documents !== null && last.documents === null) ||
-        (current.documents !== null && last.documents !== null && 
-         (current.documents.name !== last.documents.name || 
-          current.documents.size !== last.documents.size));
-      
-      return (
-        current.category !== last.category ||
-        current.description !== last.description ||
-        documentsChanged
-      );
-    });
-    
-    setHasDataChanged(hasChanged);
-  }, [formik.values, lastSavedData]);
 
   // Sync formik values to parent state - optimized with ref-based comparison
   // Only update parent when values actually change (prevents excessive re-renders)
@@ -225,39 +462,270 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit }: Achievement
     }
   }, [formik.values, onUpdate]);
 
-  // Helper functions
-  const handleValidationErrors = useCallback((error: unknown, index: number) => {
-    if (error instanceof Yup.ValidationError) {
-      error.inner.forEach((err) => {
-        if (err.path) {
-          formik.setFieldTouched(`achievements[${index}].${err.path}`, true);
-        }
-      });
-    }
-  }, [formik]);
+  // Handle save achievement with API call (for individual achievement saves)
+  const handleSaveAchievement = useCallback(async (index: number) => {
+    const achievement = formik.values.achievements[index];
+    const achievementSchema = getAchievementSchema();
 
-  // Use extracted logic hook
-  const {
-    isAchievementComplete,
-    findAchievementIndex,
-    getIncompleteAchievements,
-    getCompleteAchievements,
-    validateAndSaveAllUnsavedAchievements,
-    handleAddAchievement,
-    handleCancelIncompleteAchievement,
-    handleSaveAchievement,
-    handleEditAchievement,
-    handleCancelEdit,
-    getFieldError,
-    updateAchievementField,
-  } = useAchievementLogic({
+    // Validate first
+    try {
+      await achievementSchema.validate(achievement, { abortEarly: false });
+    } catch (error) {
+      // Mark fields as touched to show errors
+      handleValidationErrors(error, index);
+      return;
+    }
+
+    if (!applicantId) {
+      dispatch(
+        addToast({
+          type: "error",
+          message: t("applicant.applicantIdRequired", "Applicant ID is required. Please save personal details first."),
+        })
+      );
+      return;
+    }
+
+    // If achievement has achievementId, it's an existing achievement - call PUT API
+    if (achievement.achievementId && applicantId) {
+      if (isSubmittingRef.current) return;
+      
+      isSubmittingRef.current = true;
+      dispatch(showLoader());
+
+      try {
+        const documentJson = await convertFileToDocumentFormat(achievement.documents);
+        
+        const payload = {
+          isAchievements: true,
+          category: achievement.category,
+          description: achievement.description,
+          document: documentJson,
+        };
+
+        const response = await applicantService.updateAchievement(
+          achievement.achievementId,
+          applicantId,
+          payload
+        );
+
+        if (response.status === "success") {
+          // Update the achievement in form state
+          const updatedAchievements = [...formik.values.achievements];
+          updatedAchievements[index] = {
+            ...achievement,
+            saved: true,
+          };
+
+          formik.setFieldValue("achievements", updatedAchievements);
+          onUpdate({ 
+            hasAchievements: formik.values.hasAchievements,
+            achievements: updatedAchievements 
+          });
+          
+          // Update original achievements ref
+          originalAchievementsRef.current = updatedAchievements.map(a => ({ ...a }));
+
+          // Close edit mode
+          if (editingIndex === index) {
+            setEditingIndex(null);
+          }
+
+          // Show success toast
+          dispatch(
+            addToast({
+              type: "success",
+              message: response.message || t("applicant.achievementUpdated", "Achievement updated successfully"),
+            })
+          );
+        } else {
+          throw new Error(response.message || "Failed to update achievement");
+        }
+      } catch (error: any) {
+        const { message } = handleApiError(error, "Failed to save achievement");
+        dispatch(addToast({ type: "error", message }));
+      } finally {
+        isSubmittingRef.current = false;
+        dispatch(hideLoader());
+      }
+    } else {
+      // If no achievementId, it's a new achievement - call POST API to create it
+      if (applicantId) {
+        if (isSubmittingRef.current) return;
+        
+        isSubmittingRef.current = true;
+        dispatch(showLoader());
+
+        try {
+          const documentJson = await convertFileToDocumentFormat(achievement.documents);
+          
+          const payload = {
+            isAchievements: true,
+            category: achievement.category,
+            description: achievement.description,
+            document: documentJson,
+          };
+
+          const createPayload = [payload]; // POST expects array
+          const response = await applicantService.createAchievements(applicantId, createPayload);
+
+          if (response.status === "success" && response.data && response.data.length > 0) {
+            // Update the achievement in form state with the response data
+            const updatedAchievements = [...formik.values.achievements];
+            const responseData = response.data[0]; // Get first item from array
+
+            // Update achievement with response data
+            updatedAchievements[index] = {
+              ...achievement,
+              achievementId: responseData.id || null,
+              saved: true,
+            };
+
+            formik.setFieldValue("achievements", updatedAchievements);
+            onUpdate({ 
+              hasAchievements: formik.values.hasAchievements,
+              achievements: updatedAchievements 
+            });
+            
+            // Update original achievements ref
+            originalAchievementsRef.current = updatedAchievements.map(a => ({ ...a }));
+
+            // Close edit mode
+            if (editingIndex === index) {
+              setEditingIndex(null);
+            }
+
+            // Show success toast
+            dispatch(
+              addToast({
+                type: "success",
+                message: response.message || t("applicant.achievementSaved", "Achievement saved successfully"),
+              })
+            );
+          } else {
+            throw new Error(response.message || "Failed to create achievement");
+          }
+        } catch (error: any) {
+          const { message } = handleApiError(error, "Failed to save achievement");
+          dispatch(addToast({ type: "error", message }));
+        } finally {
+          isSubmittingRef.current = false;
+          dispatch(hideLoader());
+        }
+      }
+    }
+  }, [
     formik,
+    applicantId,
+    getAchievementSchema,
+    handleValidationErrors,
     editingIndex,
     setEditingIndex,
-    getAchievementSchema,
-    getEmptyAchievement,
-    handleValidationErrors,
-  });
+    dispatch,
+    t,
+    onUpdate,
+    convertFileToDocumentFormat,
+  ]);
+
+  // Handle Add More button - save current achievements to API if complete, then add new one
+  const handleAddAchievementWithAPI = useCallback(async () => {
+    if (!applicantId) {
+      dispatch(
+        addToast({
+          type: "error",
+          message: t("applicant.applicantIdRequired", "Please save personal details first to get applicant ID"),
+        })
+      );
+      return;
+    }
+
+    if (isSubmittingRef.current || isSaving) {
+      return;
+    }
+
+    // Check if there are any unsaved complete achievements
+    const unsavedCompleteAchievements = formik.values.achievements.filter(
+      (a) => !a.saved && isAchievementComplete(a) && !a.achievementId
+    );
+
+    // If there are unsaved complete achievements, save them first
+    if (unsavedCompleteAchievements.length > 0) {
+      isSubmittingRef.current = true;
+      setIsSaving(true);
+      dispatch(showLoader());
+
+      try {
+        // Save all unsaved complete achievements
+        const achievementsToSave = await Promise.all(
+          unsavedCompleteAchievements.map(async (a) => {
+            const documentJson = await convertFileToDocumentFormat(a.documents);
+            
+            return {
+              isAchievements: true,
+              category: a.category,
+              description: a.description,
+              document: documentJson,
+            };
+          })
+        );
+
+        const createResponse = await applicantService.createAchievements(applicantId, achievementsToSave);
+
+        if (createResponse.status === "success" && createResponse.data) {
+          // Update achievements with achievementId from response
+          const updatedAchievements = [...formik.values.achievements];
+          let responseIndex = 0;
+
+          for (let i = 0; i < updatedAchievements.length; i++) {
+            const a = updatedAchievements[i];
+            if (unsavedCompleteAchievements.some((ach) => ach.id === a.id)) {
+              if (createResponse.data[responseIndex]) {
+                const responseData = createResponse.data[responseIndex];
+                updatedAchievements[i] = {
+                  ...a,
+                  achievementId: responseData.id || null,
+                  saved: true,
+                };
+                responseIndex++;
+              }
+            }
+          }
+
+          formik.setFieldValue("achievements", updatedAchievements);
+          onUpdate({ 
+            hasAchievements: formik.values.hasAchievements,
+            achievements: updatedAchievements 
+          });
+          
+          // Update original achievements ref
+          originalAchievementsRef.current = updatedAchievements.map(a => ({ ...a }));
+
+          // Show success toast
+          dispatch(
+            addToast({
+              type: "success",
+              message: t("applicant.achievementsSaved", "Achievements saved successfully"),
+            })
+          );
+
+          // Now add new achievement
+          handleAddAchievement();
+        } else {
+          throw new Error(createResponse.message || "Failed to save achievements");
+        }
+      } catch (error: any) {
+        const { message } = handleApiError(error, "Failed to save achievements");
+        dispatch(addToast({ type: "error", message }));
+      } finally {
+        isSubmittingRef.current = false;
+        setIsSaving(false);
+        dispatch(hideLoader());
+      }
+    } else {
+      // No unsaved achievements, just add new one
+      handleAddAchievement();
+    }
+  }, [applicantId, isSaving, formik, isAchievementComplete, dispatch, t, onUpdate, handleAddAchievement, convertFileToDocumentFormat]);
 
   const handleDeleteAchievement = useCallback((index: number) => {
     // Show confirmation popup instead of deleting directly
@@ -299,56 +767,98 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit }: Achievement
     setDeletingIndex(null);
   }, []);
 
-  const handleSave = async () => {
-    const isValid = await validateAndSaveAllUnsavedAchievements();
-    if (!isValid) {
+  // Fetch achievements when applicantId is available (edit mode or back navigation)
+  const fetchAchievements = useCallback(async (id: number | string) => {
+    if (isFetchingAchievementsRef.current) {
       return;
     }
 
-    if (editingIndex !== null) {
-      setEditingIndex(null);
+    isFetchingAchievementsRef.current = true;
+    dispatch(showLoader());
+
+    try {
+      const response = await applicantService.getAchievements(id);
+
+      if (response.status === "success" && response.data) {
+        // Map API response to AchievementFormData
+        if (response.data.length > 0) {
+          const mappedAchievements: AchievementItem[] = await Promise.all(
+            response.data.map(async (ach) => {
+              // Parse document JSON string if it exists
+              // Note: We can't directly convert back to File from base64, so set to null
+              // User will need to re-upload if they want to change the document
+              return {
+                id: `achievement-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+                achievementId: ach.id || null,
+                category: ach.category || "",
+                description: ach.description || "",
+                documents: null, // Set to null as we can't convert back to File
+                saved: true,
+              };
+            })
+          );
+
+          const achievementData: AchievementFormData = {
+            hasAchievements: "yes",
+            achievements: mappedAchievements,
+          };
+
+          // Update form state with fetched data
+          formik.setValues(achievementData, false);
+          onUpdate(achievementData);
+          markAsSaved(achievementData);
+          
+          // Store original achievements for change detection
+          originalAchievementsRef.current = mappedAchievements.map(a => ({ ...a }));
+        } else {
+          // No achievements found, set hasAchievements to "no"
+          const achievementData: AchievementFormData = {
+            hasAchievements: "no",
+            achievements: [],
+          };
+          formik.setValues(achievementData, false);
+          onUpdate(achievementData);
+          markAsSaved(achievementData);
+          originalAchievementsRef.current = [];
+        }
+      } else {
+        throw new Error(response.message || "Failed to fetch achievements");
+      }
+    } catch (error: any) {
+      const { message } = handleApiError(error, "Failed to fetch achievements");
+      dispatch(addToast({ type: "error", message }));
+    } finally {
+      isFetchingAchievementsRef.current = false;
+      dispatch(hideLoader());
+    }
+  }, [dispatch, formik, onUpdate, markAsSaved]);
+
+  // Fetch achievements when applicantId is available
+  useEffect(() => {
+    if (applicantId && !isFetchingAchievementsRef.current) {
+      fetchAchievements(applicantId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [applicantId]); // Only depend on applicantId to avoid infinite loops
+
+  const handleSave = async () => {
+    // Prevent duplicate calls
+    if (isSubmittingRef.current || isSaving) {
+      return;
     }
 
-    formik.handleSubmit();
+    setShouldNavigateNext(false);
+    await formik.submitForm();
   };
 
   const handleSubmit = async () => {
-    // First, ensure all unsaved achievements are saved
-    const isValid = await validateAndSaveAllUnsavedAchievements();
-    if (!isValid) {
-      if (import.meta.env.DEV) {
-        console.log("Form validation failed. Please fill all required fields.");
-      }
+    // Prevent duplicate calls
+    if (isSubmittingRef.current || isSaving) {
       return;
     }
 
-    // Validate the form
-    const errors = await formik.validateForm();
-    if (Object.keys(errors).length > 0) {
-      // Mark all fields as touched to show errors
-      const touchedFields: Record<string, boolean> = {};
-      Object.keys(formik.values).forEach((key) => {
-        touchedFields[key] = true;
-      });
-      formik.setTouched(touchedFields);
-      if (import.meta.env.DEV) {
-        console.log("Form validation failed. Please fill all required fields.");
-      }
-      return;
-    }
-
-    // Close any open editing
-    if (editingIndex !== null) {
-      setEditingIndex(null);
-    }
-
-    // Save the current form data first
-    await formik.handleSubmit();
-
-    // Then call the final submit handler from parent
-    if (onSubmit) {
-      onSubmit();
-    }
+    setShouldNavigateNext(true);
+    await formik.submitForm();
   };
 
   // Find index by ID helper
@@ -409,7 +919,7 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit }: Achievement
                 onFieldChange={updateAchievementField}
                 getFieldError={getFieldError}
                 onCancel={() => handleCancelIncompleteAchievement(firstIncompleteIndex)}
-                onAddMore={handleAddAchievement}
+                onAddMore={applicantId ? handleAddAchievementWithAPI : handleAddAchievement}
                 showCancel={incomplete.length > 1 || complete.length > 0}
                 showAddMore={true}
               />
@@ -420,7 +930,9 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit }: Achievement
                 <Button
                   type="button"
                   variant="accent"
-                  onClick={handleAddAchievement}
+                  onClick={applicantId ? handleAddAchievementWithAPI : handleAddAchievement}
+                  disabled={!applicantId || isSaving}
+                  isLoading={isSaving}
                   rounded
                 >
                   {t("common.addMore")}
@@ -460,7 +972,15 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit }: Achievement
             {t("common.back")}
           </Button>
         )}
-        <Button type="button" variant="accent" onClick={handleSave} disabled={!hasDataChanged} rounded className="w-full sm:w-auto">
+        <Button 
+          type="button" 
+          variant="accent" 
+          onClick={handleSave}
+          disabled={isSaving || !applicantId}
+          isLoading={isSaving}
+          rounded 
+          className="w-full sm:w-auto"
+        >
           {t("applicant.save")}
         </Button>
         {onSubmit && (
@@ -468,7 +988,8 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit }: Achievement
             type="button" 
             variant="accent" 
             onClick={handleSubmit} 
-            disabled={!isFormValid}
+            disabled={!isFormValid || isSaving || !applicantId}
+            isLoading={isSaving}
             rounded
             className="w-full sm:w-auto"
           >
@@ -492,3 +1013,4 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit }: Achievement
 };
 
 export default Achievements;
+

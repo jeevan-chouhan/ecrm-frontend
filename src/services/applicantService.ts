@@ -34,6 +34,18 @@ import type {
   DeleteApplicationPreferenceResponse,
   CompleteDetailsParams,
   CompleteDetailsResponse,
+  EducationalDetailsPayload,
+  EducationalDetailsResponse,
+  GetEducationalDetailsResponse,
+  UpdateEducationalDetailsResponse,
+  WorkExperienceItemPayload,
+  CreateWorkExperiencesResponse,
+  GetWorkExperiencesResponse,
+  UpdateWorkExperienceResponse,
+  AchievementItemPayload,
+  CreateAchievementsResponse,
+  GetAchievementsResponse,
+  UpdateAchievementResponse,
 } from "./types";
 
 /**
@@ -480,6 +492,153 @@ const applicantService = {
     const url = `${ENDPOINTS.APPLICANTS.COMPLETE_DETAILS}?${queryParams.toString()}`;
 
     const response = await api.get<CompleteDetailsResponse>(url);
+
+    return response.data;
+  },
+
+  /**
+   * Create applicant educational details
+   * @param payload - Educational details payload
+   * @returns Educational details response
+   */
+  createEducationalDetails: async (
+    payload: EducationalDetailsPayload
+  ): Promise<EducationalDetailsResponse> => {
+    const url = ENDPOINTS.APPLICANTS.EDUCATIONAL_DETAILS;
+
+    const response = await api.post<EducationalDetailsResponse>(url, payload);
+
+    return response.data;
+  },
+
+  /**
+   * Get applicant educational details
+   * @param applicantId - Applicant ID
+   * @returns Get educational details response
+   */
+  getEducationalDetails: async (
+    applicantId: number | string
+  ): Promise<GetEducationalDetailsResponse> => {
+    const url = ENDPOINTS.APPLICANTS.GET_EDUCATIONAL_DETAILS(applicantId);
+
+    const response = await api.get<GetEducationalDetailsResponse>(url);
+
+    return response.data;
+  },
+
+  /**
+   * Update applicant educational details
+   * @param payload - Educational details payload
+   * @returns Update educational details response
+   */
+  updateEducationalDetails: async (
+    payload: EducationalDetailsPayload
+  ): Promise<UpdateEducationalDetailsResponse> => {
+    const url = ENDPOINTS.APPLICANTS.UPDATE_EDUCATIONAL_DETAILS;
+
+    const response = await api.put<UpdateEducationalDetailsResponse>(url, payload);
+
+    return response.data;
+  },
+
+  /**
+   * Create applicant work experiences
+   * @param applicantId - Applicant ID
+   * @param payload - Array of work experience items
+   * @returns Create work experiences response
+   */
+  createWorkExperiences: async (
+    applicantId: number | string,
+    payload: WorkExperienceItemPayload[]
+  ): Promise<CreateWorkExperiencesResponse> => {
+    const url = ENDPOINTS.APPLICANTS.WORK_EXPERIENCES(applicantId);
+
+    const response = await api.post<CreateWorkExperiencesResponse>(url, payload);
+
+    return response.data;
+  },
+
+  /**
+   * Get applicant work experiences
+   * @param applicantId - Applicant ID
+   * @returns Get work experiences response
+   */
+  getWorkExperiences: async (
+    applicantId: number | string
+  ): Promise<GetWorkExperiencesResponse> => {
+    const url = ENDPOINTS.APPLICANTS.GET_WORK_EXPERIENCES(applicantId);
+
+    const response = await api.get<GetWorkExperiencesResponse>(url);
+
+    return response.data;
+  },
+
+  /**
+   * Update applicant work experience
+   * @param workExperienceId - Work experience ID
+   * @param applicantId - Applicant ID
+   * @param payload - Work experience item payload
+   * @returns Update work experience response
+   */
+  updateWorkExperience: async (
+    workExperienceId: number | string,
+    applicantId: number | string,
+    payload: WorkExperienceItemPayload
+  ): Promise<UpdateWorkExperienceResponse> => {
+    const url = ENDPOINTS.APPLICANTS.UPDATE_WORK_EXPERIENCE(workExperienceId, applicantId);
+
+    const response = await api.put<UpdateWorkExperienceResponse>(url, payload);
+
+    return response.data;
+  },
+
+  /**
+   * Create applicant achievements
+   * @param applicantId - Applicant ID
+   * @param payload - Array of achievement items
+   * @returns Create achievements response
+   */
+  createAchievements: async (
+    applicantId: number | string,
+    payload: AchievementItemPayload[]
+  ): Promise<CreateAchievementsResponse> => {
+    const url = ENDPOINTS.APPLICANTS.ACHIEVEMENTS(applicantId);
+
+    const response = await api.post<CreateAchievementsResponse>(url, payload);
+
+    return response.data;
+  },
+
+  /**
+   * Get applicant achievements
+   * @param applicantId - Applicant ID
+   * @returns Get achievements response
+   */
+  getAchievements: async (
+    applicantId: number | string
+  ): Promise<GetAchievementsResponse> => {
+    const url = ENDPOINTS.APPLICANTS.GET_ACHIEVEMENTS(applicantId);
+
+    const response = await api.get<GetAchievementsResponse>(url);
+
+    return response.data;
+  },
+
+  /**
+   * Update applicant achievement
+   * @param achievementId - Achievement ID
+   * @param applicantId - Applicant ID
+   * @param payload - Achievement item payload
+   * @returns Update achievement response
+   */
+  updateAchievement: async (
+    achievementId: number | string,
+    applicantId: number | string,
+    payload: AchievementItemPayload
+  ): Promise<UpdateAchievementResponse> => {
+    const url = ENDPOINTS.APPLICANTS.UPDATE_ACHIEVEMENT(achievementId, applicantId);
+
+    const response = await api.put<UpdateAchievementResponse>(url, payload);
 
     return response.data;
   },

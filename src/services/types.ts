@@ -606,7 +606,10 @@ export type CreateApplicationPreferencesResponse = ApiResponse<ApplicationPrefer
 export type GetApplicationPreferencesResponse = ApiResponse<ApplicationPreferenceGetData[]>;
 
 // Update Application Preference Payload (single preference)
-export type UpdateApplicationPreferencePayload = ApplicationPreferenceItem;
+// Note: preferenceId is sent both as a query parameter and in the payload
+export interface UpdateApplicationPreferencePayload extends ApplicationPreferenceItem {
+  preferenceId?: number | string; // Preference ID for PUT operations
+}
 
 // Update Application Preference Response (has nested objects like GET response)
 export type UpdateApplicationPreferenceResponse = ApiResponse<ApplicationPreferenceGetData>;
@@ -707,3 +710,101 @@ export interface CompleteDetailsData {
 
 export type CompleteDetailsResponse = ApiResponse<CompleteDetailsData>;
 
+// ==========================================
+// Educational Details Types
+// ==========================================
+
+// Educational Details Payload (for POST and PUT)
+export interface EducationalDetailsPayload {
+  applicantId: number;
+  highestQualification: string;
+  instituteName: string;
+  universityName: string;
+  courseType: string | null;
+  fieldType: string | null;
+  scoreType: string;
+  score: string;
+  passingYear: string; // Format: "YYYY-MM-DD"
+}
+
+// Educational Details Data (from API response)
+export interface EducationalDetailsData {
+  applicantId: number;
+  highestQualification: string;
+  instituteName: string;
+  universityName: string;
+  courseType: string;
+  fieldType: string;
+  scoreType: string;
+  score: string;
+  passingYear: string;
+  message?: string;
+}
+
+// Educational Details Response (for POST, PUT, GET)
+export type EducationalDetailsResponse = ApiResponse<EducationalDetailsData>;
+export type GetEducationalDetailsResponse = ApiResponse<EducationalDetailsData>;
+export type UpdateEducationalDetailsResponse = ApiResponse<EducationalDetailsData>;
+
+
+
+// ==========================================
+// Work Experience Types
+// ==========================================
+
+// Work Experience Item (for API payload)
+export interface WorkExperienceItemPayload {
+  isExperienced: boolean;
+  companyName: string;
+  jobTitle: string;
+  isCurrentlyWorking: boolean;
+  startDate: string; // Format: "YYYY-MM-DD"
+  endDate: string | null; // Format: "YYYY-MM-DD" or null
+}
+
+// Work Experience Data (from API response)
+export interface WorkExperienceData {
+  id: number;
+  applicantId: number;
+  isExperienced: boolean;
+  companyName: string;
+  jobTitle: string;
+  isCurrentlyWorking: boolean;
+  startDate: string; // Format: "YYYY-MM-DD"
+  endDate: string | null; // Format: "YYYY-MM-DD" or null
+  message?: string;
+}
+
+// Work Experience Response Types
+export type CreateWorkExperiencesResponse = ApiResponse<WorkExperienceData[]>;
+export type GetWorkExperiencesResponse = ApiResponse<WorkExperienceData[]>;
+export type UpdateWorkExperienceResponse = ApiResponse<WorkExperienceData>;
+
+
+// ==========================================
+// Achievement Types
+// ==========================================
+
+// Achievement Item (for API payload)
+export interface AchievementItemPayload {
+  isAchievements: boolean;
+  category: string;
+  description: string;
+  document: string | null; // JSON stringified document object or null
+}
+
+// Achievement Data (from API response)
+export interface AchievementData {
+  id: number;
+  applicantId: number;
+  isAchievements: boolean;
+  category: string;
+  description: string;
+  document: string | null; // JSON stringified document object or null
+  message?: string;
+}
+
+// Achievement Response Types
+export type CreateAchievementsResponse = ApiResponse<AchievementData[]>;
+export type GetAchievementsResponse = ApiResponse<AchievementData[]>;
+export type UpdateAchievementResponse = ApiResponse<AchievementData>;

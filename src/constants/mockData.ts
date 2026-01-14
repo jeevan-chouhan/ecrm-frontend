@@ -129,13 +129,6 @@ export const campuses: SelectOption[] = [
 ];
 
 // Educational qualifications
-export const highestQualifications: SelectOption[] = [
-  { value: "high-school", label: "High School" },
-  { value: "diploma", label: "Diploma" },
-  { value: "ug", label: "UG (Undergraduate)" },
-  { value: "pg", label: "PG (Post Graduate)" },
-];
-
 // Applicant Tracker - Types & Mock Data
 export interface Applicant {
   id: string;
@@ -489,24 +482,17 @@ export const mockApplicantOverviewData: ApplicantOverviewItem[] = [
   },
 ];
 
-// Score types
-export const scoreTypes: SelectOption[] = [
-  { value: "percentage", label: "Percentage" },
-  { value: "cgpa", label: "CGPA" },
-  { value: "gpa", label: "GPA" },
-];
-
-// Achievement categories
-export const achievementCategories: SelectOption[] = [
-  { value: "academic", label: "Academic" },
-  { value: "sports", label: "Sports" },
-  { value: "volunteer", label: "Volunteer" },
-  { value: "certification", label: "Certification" },
-  { value: "internship", label: "Internship" },
-  { value: "technical-project", label: "Technical Project" },
-  { value: "leadership", label: "Leadership" },
-  { value: "creative", label: "Creative" },
-];
+// Achievement categories - moved to constants/index.ts with enum values
+// export const achievementCategories: SelectOption[] = [
+//   { value: "academic", label: "Academic" },
+//   { value: "sports", label: "Sports" },
+//   { value: "volunteer", label: "Volunteer" },
+//   { value: "certification", label: "Certification" },
+//   { value: "internship", label: "Internship" },
+//   { value: "technical-project", label: "Technical Project" },
+//   { value: "leadership", label: "Leadership" },
+//   { value: "creative", label: "Creative" },
+// ];
 
 // ==========================================
 // Applicant Detail - Mock Data

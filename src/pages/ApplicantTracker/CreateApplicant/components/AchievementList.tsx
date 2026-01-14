@@ -1,7 +1,7 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../../../components";
-import { COLORS } from "../../../../constants";
+import { COLORS, achievementCategories } from "../../../../constants";
 import { Edit, Trash } from "../../../../assets";
 import AchievementForm from "../AchievementForm";
 import type { AchievementItem } from "../types";
@@ -37,6 +37,13 @@ const AchievementList = ({
   findIndexById,
 }: AchievementListProps) => {
   const { t } = useTranslation();
+
+  // Helper function to get category label from value
+  const categoryMap = useMemo(() => {
+    return new Map(achievementCategories.map(cat => [cat.value, cat.label]));
+  }, []);
+  
+  const getCategoryLabel = (value: string) => categoryMap.get(value) || value;
 
   if (achievements.length === 0) {
     return null;
@@ -93,7 +100,7 @@ const AchievementList = ({
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <p className="text-sm font-medium" style={{ color: COLORS.textDark }}>
-                      {achievement.category} - {achievement.description.substring(0, 50)}
+                      {getCategoryLabel(achievement.category)} - {achievement.description.substring(0, 50)}
                       {achievement.description.length > 50 ? "..." : ""}
                     </p>
                     {achievement.documents && (

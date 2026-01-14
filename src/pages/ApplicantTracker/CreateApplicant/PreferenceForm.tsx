@@ -223,6 +223,34 @@ const PreferenceForm = ({
   );
 };
 
-// Memoize component to prevent unnecessary re-renders when props haven't changed
-export default React.memo(PreferenceForm);
+// Memoize component with custom comparison to prevent unnecessary re-renders
+export default React.memo(PreferenceForm, (prevProps, nextProps) => {
+  // Deep comparison for preference object
+  if (prevProps.preference.id !== nextProps.preference.id) return false;
+  if (prevProps.preference.desiredCountry !== nextProps.preference.desiredCountry) return false;
+  if (prevProps.preference.program !== nextProps.preference.program) return false;
+  if (prevProps.preference.desiredUniversity !== nextProps.preference.desiredUniversity) return false;
+  if (prevProps.preference.desiredCampus !== nextProps.preference.desiredCampus) return false;
+  if (prevProps.preference.course !== nextProps.preference.course) return false;
+  if (prevProps.preference.desiredIntake !== nextProps.preference.desiredIntake) return false;
+  if (prevProps.preference.assignCounselor !== nextProps.preference.assignCounselor) return false;
+  if (prevProps.preference.agencyPartnerName !== nextProps.preference.agencyPartnerName) return false;
+  if (prevProps.preference.saved !== nextProps.preference.saved) return false;
+  
+  // Compare options arrays by reference (they're memoized)
+  if (prevProps.countryOptions !== nextProps.countryOptions) return false;
+  if (prevProps.universityOptions !== nextProps.universityOptions) return false;
+  if (prevProps.campusOptions !== nextProps.campusOptions) return false;
+  if (prevProps.courseOptions !== nextProps.courseOptions) return false;
+  if (prevProps.counselorOptions !== nextProps.counselorOptions) return false;
+  
+  // Compare other props
+  if (prevProps.index !== nextProps.index) return false;
+  if (prevProps.showCancel !== nextProps.showCancel) return false;
+  if (prevProps.showAddMore !== nextProps.showAddMore) return false;
+  
+  // Functions are stable (useCallback), so we don't need to compare them
+  
+  return true; // Props are equal, skip re-render
+});
 
