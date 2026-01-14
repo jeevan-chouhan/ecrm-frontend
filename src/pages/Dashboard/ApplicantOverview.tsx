@@ -72,6 +72,7 @@ const ApplicantOverview = () => {
   // Refs
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInitialMount = useRef(true);
+  const lastFetchParamsRef = useRef<string>("");
 
   // Sync local state when Redux filter changes (e.g., from persist)
   useEffect(() => {
@@ -84,47 +85,58 @@ const ApplicantOverview = () => {
   }, [filter.search, filter.enrollmentType, filter.status]);
 
   // Fetch applicant overview data
-  const fetchApplicantOverview = useCallback(async () => {
+  useEffect(() => {
     if (!user?.agencyId) return;
 
-    try {
-      dispatch(showLoader());
+    // Create a unique key for current fetch params
+    const fetchParamsKey = `${user.agencyId}-${filter.search}-${filter.status}-${filter.enrollmentType}-${pagination.page}-${pagination.size}`;
+    
+    // Skip if same params as last fetch attempt
+    if (lastFetchParamsRef.current === fetchParamsKey) return;
+    
+    // Mark this params as being fetched BEFORE the async call
+    lastFetchParamsRef.current = fetchParamsKey;
 
-      const response = await userService.getApplicantOverview({
-        agencyId: user.agencyId,
-        assignedAdminId: null,
-        assignedManagerId: null,
-        search: filter.search || null,
-        status: filter.status || null,
-        enrollmentType: filter.enrollmentType || null,
-        page: pagination.page,
-        size: pagination.size,
-      });
+    const fetchApplicantOverview = async () => {
+      try {
+        dispatch(showLoader());
 
-      if (response.status === "success" && response.data) {
-        // Transform API data to table format
-        const transformedApplicants = transformApiData(response.data.content);
+        const response = await userService.getApplicantOverview({
+          agencyId: user.agencyId,
+          assignedAdminId: null,
+          assignedManagerId: null,
+          search: filter.search || null,
+          status: filter.status || null,
+          enrollmentType: filter.enrollmentType || null,
+          page: pagination.page,
+          size: pagination.size,
+        });
+
+        if (response.status === "success" && response.data) {
+          // Transform API data to table format
+          const transformedApplicants = transformApiData(response.data.content);
+          
+          dispatch(setApplicants({
+            applicants: transformedApplicants,
+            totalElements: response.data.totalElements,
+            totalPages: response.data.totalPages,
+            first: response.data.first,
+            last: response.data.last,
+          }));
+        }
+      } catch (error) {
+        // Reset params ref on error to allow retry
+        lastFetchParamsRef.current = "";
         
-        dispatch(setApplicants({
-          applicants: transformedApplicants,
-          totalElements: response.data.totalElements,
-          totalPages: response.data.totalPages,
-          first: response.data.first,
-          last: response.data.last,
-        }));
+        const errorMessage = handleApiError(error);
+        dispatch(addToast({ type: "error", message: typeof errorMessage === 'string' ? errorMessage : 'An error occurred' }));
+      } finally {
+        dispatch(hideLoader());
       }
-    } catch (error) {
-      const errorMessage = handleApiError(error);
-      dispatch(addToast({ type: "error", message: typeof errorMessage === 'string' ? errorMessage : 'An error occurred' }));
-    } finally {
-      dispatch(hideLoader());
-    }
-  }, [user?.agencyId, filter.search, filter.status, filter.enrollmentType, pagination.page, pagination.size, dispatch]);
+    };
 
-  // Fetch data on mount and when filters/pagination change
-  useEffect(() => {
     fetchApplicantOverview();
-  }, [fetchApplicantOverview]);
+  }, [user?.agencyId, filter.search, filter.status, filter.enrollmentType, pagination.page, pagination.size, dispatch]);
 
   // Cleanup debounce on unmount
   useEffect(() => {
@@ -136,9 +148,20 @@ const ApplicantOverview = () => {
   }, []);
 
   // Handle view applicant
-  const handleView = useCallback((applicantId: number) => {
-    navigate(ROUTES.APPLICANT_DETAIL.replace(":applicantId", applicantId.toString()), {
-      state: { from: "dashboard" },
+  const handleView = useCallback((applicant: ApplicantOverviewRow) => {
+    navigate(ROUTES.APPLICANT_DETAIL.replace(":applicantId", applicant.applicantId.toString()), {
+      state: { 
+        from: "dashboard",
+        applicantData: {
+          applicantId: applicant.applicantId,
+          applicantName: applicant.applicantName,
+          email: applicant.email,
+          contactNo: applicant.contactNo,
+          enrollmentType: applicant.enrollmentType,
+          status: applicant.status,
+          notes: applicant.notes,
+        },
+      },
     });
   }, [navigate]);
 
@@ -350,7 +373,7 @@ const ApplicantOverview = () => {
     <div className="flex items-center justify-center gap-3 w-full h-full">
       <Tooltip title={t("dashboard.viewApplicant", "View")} arrow>
         <button
-          onClick={() => handleView(params.row.applicantId)}
+          onClick={() => handleView(params.row)}
           className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
           style={{ color: COLORS.accent }}
           aria-label={t("dashboard.viewApplicant", "View")}
