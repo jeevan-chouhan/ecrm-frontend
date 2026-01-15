@@ -349,7 +349,7 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
     getCompleteAchievements,
     handleAddAchievement,
     handleCancelIncompleteAchievement,
-    handleSaveAchievement: handleSaveAchievementLocal,
+    // handleSaveAchievement: handleSaveAchievementLocal,
     handleEditAchievement,
     handleCancelEdit,
     getFieldError,
@@ -815,7 +815,8 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
       if (import.meta.env.DEV) {
         console.error("Error deleting achievement:", error);
       }
-      handleApiError(error, dispatch, t);
+      const { message } = handleApiError(error, "Failed to delete achievement");
+      dispatch(addToast({ type: "error", message }));
     } finally {
       setIsDeletePopupOpen(false);
       setDeletingIndex(null);

@@ -822,7 +822,8 @@ const WorkExperience = ({ initialValues, onUpdate, onSaveAndNext, onBack, applic
       if (import.meta.env.DEV) {
         console.error("Error deleting work experience:", error);
       }
-      handleApiError(error, dispatch, t);
+      const { message } = handleApiError(error, "Failed to delete work experience");
+      dispatch(addToast({ type: "error", message }));
     } finally {
       setIsDeletePopupOpen(false);
       setDeletingIndex(null);
