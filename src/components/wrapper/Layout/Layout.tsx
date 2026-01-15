@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Header from "../Header/Header";
 import Sidebar from "../Sidebar/Sidebar";
 import Footer from "../Footer/Footer";
@@ -22,6 +23,7 @@ import { addToast } from "../../../redux/slices/toast/toastSlice";
 import { resetManageTeamState } from "../../../redux/slices/manageTeam/manageTeamSlice";
 import { resetDashboardState } from "../../../redux/slices/dashboard/dashboardSlice";
 import { resetDocumentVaultState } from "../../../redux/slices/documentVault/documentVaultSlice";
+import { resetAgencyPartnerState } from "../../../redux/slices/agencyPartner/agencyPartnerSlice";
 
 interface LayoutProps {
   children: ReactNode;
@@ -44,6 +46,7 @@ const Layout = ({
   onProfileClick,
   onLogoutClick,
 }: LayoutProps) => {
+  const { t } = useTranslation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
@@ -70,10 +73,11 @@ const Layout = ({
     // Clear Redux auth state (this also clears localStorage)
     dispatch(clearCredentials());
     
-    // Reset manageTeam, dashboard and documentVault state on logout
+    // Reset manageTeam, dashboard, documentVault and agencyPartner state on logout
     dispatch(resetManageTeamState());
     dispatch(resetDashboardState());
     dispatch(resetDocumentVaultState());
+    dispatch(resetAgencyPartnerState());
     
     // Show logout success toast
     dispatch(
@@ -108,59 +112,63 @@ const Layout = ({
     if (!path.startsWith(ROUTES.DOCUMENT_VAULT)) {
       dispatch(resetDocumentVaultState());
     }
+    // Reset agencyPartner state if navigating away from Agency Partner
+    if (path !== ROUTES.AGENCY_PARTNER) {
+      dispatch(resetAgencyPartnerState());
+    }
   };
 
   const sidebarItems = [
     {
-      label: "Dashboard",
+      label: t("sidebar.dashboard", "Dashboard"),
       path: ROUTES.DASHBOARD,
       icon: <Dashboard className="h-5 w-5" />,
       isActive: location.pathname === ROUTES.DASHBOARD || (isApplicantDetailPage && isFromDashboard),
     },
     {
-      label: "Application Tracker",
+      label: t("sidebar.applicationTracker", "Application Tracker"),
       path: ROUTES.APPLICANT_TRACKER,
       icon: <Applicant className="h-5 w-5" />,
       isActive: (location.pathname.startsWith(ROUTES.APPLICANT_TRACKER) || location.pathname.startsWith("/applicant-tracker")) && !(isApplicantDetailPage && isFromDashboard),
     },
     {
-      label: "Country & University Directory",
+      label: t("sidebar.countryUniversity", "Country & University Directory"),
       path: ROUTES.COUNTRY_UNIVERSITY,
       icon: <University className="h-5 w-5" />,
       isActive: location.pathname === ROUTES.COUNTRY_UNIVERSITY,
     },
     {
-      label: "Document Vault",
+      label: t("sidebar.documentVault", "Document Vault"),
       path: ROUTES.DOCUMENT_VAULT,
       icon: <Document className="h-5 w-5" />,
       isActive: location.pathname.startsWith(ROUTES.DOCUMENT_VAULT),
     },
     {
-      label: "Agency Partner",
+      label: t("sidebar.agencyPartner", "Agency Partner"),
       path: ROUTES.AGENCY_PARTNER,
       icon: <Agency className="h-5 w-5" />,
       isActive: location.pathname === ROUTES.AGENCY_PARTNER,
     },
     {
-      label: "Manage Team",
+      label: t("sidebar.manageTeam", "Manage Team"),
       path: ROUTES.MANAGE_TEAM,
       icon: <Team className="h-5 w-5" />,
       isActive: location.pathname.startsWith(ROUTES.MANAGE_TEAM),
     },
     {
-      label: "Report & Analysis",
+      label: t("sidebar.reportAnalysis", "Report & Analysis"),
       path: ROUTES.REPORT_ANALYSIS,
       icon: <Report className="h-5 w-5" />,
       isActive: location.pathname === ROUTES.REPORT_ANALYSIS,
     },
     {
-      label: "Support & Feedback",
+      label: t("sidebar.supportFeedback", "Support & Feedback"),
       path: ROUTES.SUPPORT_FEEDBACK,
       icon: <InfoCircle className="h-5 w-5" />,
       isActive: location.pathname === ROUTES.SUPPORT_FEEDBACK,
     },
     {
-      label: "Settings",
+      label: t("sidebar.settings", "Settings"),
       path: ROUTES.SETTINGS,
       icon: <Settings className="h-5 w-5" />,
       isActive: location.pathname.startsWith(ROUTES.SETTINGS),
