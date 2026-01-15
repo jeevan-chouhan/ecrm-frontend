@@ -2,6 +2,7 @@ export { default as api } from "./api";
 export { default as authService } from "./authService";
 export { default as userService } from "./userService";
 export { default as applicantService } from "./applicantService";
+export { default as agencyService } from "./agencyService";
 export { ENDPOINTS } from "./endpoints";
 
 // Export all types from types.ts
@@ -90,5 +91,14 @@ export type {
   CompleteDetailsAchievement,
   CompleteDetailsData,
   CompleteDetailsResponse,
+  AddAgencyPartnerPayload,
+  AgencyPartnerData,
+  AddAgencyPartnerResponse,
+  AgencyPartnerNameItem,
+  AgencyPartnerNamesResponse,
+  PartnersListParams,
+  PartnerListItem,
+  PartnersListData,
+  PartnersListResponse,
 } from "./types";
 

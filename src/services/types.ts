@@ -810,3 +810,91 @@ export type CreateAchievementsResponse = ApiResponse<AchievementData[]>;
 export type GetAchievementsResponse = ApiResponse<AchievementData[]>;
 export type UpdateAchievementResponse = ApiResponse<AchievementData>;
 export type DeleteAchievementResponse = ApiResponse<null>;
+
+// ==========================================
+// Agency Partner Types
+// ==========================================
+
+// Add Agency Partner Payload
+export interface AddAgencyPartnerPayload {
+  agencyId: number;
+  name: string;
+  contactPerson: string;
+  countryCode: string;
+  contactNumber: string;
+  email: string;
+  commissionPercentage: number;
+  description?: string;
+}
+
+// Agency Partner Data (from API response)
+export interface AgencyPartnerData {
+  id: number;
+  uniqueId: string;
+  agencyId: number;
+  name: string;
+  contactPerson: string;
+  countryCode: string;
+  contactNumber: string;
+  email: string;
+  commissionPercentage: number;
+  description: string;
+  status: "ACTIVE" | "INACTIVE";
+  message?: string;
+}
+
+// Agency Partner Response Types
+export type AddAgencyPartnerResponse = ApiResponse<AgencyPartnerData>;
+
+// Agency Partner Name Item (for dropdown)
+export interface AgencyPartnerNameItem {
+  id: number;
+  name: string;
+}
+
+// Agency Partner Names Response (array, not wrapped in ApiResponse)
+export type AgencyPartnerNamesResponse = AgencyPartnerNameItem[];
+
+// ==========================================
+// Agency Partners List Types
+// ==========================================
+
+// Partners List Request Params
+export interface PartnersListParams {
+  agencyId: number;
+  search?: string | null;
+  page?: number;
+  size?: number;
+  sortBy?: string | null;
+  asc?: boolean | null;
+}
+
+// Partner List Item (from API response)
+export interface PartnerListItem {
+  id: number;
+  name: string;
+  contactPerson: string;
+  email: string;
+  countryCode: string;
+  contactNumber: string;
+  commissionPercentage: number;
+  description: string;
+  status: "ACTIVE" | "INACTIVE";
+}
+
+// Partners List Data (paginated response)
+export interface PartnersListData {
+  content: PartnerListItem[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+  numberOfElements: number;
+  nextPage: number | null;
+  prevPage: number | null;
+}
+
+// Partners List Response
+export type PartnersListResponse = ApiResponse<PartnersListData>;

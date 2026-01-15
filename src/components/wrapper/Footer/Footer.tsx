@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { COLORS, APP_CONFIG } from "../../../constants";
 
 interface FooterProps {
@@ -11,6 +12,8 @@ const Footer = ({
   year = new Date().getFullYear(),
   links = [],
 }: FooterProps) => {
+  const { t } = useTranslation();
+
   return (
     <footer
       className="h-14 px-4 md:px-6 flex flex-col sm:flex-row items-center justify-center gap-2"
@@ -24,7 +27,7 @@ const Footer = ({
         className="text-sm text-center"
         style={{ color: COLORS.textMuted }}
       >
-        © {year} {companyName}. All Rights Reserved.
+        {t("footer.copyright", "© {{year}} {{company}}. All Rights Reserved.", { year, company: companyName })}
       </div>
 
       {/* Links */}

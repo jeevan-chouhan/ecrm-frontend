@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ChevronDown, User, Logout, Notification, Menu } from "../../../assets";
 import { COLORS, ROUTES } from "../../../constants";
 import { LanguageSwitcher } from "../../../language";
@@ -43,6 +44,7 @@ const Header = ({
   onLoginClick,
   onPricingClick,
 }: HeaderProps) => {
+  const { t } = useTranslation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -86,12 +88,12 @@ const Header = ({
 
   const dropdownItems: ProfileDropdownItem[] = [
     {
-      label: "Profile",
+      label: t("header.profile", "Profile"),
       icon: <User className="h-4 w-4" />,
       onClick: handleProfileClick,
     },
     {
-      label: "Logout",
+      label: t("header.logout", "Logout"),
       icon: <Logout className="h-4 w-4" />,
       onClick: handleLogoutClick,
     },
