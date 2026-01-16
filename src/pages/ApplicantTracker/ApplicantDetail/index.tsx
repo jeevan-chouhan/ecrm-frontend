@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback, startTransition, useRef } from "react";
+import { useState, useEffect, useCallback, startTransition, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { GridPaginationModel } from "@mui/x-data-grid";
