@@ -48,6 +48,7 @@ import type {
   GetAchievementsResponse,
   UpdateAchievementResponse,
   DeleteAchievementResponse,
+  AgencyPartnerNameItem,
 } from "./types";
 
 /**
@@ -65,26 +66,34 @@ const buildApplicationsListQueryParams = (
   // 1. Agency ID (always required if provided)
   appendQueryParam(queryParams, "agencyId", params.agencyId);
 
-  // 2. Role-based assigned ID (based on logged-in user's role)
-  const roleBasedId = getRoleBasedAssignedId(user, params);
-  if (roleBasedId) {
-    appendQueryParam(queryParams, roleBasedId.key, roleBasedId.value);
-  } else {
-    // Fallback: append assigned IDs if explicitly provided (for backward compatibility)
-    appendQueryParam(queryParams, "assignedAdminId", params.assignedAdminId);
-    appendQueryParam(queryParams, "assignedManagerId", params.assignedManagerId);
-    appendQueryParam(queryParams, "assignedCounselorId", params.assignedCounselorId);
-  }
+  // 2. Applicant ID (optional filter)
+  appendQueryParam(queryParams, "applicantId", params.applicantId);
 
-  // 3. Application status and stage filters
+  // 3. Role-based assigned ID (based on logged-in user's role)
+  // Skip role-based assigned IDs when applicantId is provided (for applicant detail view)
+  if (!params.applicantId) {
+    const roleBasedId = getRoleBasedAssignedId(user, params);
+    if (roleBasedId) {
+      appendQueryParam(queryParams, roleBasedId.key, roleBasedId.value);
+    } else {
+      // Fallback: append assigned IDs if explicitly provided (for backward compatibility)
+      appendQueryParam(queryParams, "assignedAdminId", params.assignedAdminId);
+      appendQueryParam(queryParams, "assignedManagerId", params.assignedManagerId);
+      appendQueryParam(queryParams, "assignedCounselorId", params.assignedCounselorId);
+    }
+  }
+  // When applicantId is provided, we don't send any assigned IDs (assignedAdminId, assignedManagerId, assignedCounselorId)
+
+  // 4. Application status and stage filters
   appendQueryParam(queryParams, "applicationStatus", params.applicationStatus, { skipEmptyString: true });
   appendQueryParam(queryParams, "applicationStage", params.applicationStage, { skipEmptyString: true });
 
-  // 4. University and intake filters
+  // 5. University, intake, and agency partner filters
   appendQueryParam(queryParams, "universityId", params.universityId);
   appendQueryParam(queryParams, "desiredIntake", params.desiredIntake, { skipEmptyString: true });
+  appendQueryParam(queryParams, "agencyPartnerId", params.agencyPartnerId);
 
-  // 5. Date filters - format dates according to backend requirements
+  // 6. Date filters - format dates according to backend requirements
   // appliedFrom and appliedTo use ISO DATE_TIME format (YYYY-MM-DDTHH:mm:ss)
   appendQueryParam(queryParams, "appliedFrom", params.appliedFrom, { skipEmptyString: true });
   appendQueryParam(queryParams, "appliedTo", params.appliedTo, { skipEmptyString: true });
@@ -93,14 +102,14 @@ const buildApplicationsListQueryParams = (
   appendQueryParam(queryParams, "updatedFrom", params.updatedFrom, { skipEmptyString: true });
   appendQueryParam(queryParams, "updatedTo", params.updatedTo, { skipEmptyString: true });
 
-  // 5. Search and text filters (skip empty strings)
+  // 7. Search and text filters (skip empty strings)
   appendQueryParam(queryParams, "search", params.search, { skipEmptyString: true });
 
-  // 6. Pagination parameters
+  // 8. Pagination parameters
   appendQueryParam(queryParams, "page", params.page);
   appendQueryParam(queryParams, "size", params.size);
 
-  // 7. Sorting parameters (skip empty strings)
+  // 9. Sorting parameters (skip empty strings)
   appendQueryParam(queryParams, "sortBy", params.sortBy, { skipEmptyString: true });
   appendQueryParam(queryParams, "asc", params.asc);
 
@@ -302,6 +311,36 @@ const applicantService = {
     });
 
     const url = `${ENDPOINTS.AGENCIES.COUNSELORS}?${queryParams.toString()}`;
+
+    // API returns array directly: [{id, name}, ...]
+    const response = await api.get<CounselorItem[]>(url);
+    
+    // Response.data is the array directly
+    const result: CounselorItem[] = Array.isArray(response.data) ? response.data : [];
+    
+    return result;
+  },
+
+  /**
+   * Get counselor list for an agency, filtered by country
+   * @param agencyId - Agency ID
+   * @param countryId - Country ID to filter counselors
+   * @returns Promise with counselor list response (array directly, not wrapped)
+   */
+  getCounselorsByCountry: async (
+    agencyId: number | string | null,
+    countryId: number | string | null
+  ): Promise<CounselorListResponse> => {
+    if (!agencyId || !countryId) {
+      return [];
+    }
+
+    const queryParams = createQueryParams({
+      agencyId,
+      countryId,
+    });
+
+    const url = `${ENDPOINTS.AGENCIES.COUNSELORS_BY_COUNTRY}?${queryParams.toString()}`;
 
     // API returns array directly: [{id, name}, ...]
     const response = await api.get<CounselorItem[]>(url);
@@ -680,6 +719,33 @@ const applicantService = {
 
     const response = await api.delete<DeleteAchievementResponse>(url);
     return response.data;
+  },
+
+  /**
+   * Get agency partner names list for an agency
+   * @param agencyId - Agency ID
+   * @returns Promise with agency partner names response (array directly, not wrapped)
+   */
+  getAgencyPartnerNames: async (
+    agencyId: number | string | null
+  ): Promise<AgencyPartnerNameItem[]> => {
+    if (!agencyId) {
+      return [];
+    }
+
+    const queryParams = createQueryParams({
+      agencyId,
+    });
+
+    const url = `${ENDPOINTS.AGENCIES.PARTNER_NAMES}?${queryParams.toString()}`;
+
+    // API returns array directly: [{id, name}, ...]
+    const response = await api.get<AgencyPartnerNameItem[]>(url);
+    
+    // Response.data is the array directly
+    const result: AgencyPartnerNameItem[] = Array.isArray(response.data) ? response.data : [];
+    
+    return result;
   },
 };
 

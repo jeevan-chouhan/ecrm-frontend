@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { Button, Select, MultiSelect, DatePicker, IntakeSelector, type SelectOption } from "../../components";
 import {
   applicantStageOptions,
-  agencyPartnerOptions,
 } from "../../constants";
 
 interface ApplicantTrackerFiltersProps {
@@ -11,6 +10,7 @@ interface ApplicantTrackerFiltersProps {
   managerOptions: SelectOption[];
   counselorOptions: SelectOption[];
   universityOptions: SelectOption[];
+  agencyPartnerOptions: SelectOption[];
   selectedAdmin: string;
   selectedManager: string;
   selectedCounselor: string;
@@ -42,6 +42,7 @@ const ApplicantTrackerFilters = ({
   managerOptions,
   counselorOptions,
   universityOptions,
+  agencyPartnerOptions,
   selectedAdmin,
   selectedManager,
   selectedCounselor,
@@ -101,7 +102,7 @@ const ApplicantTrackerFilters = ({
   const agencyPartnerOptionsWithPlaceholder = useMemo(() => [
     { value: "", label: t("applicantTracker.selectAgencyPartner", "Agency Partner") },
     ...agencyPartnerOptions,
-  ], [t]);
+  ], [t, agencyPartnerOptions]);
 
   return (
     <div className="space-y-3">

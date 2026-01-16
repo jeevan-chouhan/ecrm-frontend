@@ -93,31 +93,6 @@ const WorkExperience = ({ initialValues, onUpdate, onSaveAndNext, onBack, applic
     [getWorkExperienceSchema, t]
   );
 
-  // Helper function to check if a work experience has changed compared to original
-  const hasWorkExperienceChanged = useCallback((current: WorkExperienceItem, original: WorkExperienceItem | undefined): boolean => {
-    if (!original) return true; // If no original, consider it changed (new work experience)
-    
-    // Compare all fields
-    const startDateChanged = 
-      (current.startDate === null && original.startDate !== null) ||
-      (current.startDate !== null && original.startDate === null) ||
-      (current.startDate !== null && original.startDate !== null &&
-       current.startDate.getTime() !== original.startDate.getTime());
-    
-    const endDateChanged = 
-      (current.endDate === null && original.endDate !== null) ||
-      (current.endDate !== null && original.endDate === null) ||
-      (current.endDate !== null && original.endDate !== null &&
-       current.endDate.getTime() !== original.endDate.getTime());
-    
-    return (
-      current.companyName !== original.companyName ||
-      current.jobTitle !== original.jobTitle ||
-      current.currentlyWorking !== original.currentlyWorking ||
-      startDateChanged ||
-      endDateChanged
-    );
-  }, []);
 
   const formik = useFormik<WorkExperienceFormData>({
     initialValues,
@@ -196,27 +171,15 @@ const WorkExperience = ({ initialValues, onUpdate, onSaveAndNext, onBack, applic
           return;
         }
 
-        // Separate work experiences into updates (have workExperienceId) and creates (don't have workExperienceId)
+        // Separate work experiences into creates (don't have workExperienceId)
+        // Note: PUT API for existing work experiences is only called from individual work experience card Save button
         const workExperiencesToCreate = savedWorkExperiences.filter((we) => !we.workExperienceId);
-        
-        const workExperiencesToUpdate = savedWorkExperiences.filter((we) => {
-          if (!we.workExperienceId) return false; // Skip if no workExperienceId
-          
-          // Find original work experience by workExperienceId
-          const original = originalWorkExperiencesRef.current.find(
-            (orig) => orig.workExperienceId?.toString() === we.workExperienceId?.toString()
-          );
-          
-          // Only update if work experience has changed
-          return hasWorkExperienceChanged(we, original);
-        });
 
-        // If there are new work experiences to create, always call POST API
-        // If there are updates, call PUT API
-        // Only skip if no new items and no changes
-        if (workExperiencesToUpdate.length === 0 && workExperiencesToCreate.length === 0) {
+        // Only create new work experiences (no workExperienceId)
+        // PUT API is only called from individual work experience card Save button, not from global Save or Save & Next
+        if (workExperiencesToCreate.length === 0) {
           if (import.meta.env.DEV) {
-            console.log("No work experiences to save - all are unchanged or already saved");
+            console.log("No new work experiences to create - all are already saved");
           }
           
           // Mark data as saved
@@ -231,30 +194,6 @@ const WorkExperience = ({ initialValues, onUpdate, onSaveAndNext, onBack, applic
           setIsSaving(false);
           dispatch(hideLoader());
           return;
-        }
-
-        // Update existing work experiences using PUT
-        if (workExperiencesToUpdate.length > 0) {
-          for (const we of workExperiencesToUpdate) {
-            const payload = {
-              isExperienced: true,
-              companyName: we.companyName,
-              jobTitle: we.jobTitle,
-              isCurrentlyWorking: we.currentlyWorking,
-              startDate: we.startDate ? we.startDate.toISOString().split('T')[0] : "",
-              endDate: we.currentlyWorking ? null : (we.endDate ? we.endDate.toISOString().split('T')[0] : null),
-            };
-
-            const response = await applicantService.updateWorkExperience(
-              we.workExperienceId!,
-              applicantId,
-              payload
-            );
-
-            if (response.status !== "success") {
-              throw new Error(response.message || "Failed to update work experience");
-            }
-          }
         }
 
         // Create new work experiences using POST
@@ -300,11 +239,7 @@ const WorkExperience = ({ initialValues, onUpdate, onSaveAndNext, onBack, applic
         }
 
         // Show success toast
-        const successMessage = workExperiencesToUpdate.length > 0 && workExperiencesToCreate.length > 0
-          ? t("applicant.workExperiencesSaved", "Work experiences saved successfully")
-          : workExperiencesToUpdate.length > 0
-          ? t("applicant.workExperiencesUpdated", "Work experiences updated successfully")
-          : t("applicant.workExperiencesSaved", "Work experiences saved successfully");
+        const successMessage = t("applicant.workExperiencesSaved", "Work experiences saved successfully");
 
         dispatch(
           addToast({
