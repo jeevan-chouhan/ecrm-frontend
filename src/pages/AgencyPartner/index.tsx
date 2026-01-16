@@ -204,17 +204,17 @@ const AgencyPartner = () => {
 
   // Memoized columns
   const columns: GridColDef[] = useMemo(() => [
-    {
-      field: "serialNo",
-      headerName: t("agencyPartner.no", "No."),
-      width: 70,
-      sortable: false,
-      renderCell: (params) => {
-        const index = partners.findIndex((p) => p.id === params.row.id);
-        const serialNo = pagination.page * pagination.size + index + 1;
-        return <span style={{ color: COLORS.textMuted }}>{String(serialNo).padStart(2, "0")}</span>;
-      },
-    },
+    // {
+    //   field: "serialNo",
+    //   headerName: t("agencyPartner.no", "No."),
+    //   width: 70,
+    //   sortable: false,
+    //   renderCell: (params) => {
+    //     const index = partners.findIndex((p) => p.id === params.row.id);
+    //     const serialNo = pagination.page * pagination.size + index + 1;
+    //     return <span style={{ color: COLORS.textMuted }}>{String(serialNo).padStart(2, "0")}</span>;
+    //   },
+    // },
     {
       field: "name",
       headerName: t("agencyPartner.agencyPartnerName", "Agency Partner Name"),

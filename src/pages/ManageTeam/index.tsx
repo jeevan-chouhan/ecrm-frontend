@@ -262,6 +262,11 @@ const ManageTeam = () => {
       headerName: t("manageTeam.role", "Role"),
       flex: 0.7,
       minWidth: 100,
+      renderCell: (params) => (
+        <span style={{ color: COLORS.textDark }}>
+          {params.value ? params.value.charAt(0).toUpperCase() + params.value.slice(1).toLowerCase() : ""}
+        </span>
+      ),
     },
     {
       field: "email",
