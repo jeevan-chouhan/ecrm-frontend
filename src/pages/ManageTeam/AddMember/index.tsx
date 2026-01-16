@@ -27,7 +27,6 @@ import { addToast } from "../../../redux/slices/toast/toastSlice";
 export interface AddMemberFormValues {
   name: string;
   email: string;
-  password: string;
   countryCode: string;
   contactNumber: string;
   role: string;
@@ -41,7 +40,6 @@ export interface AddMemberFormValues {
 const defaultInitialValues: AddMemberFormValues = {
   name: "",
   email: "",
-  password: "",
   countryCode: "+91",
   contactNumber: "",
   role: "",
@@ -241,7 +239,6 @@ const AddMember = () => {
       return {
         name: memberData.name || "",
         email: memberData.email || "",
-        password: "", // Password not needed for edit
         countryCode: memberData.countryCode || "+91",
         contactNumber: fullPhone,
         role: memberData.role?.toLowerCase() || "",
@@ -256,8 +253,8 @@ const AddMember = () => {
 
   // Get validation schema based on role
   const getValidationSchema = useCallback((role: string) => {
-    return getTeamMemberSchema(t, { role, isEditMode });
-  }, [isEditMode, t]);
+    return getTeamMemberSchema(t, { role });
+  }, [t]);
 
   // Formik hook
   const formik = useFormik<AddMemberFormValues>({
@@ -331,7 +328,6 @@ const AddMember = () => {
       const payload: AddMemberPayload = {
         name: values.name,
         email: values.email,
-        password: values.password,
         countryCode: values.countryCode,
         contactNumber: phoneNumber,
         role: values.role.toUpperCase(),
@@ -383,16 +379,15 @@ const AddMember = () => {
 
   // Touched fields for validation
   const allTouchedFields: Record<string, boolean> = useMemo(() => ({
-      name: true,
-      email: true,
-    password: true,
+    name: true,
+    email: true,
     countryCode: true,
-      contactNumber: true,
-      role: true,
-      adminId: true,
-      managerId: true,
-      assignedCountries: true,
-      assignedUniversities: true,
+    contactNumber: true,
+    role: true,
+    adminId: true,
+    managerId: true,
+    assignedCountries: true,
+    assignedUniversities: true,
   }), []);
 
   // Handle form submit with touch all fields
@@ -424,7 +419,7 @@ const AddMember = () => {
 
   // Check if all mandatory fields are filled
   const isMandatoryFieldsFilled = useMemo(() => {
-    const { name, email, password, contactNumber, role, adminId, managerId, assignedCountries, assignedUniversities } = formik.values;
+    const { name, email, contactNumber, role, adminId, managerId, assignedCountries, assignedUniversities } = formik.values;
     
     // Base mandatory fields
     const baseFieldsFilled = 
@@ -435,17 +430,14 @@ const AddMember = () => {
       assignedCountries.length > 0 &&
       assignedUniversities.length > 0;
     
-    // Password is mandatory only in add mode
-    const passwordFilled = isEditMode || password.trim() !== "";
-    
     // Admin is mandatory for manager, counselor, billing
     const adminFilled = !showAdminField || adminId !== "";
     
     // Manager is mandatory for counselor
     const managerFilled = !showManagerField || managerId !== "";
     
-    return baseFieldsFilled && passwordFilled && adminFilled && managerFilled;
-  }, [formik.values, isEditMode, showAdminField, showManagerField]);
+    return baseFieldsFilled && adminFilled && managerFilled;
+  }, [formik.values, showAdminField, showManagerField]);
 
   // Validate field error based on current role
   const getAdminError = () => {
@@ -509,21 +501,8 @@ const AddMember = () => {
               />
             </div>
 
-            {/* Row 2: Password, Contact Number */}
+            {/* Row 2: Contact Number, Role */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {!isEditMode && (
-                <Input
-                  name="password"
-                  label={<>{t("manageTeam.password", "Password")} <span style={{ color: COLORS.error }}>*</span></>}
-                  placeholder={t("manageTeam.enterPassword", "Enter Password")}
-                  type="password"
-                  value={formik.values.password}
-                  onChange={formik.handleChange}
-                  error={hasAttemptedSubmit && formik.errors.password ? formik.errors.password : undefined}
-                  showPasswordToggle
-                  fullWidth
-                />
-              )}
               <PhoneInput
                 label={<>{t("manageTeam.contactNumber", "Contact Number")} <span style={{ color: COLORS.error }}>*</span></>}
                 placeholder={t("manageTeam.contactNumber", "Contact Number")}
@@ -538,10 +517,6 @@ const AddMember = () => {
                 error={hasAttemptedSubmit && formik.errors.contactNumber ? formik.errors.contactNumber : undefined}
                 fullWidth
               />
-            </div>
-
-            {/* Row 3: Role and Admin (conditional) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Select
                 label={<>{t("manageTeam.role", "Role")} <span style={{ color: COLORS.error }}>*</span></>}
                 options={filteredRoleOptions}
@@ -551,47 +526,47 @@ const AddMember = () => {
                   formik.setFieldValue("role", value);
                   // Only reset admin/manager when role actually changes (not on initial load)
                   if (previousRole && previousRole !== value) {
-                  formik.setFieldValue("adminId", "");
-                  formik.setFieldValue("managerId", "");
+                    formik.setFieldValue("adminId", "");
+                    formik.setFieldValue("managerId", "");
                   }
                 }}
                 placeholder={t("manageTeam.selectRole", "Select Role")}
                 error={hasAttemptedSubmit && formik.errors.role ? formik.errors.role : undefined}
                 fullWidth
               />
-
-              {/* Show Admin field for Manager, Counselor and Billing roles */}
-              {showAdminField && (
-                <Select
-                  label={<>{t("manageTeam.admin", "Admin")} <span style={{ color: COLORS.error }}>*</span></>}
-                  options={adminOptions}
-                  value={formik.values.adminId}
-                  onChange={(value) => formik.setFieldValue("adminId", value)}
-                  placeholder={isLoadingAdmins ? t("common.loading", "Loading...") : t("manageTeam.selectAdmin", "Select Admin")}
-                  error={getAdminError()}
-                  fullWidth
-                  searchable
-                  disabled={isLoadingAdmins}
-                />
-              )}
             </div>
-              
-            {/* Row 4: Manager (conditional for Counselor) */}
-              {showManagerField && (
+
+            {/* Row 3: Admin and Manager (conditional) */}
+            {(showAdminField || showManagerField) && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Select
-                  label={<>{t("manageTeam.manager", "Manager")} <span style={{ color: COLORS.error }}>*</span></>}
-                  options={managerOptions}
-                  value={formik.values.managerId}
-                  onChange={(value) => formik.setFieldValue("managerId", value)}
-                  placeholder={isLoadingManagers ? t("common.loading", "Loading...") : t("manageTeam.selectManager", "Select Manager")}
-                  error={getManagerError()}
-                  fullWidth
-                  searchable
-                  disabled={isLoadingManagers}
-                />
+                {showAdminField && (
+                  <Select
+                    label={<>{t("manageTeam.admin", "Admin")} <span style={{ color: COLORS.error }}>*</span></>}
+                    options={adminOptions}
+                    value={formik.values.adminId}
+                    onChange={(value) => formik.setFieldValue("adminId", value)}
+                    placeholder={isLoadingAdmins ? t("common.loading", "Loading...") : t("manageTeam.selectAdmin", "Select Admin")}
+                    error={getAdminError()}
+                    fullWidth
+                    searchable
+                    disabled={isLoadingAdmins}
+                  />
+                )}
+                {showManagerField && (
+                  <Select
+                    label={<>{t("manageTeam.manager", "Manager")} <span style={{ color: COLORS.error }}>*</span></>}
+                    options={managerOptions}
+                    value={formik.values.managerId}
+                    onChange={(value) => formik.setFieldValue("managerId", value)}
+                    placeholder={isLoadingManagers ? t("common.loading", "Loading...") : t("manageTeam.selectManager", "Select Manager")}
+                    error={getManagerError()}
+                    fullWidth
+                    searchable
+                    disabled={isLoadingManagers}
+                  />
+                )}
               </div>
-              )}
+            )}
 
             {/* Row 5: Assigned Country and Assigned University */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

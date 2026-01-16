@@ -63,14 +63,13 @@ export const getResetPasswordSchema = (t: TranslationFunction) =>
 // Add/Edit Team Member validation schema
 interface TeamMemberValidationOptions {
   role: string;
-  isEditMode: boolean;
 }
 
 export const getTeamMemberSchema = (
   t: TranslationFunction,
   options: TeamMemberValidationOptions
 ) => {
-  const { role, isEditMode } = options;
+  const { role } = options;
 
   // Base schema fields
   const baseSchema: Record<string, Yup.Schema> = {
@@ -93,17 +92,6 @@ export const getTeamMemberSchema = (
       .min(1, t("validation.universityRequired"))
       .required(t("validation.assignedUniversityRequired")),
   };
-
-  // Add password validation for new members only
-  if (!isEditMode) {
-    baseSchema.password = Yup.string()
-      .min(8, t("validation.passwordMinLength"))
-      .matches(/[A-Z]/, t("validation.passwordUppercase"))
-      .matches(/[a-z]/, t("validation.passwordLowercase"))
-      .matches(/[0-9]/, t("validation.passwordNumber"))
-      .matches(/[@$!%*?&#]/, t("validation.passwordSpecial"))
-      .required(t("validation.passwordRequired"));
-  }
 
   // Role-based validation - add admin/manager requirements
   const roleRequirements: Record<string, Yup.Schema> = {};
