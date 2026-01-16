@@ -1,17 +1,12 @@
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "../../../components";
 import { COLORS, typography } from "../../../constants";
 
 interface NotesSectionProps {
   notes: string;
-  isSaving: boolean;
-  hasChanges: boolean;
-  onNotesChange: (notes: string) => void;
-  onSaveNotes: () => void;
 }
 
-const NotesSection = ({ notes, isSaving, hasChanges, onNotesChange, onSaveNotes }: NotesSectionProps) => {
+const NotesSection = ({ notes }: NotesSectionProps) => {
   const { t } = useTranslation();
 
   return (
@@ -22,30 +17,20 @@ const NotesSection = ({ notes, isSaving, hasChanges, onNotesChange, onSaveNotes 
       >
         {t("applicantTracker.notes", "Notes")}
       </label>
-      <textarea
-        value={notes}
-        onChange={(e) => onNotesChange(e.target.value)}
-        placeholder={t("applicant.enterNotes", "Enter Notes")}
-        className="w-full px-4 py-3 rounded-lg resize-none"
-        rows={4}
+      <div
+        className="w-full px-4 py-3 rounded-lg min-h-[100px] whitespace-pre-wrap"
         style={{
           border: `1px solid ${COLORS.border}`,
           color: COLORS.textDark,
           backgroundColor: COLORS.surface,
           fontSize: typography.fontSize.small,
         }}
-      />
-      <div className="flex justify-end">
-        <Button
-          variant="accent"
-          size="sm"
-          rounded
-          onClick={onSaveNotes}
-          isLoading={isSaving}
-          disabled={isSaving || !hasChanges}
-        >
-          {t("common.submit", "Submit")}
-        </Button>
+      >
+        {notes || (
+          <span style={{ color: COLORS.textMuted }}>
+            {t("applicant.noNotes", "No notes available")}
+          </span>
+        )}
       </div>
     </div>
   );

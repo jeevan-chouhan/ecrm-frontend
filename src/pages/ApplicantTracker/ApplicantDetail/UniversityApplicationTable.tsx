@@ -36,6 +36,18 @@ const UniversityApplicationTable = ({
     </span>
   ), []);
 
+  const renderCountryCell = useCallback((params: GridRenderCellParams) => (
+    <span style={{ color: params.value === "-" ? COLORS.textMuted : COLORS.textDark }}>
+      {params.value || "-"}
+    </span>
+  ), []);
+
+  const renderCounselorCell = useCallback((params: GridRenderCellParams) => (
+    <span style={{ color: params.value === "-" ? COLORS.textMuted : COLORS.textDark }}>
+      {params.value || "-"}
+    </span>
+  ), []);
+
   const renderAgencyPartnerCell = useCallback((params: GridRenderCellParams) => (
     <span style={{ color: params.value === "-" ? COLORS.textMuted : COLORS.textDark }}>
       {params.value}
@@ -74,22 +86,17 @@ const UniversityApplicationTable = ({
     const status = params.value?.toLowerCase() || "";
     const statusLabel = getApplicationStatusLabel(params.value);
     const isOfferReceived = statusLabel.toLowerCase() === "offer received";
-    const isApply = status === "apply" || !params.value || status === "";
+    const isApply = !params.value || status === "" || status === "apply";
     
     if (isApply) {
       return (
         <Button
-          variant="ghost"
+          variant="accent"
           size="sm"
           rounded
           onClick={(e) => {
             e.stopPropagation();
             onApply(params.row);
-          }}
-          style={{
-            backgroundColor: `${COLORS.textMuted}20`,
-            color: COLORS.textMuted,
-            cursor: "pointer",
           }}
         >
           Apply
@@ -165,6 +172,7 @@ const UniversityApplicationTable = ({
       flex: 1,
       minWidth: 100,
       sortable: true,
+      renderCell: renderCountryCell,
     },
     {
       field: "university",
@@ -210,6 +218,7 @@ const UniversityApplicationTable = ({
       flex: 1,
       minWidth: 100,
       sortable: true,
+      renderCell: renderCounselorCell,
     },
     {
       field: "agencyPartner",
@@ -243,7 +252,7 @@ const UniversityApplicationTable = ({
       sortable: false,
       renderCell: renderActionsCell,
     },
-  ], [t, onApply, onUpdateStatus, renderCourseCell, renderAgencyPartnerCell, renderStageCell, renderStatusCell, renderDateCell, renderActionsCell]);
+  ], [t, onApply, onUpdateStatus, renderCourseCell, renderCountryCell, renderCounselorCell, renderAgencyPartnerCell, renderStageCell, renderStatusCell, renderDateCell, renderActionsCell]);
 
   return (
     <div className="space-y-4">

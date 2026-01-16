@@ -42,6 +42,13 @@ const ApplicantPersonalDetails = ({
   const [isSaving, setIsSaving] = useState(false);
   const isSubmittingRef = useRef(false); // Prevent duplicate submissions
 
+  // Set max date to today to disable future dates for date of birth
+  const maxDateOfBirth = useMemo(() => {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999); // Set to end of today
+    return today;
+  }, []);
+
   // Validation schema using Yup with i18n messages (memoized to avoid recreation on every render)
   const validationSchema = useMemo(
     () =>
@@ -385,7 +392,7 @@ const ApplicantPersonalDetails = ({
                   onChange={(date) => formik.setFieldValue("dateOfBirth", date)}
                   placeholder={t("applicant.selectDateOfBirth")}
                   error={formik.touched.dateOfBirth && formik.errors.dateOfBirth ? formik.errors.dateOfBirth : undefined}
-                  maxDate={new Date()} // Disable future dates
+                  maxDate={maxDateOfBirth}
                   fullWidth
                 />
               </div>

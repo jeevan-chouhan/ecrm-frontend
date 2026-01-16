@@ -69,6 +69,13 @@ const ApplicantTrackerFilters = ({
 }: ApplicantTrackerFiltersProps) => {
   const { t } = useTranslation();
 
+  // Set max date to today to disable future dates
+  const maxDate = useMemo(() => {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999); // Set to end of today
+    return today;
+  }, []);
+
   // Memoize options with placeholders to prevent recreation on every render
   const adminOptionsWithPlaceholder = useMemo(() => [
     { value: "", label: t("applicantTracker.selectAdmin", "Select Admin") },
@@ -195,6 +202,7 @@ const ApplicantTrackerFilters = ({
             onChange={onAppliedFromDateChange}
             placeholder={t("applicantTracker.appliedFromDate", "Applied From Date")}
             fullWidth
+            maxDate={maxDate}
           />
         </div>
 
@@ -206,6 +214,7 @@ const ApplicantTrackerFilters = ({
             onChange={onAppliedToDateChange}
             placeholder={t("applicantTracker.appliedToDate", "Applied To Date")}
             fullWidth
+            maxDate={maxDate}
           />
         </div>
 
@@ -217,6 +226,7 @@ const ApplicantTrackerFilters = ({
             onChange={onLastUpdatedFromDateChange}
             placeholder={t("applicantTracker.lastUpdatedFromDate", "Last Updated From Date")}
             fullWidth
+            maxDate={maxDate}
           />
         </div>
 
@@ -228,6 +238,7 @@ const ApplicantTrackerFilters = ({
             onChange={onLastUpdatedToDateChange}
             placeholder={t("applicantTracker.lastUpdatedToDate", "Last Updated To Date")}
             fullWidth
+            maxDate={maxDate}
           />
         </div>
 

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback, startTransition, useRef } from "react";
+import { useState, useEffect, useCallback, startTransition, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { GridPaginationModel } from "@mui/x-data-grid";
@@ -7,7 +7,7 @@ import { COLORS, ROUTES, applicationStatusOptions, mockApplicantDetail } from ".
 import { formatDate, toSlug, handleApiError } from "../../../utils";
 import type { ApplicantDetail, UniversityApplication, ApplicationStatusHistory, PersonalDetails, EducationalDetails, WorkExperienceItem, AchievementItem } from "./types";
 import { applicantService, userService } from "../../../services";
-import type { CompleteDetailsData } from "../../../services";
+import type { CompleteDetailsData, ApplicationListItem } from "../../../services";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { addToast } from "../../../redux/slices/toast/toastSlice";
 import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
@@ -98,6 +98,27 @@ const transformCompleteDetails = (
   };
 };
 
+// Transform API ApplicationListItem to UniversityApplication format
+const transformApplicationListItemToUniversityApplication = (
+  item: ApplicationListItem,
+  index: number
+): UniversityApplication => {
+  return {
+    id: item.preferenceId.toString(),
+    no: index + 1,
+    university: item.universityName || "-",
+    country: item.countryName || "-",
+    course: item.course || "-",
+    applicationStage: item.applicantStage || "-",
+    status: item.applicantStatus || "Apply",
+    intake: item.desiredIntake || "-",
+    counselor: item.counselorName || "-",
+    agencyPartner: item.agencyName || "-",
+    appliedDate: item.appliedDate ? formatDate(new Date(item.appliedDate)) : "",
+    lastUpdated: item.updatedAt ? formatDate(new Date(item.updatedAt)) : "",
+  };
+};
+
 // Type for navigation state from dashboard
 interface NavigationState {
   from?: string;
@@ -150,9 +171,6 @@ const ApplicantDetailView = () => {
     page: 0,
     pageSize: 10,
   });
-  const [notes, setNotes] = useState(() => applicantDataFromDashboard?.notes || "");
-  const [originalNotes, setOriginalNotes] = useState(() => applicantDataFromDashboard?.notes || "");
-  const [isSavingNotes, setIsSavingNotes] = useState(false);
   
   // Status change popup state (for applicant status)
   const [isStatusPopupOpen, setIsStatusPopupOpen] = useState(false);
@@ -184,6 +202,7 @@ const ApplicantDetailView = () => {
   // Track which applicantId has been fetched to prevent duplicate calls
   const fetchedForApplicantId = useRef<string | null>(null);
   const isMountedRef = useRef(true);
+  const fetchedApplicationsForApplicantId = useRef<string | null>(null);
 
   // Set mounted ref
   useEffect(() => {
@@ -192,6 +211,99 @@ const ApplicantDetailView = () => {
       isMountedRef.current = false;
     };
   }, []);
+
+  // Fetch applicant applications
+  const fetchApplicantApplications = useCallback(async (showLoaderFlag = false) => {
+    if (!applicantId || !user?.agencyId) return;
+
+    // Skip if already fetched for this applicantId (unless forced refresh)
+    // Note: We always refetch when pagination changes, so we check paginationModel too
+    if (fetchedApplicationsForApplicantId.current === applicantId && !showLoaderFlag) return;
+    
+    // Mark as fetching for this applicantId
+    fetchedApplicationsForApplicantId.current = applicantId;
+
+    if (showLoaderFlag) {
+      setLoading(true);
+      dispatch(showLoader());
+    }
+
+    try {
+      // Fetch applications list with proper pagination
+      // Note: We filter client-side by applicantId since API doesn't support applicantId filter
+      const response = await applicantService.getApplicationsList({
+        agencyId: user.agencyId,
+        assignedAdminId: null,
+        assignedManagerId: null,
+        assignedCounselorId: null,
+        applicationStatus: null,
+        applicationStage: null,
+        universityId: null,
+        desiredIntake: null,
+        appliedFrom: null,
+        appliedTo: null,
+        updatedFrom: null,
+        updatedTo: null,
+        search: null, // Remove search parameter - not needed
+        page: paginationModel.page,
+        size: paginationModel.pageSize, // Use pagination size from model
+        sortBy: null,
+        asc: null,
+      });
+
+      if (response.status === "success" && response.data) {
+        // Filter applications for this specific applicantId
+        const applicantApplications = response.data.content.filter(
+          (item) => item.applicantId.toString() === applicantId
+        );
+
+        // Transform API response to UniversityApplication format
+        const transformedApplications: UniversityApplication[] = applicantApplications.map(
+          (item, index) => transformApplicationListItemToUniversityApplication(item, index)
+        );
+
+        // Update applicant state with applications
+        setApplicant((prevApplicant) =>
+          prevApplicant
+            ? {
+                ...prevApplicant,
+                applications: transformedApplications,
+              }
+            : null
+        );
+      } else {
+        // If no applications found, set empty array
+        setApplicant((prevApplicant) =>
+          prevApplicant
+            ? {
+                ...prevApplicant,
+                applications: [],
+              }
+            : null
+        );
+      }
+    } catch (error) {
+      // Reset ref on error so it can retry
+      fetchedApplicationsForApplicantId.current = null;
+      const { message } = handleApiError(error, "Failed to fetch applications");
+      dispatch(addToast({ type: "error", message }));
+      
+      // Set empty array on error
+      setApplicant((prevApplicant) =>
+        prevApplicant
+          ? {
+              ...prevApplicant,
+              applications: [],
+            }
+          : null
+      );
+    } finally {
+      if (showLoaderFlag) {
+        setLoading(false);
+        dispatch(hideLoader());
+      }
+    }
+  }, [applicantId, user?.agencyId, dispatch, paginationModel.page, paginationModel.pageSize]);
 
   // Fetch applicant data
   useEffect(() => {
@@ -221,17 +333,14 @@ const ApplicantDetailView = () => {
           // Transform API data to component format
           const transformedData = transformCompleteDetails(response.data, applicantId);
           
-          // Merge with existing applicant data (applications, etc.)
+          // Merge with existing applicant data (applications will be fetched separately)
           setApplicant((prev) => ({
             ...prev,
             ...transformedData,
             applications: prev?.applications || [],
           } as ApplicantDetail));
 
-          // Set notes from fetched data
-          const fetchedNotes = response.data.personalDetails?.notes || "";
-          setNotes(fetchedNotes);
-          setOriginalNotes(fetchedNotes);
+          // Notes are now read-only, stored in applicant state
         } else {
           // Reset ref on error so it can retry
           fetchedForApplicantId.current = null;
@@ -255,16 +364,22 @@ const ApplicantDetailView = () => {
 
     if (applicantId) {
       fetchApplicantDetail();
+      // Fetch applications separately (don't show loader as main fetch already shows it)
+      fetchApplicantApplications(false);
     }
-  }, [applicantId, user?.agencyId, dispatch]);
+  }, [applicantId, user?.agencyId, dispatch, fetchApplicantApplications]);
+
+  // Refetch applications when pagination changes
+  useEffect(() => {
+    if (applicantId && user?.agencyId) {
+      // Reset the ref to allow refetch when pagination changes
+      fetchedApplicationsForApplicantId.current = null;
+      fetchApplicantApplications(false);
+    }
+  }, [paginationModel.page, paginationModel.pageSize, applicantId, user?.agencyId, fetchApplicantApplications]);
 
   // Get applications for table (no need for useMemo - just direct access)
   const filteredApplications = applicant?.applications || [];
-
-  // Check if notes have changed
-  const hasNotesChanged = useMemo(() => {
-    return notes !== originalNotes;
-  }, [notes, originalNotes]);
 
   // Handle back navigation - navigate to dashboard
   const handleBack = useCallback(() => {
@@ -287,11 +402,6 @@ const ApplicantDetailView = () => {
     setPaginationModel(model);
   }, []);
 
-  // Handle notes change
-  const handleNotesChange = useCallback((newNotes: string) => {
-    setNotes(newNotes);
-  }, []);
-
   // Handle update application status - open popup for specific application
   const handleUpdateApplicationStatus = useCallback((application: UniversityApplication) => {
     setSelectedApplication(application);
@@ -309,58 +419,54 @@ const ApplicantDetailView = () => {
 
   // Handle confirm application status change
   const handleConfirmApplicationStatusChange = useCallback(async () => {
-    if (!selectedApplication || !applicant || !newApplicationStatus) return;
+    if (!selectedApplication || !applicant || !applicantId || !newApplicationStatus) return;
 
     setIsChangingApplicationStatus(true);
+    dispatch(showLoader());
 
     try {
-      // TODO: Replace with actual API call
-      // const response = await updateApplicationStatus(selectedApplication.id, {
-      //   status: newApplicationStatus,
-      //   notes: applicationNotes,
-      //   notifyStudent,
-      // });
-      
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Call Update Application Status API
+      const response = await applicantService.updateApplicationStatus({
+        applicantId: parseInt(applicantId),
+        applicationPrefId: parseInt(selectedApplication.id), // id is preferenceId
+        applicationStatus: newApplicationStatus,
+        notes: applicationNotes || "",
+        isMailSendToStudent: notifyStudent,
+      });
 
-      // Get the label for the status value
-      const statusLabel = applicationStatusOptions.find(
-        (opt) => opt.value === newApplicationStatus
-      )?.label || newApplicationStatus;
+      if (response.status === "success") {
+        // Show success toast
+        dispatch(
+          addToast({
+            type: "success",
+            message: response.message || t("applicantDetailView.statusUpdateSuccess", "Application status updated successfully"),
+          })
+        );
 
-      // Update the application in the state
-      setApplicant((prevApplicant) =>
-        prevApplicant
-          ? {
-              ...prevApplicant,
-              applications: prevApplicant.applications.map((app) =>
-                app.id === selectedApplication.id
-                  ? { 
-                      ...app, 
-                      status: statusLabel, 
-                      lastUpdated: formatDate(new Date())
-                    }
-                  : app
-              ),
-            }
-          : null
-      );
+        // Refetch applications to get updated data
+        fetchedApplicationsForApplicantId.current = null; // Reset to allow refetch
+        await fetchApplicantApplications(false); // Don't show loader as we're already showing it
 
-      setIsApplicationStatusPopupOpen(false);
-      setSelectedApplication(null);
-      setNewApplicationStatus("");
-      setApplicationNotes("");
-      setNotifyStudent(true);
-    } catch (error) {
+        // Batch popup state cleanup
+        setIsApplicationStatusPopupOpen(false);
+        setSelectedApplication(null);
+        setNewApplicationStatus("");
+        setApplicationNotes("");
+        setNotifyStudent(true);
+      } else {
+        throw new Error(response.message || "Failed to update application status");
+      }
+    } catch (error: any) {
+      const { message } = handleApiError(error, "Failed to update application status");
+      dispatch(addToast({ type: "error", message }));
       if (import.meta.env.DEV) {
         console.error("Error changing application status:", error);
       }
-      // TODO: Show error toast notification
     } finally {
       setIsChangingApplicationStatus(false);
+      dispatch(hideLoader());
     }
-  }, [selectedApplication, applicant, newApplicationStatus, applicationNotes, notifyStudent]);
+  }, [selectedApplication, applicant, applicantId, newApplicationStatus, applicationNotes, notifyStudent, dispatch, t, fetchApplicantApplications]);
 
   // Handle cancel application status change
   const handleCancelApplicationStatusChange = useCallback(() => {
@@ -373,107 +479,54 @@ const ApplicantDetailView = () => {
 
   // Handle confirm apply - update status to Application Submitted
   const handleConfirmApply = useCallback(async () => {
-    if (!applicationToApply || !applicant) return;
+    if (!applicationToApply || !applicantId) return;
 
     setIsApplying(true);
+    dispatch(showLoader());
 
     try {
-      const currentDate = formatDate(new Date());
-      const newStatus = "Application Submitted";
+      // Call Apply API
+      const response = await applicantService.applyApplication({
+        applicantId: parseInt(applicantId),
+        applicationPrefId: parseInt(applicationToApply.id), // id is preferenceId
+      });
 
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/applications/${applicationToApply.id}/apply`, {
-      //   method: "PUT",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({
-      //     status: newStatus,
-      //     appliedDate: currentDate,
-      //   }),
-      // });
-      // if (!response.ok) throw new Error("Failed to apply");
+      if (response.status === "success" && response.data) {
+        // Show success toast
+        dispatch(
+          addToast({
+            type: "success",
+            message: response.message || t("applicantDetailView.applySuccess", "Application applied successfully"),
+          })
+        );
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+        // Refetch applications to get updated data
+        fetchedApplicationsForApplicantId.current = null; // Reset to allow refetch
+        await fetchApplicantApplications(false); // Don't show loader as we're already showing it
 
-      // Update the application in the state
-      setApplicant((prevApplicant) =>
-        prevApplicant
-          ? {
-              ...prevApplicant,
-              applications: prevApplicant.applications.map((app) =>
-                app.id === applicationToApply.id
-                  ? {
-                      ...app,
-                      status: newStatus,
-                      appliedDate: currentDate,
-                      lastUpdated: currentDate,
-                    }
-                  : app
-              ),
-            }
-          : null
-      );
-
-      setIsApplyConfirmationOpen(false);
-      setApplicationToApply(null);
-    } catch (error) {
+        // Batch popup state cleanup
+        setIsApplyConfirmationOpen(false);
+        setApplicationToApply(null);
+      } else {
+        throw new Error(response.message || "Failed to apply application");
+      }
+    } catch (error: any) {
+      const { message } = handleApiError(error, "Failed to apply application");
+      dispatch(addToast({ type: "error", message }));
       if (import.meta.env.DEV) {
         console.error("Error applying for application:", error);
       }
-      // TODO: Show error toast notification
     } finally {
       setIsApplying(false);
+      dispatch(hideLoader());
     }
-  }, [applicationToApply, applicant]);
+  }, [applicationToApply, applicantId, dispatch, t, fetchApplicantApplications]);
 
   // Handle cancel apply
   const handleCancelApply = useCallback(() => {
     setIsApplyConfirmationOpen(false);
     setApplicationToApply(null);
   }, []);
-
-
-  // Handle save notes
-  const handleSaveNotes = useCallback(async () => {
-    if (!applicantId) return;
-
-    setIsSavingNotes(true);
-    try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/applicants/${applicantId}/notes`, {
-      //   method: "PUT",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ notes }),
-      // });
-      // if (!response.ok) throw new Error("Failed to save notes");
-      // const data = await response.json();
-      
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      
-      // Update applicant state with new notes
-      setApplicant((prevApplicant) =>
-        prevApplicant
-          ? { ...prevApplicant, notes }
-          : null
-      );
-      
-      // Update original notes after successful save
-      setOriginalNotes(notes);
-      
-          // TODO: Show success toast notification
-          if (import.meta.env.DEV) {
-            console.log("Notes saved successfully:", notes);
-          }
-    } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error("Error saving notes:", error);
-        }
-      // TODO: Show error toast notification
-    } finally {
-      setIsSavingNotes(false);
-    }
-  }, [applicantId, notes]);
 
   // Handle status toggle - open confirmation popup
   const handleStatusToggle = useCallback(() => {
@@ -661,11 +714,7 @@ const ApplicantDetailView = () => {
 
         {/* Notes Section */}
         <NotesSection
-          notes={notes}
-          isSaving={isSavingNotes}
-          hasChanges={hasNotesChanged}
-          onNotesChange={handleNotesChange}
-          onSaveNotes={handleSaveNotes}
+          notes={applicant?.notes || displayApplicant.notes || ""}
         />
 
         {/* Applicant Status Change Confirmation Popup */}

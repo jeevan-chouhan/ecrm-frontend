@@ -51,6 +51,14 @@ const ApplicantTracker = () => {
   const [appliedAdmin, setAppliedAdmin] = useState("");
   const [appliedManager, setAppliedManager] = useState("");
   const [appliedCounselor, setAppliedCounselor] = useState("");
+  const [appliedApplicationStage, setAppliedApplicationStage] = useState<string>("");
+  const [appliedApplicationStatus, setAppliedApplicationStatus] = useState<string>("");
+  const [appliedUniversity, setAppliedUniversity] = useState<string>("");
+  const [appliedIntake, setAppliedIntake] = useState<string>("");
+  const [appliedAppliedFromDate, setAppliedAppliedFromDate] = useState<Date | null>(null);
+  const [appliedAppliedToDate, setAppliedAppliedToDate] = useState<Date | null>(null);
+  const [appliedLastUpdatedFromDate, setAppliedLastUpdatedFromDate] = useState<Date | null>(null);
+  const [appliedLastUpdatedToDate, setAppliedLastUpdatedToDate] = useState<Date | null>(null);
 
   // Filter options from API
   const [adminOptions, setAdminOptions] = useState<SelectOption[]>([]);
@@ -88,6 +96,38 @@ const ApplicantTracker = () => {
   }, []);
 
   /**
+   * Format date to ISO DATE_TIME format (YYYY-MM-DDTHH:mm:ss) for appliedFrom/appliedTo
+   * Backend expects LocalDateTime, so we send full datetime with time set to 00:00:00
+   */
+  const formatDateToISO = useCallback((date: Date | null): string | null => {
+    if (!date) return null;
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0); // Set to start of day
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    const seconds = String(d.getSeconds()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  }, []);
+
+  /**
+   * Format date to ISO DATE_TIME format (YYYY-MM-DDTHH:mm:ss) for updatedFrom/updatedTo
+   */
+  const formatDateToISODateTime = useCallback((date: Date | null): string | null => {
+    if (!date) return null;
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    const seconds = String(d.getSeconds()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  }, []);
+
+  /**
    * Fetch applications from API
    */
   const fetchApplications = useCallback(async () => {
@@ -107,16 +147,37 @@ const ApplicantTracker = () => {
       const assignedManagerIdValue = appliedManager ? parseInt(appliedManager) : null;
       const assignedCounselorIdValue = appliedCounselor ? parseInt(appliedCounselor) : null;
 
+      // Format dates for API
+      const appliedFromFormatted = formatDateToISO(appliedAppliedFromDate);
+      const appliedToFormatted = formatDateToISO(appliedAppliedToDate);
+      const updatedFromFormatted = formatDateToISODateTime(appliedLastUpdatedFromDate);
+      const updatedToFormatted = formatDateToISODateTime(appliedLastUpdatedToDate);
+
+      // Get applicationStage - backend expects single value, take first from array if multiple selected
+      const applicationStageValue = appliedApplicationStage || null;
+
+      // Get universityId and desiredIntake values
+      const universityIdValue = appliedUniversity ? parseInt(appliedUniversity) : null;
+      const desiredIntakeValue = appliedIntake || null;
+
       const response = await applicantService.getApplicationsList({
         agencyId: currentUser.agencyId ?? null,
         assignedAdminId: assignedAdminIdValue,
         assignedManagerId: assignedManagerIdValue,
         assignedCounselorId: assignedCounselorIdValue,
+        applicationStatus: appliedApplicationStatus || null,
+        applicationStage: applicationStageValue,
+        universityId: universityIdValue,
+        desiredIntake: desiredIntakeValue,
+        appliedFrom: appliedFromFormatted,
+        appliedTo: appliedToFormatted,
+        updatedFrom: updatedFromFormatted,
+        updatedTo: updatedToFormatted,
         search: searchQuery || null,
         page: paginationModel.page,
         size: paginationModel.pageSize,
-        sortBy: null, // TODO: Add sorting support
-        asc: null,
+        sortBy: "id", // Default sort by id
+        asc: true, // Default ascending
       });
 
       if (response.status === "success" && response.data) {
@@ -146,6 +207,16 @@ const ApplicantTracker = () => {
     appliedAdmin,
     appliedManager,
     appliedCounselor,
+    appliedApplicationStatus,
+    appliedApplicationStage,
+    appliedUniversity,
+    appliedIntake,
+    appliedAppliedFromDate,
+    appliedAppliedToDate,
+    appliedLastUpdatedFromDate,
+    appliedLastUpdatedToDate,
+    formatDateToISO,
+    formatDateToISODateTime,
   ]);
 
   // Debounced search effect
@@ -268,16 +339,6 @@ const ApplicantTracker = () => {
   const [lastUpdatedFromDate, setLastUpdatedFromDate] = useState<Date | null>(null);
   const [lastUpdatedToDate, setLastUpdatedToDate] = useState<Date | null>(null);
 
-  // Applied filter states (used for API calls and filtering) - additional filters
-  // These are kept for future API integration when backend supports these filters
-  const [_appliedUniversity, setAppliedUniversity] = useState("");
-  const [_appliedApplicantStages, setAppliedApplicantStages] = useState<string[]>([]);
-  const [_appliedIntake, setAppliedIntake] = useState("");
-  const [_appliedAgencyPartner, setAppliedAgencyPartner] = useState("");
-  const [_appliedAppliedFromDate, setAppliedAppliedFromDate] = useState<Date | null>(null);
-  const [_appliedAppliedToDate, setAppliedAppliedToDate] = useState<Date | null>(null);
-  const [_appliedLastUpdatedFromDate, setAppliedLastUpdatedFromDate] = useState<Date | null>(null);
-  const [_appliedLastUpdatedToDate, setAppliedLastUpdatedToDate] = useState<Date | null>(null);
 
   // Total count comes from API response
 
@@ -378,7 +439,7 @@ const ApplicantTracker = () => {
     if (user) {
       fetchApplications();
     }
-  }, [user, paginationModel.page, paginationModel.pageSize, appliedAdmin, appliedManager, appliedCounselor, fetchApplications]);
+  }, [user, paginationModel.page, paginationModel.pageSize, appliedAdmin, appliedManager, appliedCounselor, appliedApplicationStatus, appliedApplicationStage, appliedUniversity, appliedIntake, appliedAppliedFromDate, appliedAppliedToDate, appliedLastUpdatedFromDate, appliedLastUpdatedToDate, fetchApplications]);
 
   // Application status change popup state (reusing from University Application Summary)
   const [isApplicationStatusPopupOpen, setIsApplicationStatusPopupOpen] = useState(false);
@@ -414,10 +475,13 @@ const ApplicantTracker = () => {
     setAppliedAdmin(selectedAdmin);
     setAppliedManager(selectedManager);
     setAppliedCounselor(selectedCounselor);
+    // Backend expects single applicationStage value, take first from array if multiple selected
+    setAppliedApplicationStage(selectedApplicantStages.length > 0 ? selectedApplicantStages[0] : "");
+    // Note: applicationStatus filter is not in UI yet, keeping empty for now
+    setAppliedApplicationStatus("");
+    // Store university and intake to trigger API call (even if backend doesn't support them yet)
     setAppliedUniversity(selectedUniversity);
-    setAppliedApplicantStages(selectedApplicantStages);
     setAppliedIntake(selectedIntake);
-    setAppliedAgencyPartner(selectedAgencyPartner);
     setAppliedAppliedFromDate(appliedFromDate);
     setAppliedAppliedToDate(appliedToDate);
     setAppliedLastUpdatedFromDate(lastUpdatedFromDate);
@@ -426,9 +490,9 @@ const ApplicantTracker = () => {
     // Reset pagination to first page - use functional update
     setPaginationModel((prev) => ({ page: 0, pageSize: prev.pageSize }));
 
-    // Note: fetchApplications will be triggered by the useEffect that watches appliedAdmin, appliedManager, appliedCounselor
+    // Note: fetchApplications will be triggered by the useEffect that watches applied filters
     // No need to call it explicitly here as it will be called automatically when state updates
-  }, [selectedAdmin, selectedManager, selectedCounselor, selectedUniversity, selectedApplicantStages, selectedIntake, selectedAgencyPartner, appliedFromDate, appliedToDate, lastUpdatedFromDate, lastUpdatedToDate]);
+  }, [selectedAdmin, selectedManager, selectedCounselor, selectedApplicantStages, selectedUniversity, selectedIntake, appliedFromDate, appliedToDate, lastUpdatedFromDate, lastUpdatedToDate]);
 
   // Handle clear filters
   const handleClearFilters = useCallback(() => {
@@ -449,10 +513,10 @@ const ApplicantTracker = () => {
     setAppliedAdmin("");
     setAppliedManager("");
     setAppliedCounselor("");
+    setAppliedApplicationStage("");
+    setAppliedApplicationStatus("");
     setAppliedUniversity("");
-    setAppliedApplicantStages([]);
     setAppliedIntake("");
-    setAppliedAgencyPartner("");
     setAppliedAppliedFromDate(null);
     setAppliedAppliedToDate(null);
     setAppliedLastUpdatedFromDate(null);
@@ -461,7 +525,7 @@ const ApplicantTracker = () => {
     // Reset pagination - use functional update
     setPaginationModel((prev) => ({ page: 0, pageSize: prev.pageSize }));
 
-    // Note: fetchApplications will be triggered by the useEffect that watches appliedAdmin, appliedManager, appliedCounselor
+    // Note: fetchApplications will be triggered by the useEffect that watches applied filters
   }, []);
 
   // Handle search with debounce (SearchBar handles this internally)
@@ -756,17 +820,12 @@ const ApplicantTracker = () => {
     if (isApply) {
       return (
         <Button
-          variant="ghost"
+          variant="accent"
           size="sm"
           rounded
           onClick={(e) => {
             e.stopPropagation();
             handleApplyClick(params.row);
-          }}
-          style={{
-            backgroundColor: `${COLORS.textMuted}20`,
-            color: COLORS.textMuted,
-            cursor: "pointer",
           }}
         >
           Apply
