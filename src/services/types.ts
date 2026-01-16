@@ -267,7 +267,6 @@ export type UserDetailsResponse = ApiResponse<UserDetailsData>;
 export interface AddMemberPayload {
   name: string;
   email: string;
-  password: string;
   countryCode: string;
   contactNumber: string;
   role: string;

@@ -27,7 +27,7 @@ export const useFilteredRoleOptions = (): SelectOption[] => {
     } else if (loggedInUser.isAdmin) {
       // Admin can create: Manager, Counselor, Billing
       return roleOptions.filter(option => 
-        ["manager", "counselor", "billing"].includes(option.value)
+        ["admin", "manager", "counselor", "billing"].includes(option.value)
       );
     } else if (loggedInUser.isManager) {
       // Manager can create: Counselor, Billing

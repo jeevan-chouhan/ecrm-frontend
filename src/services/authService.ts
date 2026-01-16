@@ -1,6 +1,6 @@
 import api from "./api";
 import { ENDPOINTS } from "./endpoints";
-import { decodeToken, isTokenExpired } from "../utils";
+import { decodeToken, isTokenExpired, encrypt } from "../utils";
 import type {
   LoginPayload,
   LoginResponse,
@@ -17,7 +17,12 @@ import type {
 const authService = {
   // Login API - Returns response, tokens are saved via Redux slice
   login: async (payload: LoginPayload): Promise<LoginResponse> => {
-    const response = await api.post<LoginResponse>(ENDPOINTS.AUTH.LOGIN, payload);
+    // Encrypt email and password before sending
+    const encryptedPayload = {
+      email: await encrypt(payload.email),
+      password: await encrypt(payload.password),
+    };
+    const response = await api.post<LoginResponse>(ENDPOINTS.AUTH.LOGIN, encryptedPayload);
     return response.data;
   },
 
