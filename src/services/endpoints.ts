@@ -32,6 +32,7 @@ export const ENDPOINTS = {
     ADMINS: "/agencies/admins",
     MANAGERS: "/agencies/managers",
     COUNSELORS: "/agencies/counselors",
+    COUNSELORS_BY_COUNTRY: "/agencies/counselors-by-country",
     PARTNERS: "/agencies/partners",
     PARTNERS_LIST: "/agencies/partnersList",
     PARTNER_NAMES: "/agencies/agency-partner-name",

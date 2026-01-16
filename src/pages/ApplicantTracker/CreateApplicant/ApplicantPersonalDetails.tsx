@@ -304,6 +304,20 @@ const ApplicantPersonalDetails = ({
   const handleSave = useCallback(async () => {
     if (isSaving || isSubmittingRef.current) return;
     
+    // Check if data has changed before making API call
+    if (!hasDataChanged) {
+      if (import.meta.env.DEV) {
+        console.log("No changes detected. Skipping API call for Save.");
+      }
+      dispatch(
+        addToast({
+          type: "success",
+          message: t("applicant.personalDetailsSaved", "Personal details already saved"),
+        })
+      );
+      return;
+    }
+    
     setShouldNavigateNext(false);
     // Validate form before submitting
     const isValid = await validateAndMarkTouched();
@@ -317,10 +331,23 @@ const ApplicantPersonalDetails = ({
         })
       );
     }
-  }, [isSaving, validateAndMarkTouched, formik, dispatch, t]);
+  }, [isSaving, hasDataChanged, validateAndMarkTouched, formik, dispatch, t]);
 
   const handleSaveAndNext = useCallback(async () => {
     if (isSaving || isSubmittingRef.current) return;
+    
+    // Check if data has changed before making API call
+    // If no changes, just navigate to next step without API call
+    if (!hasDataChanged) {
+      if (import.meta.env.DEV) {
+        console.log("No changes detected. Skipping API call for Save & Next.");
+      }
+      // Navigate to next step without API call
+      if (onSaveAndNext) {
+        onSaveAndNext();
+      }
+      return;
+    }
     
     // Validate form before submitting
     const isValid = await validateAndMarkTouched();
@@ -335,7 +362,7 @@ const ApplicantPersonalDetails = ({
         })
       );
     }
-  }, [isSaving, validateAndMarkTouched, formik, dispatch, t]);
+  }, [isSaving, hasDataChanged, validateAndMarkTouched, formik, dispatch, t, onSaveAndNext]);
 
   return (
     <div className="space-y-6">

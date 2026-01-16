@@ -85,24 +85,6 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
     return documentJson;
   }, []);
 
-  // Helper function to check if an achievement has changed compared to original
-  const hasAchievementChanged = useCallback((current: AchievementItem, original: AchievementItem | undefined): boolean => {
-    if (!original) return true; // If no original, consider it changed (new achievement)
-    
-    // Compare documents by name and size instead of reference
-    const documentsChanged = 
-      (current.documents === null && original.documents !== null) ||
-      (current.documents !== null && original.documents === null) ||
-      (current.documents !== null && original.documents !== null && 
-       (current.documents.name !== original.documents.name || 
-        current.documents.size !== original.documents.size));
-    
-    return (
-      current.category !== original.category ||
-      current.description !== original.description ||
-      documentsChanged
-    );
-  }, []);
 
   const formik = useFormik<AchievementFormData>({
     initialValues,
@@ -181,27 +163,15 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
           return;
         }
 
-        // Separate achievements into updates (have achievementId) and creates (don't have achievementId)
+        // Separate achievements into creates (don't have achievementId)
+        // Note: PUT API for existing achievements is only called from individual achievement card Save button
         const achievementsToCreate = savedAchievements.filter((a) => !a.achievementId);
-        
-        const achievementsToUpdate = savedAchievements.filter((a) => {
-          if (!a.achievementId) return false; // Skip if no achievementId
-          
-          // Find original achievement by achievementId
-          const original = originalAchievementsRef.current.find(
-            (orig) => orig.achievementId?.toString() === a.achievementId?.toString()
-          );
-          
-          // Only update if achievement has changed
-          return hasAchievementChanged(a, original);
-        });
 
-        // If there are new achievements to create, always call POST API
-        // If there are updates, call PUT API
-        // Only skip if no new items and no changes
-        if (achievementsToUpdate.length === 0 && achievementsToCreate.length === 0) {
+        // Only create new achievements (no achievementId)
+        // PUT API is only called from individual achievement card Save button, not from global Save or Submit
+        if (achievementsToCreate.length === 0) {
           if (import.meta.env.DEV) {
-            console.log("No achievements to save - all are unchanged or already saved");
+            console.log("No new achievements to create - all are already saved");
           }
           
           // Mark data as saved
@@ -216,30 +186,6 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
           setIsSaving(false);
           dispatch(hideLoader());
           return;
-        }
-
-        // Update existing achievements using PUT
-        if (achievementsToUpdate.length > 0) {
-          for (const a of achievementsToUpdate) {
-            const documentJson = await convertFileToDocumentFormat(a.documents);
-            
-            const payload = {
-              isAchievements: true,
-              category: a.category,
-              description: a.description,
-              document: documentJson,
-            };
-
-            const response = await applicantService.updateAchievement(
-              a.achievementId!,
-              applicantId,
-              payload
-            );
-
-            if (response.status !== "success") {
-              throw new Error(response.message || "Failed to update achievement");
-            }
-          }
         }
 
         // Create new achievements using POST
@@ -289,11 +235,7 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
         }
 
         // Show success toast
-        const successMessage = achievementsToUpdate.length > 0 && achievementsToCreate.length > 0
-          ? t("applicant.achievementsSaved", "Achievements saved successfully")
-          : achievementsToUpdate.length > 0
-          ? t("applicant.achievementsUpdated", "Achievements updated successfully")
-          : t("applicant.achievementsSaved", "Achievements saved successfully");
+        const successMessage = t("applicant.achievementsSaved", "Achievements saved successfully");
 
         dispatch(
           addToast({

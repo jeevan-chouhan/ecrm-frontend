@@ -149,8 +149,6 @@ const CreateApplicant = () => {
         const data = response.data;
         
         // Map API response to PersonalDetailsFormData
-        // Note: API response doesn't include countryCode, permanentAddress, or notes
-        // These will need to be handled separately or stored differently
         const personalDetails: PersonalDetailsFormData = {
           profilePhoto: null, // Profile photo would need separate handling if URL is returned
           enrollmentType: data.enrollmentType || "",
@@ -160,8 +158,8 @@ const CreateApplicant = () => {
           countryCode: data.countryCode || "",
           contactNumber: data.contactNumber || "",
           emailId: data.email || "",
-          permanentAddress: "", // Not in API response
-          notes: "", // Not in API response
+          permanentAddress: data.permanentAddress || "",
+          notes: data.notes || "",
         };
 
         // Update form state with fetched data

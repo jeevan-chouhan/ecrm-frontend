@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Button } from "../../../components";
-import { COLORS, programs, agencyPartners } from "../../../constants";
+import { COLORS, programs } from "../../../constants";
 import { Edit, Trash } from "../../../assets";
 import { useTranslation } from "react-i18next";
 import PreferenceForm from "./PreferenceForm";
@@ -51,6 +51,7 @@ interface PreferenceCardProps {
   campusOptions?: SelectOption[]; // Campuses from API (filtered by university)
   courseOptions?: SelectOption[]; // Courses from API (filtered by campus and course type)
   counselorOptions?: SelectOption[]; // Counselors from API (filtered by user role)
+  agencyPartnerOptions?: SelectOption[]; // Agency partners from API
 }
 
 const PreferenceCard = ({
@@ -68,6 +69,7 @@ const PreferenceCard = ({
   campusOptions = [], // Default to empty array if not provided
   courseOptions = [], // Default to empty array if not provided
   counselorOptions = [], // Default to empty array if not provided
+  agencyPartnerOptions = [], // Default to empty array if not provided
 }: PreferenceCardProps) => {
   const { t } = useTranslation();
 
@@ -80,7 +82,7 @@ const PreferenceCard = ({
     course: courseOptions.find((c) => c.value === preference.course)?.label || preference.course,
     intake: formatIntakeDisplay(preference.desiredIntake),
     counselor: counselorOptions.find((c) => c.value === preference.assignCounselor)?.label || preference.assignCounselor,
-    agency: agencyPartners.find((a) => a.value === preference.agencyPartnerName)?.label || preference.agencyPartnerName,
+    agency: agencyPartnerOptions.find((a) => a.value === preference.agencyPartnerName)?.label || preference.agencyPartnerName,
   }), [
     preference.desiredCountry,
     preference.program,
@@ -95,6 +97,7 @@ const PreferenceCard = ({
     campusOptions,
     courseOptions,
     counselorOptions,
+    agencyPartnerOptions,
   ]);
 
   if (isEditing) {
@@ -115,6 +118,7 @@ const PreferenceCard = ({
           campusOptions={campusOptions}
           courseOptions={courseOptions}
           counselorOptions={counselorOptions}
+          agencyPartnerOptions={agencyPartnerOptions}
         />
         <div className="flex gap-2 mt-4 justify-end">
           <Button

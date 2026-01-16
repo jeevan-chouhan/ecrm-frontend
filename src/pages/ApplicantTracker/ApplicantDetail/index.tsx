@@ -113,7 +113,7 @@ const transformApplicationListItemToUniversityApplication = (
     status: item.applicantStatus || "Apply",
     intake: item.desiredIntake || "-",
     counselor: item.counselorName || "-",
-    agencyPartner: item.agencyName || "-",
+    agencyPartner: item.agencyPartnerName || item.agencyName || "-",
     appliedDate: item.appliedDate ? formatDate(new Date(item.appliedDate)) : "",
     lastUpdated: item.updatedAt ? formatDate(new Date(item.updatedAt)) : "",
   };
@@ -203,6 +203,8 @@ const ApplicantDetailView = () => {
   const fetchedForApplicantId = useRef<string | null>(null);
   const isMountedRef = useRef(true);
   const fetchedApplicationsForApplicantId = useRef<string | null>(null);
+  const hasFetchedApplicationsOnMountRef = useRef(false);
+  const lastPaginationRef = useRef({ page: paginationModel.page, pageSize: paginationModel.pageSize });
 
   // Set mounted ref
   useEffect(() => {
@@ -229,22 +231,23 @@ const ApplicantDetailView = () => {
     }
 
     try {
-      // Fetch applications list with proper pagination
-      // Note: We filter client-side by applicantId since API doesn't support applicantId filter
+      // Fetch applications list with proper pagination and applicantId filter
       const response = await applicantService.getApplicationsList({
         agencyId: user.agencyId,
-        assignedAdminId: null,
+        applicantId: parseInt(applicantId), // Send applicantId as query parameter
+        assignedAdminId: null, // Not sending assignedAdminId for University Application Summary table
         assignedManagerId: null,
         assignedCounselorId: null,
         applicationStatus: null,
         applicationStage: null,
         universityId: null,
         desiredIntake: null,
+        agencyPartnerId: null,
         appliedFrom: null,
         appliedTo: null,
         updatedFrom: null,
         updatedTo: null,
-        search: null, // Remove search parameter - not needed
+        search: null,
         page: paginationModel.page,
         size: paginationModel.pageSize, // Use pagination size from model
         sortBy: null,
@@ -252,10 +255,8 @@ const ApplicantDetailView = () => {
       });
 
       if (response.status === "success" && response.data) {
-        // Filter applications for this specific applicantId
-        const applicantApplications = response.data.content.filter(
-          (item) => item.applicantId.toString() === applicantId
-        );
+        // No need to filter client-side since API now filters by applicantId
+        const applicantApplications = response.data.content;
 
         // Transform API response to UniversityApplication format
         const transformedApplications: UniversityApplication[] = applicantApplications.map(
@@ -315,6 +316,9 @@ const ApplicantDetailView = () => {
       
       // Mark as fetching for this applicantId
       fetchedForApplicantId.current = applicantId;
+      // Reset applications fetch flag when applicantId changes
+      hasFetchedApplicationsOnMountRef.current = false;
+      fetchedApplicationsForApplicantId.current = null;
 
       setLoading(true);
       dispatch(showLoader());
@@ -364,19 +368,32 @@ const ApplicantDetailView = () => {
 
     if (applicantId) {
       fetchApplicantDetail();
-      // Fetch applications separately (don't show loader as main fetch already shows it)
-      fetchApplicantApplications(false);
+      // Fetch applications only once when applicantId changes (not on pagination change)
+      if (!hasFetchedApplicationsOnMountRef.current) {
+        hasFetchedApplicationsOnMountRef.current = true;
+        fetchApplicantApplications(false);
+      }
     }
-  }, [applicantId, user?.agencyId, dispatch, fetchApplicantApplications]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [applicantId, user?.agencyId, dispatch]);
 
-  // Refetch applications when pagination changes
+  // Refetch applications when pagination changes (but not on initial mount or applicantId change)
   useEffect(() => {
-    if (applicantId && user?.agencyId) {
-      // Reset the ref to allow refetch when pagination changes
-      fetchedApplicationsForApplicantId.current = null;
-      fetchApplicantApplications(false);
+    if (applicantId && user?.agencyId && hasFetchedApplicationsOnMountRef.current) {
+      // Check if pagination actually changed
+      const paginationChanged = 
+        lastPaginationRef.current.page !== paginationModel.page || 
+        lastPaginationRef.current.pageSize !== paginationModel.pageSize;
+      
+      if (paginationChanged) {
+        // Reset the ref to allow refetch when pagination changes
+        fetchedApplicationsForApplicantId.current = null;
+        lastPaginationRef.current = { page: paginationModel.page, pageSize: paginationModel.pageSize };
+        fetchApplicantApplications(false);
+      }
     }
-  }, [paginationModel.page, paginationModel.pageSize, applicantId, user?.agencyId, fetchApplicantApplications]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paginationModel.page, paginationModel.pageSize, applicantId, user?.agencyId]);
 
   // Get applications for table (no need for useMemo - just direct access)
   const filteredApplications = applicant?.applications || [];
