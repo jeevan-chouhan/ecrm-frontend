@@ -76,28 +76,33 @@ const buildApplicationsListQueryParams = (
     appendQueryParam(queryParams, "assignedCounselorId", params.assignedCounselorId);
   }
 
-  // 3. Search and text filters (skip empty strings)
+  // 3. Application status and stage filters
+  appendQueryParam(queryParams, "applicationStatus", params.applicationStatus, { skipEmptyString: true });
+  appendQueryParam(queryParams, "applicationStage", params.applicationStage, { skipEmptyString: true });
+
+  // 4. University and intake filters
+  appendQueryParam(queryParams, "universityId", params.universityId);
+  appendQueryParam(queryParams, "desiredIntake", params.desiredIntake, { skipEmptyString: true });
+
+  // 5. Date filters - format dates according to backend requirements
+  // appliedFrom and appliedTo use ISO DATE_TIME format (YYYY-MM-DDTHH:mm:ss)
+  appendQueryParam(queryParams, "appliedFrom", params.appliedFrom, { skipEmptyString: true });
+  appendQueryParam(queryParams, "appliedTo", params.appliedTo, { skipEmptyString: true });
+  
+  // updatedFrom and updatedTo use ISO DATE_TIME format (YYYY-MM-DDTHH:mm:ss)
+  appendQueryParam(queryParams, "updatedFrom", params.updatedFrom, { skipEmptyString: true });
+  appendQueryParam(queryParams, "updatedTo", params.updatedTo, { skipEmptyString: true });
+
+  // 5. Search and text filters (skip empty strings)
   appendQueryParam(queryParams, "search", params.search, { skipEmptyString: true });
 
-  // 4. Pagination parameters
+  // 6. Pagination parameters
   appendQueryParam(queryParams, "page", params.page);
   appendQueryParam(queryParams, "size", params.size);
 
-  // 5. Sorting parameters (skip empty strings)
+  // 7. Sorting parameters (skip empty strings)
   appendQueryParam(queryParams, "sortBy", params.sortBy, { skipEmptyString: true });
   appendQueryParam(queryParams, "asc", params.asc);
-
-  // 6. Additional filters can be easily added here
-  // Example for future filters:
-  // appendQueryParam(queryParams, "universityId", params.universityId);
-  // appendQueryParam(queryParams, "courseId", params.courseId);
-  // appendQueryParam(queryParams, "applicantStage", params.applicantStage);
-  // appendQueryParam(queryParams, "applicantStatus", params.applicantStatus);
-  // appendQueryParam(queryParams, "intake", params.intake);
-  // appendQueryParam(queryParams, "appliedFromDate", params.appliedFromDate);
-  // appendQueryParam(queryParams, "appliedToDate", params.appliedToDate);
-  // appendQueryParam(queryParams, "lastUpdatedFromDate", params.lastUpdatedFromDate);
-  // appendQueryParam(queryParams, "lastUpdatedToDate", params.lastUpdatedToDate);
 
   return queryParams;
 };

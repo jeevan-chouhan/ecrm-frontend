@@ -353,6 +353,14 @@ export interface ApplicationsListParams {
   assignedAdminId: number | null; // Optional: for filtering by specific admin
   assignedManagerId: number | null; // Optional: for filtering by specific manager
   assignedCounselorId: number | null; // Optional: for filtering by specific counselor
+  applicationStatus: string | null; // Optional: ApplicationStatus enum value
+  applicationStage: string | null; // Optional: ApplicationStage enum value (single value, not array)
+  universityId: number | null; // Optional: University ID filter
+  desiredIntake: string | null; // Optional: Intake filter (e.g., "jan-2026")
+  appliedFrom: string | null; // Optional: ISO DATE_TIME format (YYYY-MM-DDTHH:mm:ss)
+  appliedTo: string | null; // Optional: ISO DATE_TIME format (YYYY-MM-DDTHH:mm:ss)
+  updatedFrom: string | null; // Optional: ISO DATE_TIME format (YYYY-MM-DDTHH:mm:ss)
+  updatedTo: string | null; // Optional: ISO DATE_TIME format (YYYY-MM-DDTHH:mm:ss)
   search: string | null;
   page: number | null;
   size: number | null;
@@ -372,6 +380,9 @@ export interface ApplicationListItem {
   universityName: string;
   desiredIntake: string;
   updatedAt: string | null;
+  countryName?: string | null;
+  counselorName?: string | null;
+  agencyName?: string | null;
 }
 
 export type ApplicationsListResponse = ApiResponse<PaginatedData<ApplicationListItem>>;
