@@ -19,7 +19,7 @@ import ApplicantTrackerFilters from "./ApplicantTrackerFilters";
 import ApplicationStatusHistoryPopup from "./ApplicantDetail/ApplicationStatusHistoryPopup";
 import type { ApplicationStatusHistory } from "./ApplicantDetail/types";
 import { applicantService, userService } from "../../services";
-import type { ApplicationListItem, AdminItem, ManagerItem, CounselorItem, UniversityItem } from "../../services";
+import type { ApplicationListItem, AdminItem, ManagerItem, CounselorItem, UniversityItem, AgencyPartnerNameItem } from "../../services";
 import type { SelectOption } from "../../components";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { addToast } from "../../redux/slices/toast/toastSlice";
@@ -55,6 +55,7 @@ const ApplicantTracker = () => {
   const [appliedApplicationStatus, setAppliedApplicationStatus] = useState<string>("");
   const [appliedUniversity, setAppliedUniversity] = useState<string>("");
   const [appliedIntake, setAppliedIntake] = useState<string>("");
+  const [appliedAgencyPartner, setAppliedAgencyPartner] = useState<string>("");
   const [appliedAppliedFromDate, setAppliedAppliedFromDate] = useState<Date | null>(null);
   const [appliedAppliedToDate, setAppliedAppliedToDate] = useState<Date | null>(null);
   const [appliedLastUpdatedFromDate, setAppliedLastUpdatedFromDate] = useState<Date | null>(null);
@@ -65,6 +66,7 @@ const ApplicantTracker = () => {
   const [managerOptions, setManagerOptions] = useState<SelectOption[]>([]);
   const [counselorOptions, setCounselorOptions] = useState<SelectOption[]>([]);
   const [universityOptions, setUniversityOptions] = useState<SelectOption[]>([]);
+  const [agencyPartnerOptions, setAgencyPartnerOptions] = useState<SelectOption[]>([]);
   
 
   // Loading state
@@ -156,12 +158,14 @@ const ApplicantTracker = () => {
       // Get applicationStage - backend expects single value, take first from array if multiple selected
       const applicationStageValue = appliedApplicationStage || null;
 
-      // Get universityId and desiredIntake values
+      // Get universityId, desiredIntake, and agencyPartnerId values
       const universityIdValue = appliedUniversity ? parseInt(appliedUniversity) : null;
       const desiredIntakeValue = appliedIntake || null;
+      const agencyPartnerIdValue = appliedAgencyPartner ? parseInt(appliedAgencyPartner) : null;
 
       const response = await applicantService.getApplicationsList({
         agencyId: currentUser.agencyId ?? null,
+        applicantId: null, // Not filtering by applicant in tracker view
         assignedAdminId: assignedAdminIdValue,
         assignedManagerId: assignedManagerIdValue,
         assignedCounselorId: assignedCounselorIdValue,
@@ -169,6 +173,7 @@ const ApplicantTracker = () => {
         applicationStage: applicationStageValue,
         universityId: universityIdValue,
         desiredIntake: desiredIntakeValue,
+        agencyPartnerId: agencyPartnerIdValue,
         appliedFrom: appliedFromFormatted,
         appliedTo: appliedToFormatted,
         updatedFrom: updatedFromFormatted,
@@ -176,8 +181,8 @@ const ApplicantTracker = () => {
         search: searchQuery || null,
         page: paginationModel.page,
         size: paginationModel.pageSize,
-        sortBy: "id", // Default sort by id
-        asc: true, // Default ascending
+        sortBy: null,
+        asc: null,
       });
 
       if (response.status === "success" && response.data) {
@@ -211,6 +216,7 @@ const ApplicantTracker = () => {
     appliedApplicationStage,
     appliedUniversity,
     appliedIntake,
+    appliedAgencyPartner,
     appliedAppliedFromDate,
     appliedAppliedToDate,
     appliedLastUpdatedFromDate,
@@ -248,9 +254,10 @@ const ApplicantTracker = () => {
       
       // Fetch filter options independently so one failure doesn't break the other
       // Use userService.getAdmins() to match the working implementation in AddMember form
-      const [adminsResult, universitiesResult] = await Promise.allSettled([
+      const [adminsResult, universitiesResult, agencyPartnersResult] = await Promise.allSettled([
         userService.getAdmins(user.agencyId),
         applicantService.getUniversities(user.agencyId),
+        applicantService.getAgencyPartnerNames(user.agencyId),
       ]);
 
       // Process admins response
@@ -297,6 +304,27 @@ const ApplicantTracker = () => {
         setUniversityOptions(universityOptionsData);
       } else {
         dispatch(addToast({ type: "error", message: "Failed to fetch universities" }));
+      }
+
+      // Process agency partners response
+      if (agencyPartnersResult.status === 'fulfilled') {
+        const agencyPartnersResponse = agencyPartnersResult.value;
+        
+        // API returns array directly: [{id, name}, ...]
+        let agencyPartners: AgencyPartnerNameItem[] = [];
+        if (Array.isArray(agencyPartnersResponse)) {
+          agencyPartners = agencyPartnersResponse;
+        }
+        
+        // Convert to SelectOption format
+        const agencyPartnerOptionsData = agencyPartners.map((partner: AgencyPartnerNameItem) => ({
+          value: partner.id.toString(),
+          label: partner.name,
+        }));
+        
+        setAgencyPartnerOptions(agencyPartnerOptionsData);
+      } else {
+        dispatch(addToast({ type: "error", message: "Failed to fetch agency partners" }));
       }
 
       // Counselors will be fetched when manager is selected
@@ -439,7 +467,7 @@ const ApplicantTracker = () => {
     if (user) {
       fetchApplications();
     }
-  }, [user, paginationModel.page, paginationModel.pageSize, appliedAdmin, appliedManager, appliedCounselor, appliedApplicationStatus, appliedApplicationStage, appliedUniversity, appliedIntake, appliedAppliedFromDate, appliedAppliedToDate, appliedLastUpdatedFromDate, appliedLastUpdatedToDate, fetchApplications]);
+  }, [user, paginationModel.page, paginationModel.pageSize, appliedAdmin, appliedManager, appliedCounselor, appliedApplicationStatus, appliedApplicationStage, appliedUniversity, appliedIntake, appliedAgencyPartner, appliedAppliedFromDate, appliedAppliedToDate, appliedLastUpdatedFromDate, appliedLastUpdatedToDate, fetchApplications]);
 
   // Application status change popup state (reusing from University Application Summary)
   const [isApplicationStatusPopupOpen, setIsApplicationStatusPopupOpen] = useState(false);
@@ -479,9 +507,10 @@ const ApplicantTracker = () => {
     setAppliedApplicationStage(selectedApplicantStages.length > 0 ? selectedApplicantStages[0] : "");
     // Note: applicationStatus filter is not in UI yet, keeping empty for now
     setAppliedApplicationStatus("");
-    // Store university and intake to trigger API call (even if backend doesn't support them yet)
+    // Store university, intake, and agency partner to trigger API call
     setAppliedUniversity(selectedUniversity);
     setAppliedIntake(selectedIntake);
+    setAppliedAgencyPartner(selectedAgencyPartner);
     setAppliedAppliedFromDate(appliedFromDate);
     setAppliedAppliedToDate(appliedToDate);
     setAppliedLastUpdatedFromDate(lastUpdatedFromDate);
@@ -492,7 +521,7 @@ const ApplicantTracker = () => {
 
     // Note: fetchApplications will be triggered by the useEffect that watches applied filters
     // No need to call it explicitly here as it will be called automatically when state updates
-  }, [selectedAdmin, selectedManager, selectedCounselor, selectedApplicantStages, selectedUniversity, selectedIntake, appliedFromDate, appliedToDate, lastUpdatedFromDate, lastUpdatedToDate]);
+  }, [selectedAdmin, selectedManager, selectedCounselor, selectedApplicantStages, selectedUniversity, selectedIntake, selectedAgencyPartner, appliedFromDate, appliedToDate, lastUpdatedFromDate, lastUpdatedToDate]);
 
   // Handle clear filters
   const handleClearFilters = useCallback(() => {
@@ -517,6 +546,7 @@ const ApplicantTracker = () => {
     setAppliedApplicationStatus("");
     setAppliedUniversity("");
     setAppliedIntake("");
+    setAppliedAgencyPartner("");
     setAppliedAppliedFromDate(null);
     setAppliedAppliedToDate(null);
     setAppliedLastUpdatedFromDate(null);
@@ -1024,6 +1054,7 @@ const ApplicantTracker = () => {
           managerOptions={managerOptions}
           counselorOptions={counselorOptions}
           universityOptions={universityOptions}
+          agencyPartnerOptions={agencyPartnerOptions}
           selectedAdmin={selectedAdmin}
           selectedManager={selectedManager}
           selectedCounselor={selectedCounselor}

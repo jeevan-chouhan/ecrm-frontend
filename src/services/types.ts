@@ -350,6 +350,7 @@ export type UpdateStatusResponse = ApiResponse<UpdateStatusData>;
 
 export interface ApplicationsListParams {
   agencyId: number | null;
+  applicantId: number | null; // Optional: for filtering by specific applicant
   assignedAdminId: number | null; // Optional: for filtering by specific admin
   assignedManagerId: number | null; // Optional: for filtering by specific manager
   assignedCounselorId: number | null; // Optional: for filtering by specific counselor
@@ -357,6 +358,7 @@ export interface ApplicationsListParams {
   applicationStage: string | null; // Optional: ApplicationStage enum value (single value, not array)
   universityId: number | null; // Optional: University ID filter
   desiredIntake: string | null; // Optional: Intake filter (e.g., "jan-2026")
+  agencyPartnerId: number | null; // Optional: Agency Partner ID filter
   appliedFrom: string | null; // Optional: ISO DATE_TIME format (YYYY-MM-DDTHH:mm:ss)
   appliedTo: string | null; // Optional: ISO DATE_TIME format (YYYY-MM-DDTHH:mm:ss)
   updatedFrom: string | null; // Optional: ISO DATE_TIME format (YYYY-MM-DDTHH:mm:ss)
@@ -382,7 +384,8 @@ export interface ApplicationListItem {
   updatedAt: string | null;
   countryName?: string | null;
   counselorName?: string | null;
-  agencyName?: string | null;
+  agencyName?: string | null; // Keep for backward compatibility
+  agencyPartnerName?: string | null; // Actual field name from API
 }
 
 export type ApplicationsListResponse = ApiResponse<PaginatedData<ApplicationListItem>>;
@@ -518,6 +521,9 @@ export interface PersonalDetailsData {
   email: string;
   contactNumber: string;
   countryCode: string;
+  permanentAddress?: string | null;
+  notes?: string | null;
+  profilePhoto?: string | null;
   message?: string;
 }
 
@@ -543,6 +549,7 @@ export interface ApplicationPreferenceItem {
   desiredCourseId: number;
   desiredIntake: string; // Format: "YYYY-MM"
   assignedAgencyId?: number | null; // Agency ID from Redux store
+  agencyPartnerId?: number | null; // Agency Partner ID
   assignedCounselorId?: number | null; // Counselor ID if counselor is selected
   assignedAdminId?: number | null; // Admin ID if user is ADMIN and no counselor selected
   assignedManagerId?: number | null; // Manager ID if user is MANAGER and no counselor selected
@@ -599,6 +606,10 @@ export interface ApplicationPreferenceGetData {
     name: string;
   } | number | null;
   assignedAgency: {
+    id: number;
+    name: string;
+  } | number | null;
+  agencyPartner: {
     id: number;
     name: string;
   } | number | null;

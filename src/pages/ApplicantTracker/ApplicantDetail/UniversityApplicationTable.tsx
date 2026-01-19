@@ -49,8 +49,8 @@ const UniversityApplicationTable = ({
   ), []);
 
   const renderAgencyPartnerCell = useCallback((params: GridRenderCellParams) => (
-    <span style={{ color: params.value === "-" ? COLORS.textMuted : COLORS.textDark }}>
-      {params.value}
+    <span style={{ color: params.value && params.value !== "-" ? COLORS.textDark : COLORS.textMuted }}>
+      {params.value || "-"}
     </span>
   ), []);
 

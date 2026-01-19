@@ -1,6 +1,6 @@
 import React from "react";
 import { Select, Button, IntakeSelector } from "../../../components";
-import { programs, agencyPartners, COLORS } from "../../../constants";
+import { programs, COLORS } from "../../../constants";
 import { useTranslation } from "react-i18next";
 import type { PreferenceItem } from "./types";
 import type { SelectOption } from "../../../components";
@@ -19,6 +19,7 @@ interface PreferenceFormProps {
   campusOptions?: SelectOption[]; // Campuses from API (filtered by university)
   courseOptions?: SelectOption[]; // Courses from API (filtered by campus and course type)
   counselorOptions?: SelectOption[]; // Counselors from API (filtered by user role)
+  agencyPartnerOptions?: SelectOption[]; // Agency partners from API
 }
 
 const PreferenceForm = ({
@@ -35,6 +36,7 @@ const PreferenceForm = ({
   campusOptions = [], // Default to empty array if not provided
   courseOptions = [], // Default to empty array if not provided
   counselorOptions = [], // Default to empty array if not provided
+  agencyPartnerOptions = [], // Default to empty array if not provided
 }: PreferenceFormProps) => {
   const { t } = useTranslation();
 
@@ -185,7 +187,7 @@ const PreferenceForm = ({
               {t("applicant.agencyPartnerName")}
             </label>
             <Select
-              options={agencyPartners}
+              options={agencyPartnerOptions}
               value={preference.agencyPartnerName}
               onChange={(value) => onFieldChange(index, "agencyPartnerName", value)}
               placeholder={t("applicant.selectAgencyPartner")}
