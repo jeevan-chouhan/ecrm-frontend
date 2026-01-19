@@ -128,6 +128,11 @@ const AgencyPartner = () => {
     }
   }, [dispatch]);
 
+  // Memoized sort model for DataTable
+  const sortModel: GridSortModel = useMemo(() => 
+    sort.sortBy ? [{ field: sort.sortBy, sort: sort.asc ? "asc" : "desc" }] : []
+  , [sort.sortBy, sort.asc]);
+
   // Popup handlers
   const handleOpenAddPopup = useCallback(() => {
     setEditingPartner(null);
@@ -310,6 +315,7 @@ const AgencyPartner = () => {
             paginationMode="server"
             onPaginationModelChange={handlePaginationModelChange}
             sortingMode="server"
+            sortModel={sortModel}
             onSortModelChange={handleSortChange}
           />
         </div>

@@ -192,7 +192,7 @@ export interface CourseItem {
 
 export interface UniversityParams {
   agencyId: number | null;
-  countryId: number | null;
+  countryId: number | number[] | string | null;
 }
 
 export type CountriesResponse = ApiResponse<CountryItem[]>;

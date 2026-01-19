@@ -64,7 +64,7 @@ const initialState: ManageTeamState = {
     last: true,
   },
   sort: {
-    sortBy: null,
+    sortBy: "name",
     asc: true,
   },
   filter: {

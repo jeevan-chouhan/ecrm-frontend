@@ -69,13 +69,23 @@ const userService = {
 
   /**
    * Get universities list with filters
-   * @param params - Query parameters (agencyId, countryId)
+   * @param params - Query parameters (agencyId, countryId - can be single or array)
    * @returns Promise with universities response
    */
   getUniversities: async (params: UniversityParams): Promise<UniversitiesResponse> => {
     const queryParams = new URLSearchParams();
     queryParams.append("agencyId", params.agencyId?.toString() ?? "");
-    queryParams.append("countryId", params.countryId?.toString() ?? "");
+    
+    // Handle countryId - can be single value, array, or comma-separated string
+    let countryIdValue = "";
+    if (params.countryId) {
+      if (Array.isArray(params.countryId)) {
+        countryIdValue = params.countryId.join(",");
+      } else {
+        countryIdValue = params.countryId.toString();
+      }
+    }
+    queryParams.append("countryId", countryIdValue);
 
     const response = await api.get<UniversitiesResponse>(
       `${ENDPOINTS.AGENCIES.UNIVERSITIES}?${queryParams.toString()}`

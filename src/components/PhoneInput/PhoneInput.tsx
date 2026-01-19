@@ -1,6 +1,7 @@
 import PhoneInput2 from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { COLORS, typography } from "../../constants";
 
 interface PhoneInputProps {
@@ -21,11 +22,16 @@ const PhoneInput = ({
   onChange,
   onBlur,
   error,
-  placeholder = "Enter Phone Number",
+  placeholder,
   fullWidth = false,
   disabled = false,
-  country = "in",
+  country,
 }: PhoneInputProps) => {
+  const { t } = useTranslation();
+  
+  // Use provided placeholder or default translated placeholder
+  const inputPlaceholder = placeholder || t("common.enterContactNumber", "Enter Contact Number");
+  const searchPlaceholder = t("common.searchCountry", "Search Country...");
   const handleChange = (phone: string, countryData: any) => {
     onChange?.(phone, countryData);
   };
@@ -45,9 +51,9 @@ const PhoneInput = ({
         value={value}
         onChange={handleChange}
         disabled={disabled}
-        placeholder={placeholder}
+        placeholder={inputPlaceholder}
         enableSearch
-        searchPlaceholder="Search Country..."
+        searchPlaceholder={searchPlaceholder}
         inputProps={{
           onBlur: onBlur,
         }}

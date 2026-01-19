@@ -35,7 +35,7 @@ export const ENDPOINTS = {
     COUNSELORS_BY_COUNTRY: "/agencies/counselors-by-country",
     PARTNERS: "/agencies/partners",
     PARTNERS_LIST: "/agencies/partnersList",
-    PARTNER_NAMES: "/agencies/agency-partner-name",
+    PARTNER_NAMES: "/agencies/global-agencyPartner-name",
   },
 
   // Applicants Endpoints

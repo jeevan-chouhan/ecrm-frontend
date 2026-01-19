@@ -68,7 +68,7 @@ const parsePhoneValue = (phoneValue: string): { countryCode: string; contactNumb
       };
     }
   }
-  return { countryCode: "+91", contactNumber: extractDigits(phoneValue) };
+  return { countryCode: "", contactNumber: extractDigits(phoneValue) };
 };
 
 const AddAgencyPartner = ({ isOpen, onClose, onSuccess, editingPartner }: AddAgencyPartnerProps) => {
@@ -309,11 +309,10 @@ const AddAgencyPartner = ({ isOpen, onClose, onSuccess, editingPartner }: AddAge
           />
           <PhoneInput
             label={<>{t("agencyPartner.contactNumber", "Contact Number")} {RequiredMark}</>}
-            placeholder={t("agencyPartner.enterPhoneNumber", "Enter Phone Number")}
+            placeholder={t("agencyPartner.enterContactNumber", "Enter Contact Number")}
             value={formData.contactNo}
             onChange={(value) => handleInputChange("contactNo", value)}
             error={formErrors.contactNo}
-            country="in"
             fullWidth
           />
         </div>

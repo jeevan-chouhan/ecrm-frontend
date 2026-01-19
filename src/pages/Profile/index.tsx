@@ -115,7 +115,8 @@ const Profile = () => {
                 label={<>{t("profile.contactNumber", "Contact Number")} <span style={{ color: COLORS.error }}>*</span></>}
                 value={profileData.contactNumber}
                 onChange={(phone) => handleFieldChange("contactNumber", phone)}
-                country="in"
+                placeholder={t("common.enterContactNumber", "Enter Contact Number")}
+
                 fullWidth
               />
 
