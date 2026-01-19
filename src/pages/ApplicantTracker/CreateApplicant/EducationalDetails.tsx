@@ -27,7 +27,7 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack, ap
   const dispatch = useAppDispatch();
   const isSubmittingRef = useRef(false); // Prevent duplicate submissions
   const isFetchingEducationalDetailsRef = useRef(false); // Prevent duplicate fetches
-  const hasEducationalDetailsRef = useRef(false); // Track if educational details exist (for POST vs PUT)
+  const educationalDetailsIdRef = useRef<number | string | null>(null); // Track educational details ID (for POST vs PUT)
   const [isSaving, setIsSaving] = useState(false);
   const [shouldNavigateNext, setShouldNavigateNext] = useState(false);
 
@@ -122,15 +122,23 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack, ap
           passingYear: passingYearFormatted,
         };
 
-        // Call appropriate API based on whether educational details already exist
+        // Call appropriate API based on whether ID exists
+        // If ID is present, call PUT API; if data is empty/null or no ID, call POST API
         let response;
-        if (hasEducationalDetailsRef.current) {
-          // Update existing educational details
+        if (educationalDetailsIdRef.current) {
+          // ID is present - update existing educational details using PUT
           response = await applicantService.updateEducationalDetails(payload);
         } else {
-          // Create new educational details
+          // No ID or data is empty/null - create new educational details using POST
           response = await applicantService.createEducationalDetails(payload);
-          hasEducationalDetailsRef.current = true; // Mark that educational details now exist
+          
+          // After successful creation, check if response contains an ID and store it
+          if (response.status === "success" && response.data) {
+            const responseId = (response.data as any).id || (response.data as any).educationalDetailsId || null;
+            if (responseId) {
+              educationalDetailsIdRef.current = responseId;
+            }
+          }
         }
 
         if (response.status === "success") {
@@ -287,26 +295,37 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack, ap
       if (response.status === "success" && response.data) {
         const data = response.data;
         
-        // Map API response to EducationalDetailFormData
-        const educationalDetails: EducationalDetailFormData = {
-          highestQualification: data.highestQualification || "",
-          institutionName: data.instituteName || "", // Map instituteName -> institutionName
-          boardUniversity: data.universityName || "", // Map universityName -> boardUniversity
-          program: data.courseType || "", // Map courseType -> program
-          major: data.fieldType || "", // Map fieldType -> major
-          scoreType: data.scoreType || "",
-          score: data.score || "",
-          passingYear: data.passingYear ? new Date(data.passingYear + "T00:00:00") : null, // Add time to avoid timezone issues
-        };
+        // Check if data exists and has an ID (check for common ID field names)
+        const educationalDetailsId = (data as any).id || (data as any).educationalDetailsId || null;
+        
+        // Only proceed if data is not empty/null
+        if (data && (data.highestQualification || data.instituteName || data.universityName)) {
+          // Map API response to EducationalDetailFormData
+          const educationalDetails: EducationalDetailFormData = {
+            highestQualification: data.highestQualification || "",
+            institutionName: data.instituteName || "", // Map instituteName -> institutionName
+            boardUniversity: data.universityName || "", // Map universityName -> boardUniversity
+            program: data.courseType || "", // Map courseType -> program
+            major: data.fieldType || "", // Map fieldType -> major
+            scoreType: data.scoreType || "",
+            score: data.score || "",
+            passingYear: data.passingYear ? new Date(data.passingYear + "T00:00:00") : null, // Add time to avoid timezone issues
+          };
 
-        // Update form state with fetched data
-        formik.setValues(educationalDetails, false);
-        onUpdate(educationalDetails);
-        markAsSaved(educationalDetails);
-        hasEducationalDetailsRef.current = true; // Mark that educational details exist
+          // Update form state with fetched data
+          formik.setValues(educationalDetails, false);
+          onUpdate(educationalDetails);
+          markAsSaved(educationalDetails);
+          
+          // Store the ID if it exists
+          educationalDetailsIdRef.current = educationalDetailsId;
+        } else {
+          // Data is empty/null - no ID, will use POST
+          educationalDetailsIdRef.current = null;
+        }
       } else {
-        // No educational details found - this is fine, user can create new ones
-        hasEducationalDetailsRef.current = false;
+        // No educational details found or empty response - will use POST
+        educationalDetailsIdRef.current = null;
       }
     } catch (error: any) {
       const { message } = handleApiError(error, "Failed to fetch educational details");
