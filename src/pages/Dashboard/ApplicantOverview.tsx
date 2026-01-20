@@ -6,7 +6,7 @@ import { Tooltip } from "@mui/material";
 import { DataTable, StatusChangePopup, SearchBar, Select, Button } from "../../components";
 import { COLORS, ROUTES, typography, enrollmentTypes, statusFilterOptions } from "../../constants";
 import { Eye, ToggleStatus } from "../../assets";
-import { formatDateValue, formatDateTime } from "../../utils/dateUtils";
+import { formatDateTime } from "../../utils/dateUtils";
 import { getEnrollmentTypeLabel, cleanContactNumber } from "../../utils/commonUtils";
 import { userService } from "../../services";
 import type { ApplicantOverviewItem } from "../../services";
