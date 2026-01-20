@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { Tooltip } from "@mui/material";
 import { COLORS } from "../../../constants";
 
 /**
@@ -21,12 +22,14 @@ export const DetailField = memo(({ label, value, className = "" }: DetailFieldPr
           {label}
         </label>
         {typeof value === "string" ? (
-          <p
-            className="text-sm font-medium"
-            style={{ color: COLORS.textDark }}
-          >
-            {value}
-          </p>
+          <Tooltip title={value} arrow placement="top">
+            <p
+              className="text-sm font-medium"
+              style={{ color: COLORS.textDark }}
+            >
+              {value}
+            </p>
+          </Tooltip>
         ) : (
           <div style={{ color: COLORS.textDark }}>{value}</div>
         )}

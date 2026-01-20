@@ -121,11 +121,16 @@ const UniversityApplicationTable = ({
     );
   }, [onApply]);
 
-  const renderDateCell = useCallback((params: GridRenderCellParams) => (
-    <span style={{ color: params.value ? COLORS.textDark : COLORS.textMuted }}>
-      {params.value || "-"}
-    </span>
-  ), []);
+  const renderDateCell = useCallback((params: GridRenderCellParams) => {
+    const dateValue = params.value || "-";
+    return (
+      <Tooltip title={dateValue} arrow placement="top">
+        <span style={{ color: params.value ? COLORS.textDark : COLORS.textMuted }}>
+          {dateValue}
+        </span>
+      </Tooltip>
+    );
+  }, []);
 
   const renderActionsCell = useCallback((params: GridRenderCellParams<UniversityApplication>) => (
     <div className="flex items-center gap-2">

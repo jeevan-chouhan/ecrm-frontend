@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { GridPaginationModel } from "@mui/x-data-grid";
 import { Layout, StatusChangePopup, ConfirmationPopup } from "../../../components";
 import { COLORS, ROUTES, applicationStatusOptions, mockApplicantDetail } from "../../../constants";
-import { formatDate, toSlug, handleApiError } from "../../../utils";
+import { formatDate, formatDateTime, toSlug, handleApiError } from "../../../utils";
 import type { ApplicantDetail, UniversityApplication, ApplicationStatusHistory, PersonalDetails, EducationalDetails, WorkExperienceItem, AchievementItem } from "./types";
 import { applicantService, userService } from "../../../services";
 import type { CompleteDetailsData, ApplicationListItem } from "../../../services";
@@ -114,8 +114,8 @@ const transformApplicationListItemToUniversityApplication = (
     intake: item.desiredIntake || "-",
     counselor: item.counselorName || "-",
     agencyPartner: item.agencyPartnerName || item.agencyName || "-",
-    appliedDate: item.appliedDate ? formatDate(new Date(item.appliedDate)) : "",
-    lastUpdated: item.updatedAt ? formatDate(new Date(item.updatedAt)) : "",
+    appliedDate: item.appliedDate ? formatDateTime(new Date(item.appliedDate)) : "",
+    lastUpdated: item.updatedAt ? formatDateTime(new Date(item.updatedAt)) : "",
   };
 };
 
