@@ -1,8 +1,9 @@
 import { memo, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { Tooltip } from "@mui/material";
 import { Popup } from "../../../components";
 import { COLORS } from "../../../constants";
-import { formatDate, getApplicationStatusLabel } from "../../../utils";
+import { formatDateTime, getApplicationStatusLabel } from "../../../utils";
 import type { ApplicationStatusHistory } from "./types";
 import ScrollableContainer from "./ScrollableContainer";
 
@@ -40,21 +41,7 @@ const ApplicationStatusHistoryPopup = ({
     return statusHistory;
   }, [statusHistory]);
 
-  // Memoized format function to prevent recreation on every render
-  const formatDateTime = useCallback((dateString: string): string => {
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        return dateString; // Return original if invalid
-      }
-      const formattedDate = formatDate(date);
-      const hours = String(date.getHours()).padStart(2, "0");
-      const minutes = String(date.getMinutes()).padStart(2, "0");
-      return `${formattedDate} ${hours}:${minutes}`;
-    } catch {
-      return dateString;
-    }
-  }, []);
+  // Use formatDateTime from utils which handles UTC to local timezone conversion
 
   return (
     <Popup
@@ -153,7 +140,9 @@ const ApplicationStatusHistoryPopup = ({
                           className="text-xs"
                           style={{ color: COLORS.textMuted }}
                         >
-                          {formatDateTime(historyItem.time)}
+                          <Tooltip title={formatDateTime(historyItem.time)} arrow placement="top">
+                            <span>{formatDateTime(historyItem.time)}</span>
+                          </Tooltip>
                           {historyItem.createdBy && (
                             <span className="ml-2">
                               • {t("applicantDetailView.createdBy", "Created by")} {historyItem.createdBy}

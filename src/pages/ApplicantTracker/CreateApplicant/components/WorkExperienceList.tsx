@@ -1,9 +1,10 @@
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
+import { Tooltip } from "@mui/material";
 import { Button } from "../../../../components";
 import { COLORS } from "../../../../constants";
 import { Edit, Trash } from "../../../../assets";
-import { formatDate } from "../../../../utils/dateUtils";
+import { formatDateOnly } from "../../../../utils/dateUtils";
 import WorkExperienceForm from "../WorkExperienceForm";
 import type { WorkExperienceItem } from "../types";
 
@@ -96,15 +97,23 @@ const WorkExperienceList = ({
                       {workExperience.companyName} - {workExperience.jobTitle}
                     </p>
                     <p className="text-xs mt-1" style={{ color: COLORS.textMuted }}>
-                      {workExperience.startDate
-                        ? formatDate(workExperience.startDate)
-                        : ""}
+                      {workExperience.startDate ? (
+                        <Tooltip title={formatDateOnly(workExperience.startDate)} arrow placement="top">
+                          <span>{formatDateOnly(workExperience.startDate)}</span>
+                        </Tooltip>
+                      ) : (
+                        ""
+                      )}
                       {" - "}
                       {workExperience.currentlyWorking
                         ? t("applicant.currentlyWorking")
-                        : workExperience.endDate
-                        ? formatDate(workExperience.endDate)
-                        : ""}
+                        : workExperience.endDate ? (
+                          <Tooltip title={formatDateOnly(workExperience.endDate)} arrow placement="top">
+                            <span>{formatDateOnly(workExperience.endDate)}</span>
+                          </Tooltip>
+                        ) : (
+                          ""
+                        )}
                     </p>
                   </div>
                   <div className="flex items-end justify-end gap-2">

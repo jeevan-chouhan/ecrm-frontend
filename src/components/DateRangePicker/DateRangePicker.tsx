@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Calendar, ChevronLeft, ChevronRight } from "../../assets";
 import { COLORS, MONTHS, typography } from "../../constants";
+import { formatDateOnly } from "../../utils/dateUtils";
 
 export interface DateRange {
   startDate: Date | null;
@@ -74,13 +75,9 @@ const DateRangePicker = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  
+  // Use formatDateOnly from utils for consistent date formatting
   const formatDate = (date: Date): string => {
-    const day = date.getDate();
-    const month = MONTH_NAMES[date.getMonth()];
-    const year = date.getFullYear();
-    return `${day} ${month} ${year}`;
+    return formatDateOnly(date);
   };
 
   const formatDateRange = (): string => {

@@ -6,7 +6,7 @@ import { Tooltip } from "@mui/material";
 import { DataTable, StatusChangePopup, SearchBar, Select, Button } from "../../components";
 import { COLORS, ROUTES, typography, enrollmentTypes, statusFilterOptions } from "../../constants";
 import { Eye, ToggleStatus } from "../../assets";
-import { formatDateValue } from "../../utils/dateUtils";
+import { formatDateValue, formatDateTime } from "../../utils/dateUtils";
 import { getEnrollmentTypeLabel, cleanContactNumber } from "../../utils/commonUtils";
 import { userService } from "../../services";
 import type { ApplicantOverviewItem } from "../../services";
@@ -358,16 +358,21 @@ const ApplicantOverview = () => {
     </span>
   ), []);
 
-  const renderCreatedDateCell = useCallback((params: GridRenderCellParams<ApplicantOverviewRow>) => (
-    <span
-      style={{
-        color: COLORS.textDark,
-        fontSize: typography.fontSize.small,
-      }}
-    >
-      {params.row.createdAt ? formatDateValue(params.row.createdAt) : "-"}
-    </span>
-  ), []);
+  const renderCreatedDateCell = useCallback((params: GridRenderCellParams<ApplicantOverviewRow>) => {
+    const dateValue = params.row.createdAt ? formatDateTime(params.row.createdAt) : "-";
+    return (
+      <Tooltip title={dateValue} arrow placement="top">
+        <span
+          style={{
+            color: COLORS.textDark,
+            fontSize: typography.fontSize.small,
+          }}
+        >
+          {dateValue}
+        </span>
+      </Tooltip>
+    );
+  }, []);
 
   const renderActionsCell = useCallback((params: GridRenderCellParams<ApplicantOverviewRow>) => (
     <div className="flex items-center justify-center gap-3 w-full h-full">

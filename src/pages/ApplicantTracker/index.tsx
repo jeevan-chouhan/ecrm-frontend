@@ -14,7 +14,7 @@ import {
 } from "../../components";
 import { COLORS, applicationStatusOptions, typography, type Applicant } from "../../constants";
 import { Calendar, Edit } from "../../assets";
-import { formatDateValue, handleApiError, getApplicationStatusLabel, getApplicationStageLabel } from "../../utils";
+import { formatDateValue, formatDateTime, handleApiError, getApplicationStatusLabel, getApplicationStageLabel } from "../../utils";
 import ApplicantTrackerFilters from "./ApplicantTrackerFilters";
 import ApplicationStatusHistoryPopup from "./ApplicantDetail/ApplicationStatusHistoryPopup";
 import type { ApplicationStatusHistory } from "./ApplicantDetail/types";
@@ -790,17 +790,27 @@ const ApplicantTracker = () => {
     );
   }, []);
 
-  const renderAppliedDateCell = useCallback((params: GridRenderCellParams<Applicant>) => (
-    <span className="text-sm" style={{ color: params.row.appliedDate ? COLORS.textDark : COLORS.textMuted }}>
-      {params.row.appliedDate ? formatDateValue(params.row.appliedDate) : "-"}
-    </span>
-  ), []);
+  const renderAppliedDateCell = useCallback((params: GridRenderCellParams<Applicant>) => {
+    const dateValue = params.row.appliedDate ? formatDateTime(params.row.appliedDate) : "-";
+    return (
+      <Tooltip title={dateValue} arrow placement="top">
+        <span className="text-sm" style={{ color: params.row.appliedDate ? COLORS.textDark : COLORS.textMuted }}>
+          {dateValue}
+        </span>
+      </Tooltip>
+    );
+  }, []);
 
-  const renderLastUpdatedDateCell = useCallback((params: GridRenderCellParams<Applicant>) => (
-    <span className="text-sm" style={{ color: params.row.lastUpdatedDate ? COLORS.textDark : COLORS.textMuted }}>
-      {params.row.lastUpdatedDate ? formatDateValue(params.row.lastUpdatedDate) : "-"}
-    </span>
-  ), []);
+  const renderLastUpdatedDateCell = useCallback((params: GridRenderCellParams<Applicant>) => {
+    const dateValue = params.row.lastUpdatedDate ? formatDateTime(params.row.lastUpdatedDate) : "-";
+    return (
+      <Tooltip title={dateValue} arrow placement="top">
+        <span className="text-sm" style={{ color: params.row.lastUpdatedDate ? COLORS.textDark : COLORS.textMuted }}>
+          {dateValue}
+        </span>
+      </Tooltip>
+    );
+  }, []);
 
   const renderIntakeYearCell = useCallback((params: GridRenderCellParams<Applicant>) => {
     if (!params.row.intake) {

@@ -2,38 +2,82 @@
  * Date formatting utility functions
  */
 
-// Month abbreviations
-const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+// Extend dayjs with plugins
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 /**
- * Formats a date to DD MMM YYYY format
- * @param date - Date object or date string
+ * Formats a date to DD MMM YYYY format (date only, no time) - converts UTC to local timezone
+ * Use this for dates like dateOfBirth, passingYear, work experience dates, etc.
+ * @param date - Date object or date string (assumed to be in UTC from backend)
  * @returns Formatted date string in DD MMM YYYY format (e.g., "31 Dec 2025")
  */
-export const formatDate = (date: Date | string): string => {
-  const d = typeof date === "string" ? new Date(date) : date;
+export const formatDateOnly = (date: Date | string): string => {
+  if (!date) {
+    console.warn("Invalid date provided to formatDateOnly:", date);
+    return "";
+  }
   
-  // Validate date
-  if (isNaN(d.getTime())) {
+  try {
+    // Parse the date and convert from UTC to local timezone
+    const dayjsDate = dayjs(date).local();
+    
+    // Validate date
+    if (!dayjsDate.isValid()) {
+      console.warn("Invalid date provided to formatDateOnly:", date);
+      return "";
+    }
+    
+    return dayjsDate.format("DD MMM YYYY");
+  } catch (error) {
+    console.warn("Error formatting date:", date, error);
+    return "";
+  }
+};
+
+/**
+ * Formats a date to DD MMM YYYY, hh:mm A format (with time) - converts UTC to local timezone
+ * Use this for created/updated timestamps (createdAt, updatedAt, appliedDate, lastUpdatedDate)
+ * @param date - Date object or date string (assumed to be in UTC from backend)
+ * @returns Formatted date string in DD MMM YYYY, hh:mm A format (e.g., "31 Dec 2025, 02:30 PM")
+ */
+export const formatDate = (date: Date | string): string => {
+  if (!date) {
     console.warn("Invalid date provided to formatDate:", date);
     return "";
   }
   
-  const day = d.getDate();
-  const month = MONTH_NAMES[d.getMonth()];
-  const year = d.getFullYear();
-  return `${day} ${month} ${year}`;
+  try {
+    // Parse the date and convert from UTC to local timezone
+    const dayjsDate = dayjs(date).local();
+    
+    // Validate date
+    if (!dayjsDate.isValid()) {
+      console.warn("Invalid date provided to formatDate:", date);
+      return "";
+    }
+    
+    return dayjsDate.format("DD MMM YYYY, hh:mm A");
+  } catch (error) {
+    console.warn("Error formatting date:", date, error);
+    return "";
+  }
 };
 
 /**
- * Formats a date value to DD-MM-YYYY format, returning "-" if date is null/undefined
- * @param date - Date object, date string, null, or undefined
- * @returns Formatted date string or "-" if date is invalid/null/undefined
+ * Formats a date value to DD MMM YYYY format (date only), returning "-" if date is null/undefined
+ * Use this for dates like dateOfBirth, passingYear, work experience dates, etc.
+ * @param date - Date object, date string, null, or undefined (assumed to be in UTC from backend)
+ * @returns Formatted date string in DD MMM YYYY format or "-" if date is invalid/null/undefined
  */
 export const formatDateValue = (date: string | Date | null | undefined): string => {
   if (!date) return "-";
   try {
-    const formatted = formatDate(date);
+    const formatted = formatDateOnly(date);
     return formatted || "-";
   } catch {
     return "-";
@@ -41,95 +85,106 @@ export const formatDateValue = (date: string | Date | null | undefined): string 
 };
 
 /**
- * Formats a date to a different format if needed
- * @param date - Date object or date string
+ * Formats a date to a different format if needed (converts UTC to local timezone)
+ * @param date - Date object or date string (assumed to be in UTC from backend)
  * @param format - Format string (e.g., "YYYY-MM-DD", "DD/MM/YYYY", "DD MMM YYYY")
  * @returns Formatted date string
  */
 export const formatDateCustom = (date: Date | string, format: string): string => {
-  const d = typeof date === "string" ? new Date(date) : date;
-  
-  // Validate date
-  if (isNaN(d.getTime())) {
+  if (!date) {
     console.warn("Invalid date provided to formatDateCustom:", date);
     return "";
   }
   
-  const day = String(d.getDate()).padStart(2, "0");
-  const dayNum = String(d.getDate());
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const monthName = MONTH_NAMES[d.getMonth()];
-  const year = d.getFullYear();
-  
-  return format
-    .replace("DD", day)
-    .replace("D", dayNum)
-    .replace("MMM", monthName)
-    .replace("MM", month)
-    .replace("YYYY", String(year))
-    .replace("YY", String(year).slice(-2));
+  try {
+    // Parse the date and convert from UTC to local timezone
+    const dayjsDate = dayjs(date).local();
+    
+    // Validate date
+    if (!dayjsDate.isValid()) {
+      console.warn("Invalid date provided to formatDateCustom:", date);
+      return "";
+    }
+    
+    return dayjsDate.format(format);
+  } catch (error) {
+    console.warn("Error formatting date:", date, error);
+    return "";
+  }
 };
 
 /**
- * Normalizes a date to the start of the day (00:00:00.000)
+ * Normalizes a date to the start of the day (00:00:00.000) in local timezone
  * @param date - Date object, date string, or null/undefined
  * @returns Date object set to start of day, or null if input is null/undefined
  */
 export const normalizeDateToStartOfDay = (date: Date | string | null | undefined): Date | null => {
   if (!date) return null;
-  const d = typeof date === "string" ? new Date(date) : date;
   
-  // Validate date
-  if (isNaN(d.getTime())) {
-    console.warn("Invalid date provided to normalizeDateToStartOfDay:", date);
+  try {
+    const dayjsDate = dayjs(date).local();
+    
+    if (!dayjsDate.isValid()) {
+      console.warn("Invalid date provided to normalizeDateToStartOfDay:", date);
+      return null;
+    }
+    
+    return dayjsDate.startOf("day").toDate();
+  } catch (error) {
+    console.warn("Error normalizing date:", date, error);
     return null;
   }
-  
-  const normalized = new Date(d);
-  normalized.setHours(0, 0, 0, 0);
-  return normalized;
 };
 
 /**
- * Normalizes a date to the end of the day (23:59:59.999)
+ * Normalizes a date to the end of the day (23:59:59.999) in local timezone
  * @param date - Date object, date string, or null/undefined
  * @returns Date object set to end of day, or null if input is null/undefined
  */
 export const normalizeDateToEndOfDay = (date: Date | string | null | undefined): Date | null => {
   if (!date) return null;
-  const d = typeof date === "string" ? new Date(date) : date;
   
-  // Validate date
-  if (isNaN(d.getTime())) {
-    console.warn("Invalid date provided to normalizeDateToEndOfDay:", date);
+  try {
+    const dayjsDate = dayjs(date).local();
+    
+    if (!dayjsDate.isValid()) {
+      console.warn("Invalid date provided to normalizeDateToEndOfDay:", date);
+      return null;
+    }
+    
+    return dayjsDate.endOf("day").toDate();
+  } catch (error) {
+    console.warn("Error normalizing date:", date, error);
     return null;
   }
-  
-  const normalized = new Date(d);
-  normalized.setHours(23, 59, 59, 999);
-  return normalized;
 };
 
 /**
- * Formats a date to a readable date-time string (e.g., "Jan 13, 2026, 10:30 AM")
- * @param date - Date object or date string
- * @returns Formatted date-time string
+ * Formats a date to DD MMM YYYY, hh:mm A format (with time) - converts UTC to local timezone
+ * Use this for created/updated timestamps (createdAt, updatedAt, appliedDate, lastUpdatedDate)
+ * @param date - Date object or date string (assumed to be in UTC from backend)
+ * @returns Formatted date-time string in DD MMM YYYY, hh:mm A format (e.g., "31 Dec 2025, 02:30 PM")
  */
 export const formatDateTime = (date: Date | string): string => {
-  const d = typeof date === "string" ? new Date(date) : date;
-  
-  // Validate date
-  if (isNaN(d.getTime())) {
+  if (!date) {
     console.warn("Invalid date provided to formatDateTime:", date);
     return "";
   }
   
-  return d.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  try {
+    // Parse the date and convert from UTC to local timezone
+    const dayjsDate = dayjs(date).local();
+    
+    // Validate date
+    if (!dayjsDate.isValid()) {
+      console.warn("Invalid date provided to formatDateTime:", date);
+      return "";
+    }
+    
+    return dayjsDate.format("DD MMM YYYY, hh:mm A");
+  } catch (error) {
+    console.warn("Error formatting date:", date, error);
+    return "";
+  }
 };
 

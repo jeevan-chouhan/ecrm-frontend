@@ -8,6 +8,7 @@ import { COLORS } from "../../constants";
 import { Eye } from "../../assets";
 import { useLoggedInUserInfo } from "../../hooks";
 import { formatDateTime } from "../../utils/dateUtils";
+import { Tooltip } from "@mui/material";
 
 // Types
 interface Query {
@@ -122,11 +123,16 @@ const SupportFeedback = () => {
       headerName: t("supportFeedback.date", "Date"),
       flex: 0.8,
       minWidth: 150,
-      renderCell: (params) => (
-        <span style={{ color: COLORS.textMuted }}>
-          {formatDateTime(params.row.createdAt)}
-        </span>
-      ),
+      renderCell: (params) => {
+        const dateValue = formatDateTime(params.row.createdAt);
+        return (
+          <Tooltip title={dateValue} arrow placement="top">
+            <span style={{ color: COLORS.textMuted }}>
+              {dateValue}
+            </span>
+          </Tooltip>
+        );
+      },
     },
     {
       field: "actions",
@@ -290,7 +296,11 @@ const SupportFeedback = () => {
                 
                 {/* Date and Creator */}
                 <p className="text-sm" style={{ color: COLORS.textMuted }}>
-                  {formatDateTime(selectedQuery.createdAt)} • {t("supportFeedback.createdBy", "Created by")} {selectedQuery.submittedBy}
+                  <Tooltip title={formatDateTime(selectedQuery.createdAt)} arrow placement="top">
+                    <span>{formatDateTime(selectedQuery.createdAt)}</span>
+                  </Tooltip>
+                  {" • "}
+                  {t("supportFeedback.createdBy", "Created by")} {selectedQuery.submittedBy}
                 </p>
               </div>
             </div>
