@@ -114,7 +114,15 @@
     "verify": "Verify",
     "resendOtpIn": "Resend OTP In",
     "resendOtp": "Resend OTP",
-    "save": "Save"
+    "save": "Save",
+    "changePassword": "Change Password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmNewPassword": "Confirm New Password",
+    "enterCurrentPassword": "Enter Current Password",
+    "enterNewPassword": "Enter New Password",
+    "enterConfirmPassword": "Confirm New Password",
+    "passwordChangedSuccess": "Password changed successfully"
   },
   "dashboard": {
     "title": "Dashboard",

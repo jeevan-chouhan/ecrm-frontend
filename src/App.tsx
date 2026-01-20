@@ -20,6 +20,7 @@ const Register = lazy(() => import("./pages/Auth/Register"));
 const ForgotPassword = lazy(() => import("./pages/Auth/ForgotPassword"));
 const OtpVerification = lazy(() => import("./pages/Auth/OtpVerification"));
 const ResetPassword = lazy(() => import("./pages/Auth/ResetPassword"));
+const ChangePasswordPage = lazy(() => import("./pages/Auth/ChangePassword/ChangePasswordPage"));
 
 // Error Pages
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -82,6 +83,7 @@ const protectedRoutes: RouteConfig[] = [
   { path: ROUTES.SETTINGS_PRICING, element: <Pricing /> },
   { path: ROUTES.SUPPORT_FEEDBACK, element: <SupportFeedback /> },
   { path: ROUTES.PROFILE, element: <Profile /> },
+  { path: ROUTES.CHANGE_PASSWORD, element: <ChangePasswordPage /> },
 ];
 
 // ==========================================

@@ -114,7 +114,15 @@
     "verify": "सत्यापित करें",
     "resendOtpIn": "OTP पुनः भेजें",
     "resendOtp": "OTP पुनः भेजें",
-    "save": "सहेजें"
+    "save": "सहेजें",
+    "changePassword": "पासवर्ड बदलें",
+    "currentPassword": "वर्तमान पासवर्ड",
+    "newPassword": "नया पासवर्ड",
+    "confirmNewPassword": "नए पासवर्ड की पुष्टि करें",
+    "enterCurrentPassword": "वर्तमान पासवर्ड दर्ज करें",
+    "enterNewPassword": "नया पासवर्ड दर्ज करें",
+    "enterConfirmPassword": "नए पासवर्ड की पुष्टि करें",
+    "passwordChangedSuccess": "पासवर्ड सफलतापूर्वक बदल दिया गया"
   },
   "dashboard": {
     "title": "डैशबोर्ड",
