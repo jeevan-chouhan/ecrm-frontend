@@ -498,6 +498,7 @@ const AddMember = () => {
                 onChange={formik.handleChange}
                 error={hasAttemptedSubmit && formik.errors.email ? formik.errors.email : undefined}
                 fullWidth
+                disabled={isEditMode}
               />
             </div>
 

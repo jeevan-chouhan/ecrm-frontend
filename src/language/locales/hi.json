@@ -302,46 +302,6 @@
     "deleteAchievementConfirmation": "क्या आप वाकई इस उपलब्धि को हटाना चाहते हैं?",
     "documentAttached": "दस्तावेज़ संलग्न"
   },
-  "settingsPage": {
-    "title": "सेटिंग्स",
-    "subtitle": "अपनी एप्लिकेशन सेटिंग्स कॉन्फ़िगर करें",
-    "generalSetting": "सामान्य सेटिंग",
-    "generalSettingDescription": "नाम, देश और विश्वविद्यालय, अनुस्मारक भेजने की अवधि, तिथि सेटिंग, भाषा वरीयता बदलें",
-    "planManagement": "योजना प्रबंधन",
-    "planManagementDescription": "सदस्यता योजनाएं (मुफ्त, प्रीमियम) अपग्रेड/नवीकरण",
-    "agencyName": "एजेंसी का नाम",
-    "agencyNamePlaceholder": "विदेशी एजेंसी",
-    "addCountriesServing": "सेवा देने वाले देश",
-    "addUniversitiesServing": "सेवा देने वाले विश्वविद्यालय",
-    "multiSelectCountries": "देश चुनें",
-    "multiSelectUniversities": "विश्वविद्यालय चुनें"
-  },
-  "supportFeedback": {
-    "title": "सहायता और प्रतिक्रिया",
-    "submitQuery": "क्वेरी जमा करें",
-    "addQuery": "क्वेरी जोड़ें",
-    "sentQueries": "भेजी गई क्वेरी",
-    "submittedBy": "द्वारा जमा किया गया",
-    "submittedTo": "को जमा किया गया",
-    "subject": "विषय",
-    "content": "सामग्री",
-    "selectSubject": "विषय चुनें",
-    "featureRequest": "फीचर अनुरोध",
-    "question": "प्रश्न",
-    "feedback": "प्रतिक्रिया",
-    "enterEmail": "ईमेल पता दर्ज करें",
-    "enterContent": "अपनी क्वेरी विवरण दर्ज करें...",
-    "submit": "जमा करें",
-    "noQueries": "अभी तक कोई क्वेरी जमा नहीं की गई है।",
-    "date": "तारीख",
-    "action": "कार्रवाई",
-    "viewQuery": "क्वेरी देखें",
-    "viewQueryDetails": "क्वेरी विवरण",
-    "submittedOn": "जमा किया गया",
-    "contentMinLength": "सामग्री कम से कम 10 अक्षर होनी चाहिए",
-    "subjectMinLength": "विषय कम से कम 3 अक्षर का होना चाहिए",
-    "enterSubject": "विषय दर्ज करें"
-  },
   "validation": {
     "required": "यह फ़ील्ड आवश्यक है",
     "email": "कृपया वैध ईमेल दर्ज करें",
@@ -654,11 +614,12 @@
     "title": "सेटिंग्स",
     "subtitle": "अपनी एप्लिकेशन सेटिंग्स कॉन्फ़िगर करें",
     "generalSetting": "सामान्य सेटिंग",
-    "generalSettingDescription": "नाम, देश और विश्वविद्यालय, रिमाइंडर भेजने की अवधि, तारीख सेटिंग, भाषा प्राथमिकता बदलें",
+    "generalSettingDescription": "नाम, देश और विश्वविद्यालय बदलें",
     "planManagement": "योजना प्रबंधन",
     "planManagementDescription": "सदस्यता योजनाएं (फ्री, प्रीमियम) अपग्रेड/नवीनीकरण",
+    "planManagementSubtitle": "अपनी वर्तमान योजना में शामिल सुविधाओं का अन्वेषण करें। अधिक क्षमताओं को अनलॉक करने के लिए कभी भी अपग्रेड करें।",
     "agencyName": "एजेंसी का नाम",
-    "agencyNamePlaceholder": "विदेश एजेंसी",
+    "agencyNamePlaceholder": "एजेंसी का नाम दर्ज करें",
     "addCountriesServing": "सेवारत देश",
     "addUniversitiesServing": "सेवारत विश्वविद्यालय",
     "multiSelectCountries": "देश चुनें",
@@ -725,11 +686,24 @@
     },
     "overallCounts": {
       "title": "कुल गणना",
-      "description": "कुल आंकड़े और गणना देखें"
+      "description": "कुल आंकड़े और गणना देखें",
+      "totalAgencyPartner": "कुल एजेंसी पार्टनर",
+      "totalStaff": "कुल स्टाफ",
+      "totalApplicants": "कुल आवेदक",
+      "totalEnrolledApplicants": "कुल नामांकित आवेदक",
+      "totalInProgressApplicants": "कुल प्रगति में आवेदक",
+      "totalRejectedApplicants": "कुल अस्वीकृत आवेदक",
+      "inactiveApplicants": "निष्क्रिय आवेदक"
     },
     "graphs": {
       "title": "ग्राफ़",
-      "description": "विश्लेषण और दृश्य रिपोर्ट देखें"
+      "description": "विश्लेषण और दृश्य रिपोर्ट देखें",
+      "countriesServing": "सेवारत देश",
+      "countriesDescription": "देश में सफल आवेदकों का वितरण",
+      "topUniversities": "शीर्ष विश्वविद्यालय",
+      "universityName": "शीर्ष विश्वविद्यालय",
+      "successfulApplicants": "सफल आवेदकों की संख्या",
+      "applicantProgressChart": "आवेदक प्रगति चार्ट अवलोकन"
     }
   }
 }

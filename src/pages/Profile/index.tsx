@@ -1,25 +1,94 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Layout, Button, Input, FileUpload, PhoneInput } from "../../components";
 import { COLORS } from "../../constants";
+import { userService } from "../../services";
+import type { ProfilePhotoInfo } from "../../services";
+import { useAppSelector, useAppDispatch } from "../../redux/hooks";
+import { showLoader, hideLoader } from "../../redux/slices/loader/loaderSlice";
+import { addToast } from "../../redux/slices/toast/toastSlice";
+import { handleApiError, formatStatus } from "../../utils";
 
 interface ProfileData {
   name: string;
   email: string;
+  countryCode: string;
   contactNumber: string;
   role: string;
+  profilePhotoInfo: ProfilePhotoInfo | null;
+  isPrimaryAdmin ?: boolean;
 }
 
 const Profile = () => {
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
+  
   const [profileImage, setProfileImage] = useState<File | null>(null);
-
   const [profileData, setProfileData] = useState<ProfileData>({
-    name: "Arthur Cumin",
-    email: "abc@ex.in",
-    contactNumber: "919876543210",
-    role: "Primary Admin",
+    name: "",
+    email: "",
+    countryCode: "",
+    contactNumber: "",
+    role: "",
+    profilePhotoInfo: null,
+    isPrimaryAdmin:false
   });
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Ref to prevent duplicate API calls
+  const hasFetchedProfile = useRef(false);
+
+  // Parse profile photo JSON string
+  const parseProfilePhoto = (photoString: string | null): ProfilePhotoInfo | null => {
+    if (!photoString) return null;
+    try {
+      return JSON.parse(photoString);
+    } catch {
+      return null;
+    }
+  };
+
+  // Fetch profile details
+  const fetchProfileDetails = useCallback(async () => {
+    if (!user?.userId || hasFetchedProfile.current) return;
+
+    hasFetchedProfile.current = true;
+    dispatch(showLoader());
+
+    try {
+      const response = await userService.getProfileDetails({ userId: user.userId });
+      
+      if (response.status === "success" && response.data) {
+        const data = response.data;
+        const photoInfo = parseProfilePhoto(data.profilePhoto);
+        
+        // Build full phone number for PhoneInput (dialCode + number)
+        const dialCode = data.countryCode?.replace("+", "") || "";
+        const fullPhone = dialCode ? `${dialCode}${data.contactNumber || ""}` : data.contactNumber || "";
+
+        setProfileData({
+          name: data.name || "",
+          email: data.email || "",
+          countryCode: data.countryCode || "",
+          contactNumber: fullPhone,
+          role: formatStatus(data?.isPrimaryAdmin == true ? "Primary Admin" : data.role || ""),
+          profilePhotoInfo: photoInfo,
+        });
+      }
+    } catch (error: any) {
+      hasFetchedProfile.current = false; // Allow retry on error
+      const { message } = handleApiError(error, "Failed to fetch profile details");
+      dispatch(addToast({ type: "error", message }));
+    } finally {
+      dispatch(hideLoader());
+    }
+  }, [user?.userId, dispatch]);
+
+  // Fetch profile on mount
+  useEffect(() => {
+    fetchProfileDetails();
+  }, [fetchProfileDetails]);
 
   const handleFieldChange = (field: keyof ProfileData, value: string) => {
     setProfileData((prev) => ({
@@ -38,9 +107,60 @@ const Profile = () => {
     setProfileImage(null);
   };
 
-  const handleSave = () => {
-    console.log("Profile saved:", { ...profileData, profileImage });
+  const handleSave = async () => {
+    if (!user?.userId) return;
+
+    // Extract phone number without country code
+    const dialCode = profileData.countryCode.replace("+", "");
+    const phoneNumber = profileData.contactNumber.startsWith(dialCode)
+      ? profileData.contactNumber.slice(dialCode.length)
+      : profileData.contactNumber;
+
+    // Build profile photo info
+    let profilePhotoPayload: ProfilePhotoInfo | null = profileData.profilePhotoInfo;
+    
+    // If a new image is uploaded, create new photo info
+    if (profileImage) {
+      profilePhotoPayload = {
+        size: profileImage.size,
+        fileName: profileImage.name,
+        filePath: `/uploads/${profileImage.name}`,
+        fileType: profileImage.type,
+        accessUrl: URL.createObjectURL(profileImage), // This will be replaced by actual URL after upload
+      };
+    }
+
+    setIsSaving(true);
+    dispatch(showLoader());
+
+    try {
+      const response = await userService.updateProfile(
+        { userId: user.userId },
+        {
+          name: profileData.name.trim(),
+          countryCode: profileData.countryCode,
+          contactNumber: phoneNumber,
+          profilePhoto: profilePhotoPayload,
+        }
+      );
+
+      if (response.status === "success") {
+        dispatch(addToast({ 
+          type: "success", 
+          message: t("profile.updateSuccess", "Profile updated successfully") 
+        }));
+      }
+    } catch (error: any) {
+      const { message } = handleApiError(error, "Failed to update profile");
+      dispatch(addToast({ type: "error", message }));
+    } finally {
+      setIsSaving(false);
+      dispatch(hideLoader());
+    }
   };
+
+  // Check if save button should be disabled
+  const isSaveDisabled = !profileData.name.trim() || !profileData.contactNumber || isSaving;
 
   return (
     <Layout>
@@ -73,6 +193,23 @@ const Profile = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Section - File Upload */}
           <div className="w-full lg:w-80 shrink-0">
+            {/* Show existing profile photo if available */}
+            {profileData.profilePhotoInfo?.accessUrl && !profileImage && (
+              <div className="mb-4">
+                <p
+                  className="text-sm font-medium mb-2"
+                  style={{ color: COLORS.textDark }}
+                >
+                  {t("profile.currentPhoto", "Current Photo")}
+                </p>
+                <img
+                  src={profileData.profilePhotoInfo.accessUrl}
+                  alt="Profile"
+                  className="w-32 h-32 rounded-lg object-cover border"
+                  style={{ borderColor: COLORS.border }}
+                />
+              </div>
+            )}
             <FileUpload
               label={t("profile.uploadImage", "Upload Image")}
               accept="image/png,image/jpeg,image/jpg"
@@ -113,7 +250,12 @@ const Profile = () => {
               <PhoneInput
                 label={<>{t("profile.contactNumber", "Contact Number")} <span style={{ color: COLORS.error }}>*</span></>}
                 value={profileData.contactNumber}
-                onChange={(phone) => handleFieldChange("contactNumber", phone)}
+                onChange={(phone, countryData) => {
+                  handleFieldChange("contactNumber", phone);
+                  if (countryData?.dialCode) {
+                    handleFieldChange("countryCode", `+${countryData.dialCode}`);
+                  }
+                }}
                 placeholder={t("common.enterContactNumber", "Enter Contact Number")}
                 fullWidth
               />
@@ -123,7 +265,13 @@ const Profile = () => {
 
         {/* Save Button */}
         <div className="mt-8 flex justify-end">
-          <Button variant="accent" size="md" rounded onClick={handleSave}>
+          <Button 
+            variant="accent" 
+            size="md" 
+            rounded 
+            onClick={handleSave}
+            disabled={isSaveDisabled}
+          >
             {t("common.save", "Save")}
           </Button>
         </div>

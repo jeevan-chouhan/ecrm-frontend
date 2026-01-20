@@ -160,6 +160,53 @@ export interface UserListDataWithCounts {
 export type UserListResponse = ApiResponse<UserListDataWithCounts | PaginatedData<UserListItem> | UserListItem[]>;
 
 // ==========================================
+// Profile Details Types
+// ==========================================
+
+export interface ProfileDetailsParams {
+  userId: number | string;
+}
+
+export interface ProfilePhotoInfo {
+  size: number;
+  fileName: string;
+  filePath: string;
+  fileType: string;
+  accessUrl: string;
+}
+
+export interface ProfileDetailsData {
+  email: string;
+  name: string;
+  contactNumber: string;
+  countryCode: string;
+  profilePhoto: string | null; // JSON string containing ProfilePhotoInfo
+  status: string;
+  role: string;
+  isPrimaryAdmin ?: boolean;
+}
+
+export type ProfileDetailsResponse = ApiResponse<ProfileDetailsData>;
+
+// Update Profile
+export interface UpdateProfileParams {
+  userId: number | string;
+}
+
+export interface UpdateProfilePayload {
+  name: string;
+  countryCode: string;
+  contactNumber: string;
+  profilePhoto?: ProfilePhotoInfo | null;
+}
+
+export interface UpdateProfileData {
+  message: string;
+}
+
+export type UpdateProfileResponse = ApiResponse<UpdateProfileData>;
+
+// ==========================================
 // Agency Types (Countries & Universities)
 // ==========================================
 

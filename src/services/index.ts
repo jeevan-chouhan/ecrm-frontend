@@ -100,5 +100,13 @@ export type {
   PartnerListItem,
   PartnersListData,
   PartnersListResponse,
+  ProfileDetailsParams,
+  ProfilePhotoInfo,
+  ProfileDetailsData,
+  ProfileDetailsResponse,
+  UpdateProfileParams,
+  UpdateProfilePayload,
+  UpdateProfileData,
+  UpdateProfileResponse,
 } from "./types";
 

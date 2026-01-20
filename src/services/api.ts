@@ -15,8 +15,8 @@ import {
 
 // Base URL for API requests
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 
-  "https://unecclesiastically-nonconsolable-johnathan.ngrok-free.dev/api/v1";
-
+  // "https://unecclesiastically-nonconsolable-johnathan.ngrok-free.dev/api/v1";
+"http://192.168.1.73/ecrm/api/v1"
 // Request timeout (80 seconds)
 const TIMEOUT = 80000;
 
