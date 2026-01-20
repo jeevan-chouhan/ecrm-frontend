@@ -33,7 +33,10 @@
     "downloadSelected": "Download Selected",
     "remove": "Remove",
     "deleteSelected": "Delete Selected",
-    "addDocument": "Add Document"
+    "addDocument": "Add Document",
+    "enterContactNumber": "Enter Contact Number",
+    "searchCountry": "Search Country...",
+    "countryCode": "Country Code"
   },
   "sidebar": {
     "dashboard": "Dashboard",
@@ -91,7 +94,7 @@
     "enterBrandName": "Enter Brand Name",
     "uploadLogo": "Upload Logo",
     "contactNumber": "Contact Number",
-    "contactNumberPlaceholder": "Enter Phone Number",
+    "contactNumberPlaceholder": "Enter Contact Number",
     "alreadyHaveAccount": "Already Have An Account?",
     "dontHaveAccount": "Does't Have An Account?",
     "agreeToTerms": "Agree to Terms and Conditions",
@@ -111,7 +114,15 @@
     "verify": "Verify",
     "resendOtpIn": "Resend OTP In",
     "resendOtp": "Resend OTP",
-    "save": "Save"
+    "save": "Save",
+    "changePassword": "Change Password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmNewPassword": "Confirm New Password",
+    "enterCurrentPassword": "Enter Current Password",
+    "enterNewPassword": "Enter New Password",
+    "enterConfirmPassword": "Confirm New Password",
+    "passwordChangedSuccess": "Password changed successfully"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -219,7 +230,6 @@
     "enterName": "Enter Name",
     "selectDateOfBirth": "Select Date Of Birth",
     "selectGender": "Select Gender",
-    "enterPhoneNumber": "Enter Phone Number",
     "enterContactNumber": "Enter Contact Number",
     "enterEmail": "Enter Email Address",
     "enterAddress": "Enter Address",
@@ -554,6 +564,7 @@
     "activeToInactive": "Active to Inactive",
     "inactiveToActive": "Inactive to Active",
     "contactNumber": "Contact Number",
+    "enterContactNumber": "Enter Contact Number",
     "selectRole": "Select Role",
     "admin": "Admin",
     "manager": "Manager",
@@ -629,7 +640,6 @@
     "emailLabel": "Email",
     "enterEmail": "Enter Email Address",
     "contactNumber": "Contact Number",
-    "enterPhoneNumber": "Enter Phone Number",
     "commissionPercentageLabel": "Commission Percentage",
     "enterCommission": "Enter Commission",
     "descriptionLabel": "Description",

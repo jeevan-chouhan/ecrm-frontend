@@ -71,8 +71,8 @@ const initialState: AgencyPartnerState = {
     last: true,
   },
   sort: {
-    sortBy: null,
-    asc: null,
+    sortBy: "name",
+    asc: true,
   },
   filter: {
     search: "",

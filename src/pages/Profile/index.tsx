@@ -7,7 +7,6 @@ interface ProfileData {
   name: string;
   email: string;
   contactNumber: string;
-  password: string;
   role: string;
 }
 
@@ -19,7 +18,6 @@ const Profile = () => {
     name: "Arthur Cumin",
     email: "abc@ex.in",
     contactNumber: "919876543210",
-    password: "**********",
     role: "Primary Admin",
   });
 
@@ -56,7 +54,7 @@ const Profile = () => {
             className="text-xl md:text-2xl font-bold"
             style={{ color: COLORS.textDark }}
           >
-            {t("profile.title", "Profile setting")}
+            {t("profile.title", "Profile Setting")}
           </h1>
           <div className="flex items-center gap-2">
             <span style={{ color: COLORS.textMuted }}>
@@ -108,6 +106,7 @@ const Profile = () => {
                 value={profileData.email}
                 onChange={(e) => handleFieldChange("email", e.target.value)}
                 fullWidth
+                disabled
               />
 
               {/* Contact Number */}
@@ -115,16 +114,7 @@ const Profile = () => {
                 label={<>{t("profile.contactNumber", "Contact Number")} <span style={{ color: COLORS.error }}>*</span></>}
                 value={profileData.contactNumber}
                 onChange={(phone) => handleFieldChange("contactNumber", phone)}
-                country="in"
-                fullWidth
-              />
-
-              {/* Password */}
-              <Input
-                label={<>{t("profile.password", "Password")} <span style={{ color: COLORS.error }}>*</span></>}
-                type="password"
-                value={profileData.password}
-                onChange={(e) => handleFieldChange("password", e.target.value)}
+                placeholder={t("common.enterContactNumber", "Enter Contact Number")}
                 fullWidth
               />
             </div>

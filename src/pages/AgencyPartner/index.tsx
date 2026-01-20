@@ -128,6 +128,11 @@ const AgencyPartner = () => {
     }
   }, [dispatch]);
 
+  // Memoized sort model for DataTable
+  const sortModel: GridSortModel = useMemo(() => 
+    sort.sortBy ? [{ field: sort.sortBy, sort: sort.asc ? "asc" : "desc" }] : []
+  , [sort.sortBy, sort.asc]);
+
   // Popup handlers
   const handleOpenAddPopup = useCallback(() => {
     setEditingPartner(null);
@@ -204,17 +209,17 @@ const AgencyPartner = () => {
 
   // Memoized columns
   const columns: GridColDef[] = useMemo(() => [
-    {
-      field: "serialNo",
-      headerName: t("agencyPartner.no", "No."),
-      width: 70,
-      sortable: false,
-      renderCell: (params) => {
-        const index = partners.findIndex((p) => p.id === params.row.id);
-        const serialNo = pagination.page * pagination.size + index + 1;
-        return <span style={{ color: COLORS.textMuted }}>{String(serialNo).padStart(2, "0")}</span>;
-      },
-    },
+    // {
+    //   field: "serialNo",
+    //   headerName: t("agencyPartner.no", "No."),
+    //   width: 70,
+    //   sortable: false,
+    //   renderCell: (params) => {
+    //     const index = partners.findIndex((p) => p.id === params.row.id);
+    //     const serialNo = pagination.page * pagination.size + index + 1;
+    //     return <span style={{ color: COLORS.textMuted }}>{String(serialNo).padStart(2, "0")}</span>;
+    //   },
+    // },
     {
       field: "name",
       headerName: t("agencyPartner.agencyPartnerName", "Agency Partner Name"),
@@ -310,6 +315,7 @@ const AgencyPartner = () => {
             paginationMode="server"
             onPaginationModelChange={handlePaginationModelChange}
             sortingMode="server"
+            sortModel={sortModel}
             onSortModelChange={handleSortChange}
           />
         </div>

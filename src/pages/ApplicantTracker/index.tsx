@@ -14,7 +14,7 @@ import {
 } from "../../components";
 import { COLORS, applicationStatusOptions, typography, type Applicant } from "../../constants";
 import { Calendar, Edit } from "../../assets";
-import { formatDateValue, formatDateTime, handleApiError, getApplicationStatusLabel, getApplicationStageLabel } from "../../utils";
+import { formatDateTime, handleApiError, getApplicationStatusLabel, getApplicationStageLabel } from "../../utils";
 import ApplicantTrackerFilters from "./ApplicantTrackerFilters";
 import ApplicationStatusHistoryPopup from "./ApplicantDetail/ApplicationStatusHistoryPopup";
 import type { ApplicationStatusHistory } from "./ApplicantDetail/types";

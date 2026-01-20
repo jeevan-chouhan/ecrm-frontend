@@ -113,7 +113,6 @@ const Register = () => {
                     onChange={(value) => formik.setFieldValue("phone", value)}
                     error={formik.touched.phone ? formik.errors.phone : undefined}
                     placeholder={t("auth.contactNumberPlaceholder")}
-                    country="in"
                     fullWidth
                   />
 

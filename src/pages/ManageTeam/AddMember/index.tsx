@@ -40,7 +40,7 @@ export interface AddMemberFormValues {
 const defaultInitialValues: AddMemberFormValues = {
   name: "",
   email: "",
-  countryCode: "+91",
+  countryCode: "",
   contactNumber: "",
   role: "",
   adminId: "",
@@ -139,14 +139,14 @@ const AddMember = () => {
     }
   }, [user?.agencyId, dispatch]);
 
-  // Fetch universities from API
-  const fetchUniversities = useCallback(async (countryId: number | null = null) => {
+  // Fetch universities from API - supports multiple country IDs
+  const fetchUniversities = useCallback(async (countryIds: number[] | null = null) => {
     setIsLoadingUniversities(true);
     
     try {
       const response = await userService.getUniversities({
         agencyId: user?.agencyId ?? null,
-        countryId,
+        countryId: countryIds && countryIds.length > 0 ? countryIds : null,
       });
       // Handle response formats: [...], { data: [...] } or { status: "success", data: [...] }
       if (Array.isArray(response)) {
@@ -217,9 +217,9 @@ const AddMember = () => {
   // Fetch universities when in edit mode with assigned countries
   useEffect(() => {
     if (isEditMode && memberData?.assignedCountries?.length > 0) {
-      // Fetch universities for the first assigned country
-      const countryId = memberData.assignedCountries[0].id;
-      fetchUniversities(countryId);
+      // Fetch universities for all assigned countries
+      const countryIds = memberData.assignedCountries.map((c: { id: number }) => c.id);
+      fetchUniversities(countryIds);
     }
   }, [isEditMode, memberData, fetchUniversities]);
 
@@ -239,7 +239,7 @@ const AddMember = () => {
       return {
         name: memberData.name || "",
         email: memberData.email || "",
-        countryCode: memberData.countryCode || "+91",
+        countryCode: memberData.countryCode || "",
         contactNumber: fullPhone,
         role: memberData.role?.toLowerCase() || "",
         adminId,
@@ -505,7 +505,7 @@ const AddMember = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <PhoneInput
                 label={<>{t("manageTeam.contactNumber", "Contact Number")} <span style={{ color: COLORS.error }}>*</span></>}
-                placeholder={t("manageTeam.contactNumber", "Contact Number")}
+                placeholder={t("manageTeam.enterContactNumber", "Enter Contact Number")}
                 value={formik.values.contactNumber}
                 onChange={(value, countryData) => {
                   formik.setFieldValue("contactNumber", value);
@@ -574,17 +574,17 @@ const AddMember = () => {
                 label={<>{t("manageTeam.assignedCountry", "Assigned Country")} <span style={{ color: COLORS.error }}>*</span></>}
                 options={countryOptions}
                 value={formik.values.assignedCountries}
-                onChange={(values) => {
-                  formik.setFieldValue("assignedCountries", values);
-                  // Clear universities when countries change
-                  formik.setFieldValue("assignedUniversities", []);
-                  setUniversities([]);
-                  // Fetch universities based on last selected country
-                  if (values.length > 0) {
-                    const lastSelectedCountryId = parseInt(values[values.length - 1], 10);
-                    fetchUniversities(lastSelectedCountryId);
-                  }
-                }}
+                  onChange={(values) => {
+                    formik.setFieldValue("assignedCountries", values);
+                    // Clear universities when countries change
+                    formik.setFieldValue("assignedUniversities", []);
+                    setUniversities([]);
+                    // Fetch universities for all selected countries
+                    if (values.length > 0) {
+                      const countryIds = values.map((v) => parseInt(v, 10));
+                      fetchUniversities(countryIds);
+                    }
+                  }}
                 placeholder={t("manageTeam.selectAssignedCountry", "Select Assigned Country")}
                 error={
                   hasAttemptedSubmit && formik.errors.assignedCountries

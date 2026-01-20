@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, User, Logout, Notification, Menu } from "../../../assets";
+import { ChevronDown, User, Logout, Notification, Menu, Settings } from "../../../assets";
 import { COLORS, ROUTES } from "../../../constants";
 import { LanguageSwitcher } from "../../../language";
 import PublicHeader from "./PublicHeader";
@@ -11,6 +11,7 @@ interface ProfileDropdownItem {
   label: string;
   icon: React.ReactNode;
   onClick?: () => void;
+  isActive?: boolean;
 }
 
 interface HeaderProps {
@@ -63,6 +64,11 @@ const Header = ({
   }, []);
 
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Check if currently on Profile or Change Password page
+  const isOnProfilePage = location.pathname === ROUTES.PROFILE;
+  const isOnChangePasswordPage = location.pathname === ROUTES.CHANGE_PASSWORD;
 
   // Render public header for non-logged in users
   if (!isLoggedIn) {
@@ -80,6 +86,10 @@ const Header = ({
     onProfileClick?.();
   };
 
+  const handleChangePasswordClick = () => {
+    navigate(ROUTES.CHANGE_PASSWORD);
+  };
+
   const handleLogoutClick = () => {
     // Clear any auth state here if needed
     onLogoutClick?.();
@@ -91,6 +101,13 @@ const Header = ({
       label: t("header.profile", "Profile"),
       icon: <User className="h-4 w-4" />,
       onClick: handleProfileClick,
+      isActive: isOnProfilePage,
+    },
+    {
+      label: t("auth.changePassword", "Change Password"),
+      icon: <Settings className="h-4 w-4" />,
+      onClick: handleChangePasswordClick,
+      isActive: isOnChangePasswordPage,
     },
     {
       label: t("header.logout", "Logout"),
@@ -233,16 +250,22 @@ const Header = ({
                   }}
                   className="w-full px-4 py-2.5 flex items-center gap-3 text-sm transition-colors"
                   style={{
-                    color: COLORS.textDark,
+                    color: item.isActive ? COLORS.textWhite : COLORS.textDark,
+                    backgroundColor: item.isActive ? COLORS.accent : "transparent",
+                    borderRadius: item.isActive ? "6px" : "0",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = COLORS.surfaceHover;
+                    if (!item.isActive) {
+                      e.currentTarget.style.backgroundColor = COLORS.surfaceHover;
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "transparent";
+                    if (!item.isActive) {
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }
                   }}
                 >
-                  <span style={{ color: COLORS.textMuted }}>
+                  <span style={{ color: item.isActive ? COLORS.textWhite : COLORS.textMuted }}>
                     {item.icon}
                   </span>
                   {item.label}
@@ -252,6 +275,7 @@ const Header = ({
           )}
         </div>
       </div>
+
     </header>
   );
 };

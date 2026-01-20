@@ -30,6 +30,7 @@ export const ROUTES = {
   SETTINGS_PRICING: "/settings/pricing",
   SUPPORT_FEEDBACK: "/support-feedback",
   PROFILE: "/profile",
+  CHANGE_PASSWORD: "/change-password",
 } as const;
 
 // Type for route keys

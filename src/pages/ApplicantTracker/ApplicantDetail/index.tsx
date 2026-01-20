@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { GridPaginationModel } from "@mui/x-data-grid";
 import { Layout, StatusChangePopup, ConfirmationPopup } from "../../../components";
 import { COLORS, ROUTES, applicationStatusOptions, mockApplicantDetail } from "../../../constants";
-import { formatDate, formatDateTime, toSlug, handleApiError } from "../../../utils";
+import { formatDateTime, toSlug, handleApiError } from "../../../utils";
 import type { ApplicantDetail, UniversityApplication, ApplicationStatusHistory, PersonalDetails, EducationalDetails, WorkExperienceItem, AchievementItem } from "./types";
 import { applicantService, userService } from "../../../services";
 import type { CompleteDetailsData, ApplicationListItem } from "../../../services";

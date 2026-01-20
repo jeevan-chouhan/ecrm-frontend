@@ -163,16 +163,26 @@ const applicantService = {
   /**
    * Get universities list for an agency, optionally filtered by country
    * @param agencyId - Agency ID
-   * @param countryId - Optional Country ID to filter universities
+   * @param countryId - Optional Country ID(s) to filter universities (single, array, or comma-separated)
    * @returns Promise with universities response (array directly, not wrapped)
    */
   getUniversities: async (
     agencyId: number | string | null,
-    countryId?: number | string | null
+    countryId?: number | string | number[] | null
   ): Promise<UniversityItem[]> => {
+    // Handle countryId - can be single value, array, or comma-separated string
+    let countryIdValue: string | null = null;
+    if (countryId) {
+      if (Array.isArray(countryId)) {
+        countryIdValue = countryId.join(",");
+      } else {
+        countryIdValue = countryId.toString();
+      }
+    }
+
     const queryParams = createQueryParams({
       agencyId,
-      countryId: countryId || null,
+      countryId: countryIdValue,
     });
 
     const url = `${ENDPOINTS.AGENCIES.UNIVERSITIES}?${queryParams.toString()}`;
