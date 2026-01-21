@@ -1,85 +1,135 @@
 /**
  * Crypto utility for AES-GCM encryption
- * Matches backend CryptoUtil implementation
+ * Uses node-forge library for cross-environment compatibility (HTTP & HTTPS)
+ * Matches backend CryptoUtil implementation exactly
  */
 
-const GCM_IV_LENGTH = 12; // bytes
+import forge from "node-forge";
+
+const GCM_IV_LENGTH = 12; // 12 bytes = 96 bits (standard for AES-GCM)
+const GCM_TAG_LENGTH = 128; // 128 bits (standard for AES-GCM)
 const ENCRYPT_KEY = "d86d7bab3d6ac01a";
 
 /**
- * Convert string to ArrayBuffer
+ * Derive key using SHA-256 hash (to match backend's 256-bit key derivation)
+ * This ensures the key is exactly 256 bits (32 bytes)
  */
-const stringToArrayBuffer = (str: string): ArrayBuffer => {
-  const encoder = new TextEncoder();
-  return encoder.encode(str).buffer;
+const deriveKey = (): string => {
+  const md = forge.md.sha256.create();
+  md.update(ENCRYPT_KEY, "utf8");
+  return md.digest().data; // Returns raw binary string (32 bytes)
 };
 
 /**
- * Convert ArrayBuffer to Base64 string
+ * Encrypt plaintext using AES-GCM
+ * Output format: Base64(IV + ciphertext + authTag)
+ * This matches the Java backend CryptoUtil format exactly
+ * 
+ * @param plainText - The text to encrypt
+ * @returns Base64 encoded encrypted string
  */
-const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
+export const encrypt = async (plainText: string): Promise<string> => {
+  try {
+    // Try Web Crypto API first (works in HTTPS/secure context)
+    if (typeof crypto !== "undefined" && crypto.subtle) {
+      return await encryptWithWebCrypto(plainText);
+    }
+    
+    // Fallback to node-forge (works everywhere including HTTP)
+    return encryptWithForge(plainText);
+  } catch (error) {
+    console.error("Web Crypto encryption failed, falling back to forge:", error);
+    // Fallback to node-forge
+    try {
+      return encryptWithForge(plainText);
+    } catch (fallbackError) {
+      console.error("Fallback encryption also failed:", fallbackError);
+      throw new Error("Encryption failed");
+    }
   }
-  return btoa(binary);
 };
 
 /**
- * Generate SHA-256 hash of the key (to match backend's 256-bit key derivation)
+ * Encrypt using Web Crypto API (for HTTPS environments)
  */
-const deriveKey = async (): Promise<CryptoKey> => {
-  const keyData = stringToArrayBuffer(ENCRYPT_KEY);
+const encryptWithWebCrypto = async (plainText: string): Promise<string> => {
+  // Generate random IV (12 bytes)
+  const iv = crypto.getRandomValues(new Uint8Array(GCM_IV_LENGTH));
   
-  // Hash the key using SHA-256 (same as backend)
+  // Hash the key using SHA-256
+  const keyData = new TextEncoder().encode(ENCRYPT_KEY);
   const hashBuffer = await crypto.subtle.digest("SHA-256", keyData);
   
   // Import the hashed key for AES-GCM
-  return crypto.subtle.importKey(
+  const key = await crypto.subtle.importKey(
     "raw",
     hashBuffer,
     { name: "AES-GCM" },
     false,
     ["encrypt"]
   );
+  
+  // Encrypt the plaintext
+  const encodedText = new TextEncoder().encode(plainText);
+  const cipherText = await crypto.subtle.encrypt(
+    {
+      name: "AES-GCM",
+      iv: iv,
+      tagLength: GCM_TAG_LENGTH,
+    },
+    key,
+    encodedText
+  );
+  
+  // Combine IV + ciphertext (Web Crypto includes auth tag in ciphertext)
+  const combined = new Uint8Array(iv.length + cipherText.byteLength);
+  combined.set(iv, 0);
+  combined.set(new Uint8Array(cipherText), iv.length);
+  
+  // Return Base64 encoded result
+  return forge.util.encode64(
+    String.fromCharCode.apply(null, Array.from(combined))
+  );
 };
 
 /**
- * Encrypt plaintext using AES-GCM
- * Output format: Base64(IV + ciphertext + authTag)
- * @param plainText - The text to encrypt
- * @returns Base64 encoded encrypted string
+ * Encrypt using node-forge with AES-GCM (for HTTP environments or fallback)
+ * This produces output identical to Web Crypto API AES-GCM
  */
-export const encrypt = async (plainText: string): Promise<string> => {
-  try {
-    // Generate random IV (12 bytes)
-    const iv = crypto.getRandomValues(new Uint8Array(GCM_IV_LENGTH));
-    
-    // Derive the key
-    const key = await deriveKey();
-    
-    // Encrypt the plaintext
-    const encodedText = new TextEncoder().encode(plainText);
-    const cipherText = await crypto.subtle.encrypt(
-      {
-        name: "AES-GCM",
-        iv: iv,
-        tagLength: 128, // 128 bits auth tag
-      },
-      key,
-      encodedText
-    );
-    
-    // Combine IV + ciphertext (ciphertext includes auth tag in Web Crypto API)
-    const combined = new Uint8Array(iv.length + cipherText.byteLength);
-    combined.set(iv, 0);
-    combined.set(new Uint8Array(cipherText), iv.length);
-    
-    // Return Base64 encoded result
-    return arrayBufferToBase64(combined.buffer);
-  } catch (error) {
-    console.error("Encryption failed:", error);
-    throw new Error("Encryption failed");
-  }
+const encryptWithForge = (plainText: string): string => {
+  // Generate random IV (12 bytes)
+  const iv = forge.random.getBytesSync(GCM_IV_LENGTH);
+  
+  // Derive key using SHA-256 (32 bytes = 256 bits)
+  const key = deriveKey();
+  
+  // Create AES-GCM cipher
+  const cipher = forge.cipher.createCipher("AES-GCM", key);
+  
+  cipher.start({
+    iv: iv,
+    tagLength: GCM_TAG_LENGTH, // 128 bits
+  });
+  
+  // Encrypt the plaintext
+  cipher.update(forge.util.createBuffer(plainText, "utf8"));
+  cipher.finish();
+  
+  // Get ciphertext and auth tag
+  const ciphertext = cipher.output.data;
+  const tag = cipher.mode.tag.data;
+  
+  // Combine: IV + ciphertext + tag (matches Java format)
+  const combined = iv + ciphertext + tag;
+  
+  // Return Base64 encoded result
+  return forge.util.encode64(combined);
+};
+
+/**
+ * Synchronous encrypt function using node-forge only
+ * Use this if you need synchronous encryption
+ */
+export const encryptSync = (plainText: string): string => {
+  return encryptWithForge(plainText);
 };
