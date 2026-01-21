@@ -135,7 +135,7 @@ const Layout = ({
       label: t("sidebar.countryUniversity", "Country & University Directory"),
       path: ROUTES.COUNTRY_UNIVERSITY,
       icon: <University className="h-5 w-5" />,
-      isActive: location.pathname === ROUTES.COUNTRY_UNIVERSITY,
+      isActive: location.pathname.startsWith(ROUTES.COUNTRY_UNIVERSITY),
     },
     {
       label: t("sidebar.documentVault", "Document Vault"),
