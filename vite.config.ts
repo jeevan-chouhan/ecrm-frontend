@@ -20,6 +20,15 @@ export default defineConfig({
     }
   },
    build: {
-    chunkSizeWarningLimit: 1500, // in kB
+    chunkSizeWarningLimit: 2500, // in kB
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+        },
+      },
+    },
   },
 })
