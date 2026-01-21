@@ -86,7 +86,6 @@ const CountryUniversity = () => {
   const [appliedCourse, setAppliedCourse] = useState("");
 
   // Loading states
-  const [isLoading, setIsLoading] = useState(false);
   const [isLoadingCountries, setIsLoadingCountries] = useState(false);
 
   // Pagination
@@ -124,7 +123,6 @@ const CountryUniversity = () => {
   const fetchUniversities = useCallback(
     async (countryId?: number | null) => {
       if (!user?.agencyId) return;
-      setIsLoading(true);
       dispatch(showLoader());
       try {
         const response = await userService.getUniversities({
@@ -163,7 +161,6 @@ const CountryUniversity = () => {
         console.error("Failed to fetch universities:", error);
         // Keep mock data on error - don't clear the list
       } finally {
-        setIsLoading(false);
         dispatch(hideLoader());
       }
     },
