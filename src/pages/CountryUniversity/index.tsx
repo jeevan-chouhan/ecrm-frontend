@@ -377,7 +377,7 @@ const CountryUniversity = () => {
             onSearchChange={setSearchValue}
             pendingCountry={pendingCountry}
             pendingProgram={pendingProgram}
-            pendingCourse={pendingCourse}
+            pendingCourse={pendingCourse} 
             onCountryChange={setPendingCountry}
             onProgramChange={setPendingProgram}
             onCourseChange={setPendingCourse}
@@ -394,7 +394,6 @@ const CountryUniversity = () => {
           <DataTable
             rows={filteredUniversities}
             columns={columns}
-            // loading={isLoading}
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
             rowCount={filteredUniversities.length}
