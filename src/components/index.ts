@@ -18,6 +18,10 @@ export { default as DataTable } from "./DataTable/DataTable";
 export { default as GlobalLoader } from "./GlobalLoader/GlobalLoader";
 export { default as Toast } from "./Toast/Toast";
 export type { GridRowId, GridColDef, GridSortModel } from "./DataTable/DataTable";
+
+// Chart components
+export { PieChartComponent, BarChartComponent } from "./Charts";
+export type { PieChartDataItem, BarChartDataItem } from "./Charts";
 export {
   Accordion,
   AccordionGroup,

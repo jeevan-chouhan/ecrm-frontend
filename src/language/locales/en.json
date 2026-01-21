@@ -306,11 +306,12 @@
     "title": "Settings",
     "subtitle": "Configure Your Application Settings",
     "generalSetting": "General Setting",
-    "generalSettingDescription": "Change Name, Country & University, Reminder Sending Duration, Date Setting, Language Preference",
+    "generalSettingDescription": "Change Name, Country & University",
     "planManagement": "Plan Management",
     "planManagementDescription": "Subscription Plans (Free, Premium) Upgrade/Renew",
+    "planManagementSubtitle": "Explore features included in your current plan. Upgrade anytime to unlock more capabilities.",
     "agencyName": "Agency Name",
-    "agencyNamePlaceholder": "Abroad Agency",
+    "agencyNamePlaceholder": "Enter Agency Name",
     "addCountriesServing": "Countries Serving",
     "addUniversitiesServing": "Universities Serving",
     "multiSelectCountries": "Select Countries",
@@ -684,11 +685,24 @@
     },
     "overallCounts": {
       "title": "Overall Counts",
-      "description": "View Overall Statistics And Counts"
+      "description": "View Overall Statistics And Counts",
+      "totalAgencyPartner": "Total Agency Partner",
+      "totalStaff": "Total Staff",
+      "totalApplicants": "Total Applicants",
+      "totalEnrolledApplicants": "Total Enrolled Applicants",
+      "totalInProgressApplicants": "Total In-progress Applicants",
+      "totalRejectedApplicants": "Total Rejected Applicants",
+      "inactiveApplicants": "Inactive Applicants"
     },
     "graphs": {
       "title": "Graphs",
-      "description": "View Analytics And Visual Reports"
+      "description": "View Analytics And Visual Reports",
+      "countriesServing": "Countries Serving",
+      "countriesDescription": "Distribution of successful applicants in the country",
+      "topUniversities": "Top Universities",
+      "universityName": "Top Universities",
+      "successfulApplicants": "No. of Successful Applicants",
+      "applicantProgressChart": "Applicant Progress Chart  Overview"
     }
   }
 }

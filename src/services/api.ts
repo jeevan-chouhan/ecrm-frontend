@@ -13,17 +13,16 @@ import {
 // Configuration
 // ==========================================
 
-// Base URL for API requests
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 
-  "https://unecclesiastically-nonconsolable-johnathan.ngrok-free.dev/api/v1";
-
+// Base URL for API requests - Must be set in .env file
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 // Request timeout (80 seconds)
 const TIMEOUT = 80000;
 
 // Common headers for all requests
 const COMMON_HEADERS = {
   "Content-Type": "application/json",
-  "ngrok-skip-browser-warning": "true",
+  "Accept": "application/json",
+  "ngrok-skip-browser-warning": "69420",
 };
 
 // Public endpoints - No authentication token required
@@ -219,7 +218,7 @@ api.interceptors.response.use(
         processPendingRequests(refreshError as AxiosError, null);
 
         // Redirect to login
-        redirectToLogin();
+        // redirectToLogin();
 
         return Promise.reject(refreshError);
 

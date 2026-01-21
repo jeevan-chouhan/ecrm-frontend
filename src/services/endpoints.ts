@@ -18,6 +18,7 @@ export const ENDPOINTS = {
   USERS: {
     LIST: "/users/userList",
     DETAILS: "/users/userDetails",
+    PROFILE_DETAILS: "/users/profileDetails",
     REGISTER: "users/add-member",
     UPDATE: "/users/update-userDetails",
     UPDATE_STATUS: "/users/update-userStatus",

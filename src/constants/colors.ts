@@ -17,9 +17,11 @@ export const COLORS = {
   background: "#F5F5F5",
   surface: "#FFFFFF",
   surfaceHover: "#F0F0FF",
+  white: "#FFFFFF",
 
   // Border Colors
   border: "#D3D3D3",
+  borderLight: "#E5E7EB",
   borderFocus: "#8A2BE2", // Same as accent for consistency
 
   // Text Colors

@@ -21,6 +21,11 @@ import type {
   UpdateApplicantStatusParams,
   UpdateApplicantStatusPayload,
   UpdateApplicantStatusResponse,
+  ProfileDetailsParams,
+  ProfileDetailsResponse,
+  UpdateProfileParams,
+  UpdateProfilePayload,
+  UpdateProfileResponse,
 } from "./types";
 
 /**
@@ -238,6 +243,41 @@ const userService = {
 
     const response = await api.patch<UpdateApplicantStatusResponse>(
       `${ENDPOINTS.APPLICANTS.UPDATE_APPLICANT_STATUS}?${queryParams.toString()}`,
+      payload
+    );
+    return response.data;
+  },
+
+  /**
+   * Get user profile details
+   * @param params - Query parameters (userId)
+   * @returns Promise with profile details response
+   */
+  getProfileDetails: async (params: ProfileDetailsParams): Promise<ProfileDetailsResponse> => {
+    const queryParams = new URLSearchParams();
+    queryParams.append("userId", params.userId.toString());
+
+    const response = await api.get<ProfileDetailsResponse>(
+      `${ENDPOINTS.USERS.PROFILE_DETAILS}?${queryParams.toString()}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Update user profile details
+   * @param params - Query parameters (userId)
+   * @param payload - Profile data to update
+   * @returns Promise with update profile response
+   */
+  updateProfile: async (
+    params: UpdateProfileParams,
+    payload: UpdateProfilePayload
+  ): Promise<UpdateProfileResponse> => {
+    const queryParams = new URLSearchParams();
+    queryParams.append("userId", params.userId.toString());
+
+    const response = await api.put<UpdateProfileResponse>(
+      `${ENDPOINTS.USERS.PROFILE_DETAILS}?${queryParams.toString()}`,
       payload
     );
     return response.data;
