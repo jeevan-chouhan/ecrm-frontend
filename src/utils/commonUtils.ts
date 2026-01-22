@@ -20,9 +20,9 @@ export const getLabelFromConstant = <T extends { value: string; label: string }>
 };
 
 /**
- * Get enrollment type label from value
- * @param value - The enrollment type value (e.g., "referred-to-agency")
- * @returns The enrollment type label (e.g., "Referred to Agency Partner") or "-" if not found
+ * Get enrolment type label from value
+ * @param value - The enrolment type value (e.g., "referred-to-agency")
+ * @returns The enrolment type label (e.g., "Referred to Agency Partner") or "-" if not found
  */
 export const getEnrollmentTypeLabel = (value: string | undefined): string => {
   return getLabelFromConstant(value, enrollmentTypes);

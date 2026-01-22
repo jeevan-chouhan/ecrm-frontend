@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
+import { Tooltip } from "@mui/material";
 import { Button } from "../../../components";
 import { COLORS } from "../../../constants";
 import { getEnrollmentTypeLabel } from "../../../utils";
@@ -42,30 +43,34 @@ const ApplicantHeader = ({ applicant, onBack, onEdit, onStatusToggle }: Applican
               {t("applicantTracker.applicantStage", "Applicant Stage")} - {applicant.applicantStage}
             </p>
             <p className="text-sm" style={{ color: COLORS.textMuted }}>
-              {t("applicantTracker.enrollmentType", "Enrollment Type")} - {getEnrollmentTypeLabel(applicant.enrollmentType)}
+              {t("applicantTracker.enrollmentType", "Enrolment Type")} - {getEnrollmentTypeLabel(applicant.enrollmentType)}
             </p>
           </div>
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <button
-          onClick={onEdit}
-          className="p-2 rounded-md transition-colors hover:bg-slate-100"
-          style={{ color: COLORS.accent }}
-          aria-label={t("common.edit", "Edit")}
-        >
-          <Edit className="w-5 h-5" />
-        </button>
-        <button
-          onClick={onStatusToggle}
-          className="p-2 rounded-md transition-colors hover:bg-slate-100"
-          style={{
-            color: applicant.status === "Active" ? COLORS.error : COLORS.success,
-          }}
-          aria-label={t("applicantTracker.changeStatus", "Change Status")}
-        >
-          <ToggleStatus className="w-5 h-5" />
-        </button>
+        <Tooltip title={t("common.edit", "Edit")} arrow>
+          <button
+            onClick={onEdit}
+            className="p-2 rounded-md transition-colors hover:bg-slate-100"
+            style={{ color: COLORS.accent }}
+            aria-label={t("common.edit", "Edit")}
+          >
+            <Edit className="w-5 h-5" />
+          </button>
+        </Tooltip>
+        <Tooltip title={t("applicantTracker.changeStatus", "Change Status")} arrow>
+          <button
+            onClick={onStatusToggle}
+            className="p-2 rounded-md transition-colors hover:bg-slate-100"
+            style={{
+              color: applicant.status === "Active" ? COLORS.error : COLORS.success,
+            }}
+            aria-label={t("applicantTracker.changeStatus", "Change Status")}
+          >
+            <ToggleStatus className="w-5 h-5" />
+          </button>
+        </Tooltip>
       </div>
     </div>
   );

@@ -370,7 +370,7 @@ const ApplicantPersonalDetails = ({
       <div>
         <form onSubmit={formik.handleSubmit}>
           <div className="space-y-4">
-            {/* Enrollment Type, Name, and Date of Birth Row */}
+            {/* Enrolment Type, Name, and Date of Birth Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="w-full">
                 <label

@@ -186,7 +186,7 @@ const DocumentVault = () => {
     },
     {
       field: "enrollmentType",
-      headerName: t("documentVault.enrollmentType", "Enrollment Type"),
+      headerName: t("documentVault.enrollmentType", "Enrolment Type"),
       flex: 1.2,
       minWidth: 150,
       renderCell: (params) => (

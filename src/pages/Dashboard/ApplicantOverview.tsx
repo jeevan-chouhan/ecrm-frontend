@@ -1,7 +1,7 @@
 import { useMemo, useCallback, useState, useEffect, useRef, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import type { GridColDef, GridPaginationModel, GridRenderCellParams } from "@mui/x-data-grid";
+import type { GridColDef, GridPaginationModel, GridRenderCellParams, GridSortModel } from "@mui/x-data-grid";
 import { Tooltip } from "@mui/material";
 import { DataTable, StatusChangePopup, SearchBar, Select, Button } from "../../components";
 import { COLORS, ROUTES, typography, enrollmentTypes, statusFilterOptions } from "../../constants";
@@ -17,6 +17,7 @@ import {
   setApplicants,
   setPage,
   setPageSize,
+  setSort,
   setSearch,
   setStatusFilter,
   setEnrollmentTypeFilter,
@@ -57,7 +58,7 @@ const ApplicantOverview = () => {
   const { user } = useAppSelector((state) => state.auth);
 
   // Get dashboard state from Redux
-  const { applicants, pagination, filter } = useAppSelector((state) => state.dashboard);
+  const { applicants, pagination, filter, sort } = useAppSelector((state) => state.dashboard);
 
   // Local state for input fields (for controlled inputs with debounce)
   const [searchInput, setSearchInput] = useState(() => filter.search);
@@ -89,7 +90,7 @@ const ApplicantOverview = () => {
     if (!user?.agencyId) return;
 
     // Create a unique key for current fetch params
-    const fetchParamsKey = `${user.agencyId}-${filter.search}-${filter.status}-${filter.enrollmentType}-${pagination.page}-${pagination.size}`;
+    const fetchParamsKey = `${user.agencyId}-${filter.search}-${filter.status}-${filter.enrollmentType}-${pagination.page}-${pagination.size}-${sort.sortBy}-${sort.asc}`;
     
     // Skip if same params as last fetch attempt
     if (lastFetchParamsRef.current === fetchParamsKey) return;
@@ -110,6 +111,8 @@ const ApplicantOverview = () => {
           enrollmentType: filter.enrollmentType || null,
           page: pagination.page,
           size: pagination.size,
+          sortBy: sort.sortBy || null,
+          asc: sort.asc,
         });
 
         if (response.status === "success" && response.data) {
@@ -136,7 +139,7 @@ const ApplicantOverview = () => {
     };
 
     fetchApplicantOverview();
-  }, [user?.agencyId, filter.search, filter.status, filter.enrollmentType, pagination.page, pagination.size, dispatch]);
+  }, [user?.agencyId, filter.search, filter.status, filter.enrollmentType, pagination.page, pagination.size, sort.sortBy, sort.asc, dispatch]);
 
   // Cleanup debounce on unmount
   useEffect(() => {
@@ -264,16 +267,31 @@ const ApplicantOverview = () => {
     }
   }, [dispatch, pagination.page, pagination.size]);
 
+  // Handle sort model change
+  const handleSortModelChange = useCallback((model: GridSortModel) => {
+    if (model.length > 0) {
+      const { field, sort: sortOrder } = model[0];
+      dispatch(setSort({ sortBy: field, asc: sortOrder === "asc" }));
+    } else {
+      dispatch(setSort({ sortBy: "", asc: true }));
+    }
+  }, [dispatch]);
+
   // Pagination model for DataTable
   const paginationModel: GridPaginationModel = useMemo(() => ({
     page: pagination.page,
     pageSize: pagination.size,
   }), [pagination.page, pagination.size]);
 
+  // Sort model for DataTable
+  const sortModel: GridSortModel = useMemo(() => 
+    sort.sortBy ? [{ field: sort.sortBy, sort: sort.asc ? "asc" : "desc" }] : []
+  , [sort.sortBy, sort.asc]);
+
   // Enrollment type options with placeholder
   const enrollmentTypeOptionsWithPlaceholder = useMemo(() => {
     return [
-      { value: "", label: t("dashboard.selectEnrollmentType", "Select Enrollment Type") },
+      { value: "", label: t("dashboard.selectEnrollmentType", "Select Enrolment Type") },
       ...enrollmentTypes,
     ];
   }, [t]);
@@ -432,7 +450,7 @@ const ApplicantOverview = () => {
     },
     {
       field: "enrollmentType",
-      headerName: t("dashboard.enrollmentType", "Enrollment Type"),
+      headerName: t("dashboard.enrollmentType", "Enrolment Type"),
       flex: 1.2,
       minWidth: 150,
       sortable: true,
@@ -505,7 +523,7 @@ const ApplicantOverview = () => {
           />
         </div>
 
-        {/* Enrollment Type Filter */}
+        {/* Enrolment Type Filter */}
         <div className="w-full md:w-56 applicant-overview-filter-placeholder">
           <Select
             label={t("dashboard.enrollmentTypeLabel", "Type")}
@@ -557,7 +575,9 @@ const ApplicantOverview = () => {
         onPaginationModelChange={handlePaginationChange}
         paginationMode="server"
         rowCount={pagination.totalElements}
-        sortingMode="client"
+        sortingMode="server"
+        sortModel={sortModel}
+        onSortModelChange={handleSortModelChange}
       />
 
       {/* Status Change Confirmation Popup */}

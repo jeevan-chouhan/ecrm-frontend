@@ -71,6 +71,7 @@ const protectedRoutes: RouteConfig[] = [
   { path: ROUTES.APPLICANT_TRACKER, element: <ApplicantTracker /> },
   { path: ROUTES.CREATE_APPLICANT, element: <CreateApplicant /> },
   { path: ROUTES.APPLICANT_DETAIL, element: <ApplicantDetailView /> },
+  { path: ROUTES.APPLICANT_TRACKER_DOCUMENTS, element: <DocumentDetail /> },
   { path: ROUTES.COUNTRY_UNIVERSITY, element: <CountryUniversity /> },
   { path: ROUTES.UNIVERSITY_DETAIL, element: <UniversityDetail /> },
   { path: ROUTES.DOCUMENT_VAULT, element: <DocumentVault /> },

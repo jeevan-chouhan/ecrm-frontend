@@ -5,6 +5,7 @@ import { COLORS, typography } from "../../../constants";
 import { File, Eye, Download } from "../../../assets";
 import { EmptyState } from "./DisplayComponents";
 import ScrollableContainer from "./ScrollableContainer";
+import type { ApplicationSpecificDocumentItem } from "./types";
 
 // Document type icons mapping
 const documentIcons: Record<string, string> = {
@@ -17,40 +18,30 @@ const documentIcons: Record<string, string> = {
   default: COLORS.documentDefault,
 };
 
-export interface DocumentItem {
-  id: string;
-  name: string;
-  type: string;
-  uploaded: boolean;
-  verified: boolean;
-  fileUrl?: string;
-  fileName?: string;
+interface ApplicationSpecificDocumentsDisplayProps {
+  documents: ApplicationSpecificDocumentItem[];
+  onView?: (document: ApplicationSpecificDocumentItem) => void;
+  onDownload?: (document: ApplicationSpecificDocumentItem) => void;
 }
 
-interface DocumentsDisplayProps {
-  documents: DocumentItem[];
-  onView?: (document: DocumentItem) => void;
-  onDownload?: (document: DocumentItem) => void;
-}
-
-const DocumentsDisplay = ({
+const ApplicationSpecificDocumentsDisplay = ({
   documents,
   onView,
   onDownload,
-}: DocumentsDisplayProps) => {
+}: ApplicationSpecificDocumentsDisplayProps) => {
   const { t } = useTranslation();
 
   const getDocumentIconColor = (type: string): string => {
     return documentIcons[type] || documentIcons.default;
   };
 
-  const handleView = (document: DocumentItem) => {
+  const handleView = (document: ApplicationSpecificDocumentItem) => {
     if (onView) {
       onView(document);
     }
   };
 
-  const handleDownload = (document: DocumentItem, e: React.MouseEvent) => {
+  const handleDownload = (document: ApplicationSpecificDocumentItem, e: React.MouseEvent) => {
     e.stopPropagation();
     if (onDownload) {
       onDownload(document);
@@ -65,7 +56,7 @@ const DocumentsDisplay = ({
 
   if (!uploadedDocuments || uploadedDocuments.length === 0) {
     return (
-      <EmptyState message={t("applicantDetailView.noDocuments", "No documents available.")} />
+      <EmptyState message={t("applicantDetailView.noApplicationSpecificDocuments", "No application-specific documents available.")} />
     );
   }
 
@@ -73,7 +64,7 @@ const DocumentsDisplay = ({
     <ScrollableContainer
       maxHeight="400px"
       className="overflow-x-auto"
-      scrollbarClassName="documents-scroll"
+      scrollbarClassName="application-specific-documents-scroll"
     >
       <table className="w-full" style={{ borderCollapse: "separate", borderSpacing: 0 }}>
         <thead>
@@ -87,6 +78,26 @@ const DocumentsDisplay = ({
               }}
             >
               {t("applicantDetailView.documentName", "Document Name")}
+            </th>
+            <th
+              className="text-left py-3 px-4 font-semibold tracking-wide"
+              style={{
+                color: COLORS.textMuted,
+                borderBottom: `1px solid ${COLORS.border}`,
+                fontSize: typography.fontSize.body,
+              }}
+            >
+              {t("applicantDetailView.universityName", "University")}
+            </th>
+            <th
+              className="text-left py-3 px-4 font-semibold tracking-wide"
+              style={{
+                color: COLORS.textMuted,
+                borderBottom: `1px solid ${COLORS.border}`,
+                fontSize: typography.fontSize.body,
+              }}
+            >
+              {t("applicantDetailView.courseName", "Course")}
             </th>
             <th
               className="text-left py-3 px-4 font-semibold tracking-wide"
@@ -138,6 +149,20 @@ const DocumentsDisplay = ({
                     {document.name}
                   </span>
                 </div>
+              </td>
+
+              {/* University Name */}
+              <td className="py-3 px-4">
+                <span className="text-sm" style={{ color: COLORS.textDark }}>
+                  {document.universityName || "-"}
+                </span>
+              </td>
+
+              {/* Course Name */}
+              <td className="py-3 px-4">
+                <span className="text-sm" style={{ color: COLORS.textDark }}>
+                  {document.courseName || "-"}
+                </span>
               </td>
 
               {/* Actions */}
@@ -196,5 +221,5 @@ const DocumentsDisplay = ({
   );
 };
 
-export default memo(DocumentsDisplay);
+export default memo(ApplicationSpecificDocumentsDisplay);
 

@@ -731,6 +731,7 @@ export interface CompleteDetailsPersonal {
   notes: string;
   dob: string | null;
   gender: string;
+  status?: "ACTIVE" | "INACTIVE";
   message: string;
 }
 
@@ -774,6 +775,8 @@ export interface CompleteDetailsData {
   educationalDetails: CompleteDetailsEducational;
   workExperiences: CompleteDetailsWorkExperience[];
   achievements: CompleteDetailsAchievement[];
+  commonDocuments?: ApplicationPreferenceDocument[];
+  applicationSpecificDocuments?: ApplicationPreferenceDocument[];
 }
 
 export type CompleteDetailsResponse = ApiResponse<CompleteDetailsData>;
@@ -966,3 +969,69 @@ export interface PartnersListData {
 
 // Partners List Response
 export type PartnersListResponse = ApiResponse<PartnersListData>;
+
+// ==========================================
+// Documents Types
+// ==========================================
+
+export interface DocumentFile {
+  size: number;
+  fileName: string;
+  filePath: string;
+  fileType: string;
+  accessUrl: string;
+}
+
+export interface ApplicantDocument {
+  id: number;
+  applicantId: number;
+  documentName: string;
+  document: DocumentFile;
+  isVerified: boolean;
+  message?: string;
+}
+
+export type GetDocumentsResponse = ApiResponse<ApplicantDocument[]>;
+
+// Application Preference Documents Response Types
+export interface ApplicationPreferenceDocument extends ApplicantDocument {
+  universityName?: string | null;
+  courseName?: string | null;
+}
+
+export interface UniversityCourseName {
+  count: number;
+  name: string;
+}
+
+export interface ApplicantPersonalDetail {
+  applicantId: number;
+  applicantName: string;
+  enrollmentType: string;
+}
+
+export interface DocumentCount {
+  totalDocuments: number;
+  approved: number;
+  pending: number;
+}
+
+export interface ApplicationPreferenceDocumentsData {
+  commonDocuments: ApplicationPreferenceDocument[];
+  applicationSpecificDocuments: ApplicationPreferenceDocument[];
+  uploadUniversityAndCoursesName: UniversityCourseName[];
+  verifiedUniversityAndCoursesName: UniversityCourseName[];
+  applicantPersonalDetail: ApplicantPersonalDetail;
+  documentCount: DocumentCount;
+}
+
+export type ApplicationPreferenceDocumentsResponse = ApiResponse<ApplicationPreferenceDocumentsData>;
+
+// Upload Document Request Payload
+export interface UploadDocumentPayload {
+  documentName: string;
+  document: File;
+}
+
+// Upload Document Response
+export type UploadDocumentResponse = ApiResponse<ApplicantDocument>;

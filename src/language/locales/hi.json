@@ -20,6 +20,7 @@
     "back": "वापस",
     "next": "अगला",
     "previous": "पिछला",
+    "of": "का",
     "success": "सफल",
     "error": "त्रुटि",
     "warning": "चेतावनी",
@@ -37,7 +38,8 @@
     "addDocument": "दस्तावेज़ जोड़ें",
     "enterContactNumber": "संपर्क नंबर दर्ज करें",
     "searchCountry": "देश खोजें...",
-    "countryCode": "देश कोड"
+    "countryCode": "देश कोड",
+    "openInNewTab": "नई टैब में खोलें"
   },
   "sidebar": {
     "dashboard": "डैशबोर्ड",
@@ -507,7 +509,11 @@
     "actions": "कार्रवाई",
     "pending": "लंबित",
     "applicationStatusHistory": "आवेदन स्थिति इतिहास",
-    "noStatusHistory": "कोई स्थिति इतिहास उपलब्ध नहीं है।"
+    "noStatusHistory": "कोई स्थिति इतिहास उपलब्ध नहीं है।",
+    "applicationSpecificDocuments": "एप्लिकेशन-विशिष्ट दस्तावेज़",
+    "noApplicationSpecificDocuments": "अभी तक कोई एप्लिकेशन-विशिष्ट दस्तावेज़ नहीं जोड़े गए हैं।",
+    "universityName": "विश्वविद्यालय",
+    "courseName": "कोर्स"
   },
   "manageTeam": {
     "title": "टीम प्रबंधन",
@@ -581,7 +587,10 @@
     "approveDocument": "दस्तावेज़ स्वीकृत करें",
     "approveConfirmation": "क्या आप वाकई इस दस्तावेज़ को स्वीकृत करना चाहते हैं?",
     "verifyDocument": "दस्तावेज़ सत्यापित करें",
-    "verifyConfirmation": "क्या आप वाकई इस दस्तावेज़ को सत्यापित करना चाहते हैं?"
+    "verifyConfirmation": "क्या आप वाकई इस दस्तावेज़ को सत्यापित करना चाहते हैं?",
+    "page": "पृष्ठ",
+    "deleteDocument": "दस्तावेज़ हटाएं",
+    "deleteConfirmation": "क्या आप वाकई दस्तावेज़ '{{documentName}}' को हटाना चाहते हैं?"
   },
   "agencyPartner": {
     "title": "एजेंसी पार्टनर",

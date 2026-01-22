@@ -71,10 +71,17 @@ export interface DocumentItem {
   verified: boolean;
   fileUrl?: string;
   fileName?: string;
+  fileType?: string;
+}
+
+export interface ApplicationSpecificDocumentItem extends DocumentItem {
+  universityName?: string | null;
+  courseName?: string | null;
 }
 
 export interface Documents {
   documents: DocumentItem[];
+  applicationSpecificDocuments?: ApplicationSpecificDocumentItem[];
 }
 
 export interface ApplicationStatusHistory {

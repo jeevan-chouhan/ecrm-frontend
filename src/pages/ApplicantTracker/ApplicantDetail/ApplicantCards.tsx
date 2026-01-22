@@ -4,34 +4,35 @@ import { useTranslation } from "react-i18next";
 import { Card } from "../../../components";
 import { COLORS } from "../../../constants";
 import { Applicant, University, Document } from "../../../assets";
-import type { ApplicantDetail, DocumentItem } from "./types";
+import type { ApplicantDetail, DocumentItem, ApplicationSpecificDocumentItem } from "./types";
 import PersonalDetailsDisplay from "./PersonalDetailsDisplay";
 import EducationalDetailsDisplay from "./EducationalDetailsDisplay";
 import WorkExperienceDisplay from "./WorkExperienceDisplay";
 import AchievementsDisplay from "./AchievementsDisplay";
 import DocumentsDisplay from "./DocumentsDisplay";
+import ApplicationSpecificDocumentsDisplay from "./ApplicationSpecificDocumentsDisplay";
 
 interface ApplicantCardsProps {
   applicant: ApplicantDetail | null;
+  onDocumentView?: (document: DocumentItem | ApplicationSpecificDocumentItem) => void;
+  onDocumentDownload?: (document: DocumentItem | ApplicationSpecificDocumentItem) => void;
 }
 
-const ApplicantCards = ({ applicant }: ApplicantCardsProps) => {
+const ApplicantCards = ({ applicant, onDocumentView, onDocumentDownload }: ApplicantCardsProps) => {
   const { t } = useTranslation();
 
   // Memoize document handlers to prevent re-renders
   const handleDocumentView = useCallback((doc: DocumentItem) => {
-    // TODO: Implement document view functionality
-    if (import.meta.env.DEV) {
-      console.log("View document:", doc);
+    if (onDocumentView) {
+      onDocumentView(doc);
     }
-  }, []);
+  }, [onDocumentView]);
 
   const handleDocumentDownload = useCallback((doc: DocumentItem) => {
-    // TODO: Implement document download functionality
-    if (import.meta.env.DEV) {
-      console.log("Download document:", doc);
+    if (onDocumentDownload) {
+      onDocumentDownload(doc);
     }
-  }, []);
+  }, [onDocumentDownload]);
 
   // Memoize renderCard function
   const renderCard = useCallback((
@@ -157,7 +158,7 @@ const ApplicantCards = ({ applicant }: ApplicantCardsProps) => {
         )}
       </div>
 
-      {/* View Documents Card */}
+      {/* Common Documents Card */}
       {renderCard(
         "documents",
         t("applicantDetailView.viewDocuments", "View Documents"),
@@ -172,6 +173,26 @@ const ApplicantCards = ({ applicant }: ApplicantCardsProps) => {
           <div className="flex items-center justify-center min-h-[120px]">
             <p className="text-sm text-center" style={{ color: COLORS.textMuted }}>
               {t("applicantDetailView.noDocuments", "No Documents Added Yet.")}
+            </p>
+          </div>
+        )
+      )}
+
+      {/* Application-Specific Documents Card */}
+      {renderCard(
+        "application-specific-documents",
+        t("applicantDetailView.applicationSpecificDocuments", "Application-Specific Documents"),
+        Document,
+        applicant?.documents?.applicationSpecificDocuments && applicant.documents.applicationSpecificDocuments.length > 0 ? (
+          <ApplicationSpecificDocumentsDisplay
+            documents={applicant.documents.applicationSpecificDocuments}
+            onView={handleDocumentView}
+            onDownload={handleDocumentDownload}
+          />
+        ) : (
+          <div className="flex items-center justify-center min-h-[120px]">
+            <p className="text-sm text-center" style={{ color: COLORS.textMuted }}>
+              {t("applicantDetailView.noApplicationSpecificDocuments", "No Application-Specific Documents Added Yet.")}
             </p>
           </div>
         )

@@ -9,7 +9,6 @@ import {
   Dashboard,
   Applicant,
   University,
-  Document,
   Agency,
   Team,
   Report,
@@ -108,8 +107,8 @@ const Layout = ({
     if (path !== ROUTES.DASHBOARD) {
       dispatch(resetDashboardState());
     }
-    // Reset documentVault state if navigating away from DocumentVault routes
-    if (!path.startsWith(ROUTES.DOCUMENT_VAULT)) {
+    // Reset documentVault state if navigating away from Application Tracker Documents routes
+    if (!path.includes("/application-tracker/documents/")) {
       dispatch(resetDocumentVaultState());
     }
     // Reset agencyPartner state if navigating away from Agency Partner
@@ -136,12 +135,6 @@ const Layout = ({
       path: ROUTES.COUNTRY_UNIVERSITY,
       icon: <University className="h-5 w-5" />,
       isActive: location.pathname.startsWith(ROUTES.COUNTRY_UNIVERSITY),
-    },
-    {
-      label: t("sidebar.documentVault", "Document Vault"),
-      path: ROUTES.DOCUMENT_VAULT,
-      icon: <Document className="h-5 w-5" />,
-      isActive: location.pathname.startsWith(ROUTES.DOCUMENT_VAULT),
     },
     {
       label: t("sidebar.agencyPartner", "Agency Partner"),

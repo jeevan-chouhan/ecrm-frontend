@@ -34,7 +34,7 @@ const PersonalDetailsDisplay = ({ data }: PersonalDetailsDisplayProps) => {
 
   const details = useMemo(() => [
     {
-      label: t("applicant.enrollmentType", "Enrollment Type"),
+      label: t("applicant.enrollmentType", "Enrolment Type"),
       value: getEnrollmentTypeLabel(data.enrollmentType),
     },
     {

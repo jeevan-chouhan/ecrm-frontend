@@ -73,8 +73,8 @@ const initialState: DashboardState = {
     last: true,
   },
   sort: {
-    sortBy: null,
-    asc: true,
+    sortBy: "createdAt",
+    asc: false, // Descending order (newest first)
   },
   filter: {
     search: "",

@@ -206,21 +206,27 @@ const userService = {
     });
 
     // Optional params - only append if they have values
-    const optionalParams: Record<string, string | number | boolean | null | undefined> = {
-      search: params.search,
-      status: params.status !== "all" ? params.status : null,
-      enrollmentType: params.enrollmentType,
-      page: params.page,
-      size: params.size,
-      sortBy: params.sortBy,
-      asc: params.asc,
-    };
-
-    Object.entries(optionalParams).forEach(([key, value]) => {
-      if (value !== null && value !== undefined && value !== "") {
-        queryParams.append(key, value.toString());
-      }
-    });
+    if (params.search) {
+      queryParams.append("search", params.search);
+    }
+    if (params.status && params.status !== "all") {
+      queryParams.append("status", params.status);
+    }
+    if (params.enrollmentType) {
+      queryParams.append("enrollmentType", params.enrollmentType);
+    }
+    if (params.page !== null && params.page !== undefined) {
+      queryParams.append("page", params.page.toString());
+    }
+    if (params.size !== null && params.size !== undefined) {
+      queryParams.append("size", params.size.toString());
+    }
+    if (params.sortBy) {
+      queryParams.append("sortBy", params.sortBy);
+    }
+    if (params.asc !== null && params.asc !== undefined) {
+      queryParams.append("asc", params.asc.toString());
+    }
 
     const response = await api.get<ApplicantOverviewResponse>(
       `${ENDPOINTS.APPLICANTS.OVERVIEW}?${queryParams.toString()}`
