@@ -1,6 +1,6 @@
 import { useMemo, memo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import type { GridColDef, GridPaginationModel, GridRenderCellParams } from "@mui/x-data-grid";
+import type { GridColDef, GridPaginationModel, GridRenderCellParams, GridSortModel } from "@mui/x-data-grid";
 import { Tooltip } from "@mui/material";
 import { DataTable, Button } from "../../../components";
 import { COLORS } from "../../../constants";
@@ -13,6 +13,8 @@ interface UniversityApplicationTableProps {
   loading: boolean;
   paginationModel: GridPaginationModel;
   onPaginationModelChange: (model: GridPaginationModel) => void;
+  sortModel: GridSortModel;
+  onSortModelChange: (model: GridSortModel) => void;
   onUpdateStatus: (application: UniversityApplication) => void;
   onApply: (application: UniversityApplication) => void;
   onViewStatusHistory: (application: UniversityApplication) => void;
@@ -23,6 +25,8 @@ const UniversityApplicationTable = ({
   loading,
   paginationModel,
   onPaginationModelChange,
+  sortModel,
+  onSortModelChange,
   onUpdateStatus,
   onApply,
   onViewStatusHistory,
@@ -276,8 +280,10 @@ const UniversityApplicationTable = ({
         pageSizeOptions={[5, 10, 25, 50]}
         paginationModel={paginationModel}
         onPaginationModelChange={onPaginationModelChange}
-        paginationMode="client"
-        sortingMode="client"
+        paginationMode="server"
+        sortingMode="server"
+        sortModel={sortModel}
+        onSortModelChange={onSortModelChange}
       />
     </div>
   );

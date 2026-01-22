@@ -506,7 +506,11 @@
     "actions": "कार्रवाई",
     "pending": "लंबित",
     "applicationStatusHistory": "आवेदन स्थिति इतिहास",
-    "noStatusHistory": "कोई स्थिति इतिहास उपलब्ध नहीं है।"
+    "noStatusHistory": "कोई स्थिति इतिहास उपलब्ध नहीं है।",
+    "applicationSpecificDocuments": "एप्लिकेशन-विशिष्ट दस्तावेज़",
+    "noApplicationSpecificDocuments": "अभी तक कोई एप्लिकेशन-विशिष्ट दस्तावेज़ नहीं जोड़े गए हैं।",
+    "universityName": "विश्वविद्यालय",
+    "courseName": "कोर्स"
   },
   "manageTeam": {
     "title": "टीम प्रबंधन",

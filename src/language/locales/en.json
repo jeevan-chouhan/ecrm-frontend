@@ -601,7 +601,11 @@
     "actions": "Actions",
     "pending": "Pending",
     "applicationStatusHistory": "Application Status History",
-    "noStatusHistory": "No Status History Available."
+    "noStatusHistory": "No Status History Available.",
+    "applicationSpecificDocuments": "Application-Specific Documents",
+    "noApplicationSpecificDocuments": "No Application-Specific Documents Added Yet.",
+    "universityName": "University",
+    "courseName": "Course"
   },
   "manageTeam": {
     "title": "Manage Team",

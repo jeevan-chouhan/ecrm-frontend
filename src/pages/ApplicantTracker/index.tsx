@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef, startTransition } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import type { GridColDef, GridPaginationModel, GridRenderCellParams } from "@mui/x-data-grid";
+import type { GridColDef, GridPaginationModel, GridRenderCellParams, GridSortModel } from "@mui/x-data-grid";
 import { Tooltip } from "@mui/material";
 import {
   Layout,
@@ -48,6 +48,11 @@ const ApplicantTracker = () => {
     page: 0,
     pageSize: 10,
   });
+
+  // Sort state - default to updatedDate desc
+  const [sortModel, setSortModel] = useState<GridSortModel>([
+    { field: "lastUpdatedDate", sort: "desc" },
+  ]);
 
   // Applied filter states (used for API calls and filtering) - must be declared before fetchApplications
   const [appliedAdmin, setAppliedAdmin] = useState("");
@@ -183,8 +188,8 @@ const ApplicantTracker = () => {
         search: searchQuery || null,
         page: paginationModel.page,
         size: paginationModel.pageSize,
-        sortBy: null,
-        asc: null,
+        sortBy: sortModel.length > 0 ? (sortModel[0].field === "lastUpdatedDate" ? "updatedAt" : sortModel[0].field) : "updatedAt",
+        asc: sortModel.length > 0 ? (sortModel[0].sort === "asc") : false, // Descending order (newest first)
       });
 
       if (response.status === "success" && response.data) {
@@ -225,6 +230,7 @@ const ApplicantTracker = () => {
     appliedLastUpdatedToDate,
     formatDateToISO,
     formatDateToISODateTime,
+    sortModel,
   ]);
 
   // Debounced search effect
@@ -569,6 +575,11 @@ const ApplicantTracker = () => {
   // Handle pagination change
   const handlePaginationModelChange = useCallback((model: GridPaginationModel) => {
     setPaginationModel(model);
+  }, []);
+
+  // Handle sort model change
+  const handleSortModelChange = useCallback((model: GridSortModel) => {
+    setSortModel(model);
   }, []);
 
 
@@ -1126,7 +1137,9 @@ const ApplicantTracker = () => {
           paginationModel={paginationModel}
           onPaginationModelChange={handlePaginationModelChange}
           rowCount={totalCount}
-          sortingMode="client"
+          sortingMode="server"
+          sortModel={sortModel}
+          onSortModelChange={handleSortModelChange}
         />
 
         {/* Application Status Change Popup (reusing from University Application Summary) */}

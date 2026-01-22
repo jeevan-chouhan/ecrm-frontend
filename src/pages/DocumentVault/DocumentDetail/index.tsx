@@ -496,14 +496,6 @@ const DocumentDetail = () => {
         detectedType = getFileType(doc.fileName || "");
       }
       
-      // Debug: Log file info
-      console.log("Viewing document:", {
-        name: doc.fileName || doc.name,
-        url: doc.fileUrl,
-        fileType: doc.fileType,
-        detectedType,
-      });
-      
       setViewerFile({
         url: doc.fileUrl,
         name: doc.fileName || doc.name,

@@ -68,14 +68,13 @@ const UploadDocView = ({ isOpen, file, onClose }: UploadDocViewProps) => {
           const loadingTask = pdfjsLib.getDocument({ data: pdfData });
           const pdf = await loadingTask.promise;
           
-          setPdfDocument(pdf);
-          setNumPages(pdf.numPages);
-          setLoading(false);
-        } catch (err) {
-          console.error("Failed to load PDF:", err);
-          setError("Failed to load PDF. Please use 'Open in New Tab' to view.");
-          setLoading(false);
-        }
+                setPdfDocument(pdf);
+                setNumPages(pdf.numPages);
+                setLoading(false);
+              } catch (err) {
+                setError("Failed to load PDF. Please use 'Open in New Tab' to view.");
+                setLoading(false);
+              }
       };
       
       fetchPdfData();
@@ -116,7 +115,6 @@ const UploadDocView = ({ isOpen, file, onClose }: UploadDocViewProps) => {
         viewport: scaledViewport,
       } as any).promise;
     } catch (err) {
-      console.error("Failed to render PDF page:", err);
       setError("Failed to render PDF page.");
     }
   }, [pdfDocument, currentPage]);

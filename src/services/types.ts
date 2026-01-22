@@ -731,6 +731,7 @@ export interface CompleteDetailsPersonal {
   notes: string;
   dob: string | null;
   gender: string;
+  status?: "ACTIVE" | "INACTIVE";
   message: string;
 }
 
@@ -774,6 +775,8 @@ export interface CompleteDetailsData {
   educationalDetails: CompleteDetailsEducational;
   workExperiences: CompleteDetailsWorkExperience[];
   achievements: CompleteDetailsAchievement[];
+  commonDocuments?: ApplicationPreferenceDocument[];
+  applicationSpecificDocuments?: ApplicationPreferenceDocument[];
 }
 
 export type CompleteDetailsResponse = ApiResponse<CompleteDetailsData>;

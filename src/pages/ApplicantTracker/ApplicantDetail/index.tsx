@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback, startTransition, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import type { GridPaginationModel } from "@mui/x-data-grid";
+import type { GridPaginationModel, GridSortModel } from "@mui/x-data-grid";
 import { Layout, StatusChangePopup, ConfirmationPopup } from "../../../components";
 import { COLORS, ROUTES, applicationStatusOptions, mockApplicantDetail } from "../../../constants";
 import { formatDateTime, toSlug, handleApiError } from "../../../utils";
-import type { ApplicantDetail, UniversityApplication, ApplicationStatusHistory, PersonalDetails, EducationalDetails, WorkExperienceItem, AchievementItem } from "./types";
+import type { ApplicantDetail, UniversityApplication, ApplicationStatusHistory, PersonalDetails, EducationalDetails, WorkExperienceItem, AchievementItem, DocumentItem, ApplicationSpecificDocumentItem } from "./types";
 import { applicantService, userService } from "../../../services";
-import type { CompleteDetailsData, ApplicationListItem } from "../../../services";
+import type { CompleteDetailsData, ApplicationListItem, ApplicationPreferenceDocument } from "../../../services";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { addToast } from "../../../redux/slices/toast/toastSlice";
 import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
@@ -17,13 +17,57 @@ import ApplicantCards from "./ApplicantCards";
 import NotesSection from "./NotesSection";
 import ApplicationStatusPopup from "./ApplicationStatusPopup";
 import ApplicationStatusHistoryPopup from "./ApplicationStatusHistoryPopup";
+import UploadDocView from "../../DocumentVault/DocumentDetail/UploadDocView";
+import type { ViewerFile } from "../../DocumentVault/DocumentDetail/UploadDocView";
+
+// Helper function to get document type from document name
+const getDocumentType = (documentName: string): string => {
+  const nameLower = documentName.toLowerCase();
+  if (nameLower.includes("passport") || nameLower.includes("visa")) return "passport";
+  if (nameLower.includes("transcript")) return "transcript";
+  if (nameLower.includes("recommendation") || nameLower.includes("lor")) return "letter";
+  if (nameLower.includes("purpose") || nameLower.includes("sop")) return "statement";
+  if (nameLower.includes("resume") || nameLower.includes("cv")) return "resume";
+  if (nameLower.includes("financial")) return "financial";
+  return "default";
+};
+
+// Transform API document to DocumentItem format
+const transformDocument = (apiDoc: ApplicationPreferenceDocument): DocumentItem => {
+  return {
+    id: apiDoc.id.toString(),
+    name: apiDoc.documentName,
+    type: getDocumentType(apiDoc.documentName),
+    uploaded: !!apiDoc.document,
+    verified: apiDoc.isVerified,
+    fileUrl: apiDoc.document?.accessUrl,
+    fileName: apiDoc.document?.fileName,
+    fileType: apiDoc.document?.fileType,
+  };
+};
+
+// Transform API application-specific document to ApplicationSpecificDocumentItem format
+const transformApplicationSpecificDocument = (apiDoc: ApplicationPreferenceDocument): ApplicationSpecificDocumentItem => {
+  return {
+    id: apiDoc.id.toString(),
+    name: apiDoc.documentName,
+    type: getDocumentType(apiDoc.documentName),
+    uploaded: !!apiDoc.document,
+    verified: apiDoc.isVerified,
+    fileUrl: apiDoc.document?.accessUrl,
+    fileName: apiDoc.document?.fileName,
+    fileType: apiDoc.document?.fileType,
+    universityName: apiDoc.universityName || null,
+    courseName: apiDoc.courseName || null,
+  };
+};
 
 // Transform API data to component format
 const transformCompleteDetails = (
   apiData: CompleteDetailsData,
   applicantId: string
 ): Partial<ApplicantDetail> => {
-  const { personalDetails, educationalDetails, workExperiences, achievements } = apiData;
+  const { personalDetails, educationalDetails, workExperiences, achievements, commonDocuments, applicationSpecificDocuments } = apiData;
 
   // Transform personal details
   const transformedPersonalDetails: PersonalDetails = {
@@ -83,6 +127,26 @@ const transformCompleteDetails = (
     };
   });
 
+  // Transform documents from commonDocuments and applicationSpecificDocuments
+  const transformedCommonDocuments: DocumentItem[] = [];
+  const transformedApplicationSpecificDocuments: ApplicationSpecificDocumentItem[] = [];
+  
+  // Add common documents
+  if (commonDocuments && commonDocuments.length > 0) {
+    transformedCommonDocuments.push(...commonDocuments.map(transformDocument));
+  }
+  
+  // Add application-specific documents
+  if (applicationSpecificDocuments && applicationSpecificDocuments.length > 0) {
+    transformedApplicationSpecificDocuments.push(...applicationSpecificDocuments.map(transformApplicationSpecificDocument));
+  }
+
+  // Map status from API response (ACTIVE/INACTIVE) to component format (Active/Inactive)
+  const mappedStatus: "Active" | "Inactive" = 
+    personalDetails.status === "ACTIVE" ? "Active" : 
+    personalDetails.status === "INACTIVE" ? "Inactive" : 
+    "Active"; // Default to Active if status is not provided
+
   return {
     id: applicantId,
     applicantId: personalDetails.applicantId.toString(),
@@ -90,11 +154,15 @@ const transformCompleteDetails = (
     applicantStage: "Lead", // Default stage, can be updated from applications
     enrollmentType: personalDetails.enrollmentType || "",
     notes: personalDetails.notes || "",
-    status: "Active" as const, // Default, will be updated from status
+    status: mappedStatus,
     personalDetails: transformedPersonalDetails,
     educationalDetails: transformedEducationalDetails,
     workExperience: { experiences: transformedWorkExperiences },
     achievements: { achievements: transformedAchievements },
+    documents: { 
+      documents: transformedCommonDocuments,
+      applicationSpecificDocuments: transformedApplicationSpecificDocuments,
+    },
   };
 };
 
@@ -171,6 +239,11 @@ const ApplicantDetailView = () => {
     page: 0,
     pageSize: 10,
   });
+
+  // Sort state - default to lastUpdated desc
+  const [sortModel, setSortModel] = useState<GridSortModel>([
+    { field: "lastUpdated", sort: "desc" },
+  ]);
   
   // Status change popup state (for applicant status)
   const [isStatusPopupOpen, setIsStatusPopupOpen] = useState(false);
@@ -198,6 +271,10 @@ const ApplicantDetailView = () => {
     applicantName: string;
   } | null>(null);
   const [isLoadingStatusHistory, setIsLoadingStatusHistory] = useState(false);
+  
+  // Document viewer state
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerFile, setViewerFile] = useState<ViewerFile | null>(null);
 
   // Track which applicantId has been fetched to prevent duplicate calls
   const fetchedForApplicantId = useRef<string | null>(null);
@@ -250,8 +327,8 @@ const ApplicantDetailView = () => {
         search: null,
         page: paginationModel.page,
         size: paginationModel.pageSize, // Use pagination size from model
-        sortBy: null,
-        asc: null,
+        sortBy: sortModel.length > 0 ? (sortModel[0].field === "lastUpdated" ? "updatedAt" : sortModel[0].field) : "updatedAt",
+        asc: sortModel.length > 0 ? (sortModel[0].sort === "asc") : false,
       });
 
       if (response.status === "success" && response.data) {
@@ -304,7 +381,7 @@ const ApplicantDetailView = () => {
         dispatch(hideLoader());
       }
     }
-  }, [applicantId, user?.agencyId, dispatch, paginationModel.page, paginationModel.pageSize]);
+  }, [applicantId, user?.agencyId, dispatch, paginationModel.page, paginationModel.pageSize, sortModel]);
 
   // Fetch applicant data
   useEffect(() => {
@@ -398,6 +475,56 @@ const ApplicantDetailView = () => {
   // Get applications for table (no need for useMemo - just direct access)
   const filteredApplications = applicant?.applications || [];
 
+  // Helper function to get file type from file name or MIME type
+  const getFileType = (fileName?: string, fileType?: string): string => {
+    if (fileType) {
+      const fileTypeLower = fileType.toLowerCase();
+      if (fileTypeLower.includes("pdf")) return "pdf";
+      if (fileTypeLower.startsWith("image/")) return "image";
+      if (fileTypeLower.includes("text")) return "text";
+      if (fileTypeLower.includes("csv")) return "csv";
+      if (fileTypeLower.includes("excel") || fileTypeLower.includes("spreadsheet")) return "excel";
+      if (fileTypeLower.includes("word") || fileTypeLower.includes("document")) return "word";
+    }
+    
+    if (fileName) {
+      const ext = fileName.split(".").pop()?.toLowerCase() || "";
+      if (["pdf"].includes(ext)) return "pdf";
+      if (["txt"].includes(ext)) return "text";
+      if (["csv"].includes(ext)) return "csv";
+      if (["xls", "xlsx"].includes(ext)) return "excel";
+      if (["doc", "docx"].includes(ext)) return "word";
+      if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) return "image";
+    }
+    
+    return "other";
+  };
+
+  // Handle document view
+  const handleDocumentView = useCallback((doc: DocumentItem | ApplicationSpecificDocumentItem) => {
+    if (doc.fileUrl) {
+      const detectedType = getFileType(doc.fileName, doc.fileType);
+      setViewerFile({
+        url: doc.fileUrl,
+        name: doc.fileName || doc.name,
+        type: detectedType,
+      });
+      setViewerOpen(true);
+    }
+  }, []);
+
+  // Handle document download
+  const handleDocumentDownload = useCallback((doc: DocumentItem | ApplicationSpecificDocumentItem) => {
+    if (doc.fileUrl && doc.fileName) {
+      const link = document.createElement("a");
+      link.href = doc.fileUrl;
+      link.download = doc.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }, []);
+
   // Handle back navigation - navigate to dashboard
   const handleBack = useCallback(() => {
     navigate(ROUTES.DASHBOARD);
@@ -476,9 +603,6 @@ const ApplicantDetailView = () => {
     } catch (error: any) {
       const { message } = handleApiError(error, "Failed to update application status");
       dispatch(addToast({ type: "error", message }));
-      if (import.meta.env.DEV) {
-        console.error("Error changing application status:", error);
-      }
     } finally {
       setIsChangingApplicationStatus(false);
       dispatch(hideLoader());
@@ -530,9 +654,6 @@ const ApplicantDetailView = () => {
     } catch (error: any) {
       const { message } = handleApiError(error, "Failed to apply application");
       dispatch(addToast({ type: "error", message }));
-      if (import.meta.env.DEV) {
-        console.error("Error applying for application:", error);
-      }
     } finally {
       setIsApplying(false);
       dispatch(hideLoader());
@@ -594,9 +715,6 @@ const ApplicantDetailView = () => {
         type: "error",
         message: typeof errorMessage === "string" ? errorMessage : t("applicantDetailView.statusUpdateError", "Failed to update applicant status"),
       }));
-      if (import.meta.env.DEV) {
-        console.error("Error changing status:", error);
-      }
     } finally {
       setIsChangingStatus(false);
     }
@@ -721,17 +839,33 @@ const ApplicantDetailView = () => {
           loading={loading}
           paginationModel={paginationModel}
           onPaginationModelChange={handlePaginationModelChange}
+          sortModel={sortModel}
+          onSortModelChange={setSortModel}
           onUpdateStatus={handleUpdateApplicationStatus}
           onApply={handleApplyClick}
           onViewStatusHistory={handleViewStatusHistory}
         />
 
         {/* Card Sections */}
-        <ApplicantCards applicant={displayApplicant} />
+        <ApplicantCards 
+          applicant={displayApplicant}
+          onDocumentView={handleDocumentView}
+          onDocumentDownload={handleDocumentDownload}
+        />
 
         {/* Notes Section */}
         <NotesSection
           notes={applicant?.notes || displayApplicant.notes || ""}
+        />
+
+        {/* Document Viewer Modal */}
+        <UploadDocView
+          isOpen={viewerOpen}
+          file={viewerFile}
+          onClose={() => {
+            setViewerOpen(false);
+            setViewerFile(null);
+          }}
         />
 
         {/* Applicant Status Change Confirmation Popup */}
