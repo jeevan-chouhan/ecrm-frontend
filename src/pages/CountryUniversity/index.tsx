@@ -246,7 +246,7 @@ const CountryUniversity = () => {
         flex: 2,
         minWidth: 250,
         renderCell: (params) => (
-          <div className="py-2">
+          <div>
             <div
               className="font-medium"
               style={{ color: COLORS.textDark }}

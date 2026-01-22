@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../components";
 import { COLORS, ROUTES } from "../../constants";
 import { Check, Close } from "../../assets";
+import { userService } from "../../services";
 
 interface PlanFeature {
   text: string;
@@ -24,54 +25,27 @@ interface PricingPlan {
   buttonText: string;
 }
 
-const pricingPlans: PricingPlan[] = [
-  {
-    id: "pro",
-    name: "Agency Pro",
-    badge: "Most Popular",
-    badgeColor: COLORS.badgeGold,
-    description: "Designed for growing teams needing collaboration and automation.",
-    monthlyPrice: "$50",
-    monthlySubtext: "/month billed monthly",
-    annualPrice: "$420",
-    annualSubtext: "/year billed annually",
-    studentLimit: "Up to 50 Students",
-    features: [
-      { text: "Manual student data entry", included: true },
-      { text: "Internal document upload", included: true },
-      { text: "Visa status tracking", included: true },
-      { text: "Magic links for visa updates & document upload", included: true },
-      { text: "Sub-Agent Portal for collaboration", included: true },
-      { text: "Morning War Room financial alert modal", included: true },
-      { text: "Improved commission visibility", included: true },
-      { text: "Faster operational workflows", included: true },
-      { text: "Standard support response time", included: true },
-    ],
-    buttonText: "Start Free 14-Day Trial",
-  },
-  {
-    id: "prime",
-    name: "Agency Prime",
-    badge: "Best Value",
-    badgeColor: COLORS.badgePurple,
-    description: "For established agencies requiring unlimited scale and priority support.",
-    monthlyPrice: "$250",
-    monthlySubtext: "/month billed monthly",
-    annualPrice: "$2388",
-    annualSubtext: "/year billed annually (2 months free)",
-    studentLimit: "Unlimited Students",
-    features: [
-      { text: "All Pro features", included: true },
-      { text: "Fastest & optimized workflows", included: true },
-      { text: "Priority Support Badge", included: true },
-      { text: "Priority response time", included: true },
-      { text: "Dedicated support queue", included: true },
-      { text: "Built for scale & stability", included: true },
-      { text: "Custom integrations (coming soon)", included: true },
-    ],
-    buttonText: "Go Prime & Scale Unlimited",
-  },
-];
+// API Response type
+interface PlanApiItem {
+  product: string;
+  price: number;
+  subscriptionStatus: string;
+}
+
+interface PlanApiResponse {
+  status: string;
+  statusCode: number;
+  message: string;
+  data: PlanApiItem[];
+}
+
+// Dynamic prices state
+interface DynamicPrices {
+  proMonthly: number;
+  proYearly: number;
+  primeMonthly: number;
+  primeYearly: number;
+}
 
 interface PricingContentProps {
   showHeader?: boolean;
@@ -81,6 +55,107 @@ interface PricingContentProps {
 const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl" }: PricingContentProps) => {
   const navigate = useNavigate();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [dynamicPrices, setDynamicPrices] = useState<DynamicPrices>({
+    proMonthly: 0,
+    proYearly: 0,
+    primeMonthly: 0,
+    primeYearly: 0,
+  });
+  const hasFetched = useRef(false);
+
+  // Fetch plans from API
+  useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+
+    const fetchPlans = async () => {
+      try {
+        const response = await userService.getAllPlans() as PlanApiResponse;
+        
+        if (response.data && Array.isArray(response.data)) {
+          const prices: DynamicPrices = {
+            proMonthly: 0,
+            proYearly: 0,
+            primeMonthly: 0,
+            primeYearly: 0,
+          };
+
+          response.data.forEach((item) => {
+            switch (item.product) {
+              case "AGENCY_PRO":
+                prices.proMonthly = item.price;
+                break;
+              case "AGENCY_PRO_YEARLY":
+                prices.proYearly = item.price;
+                break;
+              case "AGENCY_PRIME":
+                prices.primeMonthly = item.price;
+                break;
+              case "AGENCY_PRIME_YEARLY":
+                prices.primeYearly = item.price;
+                break;
+            }
+          });
+
+          setDynamicPrices(prices);
+        }
+      } catch (error) {
+        console.error("Error fetching plans:", error);
+      }
+    };
+
+    fetchPlans();
+  }, []);
+
+  // Generate pricing plans with dynamic prices
+  const pricingPlans: PricingPlan[] = useMemo(() => [
+    {
+      id: "pro",
+      name: "Agency Pro",
+      badge: "Most Popular",
+      badgeColor: COLORS.badgeGold,
+      description: "Designed for growing teams needing collaboration and automation.",
+      monthlyPrice: `$${dynamicPrices.proMonthly}`,
+      monthlySubtext: "/month billed monthly",
+      annualPrice: `$${dynamicPrices.proYearly}`,
+      annualSubtext: "/year billed annually",
+      studentLimit: "Up to 50 Students",
+      features: [
+        { text: "Manual student data entry", included: true },
+        { text: "Internal document upload", included: true },
+        { text: "Visa status tracking", included: true },
+        { text: "Magic links for visa updates & document upload", included: true },
+        { text: "Sub-Agent Portal for collaboration", included: true },
+        { text: "Morning War Room financial alert modal", included: true },
+        { text: "Improved commission visibility", included: true },
+        { text: "Faster operational workflows", included: true },
+        { text: "Standard support response time", included: true },
+      ],
+      buttonText: "Start Free 14-Day Trial",
+    },
+    {
+      id: "prime",
+      name: "Agency Prime",
+      badge: "Best Value",
+      badgeColor: COLORS.badgePurple,
+      description: "For established agencies requiring unlimited scale and priority support.",
+      monthlyPrice: `$${dynamicPrices.primeMonthly}`,
+      monthlySubtext: "/month billed monthly",
+      annualPrice: `$${dynamicPrices.primeYearly}`,
+      annualSubtext: "/year billed annually (2 months free)",
+      studentLimit: "Unlimited Students",
+      features: [
+        { text: "All Pro features", included: true },
+        { text: "Fastest & optimized workflows", included: true },
+        { text: "Priority Support Badge", included: true },
+        { text: "Priority response time", included: true },
+        { text: "Dedicated support queue", included: true },
+        { text: "Built for scale & stability", included: true },
+        { text: "Custom integrations (coming soon)", included: true },
+      ],
+      buttonText: "Go Prime & Scale Unlimited",
+    },
+  ], [dynamicPrices]);
 
   const handleCardClick = (planId: string) => {
     setSelectedPlan(planId);

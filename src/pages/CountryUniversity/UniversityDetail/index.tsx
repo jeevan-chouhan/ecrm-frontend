@@ -11,7 +11,6 @@ import type { UniversityDetail, TabType, Tab } from "./types";
 // Tab Components
 import {
   CollegeInfoTab,
-  CoursesTab,
   FeesTab,
   ScholarshipTab,
   EligibilityTab,
@@ -139,13 +138,12 @@ const UniversityDetailPage = () => {
   const tabs: Tab[] = useMemo(
     () => [
       { id: "collegeInfo", labelKey: "universityDetail.tabs.collegeInfo", defaultLabel: "College Info" },
-      { id: "courses", labelKey: "universityDetail.tabs.courses", defaultLabel: "Courses" },
+      { id: "campus", labelKey: "universityDetail.tabs.campus", defaultLabel: "Campus" },
       { id: "fees", labelKey: "universityDetail.tabs.fees", defaultLabel: "Fees" },
       { id: "scholarship", labelKey: "universityDetail.tabs.scholarship", defaultLabel: "Scholarship" },
       { id: "eligibility", labelKey: "universityDetail.tabs.eligibility", defaultLabel: "Eligibility" },
       { id: "admissions", labelKey: "universityDetail.tabs.admissions", defaultLabel: "Admissions" },
       { id: "documents", labelKey: "universityDetail.tabs.documents", defaultLabel: "Documents" },
-      { id: "campus", labelKey: "universityDetail.tabs.campus", defaultLabel: "Campus" },
     ],
     []
   );
@@ -162,8 +160,8 @@ const UniversityDetailPage = () => {
     switch (activeTab) {
       case "collegeInfo":
         return <CollegeInfoTab university={universityDetail} />;
-      case "courses":
-        return <CoursesTab university={universityDetail} />;
+      case "campus":
+        return <CampusTab university={universityDetail} />;
       case "fees":
         return <FeesTab university={universityDetail} />;
       case "scholarship":
@@ -174,8 +172,6 @@ const UniversityDetailPage = () => {
         return <AdmissionsTab university={universityDetail} />;
       case "documents":
         return <DocumentsTab university={universityDetail} />;
-      case "campus":
-        return <CampusTab university={universityDetail} />;
       default:
         return null;
     }

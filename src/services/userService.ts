@@ -282,6 +282,44 @@ const userService = {
     );
     return response.data;
   },
+
+  /**
+   * Get all plans
+   * @returns Promise with plans response
+   */
+  getAllPlans: async (): Promise<unknown> => {
+    const response = await api.get(ENDPOINTS.PLAN.GET_ALL);
+    return response.data;
+  },
+
+  /**
+   * Register a new agency
+   * @param payload - Agency registration data (agencyName, fullName, email, contactNumber, logo)
+   * @returns Promise with registration response
+   */
+  registerAgency: async (payload: {
+    agencyName: string;
+    fullName: string;
+    email: string;
+    contactNumber: string;
+    logo?: File | null;
+  }): Promise<unknown> => {
+    const formData = new FormData();
+    formData.append("agencyName", payload.agencyName);
+    formData.append("fullName", payload.fullName);
+    formData.append("email", payload.email);
+    formData.append("contactNumber", payload.contactNumber);
+    if (payload.logo) {
+      formData.append("logo", payload.logo);
+    }
+
+    const response = await api.post(ENDPOINTS.AGENCIES.REGISTER, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  },
 };
 
 export default userService;

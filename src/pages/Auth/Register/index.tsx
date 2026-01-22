@@ -1,19 +1,21 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useFormik } from "formik";
+import * as Yup from "yup";
 import { Input, Button, PhoneInput, Checkbox, Popup, FileUpload } from "../../../components";
 import PublicLayout from "../../../components/wrapper/PublicLayout";
 import { COLORS, ROUTES, termsAndConditions } from "../../../constants";
-import { getRegisterSchema } from "../../../utils";
+import { userService } from "../../../services";
+import { useAppDispatch } from "../../../redux/hooks";
+import { addToast } from "../../../redux/slices/toast/toastSlice";
+import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
+import { handleApiError } from "../../../utils";
 
 interface RegisterFormValues {
   agencyName: string;
   fullName: string;
-  brandName: string;
   email: string;
-  password: string;
-  confirmPassword: string;
   phone: string;
   logo: File | null;
   agreeToTerms: boolean;
@@ -21,24 +23,65 @@ interface RegisterFormValues {
 
 const Register = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [isTermsPopupOpen, setIsTermsPopupOpen] = useState(false);
+
+  // Validation schema
+  const validationSchema = Yup.object({
+    agencyName: Yup.string()
+      .required(t("validation.agencyNameRequired", "Agency name is required"))
+      .min(2, t("validation.agencyNameMin", "Agency name must be at least 2 characters")),
+    fullName: Yup.string()
+      .required(t("validation.fullNameRequired", "Full name is required"))
+      .min(2, t("validation.fullNameMin", "Full name must be at least 2 characters")),
+    email: Yup.string()
+      .required(t("validation.emailRequired", "Email is required"))
+      .email(t("validation.emailInvalid", "Invalid email address")),
+    phone: Yup.string()
+      .required(t("validation.phoneRequired", "Contact number is required")),
+    agreeToTerms: Yup.boolean()
+      .oneOf([true], t("validation.agreeToTermsRequired", "You must agree to the terms and conditions")),
+  });
 
   const formik = useFormik<RegisterFormValues>({
     initialValues: {
       agencyName: "",
       fullName: "",
-      brandName: "",
       email: "",
-      password: "",
-      confirmPassword: "",
       phone: "",
       logo: null,
       agreeToTerms: false,
     },
-    validationSchema: getRegisterSchema(t),
-    onSubmit: (values) => {
-      console.log("Form submitted:", values);
-      // Handle registration logic here
+    validationSchema,
+    onSubmit: async (values) => {
+      dispatch(showLoader());
+      try {
+        const response = await userService.registerAgency({
+          agencyName: values.agencyName,
+          fullName: values.fullName,
+          email: values.email,
+          contactNumber: values.phone,
+          logo: values.logo,
+        }) as { status: string; statusCode: number; message: string; data: unknown };
+        
+        dispatch(addToast({
+          type: "success",
+          message: response.message || t("auth.registrationSuccess", "Agency registered successfully."),
+        }));
+        
+        // Navigate to login page after successful registration
+        navigate(ROUTES.PRICING);
+      } catch (error) {
+        console.error("Registration error:", error);
+        const errorResponse = handleApiError(error);
+        dispatch(addToast({
+          type: "error",
+          message: errorResponse.message || t("auth.registrationFailed", "Registration failed. Please try again."),
+        }));
+      } finally {
+        dispatch(hideLoader());
+      }
     },
   });
 
@@ -106,27 +149,6 @@ const Register = () => {
                     error={formik.touched.email ? formik.errors.email : undefined}
                     fullWidth
                   />
-
-                  <PhoneInput
-                    label={<>{t("auth.contactNumber")} <span style={{ color: COLORS.error }}>*</span></>}
-                    value={formik.values.phone}
-                    onChange={(value) => formik.setFieldValue("phone", value)}
-                    error={formik.touched.phone ? formik.errors.phone : undefined}
-                    placeholder={t("auth.contactNumberPlaceholder")}
-                    fullWidth
-                  />
-
-                  {/* Brand Name - Mandatory */}
-                  <Input
-                    label={<>{t("auth.brandName")} <span style={{ color: COLORS.error }}>*</span></>}
-                    placeholder={t("auth.enterBrandName")}
-                    name="brandName"
-                    value={formik.values.brandName}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.brandName ? formik.errors.brandName : undefined}
-                    fullWidth
-                  />
                 </div>
 
                 {/* Right Column */}
@@ -142,44 +164,31 @@ const Register = () => {
                     fullWidth
                   />
 
-                  <Input
-                    label={<>{t("auth.password")} <span style={{ color: COLORS.error }}>*</span></>}
-                    type="password"
-                    placeholder={t("auth.confirmPasswordPlaceholder")}
-                    name="password"
-                    value={formik.values.password}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.password ? formik.errors.password : undefined}
+                  <PhoneInput
+                    label={<>{t("auth.contactNumber")} <span style={{ color: COLORS.error }}>*</span></>}
+                    value={formik.values.phone}
+                    onChange={(value) => formik.setFieldValue("phone", value)}
+                    error={formik.touched.phone ? formik.errors.phone : undefined}
+                    placeholder={t("auth.contactNumberPlaceholder")}
                     fullWidth
-                  />
-
-                  <Input
-                    label={<>{t("auth.confirmPassword")} <span style={{ color: COLORS.error }}>*</span></>}
-                    type="password"
-                    placeholder={t("auth.confirmPasswordPlaceholder")}
-                    name="confirmPassword"
-                    value={formik.values.confirmPassword}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.confirmPassword ? formik.errors.confirmPassword : undefined}
-                    fullWidth
-                  />
-
-                  {/* Upload Logo */}
-                  <FileUpload
-                    label={t("auth.uploadLogo")}
-                    value={formik.values.logo}
-                    onChange={handleLogoChange}
-                    onRemove={handleLogoRemove}
-                    accept="image/*"
-                    maxSizeMB={2}
-                    showPreview
-                    multiple={false}
-                    supportedFormats="PNG, JPG, JPEG"
-                    dismissible={false}
                   />
                 </div>
+              </div>
+
+              {/* Upload Logo - Full Width */}
+              <div className="mt-6">
+                <FileUpload
+                  label={t("auth.uploadLogo")}
+                  value={formik.values.logo}
+                  onChange={handleLogoChange}
+                  onRemove={handleLogoRemove}
+                  accept="image/*"
+                  maxSizeMB={2}
+                  showPreview
+                  multiple={false}
+                  supportedFormats="PNG, JPG, JPEG"
+                  dismissible={false}
+                />
               </div>
 
               {/* Footer Section */}
@@ -235,10 +244,7 @@ const Register = () => {
                   disabled={
                     !formik.values.agencyName ||
                     !formik.values.fullName ||
-                    !formik.values.brandName ||
                     !formik.values.email ||
-                    !formik.values.password ||
-                    !formik.values.confirmPassword ||
                     !formik.values.phone ||
                     !formik.values.agreeToTerms ||
                     Object.keys(formik.errors).length > 0
