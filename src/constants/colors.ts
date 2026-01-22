@@ -10,6 +10,7 @@ export const COLORS = {
   secondaryHover: "#1C9E99",
   accent: "#8A2BE2",
   accentHover: "#7B27CC",
+  accentLight: "#F3E8FF", // Light purple background
   // accent: "#FF0000",
   // accentHover: "#CC0000",
 

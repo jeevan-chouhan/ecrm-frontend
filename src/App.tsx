@@ -30,8 +30,10 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const ApplicantTracker = lazy(() => import("./pages/ApplicantTracker"));
 const CreateApplicant = lazy(() => import("./pages/ApplicantTracker/CreateApplicant"));
 const ApplicantDetailView = lazy(() => import("./pages/ApplicantTracker/ApplicantDetail"));
-const DocumentDetail = lazy(() => import("./pages/DocumentVault/DocumentDetail/index"));
 const CountryUniversity = lazy(() => import("./pages/CountryUniversity"));
+const UniversityDetail = lazy(() => import("./pages/CountryUniversity/UniversityDetail"));
+const DocumentVault = lazy(() => import("./pages/DocumentVault"));
+const DocumentDetail = lazy(() => import("./pages/DocumentVault/DocumentDetail/index"));
 const AgencyPartner = lazy(() => import("./pages/AgencyPartner"));
 const ManageTeam = lazy(() => import("./pages/ManageTeam"));
 const ManageTeamAdd = lazy(() => import("./pages/ManageTeam/AddMember"));
@@ -71,6 +73,9 @@ const protectedRoutes: RouteConfig[] = [
   { path: ROUTES.APPLICANT_DETAIL, element: <ApplicantDetailView /> },
   { path: ROUTES.APPLICANT_TRACKER_DOCUMENTS, element: <DocumentDetail /> },
   { path: ROUTES.COUNTRY_UNIVERSITY, element: <CountryUniversity /> },
+  { path: ROUTES.UNIVERSITY_DETAIL, element: <UniversityDetail /> },
+  { path: ROUTES.DOCUMENT_VAULT, element: <DocumentVault /> },
+  { path: ROUTES.DOCUMENT_VAULT_DETAIL, element: <DocumentDetail /> },
   { path: ROUTES.AGENCY_PARTNER, element: <AgencyPartner /> },
   { path: ROUTES.MANAGE_TEAM, element: <ManageTeam /> },
   { path: ROUTES.MANAGE_TEAM_ADD, element: <ManageTeamAdd /> },
