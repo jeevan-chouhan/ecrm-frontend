@@ -3,6 +3,10 @@ import { useTranslation } from "react-i18next";
 import { Button, Input } from "../../../components";
 import { COLORS } from "../../../constants";
 import { EyeOff, Eye } from "../../../assets";
+import { authService } from "../../../services";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { addToast } from "../../../redux/slices/toast/toastSlice";
+import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
 
 interface ChangePasswordProps {
   onSuccess?: () => void;
@@ -23,6 +27,8 @@ interface PasswordErrors {
 
 const ChangePassword = ({ onSuccess, onCancel }: ChangePasswordProps) => {
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
 
   const [passwordData, setPasswordData] = useState<PasswordData>({
     currentPassword: "",
@@ -75,25 +81,45 @@ const ChangePassword = ({ onSuccess, onCancel }: ChangePasswordProps) => {
   const handleSubmit = useCallback(async () => {
     if (!validateForm()) return;
 
+    if (!user?.email) {
+      dispatch(addToast({ type: "error", message: t("auth.emailNotFound", "Email not found") }));
+      return;
+    }
+
     setIsSubmitting(true);
+    dispatch(showLoader());
+
     try {
-      // TODO: API call to change password
-      console.log("Changing password:", {
-        currentPassword: passwordData.currentPassword,
+      const response = await authService.updatePassword({
+        email: user.email,
         newPassword: passwordData.newPassword,
+        confirmPassword: passwordData.confirmPassword,
       });
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      if (response.status === "success") {
+        dispatch(addToast({
+          type: "success",
+          message: response.message || t("auth.passwordUpdatedSuccess", "Password updated successfully"),
+        }));
+        onSuccess?.();
+      } else {
+        dispatch(addToast({
+          type: "error",
+          message: response.message || t("auth.passwordUpdateFailed", "Failed to update password"),
+        }));
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        t("auth.passwordUpdateFailed", "Failed to update password");
 
-      // On success
-      onSuccess?.();
-    } catch (error) {
-      console.error("Failed to change password:", error);
+      dispatch(addToast({ type: "error", message: errorMessage }));
     } finally {
       setIsSubmitting(false);
+      dispatch(hideLoader());
     }
-  }, [validateForm, passwordData, onSuccess]);
+  }, [validateForm, passwordData, user, dispatch, t, onSuccess]);
 
   // Check if all required fields are filled
   const isFormFilled = 

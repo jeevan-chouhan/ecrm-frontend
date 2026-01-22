@@ -44,7 +44,11 @@ export const getGenderLabel = (value: string | undefined): string => {
  */
 export const formatStatus = (value: string | null | undefined): string => {
   if (!value) return "N/A";
-  return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+  // Title case each word (e.g., "Primary Admin" stays "Primary Admin")
+  return value
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 };
 
 /**

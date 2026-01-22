@@ -47,7 +47,7 @@ export interface UniversityDetail {
 }
 
 // Tab types - Logical sequence following student journey
-export type TabType = "collegeInfo" | "courses" | "fees" | "scholarship" | "eligibility" | "admissions" | "documents" | "campus";
+export type TabType = "collegeInfo" | "fees" | "scholarship" | "eligibility" | "admissions" | "documents" | "campus";
 
 export interface Tab {
   id: TabType;

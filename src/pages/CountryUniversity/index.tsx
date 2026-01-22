@@ -246,7 +246,7 @@ const CountryUniversity = () => {
         flex: 2,
         minWidth: 250,
         renderCell: (params) => (
-          <div className="py-2">
+          <div>
             <div
               className="font-medium"
               style={{ color: COLORS.textDark }}
@@ -377,7 +377,7 @@ const CountryUniversity = () => {
             onSearchChange={setSearchValue}
             pendingCountry={pendingCountry}
             pendingProgram={pendingProgram}
-            pendingCourse={pendingCourse}
+            pendingCourse={pendingCourse} 
             onCountryChange={setPendingCountry}
             onProgramChange={setPendingProgram}
             onCourseChange={setPendingCourse}
@@ -394,7 +394,6 @@ const CountryUniversity = () => {
           <DataTable
             rows={filteredUniversities}
             columns={columns}
-            // loading={isLoading}
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
             rowCount={filteredUniversities.length}
