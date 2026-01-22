@@ -26,6 +26,7 @@ export const ENDPOINTS = {
 
   // Agency Endpoints
   AGENCIES: {
+    REGISTER: "/agencies/register",
     COUNTRIES: "/agencies/countries",
     UNIVERSITIES: "/agencies/universities",
     CAMPUSES: "/agencies/campuses",
@@ -37,6 +38,11 @@ export const ENDPOINTS = {
     PARTNERS: "/agencies/partners",
     PARTNERS_LIST: "/agencies/partnersList",
     PARTNER_NAMES: "/agencies/global-agencyPartner-name",
+  },
+
+  // Plan Endpoints
+  PLAN: {
+    GET_ALL: "/plan/getAll",
   },
 
   // Applicants Endpoints

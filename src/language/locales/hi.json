@@ -125,7 +125,10 @@
     "enterCurrentPassword": "वर्तमान पासवर्ड दर्ज करें",
     "enterNewPassword": "नया पासवर्ड दर्ज करें",
     "enterConfirmPassword": "नए पासवर्ड की पुष्टि करें",
-    "passwordChangedSuccess": "पासवर्ड सफलतापूर्वक बदल दिया गया"
+    "passwordChangedSuccess": "पासवर्ड सफलतापूर्वक बदल दिया गया",
+    "passwordUpdatedSuccess": "पासवर्ड सफलतापूर्वक अपडेट किया गया",
+    "passwordUpdateFailed": "पासवर्ड अपडेट करने में विफल",
+    "emailNotFound": "ईमेल नहीं मिला"
   },
   "dashboard": {
     "title": "डैशबोर्ड",

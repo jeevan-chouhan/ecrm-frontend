@@ -125,7 +125,10 @@
     "enterCurrentPassword": "Enter Current Password",
     "enterNewPassword": "Enter New Password",
     "enterConfirmPassword": "Confirm New Password",
-    "passwordChangedSuccess": "Password changed successfully"
+    "passwordChangedSuccess": "Password changed successfully",
+    "passwordUpdatedSuccess": "Password updated successfully",
+    "passwordUpdateFailed": "Failed to update password",
+    "emailNotFound": "Email not found"
   },
   "dashboard": {
     "title": "Dashboard",
