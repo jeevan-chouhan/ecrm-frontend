@@ -18,5 +18,17 @@ export default defineConfig({
         secure: false,
       }
     }
-  }
+  },
+   build: {
+    chunkSizeWarningLimit: 2500, // in kB
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+        },
+      },
+    },
+  },
 })

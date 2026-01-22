@@ -404,8 +404,6 @@ const ManageTeam = () => {
             </div>
             
           </div>
-
-          
         </div>
 
          {/* Stats Cards */}

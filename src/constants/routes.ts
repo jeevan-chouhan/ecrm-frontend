@@ -18,6 +18,7 @@ export const ROUTES = {
   CREATE_APPLICANT: "/application-tracker/create",
   APPLICANT_DETAIL: "/applicant-tracker/:applicantId",
   COUNTRY_UNIVERSITY: "/country-university-directory",
+  UNIVERSITY_DETAIL: "/country-university-directory/:universityId",
   DOCUMENT_VAULT: "/document-vault",
   DOCUMENT_VAULT_DETAIL: "/document-vault/:applicantId",
   AGENCY_PARTNER: "/agency-partner",
