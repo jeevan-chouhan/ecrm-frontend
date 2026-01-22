@@ -66,6 +66,15 @@ export const ENDPOINTS = {
     GET_ACHIEVEMENTS: (applicantId: number | string) => `/applicants/achievements?applicantId=${applicantId}`,
     UPDATE_ACHIEVEMENT: (achievementId: number | string, applicantId: number | string) => `/applicants/achievements?achievementId=${achievementId}&applicantId=${applicantId}`,
     DELETE_ACHIEVEMENT: (achievementId: number | string, applicantId: number | string) => `/applicants/achievements?achievementId=${achievementId}&applicantId=${applicantId}`,
+    DOCUMENTS: (applicantId: number | string) => `/applicants/documents?applicantId=${applicantId}`,
+    APPLICATION_PREFERENCE_DOCUMENTS: (applicantId: number | string, applicationPrefId: number | string) => 
+      `/applicants/application-preference-documents?applicantId=${applicantId}&applicationPrefId=${applicationPrefId}`,
+    UPLOAD_DOCUMENT: (applicantId: number | string, applicationPrefId?: number | string) => {
+      const baseUrl = `/applicants/documents?applicantId=${applicantId}`;
+      return applicationPrefId ? `${baseUrl}&applicationPrefId=${applicationPrefId}` : baseUrl;
+    },
+    DELETE_DOCUMENT: (applicantId: number | string, documentId: number | string) => `/applicants/documents?applicantId=${applicantId}&documentId=${documentId}`,
+    VERIFY_DOCUMENT: (applicantId: number | string, documentId: number | string, isVerified: boolean) => `/applicants/verify?applicantId=${applicantId}&documentId=${documentId}&isVerified=${isVerified}`,
   },
 
 //   // User Endpoints

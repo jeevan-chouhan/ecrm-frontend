@@ -3,6 +3,7 @@ import { ENDPOINTS } from "./endpoints";
 import { store } from "../redux/store";
 import { appendQueryParam, getRoleBasedAssignedId, createQueryParams } from "../utils";
 import type {
+  ApiResponse,
   ApplicationsListParams,
   ApplicationsListResponse,
   CountriesResponse,
@@ -49,6 +50,9 @@ import type {
   UpdateAchievementResponse,
   DeleteAchievementResponse,
   AgencyPartnerNameItem,
+  GetDocumentsResponse,
+  UploadDocumentResponse,
+  ApplicationPreferenceDocumentsResponse,
 } from "./types";
 
 /**
@@ -756,6 +760,95 @@ const applicantService = {
     const result: AgencyPartnerNameItem[] = Array.isArray(response.data) ? response.data : [];
     
     return result;
+  },
+
+  /**
+   * Get documents list for an applicant
+   * @param applicantId - Applicant ID
+   * @returns Promise with documents response
+   */
+  getDocuments: async (applicantId: number | string): Promise<GetDocumentsResponse> => {
+    const url = ENDPOINTS.APPLICANTS.DOCUMENTS(applicantId);
+    const response = await api.get<GetDocumentsResponse>(url);
+    
+    return response.data;
+  },
+
+  /**
+   * Get application preference documents for an applicant
+   * @param applicantId - Applicant ID
+   * @param applicationPrefId - Application Preference ID
+   * @returns Promise with application preference documents response
+   */
+  getApplicationPreferenceDocuments: async (
+    applicantId: number | string,
+    applicationPrefId: number | string
+  ): Promise<ApplicationPreferenceDocumentsResponse> => {
+    const url = ENDPOINTS.APPLICANTS.APPLICATION_PREFERENCE_DOCUMENTS(applicantId, applicationPrefId);
+    const response = await api.get<ApplicationPreferenceDocumentsResponse>(url);
+    
+    return response.data;
+  },
+
+  /**
+   * Upload a document for an applicant
+   * @param applicantId - Applicant ID
+   * @param documentName - Name of the document
+   * @param file - File to upload
+   * @param applicationPrefId - Optional application preference ID (for new documents)
+   * @returns Promise with upload response
+   */
+  uploadDocument: async (
+    applicantId: number | string,
+    documentName: string,
+    file: File,
+    applicationPrefId?: number | string
+  ): Promise<UploadDocumentResponse> => {
+    const url = ENDPOINTS.APPLICANTS.UPLOAD_DOCUMENT(applicantId, applicationPrefId);
+    
+    // Create FormData for file upload
+    const formData = new FormData();
+    formData.append("documentName", documentName);
+    formData.append("document", file);
+    
+    const response = await api.post<UploadDocumentResponse>(url, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    
+    return response.data;
+  },
+
+  /**
+   * Delete a document for an applicant
+   * @param applicantId - Applicant ID
+   * @param documentId - Document ID
+   * @returns Promise with delete response
+   */
+  deleteDocument: async (applicantId: number | string, documentId: number | string): Promise<ApiResponse<null>> => {
+    const url = ENDPOINTS.APPLICANTS.DELETE_DOCUMENT(applicantId, documentId);
+    const response = await api.delete<ApiResponse<null>>(url);
+    
+    return response.data;
+  },
+
+  /**
+   * Verify a document for an applicant
+   * @param applicantId - Applicant ID
+   * @param documentId - Document ID
+   * @param isVerified - Verification status (true to verify, false to unverify)
+   * @returns Promise with verify response
+   */
+  verifyDocument: async (
+    applicantId: number | string,
+    documentId: number | string,
+    isVerified: boolean
+  ): Promise<ApiResponse<null>> => {
+    const url = ENDPOINTS.APPLICANTS.VERIFY_DOCUMENT(applicantId, documentId, isVerified);
+    const response = await api.put<ApiResponse<null>>(url);
+    
+    return response.data;
   },
 };
 

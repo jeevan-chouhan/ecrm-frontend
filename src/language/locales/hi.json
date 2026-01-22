@@ -19,6 +19,7 @@
     "back": "वापस",
     "next": "अगला",
     "previous": "पिछला",
+    "of": "का",
     "success": "सफल",
     "error": "त्रुटि",
     "warning": "चेतावनी",
@@ -36,7 +37,8 @@
     "addDocument": "दस्तावेज़ जोड़ें",
     "enterContactNumber": "संपर्क नंबर दर्ज करें",
     "searchCountry": "देश खोजें...",
-    "countryCode": "देश कोड"
+    "countryCode": "देश कोड",
+    "openInNewTab": "नई टैब में खोलें"
   },
   "sidebar": {
     "dashboard": "डैशबोर्ड",
@@ -577,7 +579,10 @@
     "approveDocument": "दस्तावेज़ स्वीकृत करें",
     "approveConfirmation": "क्या आप वाकई इस दस्तावेज़ को स्वीकृत करना चाहते हैं?",
     "verifyDocument": "दस्तावेज़ सत्यापित करें",
-    "verifyConfirmation": "क्या आप वाकई इस दस्तावेज़ को सत्यापित करना चाहते हैं?"
+    "verifyConfirmation": "क्या आप वाकई इस दस्तावेज़ को सत्यापित करना चाहते हैं?",
+    "page": "पृष्ठ",
+    "deleteDocument": "दस्तावेज़ हटाएं",
+    "deleteConfirmation": "क्या आप वाकई दस्तावेज़ '{{documentName}}' को हटाना चाहते हैं?"
   },
   "agencyPartner": {
     "title": "एजेंसी पार्टनर",

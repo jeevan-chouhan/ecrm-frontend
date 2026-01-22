@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef, startTransition } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { GridColDef, GridPaginationModel, GridRenderCellParams } from "@mui/x-data-grid";
 import { Tooltip } from "@mui/material";
@@ -12,8 +13,8 @@ import {
   Checkbox,
   ConfirmationPopup,
 } from "../../components";
-import { COLORS, applicationStatusOptions, typography, type Applicant } from "../../constants";
-import { Calendar, Edit } from "../../assets";
+import { COLORS, applicationStatusOptions, typography, type Applicant, ROUTES } from "../../constants";
+import { Calendar, Edit, Document } from "../../assets";
 import { formatDateTime, handleApiError, getApplicationStatusLabel, getApplicationStageLabel } from "../../utils";
 import ApplicantTrackerFilters from "./ApplicantTrackerFilters";
 import ApplicationStatusHistoryPopup from "./ApplicantDetail/ApplicationStatusHistoryPopup";
@@ -27,6 +28,7 @@ import { showLoader, hideLoader } from "../../redux/slices/loader/loaderSlice";
 
 const ApplicantTracker = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
   // Get user from Redux (decoded from token)
@@ -769,6 +771,17 @@ const ApplicantTracker = () => {
     setApplicantToApply(null);
   }, []);
 
+  // Handle view documents - navigate to application tracker documents page
+  const handleViewDocuments = useCallback((applicant: Applicant) => {
+    navigate(ROUTES.APPLICANT_TRACKER_DOCUMENTS.replace(":applicantId", applicant.applicantId), {
+      state: {
+        applicantName: applicant.applicantName,
+        contactNo: applicant.contactNo,
+        applicationPrefId: applicant.id, // id is preferenceId (applicationPrefId)
+      },
+    });
+  }, [navigate]);
+
   // Memoize renderCell functions to prevent recreation
   const renderApplicantNameCell = useCallback((params: GridRenderCellParams<Applicant>) => {
     if (!params.row.applicantName) {
@@ -921,6 +934,19 @@ const ApplicantTracker = () => {
 
   const renderActionsCell = useCallback((params: GridRenderCellParams<Applicant>) => (
     <div className="flex items-center gap-2">
+      <Tooltip title={t("documentVault.title", "Document Vault")} arrow>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleViewDocuments(params.row);
+          }}
+          className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
+          style={{ color: COLORS.accent }}
+          aria-label={t("documentVault.title", "Document Vault")}
+        >
+          <Document className="w-5 h-5" />
+        </button>
+      </Tooltip>
       <Tooltip title={t("applicantDetailView.applicationStatusHistory", "Application Status History")} arrow>
         <button
           onClick={(e) => {
@@ -948,7 +974,7 @@ const ApplicantTracker = () => {
         </button>
       </Tooltip>
     </div>
-  ), [t, handleViewStatusHistory, handleUpdateStatus]);
+  ), [t, handleViewDocuments, handleViewStatusHistory, handleUpdateStatus]);
 
   // Table columns - memoized to prevent recreation
   const columns: GridColDef[] = useMemo(() => [

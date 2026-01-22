@@ -273,7 +273,7 @@ const ApplicantOverview = () => {
   // Enrollment type options with placeholder
   const enrollmentTypeOptionsWithPlaceholder = useMemo(() => {
     return [
-      { value: "", label: t("dashboard.selectEnrollmentType", "Select Enrollment Type") },
+      { value: "", label: t("dashboard.selectEnrollmentType", "Select Enrolment Type") },
       ...enrollmentTypes,
     ];
   }, [t]);
@@ -432,7 +432,7 @@ const ApplicantOverview = () => {
     },
     {
       field: "enrollmentType",
-      headerName: t("dashboard.enrollmentType", "Enrollment Type"),
+      headerName: t("dashboard.enrollmentType", "Enrolment Type"),
       flex: 1.2,
       minWidth: 150,
       sortable: true,
@@ -505,7 +505,7 @@ const ApplicantOverview = () => {
           />
         </div>
 
-        {/* Enrollment Type Filter */}
+        {/* Enrolment Type Filter */}
         <div className="w-full md:w-56 applicant-overview-filter-placeholder">
           <Select
             label={t("dashboard.enrollmentTypeLabel", "Type")}

@@ -108,5 +108,10 @@ export type {
   UpdateProfilePayload,
   UpdateProfileData,
   UpdateProfileResponse,
+  GetDocumentsResponse,
+  ApplicantDocument,
+  DocumentFile,
+  ApplicationPreferenceDocument,
+  ApplicationPreferenceDocumentsResponse,
 } from "./types";
 

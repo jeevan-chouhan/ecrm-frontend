@@ -42,7 +42,7 @@ const TeamOverviewFilters = ({
 
   // Enrollment type options with placeholder
   const enrollmentTypeOptionsWithPlaceholder = useMemo(() => [
-    { value: "", label: t("dashboard.selectEnrollmentType", "Select Enrollment Type") },
+    { value: "", label: t("dashboard.selectEnrollmentType", "Select Enrolment Type") },
     ...enrollmentTypes.map((type) => ({
       value: type.value,
       label: t(`enrollmentType.${type.value}`, type.label),
@@ -111,10 +111,10 @@ const TeamOverviewFilters = ({
         />
       </div>
 
-      {/* Enrollment Type Select */}
+      {/* Enrolment Type Select */}
       <div className="w-56 team-overview-filter-placeholder">
         <Select
-          label={t("reportAnalysis.teamOverview.enrollmentTypeLabel", "Enrollment Type")}
+          label={t("reportAnalysis.teamOverview.enrollmentTypeLabel", "Enrolment Type")}
           options={enrollmentTypeOptionsWithPlaceholder}
           value={selectedEnrollmentType}
           onChange={(value) => onEnrollmentTypeChange(value as string)}

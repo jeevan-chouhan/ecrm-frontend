@@ -42,7 +42,7 @@ const ApplicantHeader = ({ applicant, onBack, onEdit, onStatusToggle }: Applican
               {t("applicantTracker.applicantStage", "Applicant Stage")} - {applicant.applicantStage}
             </p>
             <p className="text-sm" style={{ color: COLORS.textMuted }}>
-              {t("applicantTracker.enrollmentType", "Enrollment Type")} - {getEnrollmentTypeLabel(applicant.enrollmentType)}
+              {t("applicantTracker.enrollmentType", "Enrolment Type")} - {getEnrollmentTypeLabel(applicant.enrollmentType)}
             </p>
           </div>
         </div>
