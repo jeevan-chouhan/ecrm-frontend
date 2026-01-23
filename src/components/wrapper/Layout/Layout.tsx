@@ -8,6 +8,7 @@ import Footer from "../Footer/Footer";
 import {
   Dashboard,
   Applicant,
+  Ledger,
   University,
   Agency,
   Team,
@@ -129,6 +130,12 @@ const Layout = ({
       path: ROUTES.APPLICANT_TRACKER,
       icon: <Applicant className="h-5 w-5" />,
       isActive: (location.pathname.startsWith(ROUTES.APPLICANT_TRACKER) || location.pathname.startsWith("/applicant-tracker")) && !(isApplicantDetailPage && isFromDashboard),
+    },
+    {
+      label: t("sidebar.masterLedger", "Master Ledger"),
+      path: ROUTES.MASTER_LEDGER,
+      icon: <Ledger className="h-5 w-5" />,
+      isActive: location.pathname.startsWith(ROUTES.MASTER_LEDGER),
     },
     {
       label: t("sidebar.countryUniversity", "Country & University Directory"),

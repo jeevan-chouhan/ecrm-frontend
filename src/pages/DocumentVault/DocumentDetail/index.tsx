@@ -338,6 +338,9 @@ const DocumentDetail = () => {
           )
         );
 
+        // Reset refs to allow refetch
+        fetchedApplicantIdRef.current = null;
+        isFetchingRef.current = false;
         // Refetch documents to get updated list
         await fetchDocuments();
       } else {
@@ -392,6 +395,9 @@ const DocumentDetail = () => {
           )
         );
 
+        // Reset refs to allow refetch
+        fetchedApplicantIdRef.current = null;
+        isFetchingRef.current = false;
         // Refetch documents to get updated data
         await fetchDocuments();
       } else {
@@ -450,6 +456,9 @@ const DocumentDetail = () => {
           )
         );
 
+        // Reset refs to allow refetch
+        fetchedApplicantIdRef.current = null;
+        isFetchingRef.current = false;
         // Refetch documents to get updated data
         await fetchDocuments();
       } else {

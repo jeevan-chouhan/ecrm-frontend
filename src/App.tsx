@@ -34,6 +34,7 @@ const CountryUniversity = lazy(() => import("./pages/CountryUniversity"));
 const UniversityDetail = lazy(() => import("./pages/CountryUniversity/UniversityDetail"));
 const DocumentVault = lazy(() => import("./pages/DocumentVault"));
 const DocumentDetail = lazy(() => import("./pages/DocumentVault/DocumentDetail/index"));
+const MasterLedger = lazy(() => import("./pages/MasterLedger"));
 const AgencyPartner = lazy(() => import("./pages/AgencyPartner"));
 const ManageTeam = lazy(() => import("./pages/ManageTeam"));
 const ManageTeamAdd = lazy(() => import("./pages/ManageTeam/AddMember"));
@@ -72,6 +73,7 @@ const protectedRoutes: RouteConfig[] = [
   { path: ROUTES.CREATE_APPLICANT, element: <CreateApplicant /> },
   { path: ROUTES.APPLICANT_DETAIL, element: <ApplicantDetailView /> },
   { path: ROUTES.APPLICANT_TRACKER_DOCUMENTS, element: <DocumentDetail /> },
+  { path: ROUTES.MASTER_LEDGER, element: <MasterLedger /> },
   { path: ROUTES.COUNTRY_UNIVERSITY, element: <CountryUniversity /> },
   { path: ROUTES.UNIVERSITY_DETAIL, element: <UniversityDetail /> },
   { path: ROUTES.DOCUMENT_VAULT, element: <DocumentVault /> },

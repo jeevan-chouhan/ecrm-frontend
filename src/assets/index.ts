@@ -47,6 +47,7 @@ import SuccessCircleIcon from "./SuccessCircle.svg?react";
 import ErrorCircleIcon from "./ErrorCircle.svg?react";
 import WarningCircleIcon from "./WarningCircle.svg?react";
 import InfoCircleIcon from "./InfoCircle.svg?react";
+import LedgerIcon from "./Ledger.svg?react";
 
 // Logo Image
 import LogoImagePng from "./LogoImage.png";
@@ -97,6 +98,7 @@ export const SuccessCircle = SuccessCircleIcon;
 export const ErrorCircle = ErrorCircleIcon;
 export const WarningCircle = WarningCircleIcon;
 export const InfoCircle = InfoCircleIcon;
+export const Ledger = LedgerIcon;
 export const LogoImage = LogoImagePng;
 
 // Also export as icons object for alternative usage
@@ -146,6 +148,7 @@ export const icons = {
   ErrorCircle: ErrorCircleIcon,
   WarningCircle: WarningCircleIcon,
   InfoCircle: InfoCircleIcon,
+  Ledger: LedgerIcon,
 };
 
 // Images
