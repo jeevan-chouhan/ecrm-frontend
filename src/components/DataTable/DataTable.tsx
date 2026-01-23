@@ -37,6 +37,7 @@ interface DataTableProps {
   height?: number | string; // Fixed height for table with scroll
   rowSelectionModel?: GridRowId[];
   onRowSelectionModelChange?: (newSelection: GridRowId[]) => void;
+  isRowSelectable?: (params: any) => boolean;
 }
 
 // Custom DataGrid styles - applied via sx prop since MuiDataGrid theme types
@@ -138,6 +139,7 @@ const DataTable = ({
   height,
   rowSelectionModel,
   onRowSelectionModelChange,
+  isRowSelectable,
 }: DataTableProps) => {
   // Internal pagination state for uncontrolled mode
   const [internalPaginationModel, setInternalPaginationModel] = useState<GridPaginationModel>({
@@ -189,6 +191,7 @@ const DataTable = ({
           onRowSelectionModelChange={onRowSelectionModelChange ? (model: GridRowSelectionModel) => {
             onRowSelectionModelChange(fromSelectionModel(model));
           } : undefined}
+          isRowSelectable={isRowSelectable}
           localeText={{
             noRowsLabel: "No Record Found",
           }}

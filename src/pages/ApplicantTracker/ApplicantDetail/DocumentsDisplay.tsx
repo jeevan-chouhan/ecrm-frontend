@@ -1,6 +1,5 @@
 import { useMemo, memo } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "../../../components";
 import { COLORS, typography } from "../../../constants";
 import { File, Eye, Download } from "../../../assets";
 import { EmptyState } from "./DisplayComponents";
@@ -96,7 +95,7 @@ const DocumentsDisplay = ({
                 fontSize: typography.fontSize.body,
               }}
             >
-              {t("applicantDetailView.actions", "Actions")}
+              {t("applicantDetailView.verificationStatus", "Verification Status")}
             </th>
             <th
               className="text-left py-3 px-4 font-semibold tracking-wide"
@@ -106,7 +105,7 @@ const DocumentsDisplay = ({
                 fontSize: typography.fontSize.body,
               }}
             >
-              {t("applicantDetailView.verificationStatus", "Verification Status")}
+              {t("applicantDetailView.actions", "Actions")}
             </th>
           </tr>
         </thead>
@@ -140,33 +139,6 @@ const DocumentsDisplay = ({
                 </div>
               </td>
 
-              {/* Actions */}
-              <td className="py-3 px-4">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    rounded
-                    onClick={() => handleView(document)}
-                    style={{
-                      color: COLORS.accent,
-                      padding: "4px 8px",
-                    }}
-                  >
-                    <Eye className="w-4 h-4 mr-1" />
-                    {t("applicantTracker.view", "View")}
-                  </Button>
-                  <button
-                    onClick={(e) => handleDownload(document, e)}
-                    className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
-                    style={{ color: COLORS.accent }}
-                    aria-label={t("common.download", "Download")}
-                  >
-                    <Download className="w-4 h-4" />
-                  </button>
-                </div>
-              </td>
-
               {/* Verification Status */}
               <td className="py-3 px-4">
                 {document.verified ? (
@@ -187,6 +159,29 @@ const DocumentsDisplay = ({
                     {t("applicantDetailView.pending", "Pending")}
                   </span>
                 )}
+              </td>
+
+              {/* Actions */}
+              <td className="py-3 px-4">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleView(document)}
+                    className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
+                    style={{ color: COLORS.accent }}
+                    aria-label={t("applicantTracker.view", "View")}
+                    title={t("applicantTracker.view", "View")}
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={(e) => handleDownload(document, e)}
+                    className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
+                    style={{ color: COLORS.accent }}
+                    aria-label={t("common.download", "Download")}
+                  >
+                    <Download className="w-4 h-4" />
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

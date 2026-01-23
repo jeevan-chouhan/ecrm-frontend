@@ -8,6 +8,7 @@ import { getEnrollmentTypeLabel } from "../../../utils/commonUtils";
 import {
   ArrowLeft,
   File,
+  Eye,
   Download,
   Close,
 } from "../../../assets";
@@ -107,6 +108,11 @@ const DocumentDetail = () => {
     pending: 0,
   });
 
+  // State for verified university and course names
+  const [verifiedUniversityAndCourses, setVerifiedUniversityAndCourses] = useState<
+    Array<{ universityName: string; courseName: string }>
+  >([]);
+
   // Fetch documents from API and merge with fixed list
   const fetchDocuments = useCallback(async () => {
     if (!applicantId || !storedApplicationPrefId) return;
@@ -148,6 +154,20 @@ const DocumentDetail = () => {
             approved: response.data.documentCount.approved,
             pending: response.data.documentCount.pending,
           });
+        }
+
+        // Update verified university and course names
+        if (response.data.verifiedUniversityAndCoursesName && response.data.verifiedUniversityAndCoursesName.length > 0) {
+          setVerifiedUniversityAndCourses(
+            response.data.verifiedUniversityAndCoursesName.filter(
+              (item) => item.universityName && item.courseName
+            ).map((item) => ({
+              universityName: item.universityName,
+              courseName: item.courseName,
+            }))
+          );
+        } else {
+          setVerifiedUniversityAndCourses([]);
         }
 
         // Combine commonDocuments and applicationSpecificDocuments
@@ -224,16 +244,10 @@ const DocumentDetail = () => {
     fetchDocuments();
   }, [fetchDocuments, applicantId, storedApplicationPrefId]);
 
-  // Stats - use API data if available, otherwise calculate from documents
-  const totalDocuments = documentCount.totalDocuments > 0 
-    ? documentCount.totalDocuments 
-    : documents.length;
-  const approvedCount = documentCount.approved > 0 
-    ? documentCount.approved 
-    : documents.filter((d) => d.verified).length;
-  const pendingCount = documentCount.pending > 0 
-    ? documentCount.pending 
-    : documents.filter((d) => !d.verified).length;
+  // Stats - use API data from documentCount
+  const totalDocuments = documentCount.totalDocuments;
+  const approvedCount = documentCount.approved;
+  const pendingCount = documentCount.pending;
 
   const handleBack = () => {
     navigate(-1);
@@ -564,8 +578,8 @@ const DocumentDetail = () => {
     {
       field: "name",
       headerName: t("documentVault.documentName", "Document Name"),
-      flex: 2,
-      minWidth: 250,
+      flex: 3,
+      minWidth: 300,
       sortable: true,
       renderCell: (params) => {
         const doc = params.row as DocumentItem;
@@ -606,76 +620,10 @@ const DocumentDetail = () => {
       },
     },
     {
-      field: "upload",
-      headerName: t("documentVault.upload", "Upload"),
-      flex: 1.5,
-      minWidth: 200,
-      sortable: false,
-      headerAlign: "center",
-      align: "center",
-      renderCell: (params) => {
-        const doc = params.row as DocumentItem;
-        return (
-          <div className="flex items-center justify-center gap-2 h-full">
-            {doc.uploaded ? (
-              <>
-                <Button
-                  variant="accent"
-                  size="sm"
-                  rounded
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleViewDocument(doc);
-                  }}
-                >
-                  {t("documentVault.view", "View")}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  icon={<Download className="h-4 w-4" style={{ color: COLORS.textMuted }} />}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (doc.fileUrl && doc.fileName) handleDownload(doc.fileUrl, doc.fileName);
-                  }}
-                  title={t("common.download", "Download")}
-                />
-                {!doc.verified && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    icon={<Close className="h-4 w-4" style={{ color: COLORS.error }} />}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteClick(doc.id);
-                    }}
-                    title={t("documentVault.deleteDocument", "Delete Document")}
-                  />
-                )}
-              </>
-            ) : (
-              <Button
-                variant="accent"
-                size="sm"
-                rounded
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleUploadClick(doc.id);
-                }}
-                disabled={doc.isNew && !doc.name}
-              >
-                {t("documentVault.upload", "Upload")}
-              </Button>
-            )}
-          </div>
-        );
-      },
-    },
-    {
       field: "verified",
       headerName: t("documentVault.verificationStatus", "Verification Status"),
-      flex: 1,
-      minWidth: 150,
+      flex: 1.2,
+      minWidth: 180,
       sortable: true,
       headerAlign: "center",
       align: "center",
@@ -705,6 +653,77 @@ const DocumentDetail = () => {
                 disabled={!doc.uploaded}
               >
                 {t("documentVault.verify", "Verify")}
+              </Button>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      field: "upload",
+      headerName: t("documentVault.actions", "Actions"),
+      flex: 1,
+      minWidth: 150,
+      sortable: false,
+      headerAlign: "left",
+      align: "left",
+      renderCell: (params) => {
+        const doc = params.row as DocumentItem;
+        return (
+          <div className="flex items-center gap-2 h-full">
+            {doc.uploaded ? (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewDocument(doc);
+                  }}
+                  className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
+                  style={{ color: COLORS.accent }}
+                  aria-label={t("documentVault.view", "View")}
+                  title={t("documentVault.view", "View")}
+                >
+                  <Eye className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (doc.fileUrl && doc.fileName) handleDownload(doc.fileUrl, doc.fileName);
+                  }}
+                  className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
+                  style={{ color: COLORS.accent }}
+                  aria-label={t("common.download", "Download")}
+                  title={t("common.download", "Download")}
+                >
+                  <Download className="w-4 h-4" />
+                </button>
+                {!doc.verified && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteClick(doc.id);
+                    }}
+                    className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
+                    style={{ color: COLORS.error }}
+                    aria-label={t("documentVault.deleteDocument", "Delete Document")}
+                    title={t("documentVault.deleteDocument", "Delete Document")}
+                  >
+                    <Close className="w-4 h-4" />
+                  </button>
+                )}
+              </>
+            ) : (
+              <Button
+                variant="accent"
+                size="sm"
+                rounded
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleUploadClick(doc.id);
+                }}
+                disabled={doc.isNew && !doc.name}
+              >
+                {t("documentVault.upload", "Upload")}
               </Button>
             )}
           </div>
@@ -747,9 +766,30 @@ const DocumentDetail = () => {
             <p className="text-sm" style={{ color: COLORS.textMuted }}>
               ID: {applicantData.applicantId}
             </p>
-            <p className="text-sm" style={{ color: COLORS.accent }}>
+            <p className="text-sm" style={{ color: COLORS.textMuted }}>
               Enrolment Type - {getEnrollmentTypeLabel(applicantData.enrollmentType)}
             </p>
+            {verifiedUniversityAndCourses.length > 0 && (
+              <p className="text-sm mt-1" style={{ color: COLORS.error }}>
+                {verifiedUniversityAndCourses.length === 1 ? (
+                  <>
+                    {t("documentVault.embassyVisaApprovedMultiple", "This is to note that the applicant's Embassy visa for")}{" "}
+                    <strong>{verifiedUniversityAndCourses[0].universityName}</strong> {t("documentVault.inTheProgram", "in the program")}{" "}
+                    <strong>{verifiedUniversityAndCourses[0].courseName}</strong> {t("documentVault.hasBeenApproved", "has been approved.")}
+                  </>
+                ) : (
+                  <>
+                    {t("documentVault.embassyVisaApprovedMultiple", "This is to note that the applicant's Embassy visa for")}{" "}
+                    {verifiedUniversityAndCourses.map((item, index) => (
+                      <span key={index}>
+                        <strong>{item.universityName}</strong> {t("documentVault.inTheProgram", "in the program")} <strong>{item.courseName}</strong>
+                        {index < verifiedUniversityAndCourses.length - 1 ? "; " : ` ${t("documentVault.hasBeenApproved", "has been approved.")}`}
+                      </span>
+                    ))}
+                  </>
+                )}
+              </p>
+            )}
           </div>
         </div>
 
@@ -763,7 +803,7 @@ const DocumentDetail = () => {
               {totalDocuments}
             </p>
             <p className="text-sm" style={{ color: COLORS.textMuted }}>
-              {t("documentVault.totalDocuments", "Total Documents")}
+              {t("documentVault.uploadedDocuments", "Uploaded Documents")}
             </p>
           </Card>
           <Card padding="md" shadow="sm">
@@ -820,6 +860,11 @@ const DocumentDetail = () => {
           hideFooter
           rowSelectionModel={selectedDocs}
           onRowSelectionModelChange={handleSelectionChange}
+          isRowSelectable={(params) => {
+            if (!params.row) return false;
+            const doc = params.row as DocumentItem;
+            return doc?.uploaded === true;
+          }}
         />
       </div>
 
@@ -831,19 +876,42 @@ const DocumentDetail = () => {
         size="sm"
         showCloseButton
       >
-        <div>
-          <p className="text-base mb-6" style={{ color: COLORS.textDark }}>
-            {t("documentVault.verifyConfirmation", "Are you sure you want to verify this document?")}
-          </p>
-          <div className="flex justify-end gap-3">
-            <Button variant="cancel" rounded onClick={handleVerifyCancel}>
-              {t("common.no", "No")}
-            </Button>
-            <Button variant="accent" rounded onClick={handleVerifyConfirm}>
-              {t("common.yes", "Yes")}
-            </Button>
+        {approvingDocId && (
+          <div>
+            <p className="text-sm mb-4" style={{ color: COLORS.textDark }}>
+              {t("documentVault.verifyConfirmation", "Are you sure you want to verify this document?")}
+            </p>
+            {(() => {
+              const docToVerify = documents.find((d) => d.id === approvingDocId);
+              return docToVerify ? (
+                <div className="text-sm space-y-1 mb-6">
+                  <div>
+                    <span className="font-medium" style={{ color: COLORS.textDark }}>
+                      {t("documentVault.documentName", "Document Name")}:{" "}
+                    </span>
+                    <span style={{ color: COLORS.textMuted }}>{docToVerify.name}</span>
+                  </div>
+                  {docToVerify.fileName && (
+                    <div>
+                      <span className="font-medium" style={{ color: COLORS.textDark }}>
+                        {t("documentVault.fileName", "File Name")}:{" "}
+                      </span>
+                      <span style={{ color: COLORS.textMuted }}>{docToVerify.fileName}</span>
+                    </div>
+                  )}
+                </div>
+              ) : null;
+            })()}
+            <div className="flex justify-end gap-3">
+              <Button variant="cancel" rounded onClick={handleVerifyCancel}>
+                {t("common.no", "No")}
+              </Button>
+              <Button variant="accent" rounded onClick={handleVerifyConfirm}>
+                {t("common.yes", "Yes")}
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </Popup>
 
       {/* Document Viewer Modal */}
@@ -863,32 +931,36 @@ const DocumentDetail = () => {
       >
         {deletingDocId && (
           <div className="space-y-3">
-            <p className="text-sm" style={{ color: COLORS.textDark }}>
-              {t(
-                "documentVault.deleteConfirmation",
-                "Are you sure you want to delete this document? This action cannot be undone."
-              )}
-            </p>
             {(() => {
               const docToDelete = documents.find((d) => d.id === deletingDocId);
               return docToDelete ? (
-                <div className="text-sm space-y-1">
-                  <div>
-                    <span className="font-medium" style={{ color: COLORS.textDark }}>
-                      {t("documentVault.documentName", "Document Name")}:{" "}
-                    </span>
-                    <span style={{ color: COLORS.textMuted }}>{docToDelete.name}</span>
+                <>
+                  <p className="text-sm" style={{ color: COLORS.textDark }}>
+                    {t(
+                      "documentVault.deleteConfirmation",
+                      "Are you sure you want to delete the document '{{documentName}}'?",
+                      { documentName: docToDelete.name }
+                    )}
+                  </p>
+                  <div className="text-sm space-y-1">
+                    {docToDelete.fileName && (
+                      <div>
+                        <span className="font-medium" style={{ color: COLORS.textDark }}>
+                          {t("documentVault.fileName", "File Name")}:{" "}
+                        </span>
+                        <span style={{ color: COLORS.textMuted }}>{docToDelete.fileName}</span>
+                      </div>
+                    )}
                   </div>
-                  {docToDelete.fileName && (
-                    <div>
-                      <span className="font-medium" style={{ color: COLORS.textDark }}>
-                        {t("documentVault.fileName", "File Name")}:{" "}
-                      </span>
-                      <span style={{ color: COLORS.textMuted }}>{docToDelete.fileName}</span>
-                    </div>
+                </>
+              ) : (
+                <p className="text-sm" style={{ color: COLORS.textDark }}>
+                  {t(
+                    "documentVault.deleteConfirmation",
+                    "Are you sure you want to delete this document? This action cannot be undone."
                   )}
-                </div>
-              ) : null;
+                </p>
+              );
             })()}
           </div>
         )}

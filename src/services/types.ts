@@ -1000,8 +1000,8 @@ export interface ApplicationPreferenceDocument extends ApplicantDocument {
 }
 
 export interface UniversityCourseName {
-  count: number;
-  name: string;
+  universityName: string;
+  courseName: string;
 }
 
 export interface ApplicantPersonalDetail {
