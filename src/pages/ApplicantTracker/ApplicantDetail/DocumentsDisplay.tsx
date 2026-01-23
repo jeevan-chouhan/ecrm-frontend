@@ -1,6 +1,5 @@
 import { useMemo, memo } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "../../../components";
 import { COLORS, typography } from "../../../constants";
 import { File, Eye, Download } from "../../../assets";
 import { EmptyState } from "./DisplayComponents";
