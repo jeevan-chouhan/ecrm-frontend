@@ -594,6 +594,7 @@
     "workExperienceContent": "Work Experience Content Will Be Displayed Here.",
     "achievementsContent": "Achievements Content Will Be Displayed Here.",
     "viewDocuments": "View Documents",
+    "commonDocuments": "Common Documents",
     "duration": "Duration",
     "noWorkExperiences": "No Work Experiences Added Yet.",
     "noAchievements": "No Achievements Added Yet.",
@@ -605,8 +606,8 @@
     "pending": "Pending",
     "applicationStatusHistory": "Application Status History",
     "noStatusHistory": "No Status History Available.",
-    "applicationSpecificDocuments": "Application-Specific Documents",
-    "noApplicationSpecificDocuments": "No Application-Specific Documents Added Yet.",
+    "applicationSpecificDocuments": "Application Specific Documents",
+    "noApplicationSpecificDocuments": "No Application Specific Documents Added Yet.",
     "universityName": "University",
     "courseName": "Course"
   },
@@ -667,6 +668,7 @@
     "view": "View",
     "searchApplicants": "Search Applicants ID, Name...",
     "totalDocuments": "Total Documents",
+    "uploadedDocuments": "Uploaded Documents",
     "verified": "Verified",
     "approved": "Approved",
     "pending": "Pending",
@@ -685,7 +687,13 @@
     "verifyConfirmation": "Are You Sure You Want To Verify This Document?",
     "page": "Page",
     "deleteDocument": "Delete Document",
-    "deleteConfirmation": "Are you sure you want to delete the document '{{documentName}}'?"
+    "deleteConfirmation": "Are you sure you want to delete the document '{{documentName}}'? This action cannot be undone.",
+    "actions": "Actions",
+    "enterDocName": "Enter Document Name",
+    "fileName": "File Name",
+    "embassyVisaApprovedMultiple": "This Is To Note That The Applicant's Embassy Visa For",
+    "inTheProgram": "In The Program",
+    "hasBeenApproved": "Has Been Approved."
   },
   "agencyPartner": {
     "title": "Agency Partner",

@@ -14,7 +14,6 @@ import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice
 import ApplicantHeader from "./ApplicantHeader";
 import UniversityApplicationTable from "./UniversityApplicationTable";
 import ApplicantCards from "./ApplicantCards";
-import NotesSection from "./NotesSection";
 import ApplicationStatusPopup from "./ApplicationStatusPopup";
 import ApplicationStatusHistoryPopup from "./ApplicationStatusHistoryPopup";
 import UploadDocView from "../../DocumentVault/DocumentDetail/UploadDocView";
@@ -851,11 +850,6 @@ const ApplicantDetailView = () => {
           applicant={displayApplicant}
           onDocumentView={handleDocumentView}
           onDocumentDownload={handleDocumentDownload}
-        />
-
-        {/* Notes Section */}
-        <NotesSection
-          notes={applicant?.notes || displayApplicant.notes || ""}
         />
 
         {/* Document Viewer Modal */}

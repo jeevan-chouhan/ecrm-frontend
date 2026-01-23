@@ -161,7 +161,7 @@ const ApplicantCards = ({ applicant, onDocumentView, onDocumentDownload }: Appli
       {/* Common Documents Card */}
       {renderCard(
         "documents",
-        t("applicantDetailView.viewDocuments", "View Documents"),
+        t("applicantDetailView.commonDocuments", "Common Documents"),
         Document,
         applicant?.documents?.documents && applicant.documents.documents.length > 0 ? (
           <DocumentsDisplay
@@ -178,10 +178,10 @@ const ApplicantCards = ({ applicant, onDocumentView, onDocumentDownload }: Appli
         )
       )}
 
-      {/* Application-Specific Documents Card */}
+      {/* Application Specific Documents Card */}
       {renderCard(
         "application-specific-documents",
-        t("applicantDetailView.applicationSpecificDocuments", "Application-Specific Documents"),
+        t("applicantDetailView.applicationSpecificDocuments", "Application Specific Documents"),
         Document,
         applicant?.documents?.applicationSpecificDocuments && applicant.documents.applicationSpecificDocuments.length > 0 ? (
           <ApplicationSpecificDocumentsDisplay
@@ -192,7 +192,7 @@ const ApplicantCards = ({ applicant, onDocumentView, onDocumentDownload }: Appli
         ) : (
           <div className="flex items-center justify-center min-h-[120px]">
             <p className="text-sm text-center" style={{ color: COLORS.textMuted }}>
-              {t("applicantDetailView.noApplicationSpecificDocuments", "No Application-Specific Documents Added Yet.")}
+              {t("applicantDetailView.noApplicationSpecificDocuments", "No Application Specific Documents Added Yet.")}
             </p>
           </div>
         )
