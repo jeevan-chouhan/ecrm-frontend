@@ -12,10 +12,10 @@ import type { PieChartDataItem, BarChartDataItem } from "../../components";
 
 // Mock data for Countries Serving pie chart
 const countriesData: PieChartDataItem[] = [
-  { name: "USA", value: 30, color: "#F7C948" },
-  { name: "Canada", value: 30, color: "#EF7B7B" },
-  { name: "Australia", value: 30, color: "#4ECDC4" },
-  { name: "Other", value: 10, color: "#95E1D3" },
+  { name: "USA", value: 30, color: COLORS.chartYellow },
+  { name: "Canada", value: 30, color: COLORS.chartRed },
+  { name: "Australia", value: 30, color: COLORS.chartTeal },
+  { name: "Other", value: 10, color: COLORS.chartMint },
 ];
 
 // Mock data for Top Universities table

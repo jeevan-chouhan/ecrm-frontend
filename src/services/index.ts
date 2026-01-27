@@ -113,5 +113,11 @@ export type {
   DocumentFile,
   ApplicationPreferenceDocument,
   ApplicationPreferenceDocumentsResponse,
+  GlobalAndServingCountry,
+  GlobalAndServingUniversity,
+  GeneralSettingsData,
+  GeneralSettingsResponse,
+  SaveServingPayload,
+  SaveServingResponse,
 } from "./types";
 

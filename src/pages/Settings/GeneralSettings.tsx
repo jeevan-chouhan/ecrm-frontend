@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Input, MultiSelect, Button } from "../../components";
 import { COLORS, typography } from "../../constants";
-import { userService } from "../../services";
-import type { CountryItem, UniversityItem } from "../../services";
+import { agencyService } from "../../services";
+import type { GlobalAndServingCountry, GlobalAndServingUniversity } from "../../services";
 import { useAppSelector, useAppDispatch } from "../../redux/hooks";
 import { showLoader, hideLoader } from "../../redux/slices/loader/loaderSlice";
 import { addToast } from "../../redux/slices/toast/toastSlice";
@@ -12,96 +12,103 @@ const GeneralSettings = () => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  const hasFetched = useRef(false);
+  
+  // Track if any country or university was initially selected (to decide POST vs PUT)
+  const hasInitialSelection = useRef(false);
 
   // Form state
   const [agencyName, setAgencyName] = useState("");
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [selectedUniversities, setSelectedUniversities] = useState<string[]>([]);
 
-  // Dropdown options
-  const [countries, setCountries] = useState<CountryItem[]>([]);
-  const [universities, setUniversities] = useState<UniversityItem[]>([]);
-  const [isLoadingCountries, setIsLoadingCountries] = useState(false);
-  const [isLoadingUniversities, setIsLoadingUniversities] = useState(false);
+  // Dropdown options from API
+  const [countryOptions, setCountryOptions] = useState<{ value: string; label: string }[]>([]);
+  const [universityOptions, setUniversityOptions] = useState<{ value: string; label: string }[]>([]);
 
-  // Fetch countries
-  const fetchCountries = useCallback(async () => {
-    if (!user?.agencyId) return;
-    setIsLoadingCountries(true);
-    try {
-      const response = await userService.getCountries(user.agencyId);
-      if (Array.isArray(response)) {
-        setCountries(response);
-      } else if (response.data) {
-        setCountries(response.data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch countries:", error);
-    } finally {
-      setIsLoadingCountries(false);
-    }
-  }, [user?.agencyId]);
-
-  // Fetch universities
-  const fetchUniversities = useCallback(async (countryIds: number[] | null = null) => {
-    setIsLoadingUniversities(true);
-    try {
-      const response = await userService.getUniversities({
-        agencyId: user?.agencyId ?? null,
-        countryId: countryIds,
-      });
-      if (Array.isArray(response)) {
-        setUniversities(response);
-      } else if (response.data) {
-        setUniversities(response.data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch universities:", error);
-    } finally {
-      setIsLoadingUniversities(false);
-    }
-  }, [user?.agencyId]);
-
-  // Fetch data on mount
+  // Fetch general settings on mount
   useEffect(() => {
-    fetchCountries();
-    fetchUniversities();
-  }, [fetchCountries, fetchUniversities]);
+    if (!user?.agencyId || hasFetched.current) return;
+    hasFetched.current = true;
 
-  // Convert to dropdown options
-  const countryOptions = countries.map((country) => ({
-    value: country.id.toString(),
-    label: country.name,
-  }));
+    const fetchGeneralSettings = async () => {
+      dispatch(showLoader());
+      try {
+        const response = await agencyService.getGeneralSettings(user.agencyId!);
+        if (response.status === "success" && response.data) {
+          const { agencyName: name, globalAndServingCountries, globalAndServingUniversities } = response.data;
 
-  const universityOptions = universities.map((uni) => ({
-    value: uni.id.toString(),
-    label: uni.name,
-  }));
+          // Set agency name (read-only)
+          setAgencyName(name || "");
 
-  // Handle country change - fetch universities for selected countries
-  const handleCountryChange = (values: string[]) => {
-    setSelectedCountries(values);
-    setSelectedUniversities([]); // Reset universities
-    if (values.length > 0) {
-      const countryIds = values.map((v) => parseInt(v, 10));
-      fetchUniversities(countryIds);
-    } else {
-      fetchUniversities(null);
-    }
-  };
+          // Check if any country or university has isSelect: true
+          const hasSelectedCountry = globalAndServingCountries?.some((c: GlobalAndServingCountry) => c.isSelect) || false;
+          const hasSelectedUniversity = globalAndServingUniversities?.some((u: GlobalAndServingUniversity) => u.isSelect) || false;
+          hasInitialSelection.current = hasSelectedCountry || hasSelectedUniversity;
+
+          // Set country options from globalAndServingCountries
+          // Select only countries where isSelect is true
+          if (globalAndServingCountries?.length) {
+            setCountryOptions(globalAndServingCountries.map((c: GlobalAndServingCountry) => ({
+              value: c.countryId.toString(),
+              label: c.countryName,
+            })));
+            setSelectedCountries(
+              globalAndServingCountries
+                .filter((c: GlobalAndServingCountry) => c.isSelect)
+                .map((c: GlobalAndServingCountry) => c.countryId.toString())
+            );
+          }
+
+          // Set university options from globalAndServingUniversities
+          // Select only universities where isSelect is true
+          if (globalAndServingUniversities?.length) {
+            setUniversityOptions(globalAndServingUniversities.map((u: GlobalAndServingUniversity) => ({
+              value: u.universityId.toString(),
+              label: u.universityName,
+            })));
+            setSelectedUniversities(
+              globalAndServingUniversities
+                .filter((u: GlobalAndServingUniversity) => u.isSelect)
+                .map((u: GlobalAndServingUniversity) => u.universityId.toString())
+            );
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch general settings:", error);
+        dispatch(addToast({ type: "error", message: t("common.fetchFailed", "Failed to fetch data") }));
+      } finally {
+        dispatch(hideLoader());
+      }
+    };
+
+    fetchGeneralSettings();
+  }, [user?.agencyId, dispatch, t]);
 
   const handleSave = async () => {
+    if (!user?.agencyId) return;
+
     dispatch(showLoader());
     try {
-      // TODO: Call API to save settings
-      console.log("Saving settings:", {
-        agencyName,
-        selectedCountries,
-        selectedUniversities,
-      });
+      const payload = {
+        agencyId: user.agencyId,
+        countryIds: selectedCountries.map((id) => parseInt(id, 10)),
+        universityIds: selectedUniversities.map((id) => parseInt(id, 10)),
+      };
+
+      // If no initial selection (all isSelect were false) -> POST
+      // If any initial selection existed (at least one isSelect was true) -> PUT
+      if (hasInitialSelection.current) {
+        await agencyService.updateServing(payload);
+      } else {
+        await agencyService.createServing(payload);
+        // After first save, set flag to true for subsequent saves
+        hasInitialSelection.current = true;
+      }
+
       dispatch(addToast({ type: "success", message: t("common.savedSuccessfully", "Saved successfully") }));
     } catch (error) {
+      console.error("Failed to save settings:", error);
       dispatch(addToast({ type: "error", message: t("common.saveFailed", "Failed to save") }));
     } finally {
       dispatch(hideLoader());
@@ -129,37 +136,34 @@ const GeneralSettings = () => {
 
       {/* Form */}
       <div className="max-w-2xl space-y-5">
-        {/* Agency Name */}
+        {/* Agency Name (Read-only) */}
         <Input
           label={t("settingsPage.agencyName", "Agency Name")}
-          placeholder={t("settingsPage.agencyNamePlaceholder", "Enter Agency Name")}
           value={agencyName}
-          onChange={(e) => setAgencyName(e.target.value)}
           fullWidth
+          disabled
         />
 
-        {/* Add Countries Serving */}
+        {/* Countries Serving */}
         <MultiSelect
           label={t("settingsPage.addCountriesServing", "Countries Serving")}
           options={countryOptions}
           value={selectedCountries}
-          onChange={handleCountryChange}
-          placeholder={isLoadingCountries ? t("common.loading", "Loading...") : t("settingsPage.multiSelectCountries", "Select Countries")}
+          onChange={setSelectedCountries}
+          placeholder={t("settingsPage.multiSelectCountries", "Select Countries")}
           fullWidth
           searchable
-          disabled={isLoadingCountries}
         />
 
-        {/* Add Universities Serving */}
+        {/* Universities Serving */}
         <MultiSelect
           label={t("settingsPage.addUniversitiesServing", "Universities Serving")}
           options={universityOptions}
           value={selectedUniversities}
           onChange={setSelectedUniversities}
-          placeholder={isLoadingUniversities ? t("common.loading", "Loading...") : t("settingsPage.multiSelectUniversities", "Select Universities")}
+          placeholder={t("settingsPage.multiSelectUniversities", "Select Universities")}
           fullWidth
           searchable
-          disabled={isLoadingUniversities}
         />
 
         {/* Save Button */}

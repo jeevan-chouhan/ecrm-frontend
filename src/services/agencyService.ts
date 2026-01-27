@@ -6,6 +6,9 @@ import type {
   AgencyPartnerNamesResponse,
   PartnersListParams,
   PartnersListResponse,
+  GeneralSettingsResponse,
+  SaveServingPayload,
+  SaveServingResponse,
 } from "./types";
 
 /**
@@ -87,6 +90,44 @@ const agencyService = {
   ): Promise<{ status: string; statusCode: number; message: string; data: string }> => {
     const response = await api.delete(
       `${ENDPOINTS.AGENCIES.PARTNERS}?partnerId=${partnerId}&agencyId=${agencyId}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Get general settings for an agency
+   * @param agencyId - Agency ID
+   * @returns Promise with general settings data
+   */
+  getGeneralSettings: async (agencyId: number): Promise<GeneralSettingsResponse> => {
+    const response = await api.get<GeneralSettingsResponse>(
+      `${ENDPOINTS.AGENCIES.GENERAL_SETTINGS}?agencyId=${agencyId}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Create serving countries and universities (when none were initially selected)
+   * @param payload - Serving data with agencyId, countryIds, universityIds
+   * @returns Promise with save response
+   */
+  createServing: async (payload: SaveServingPayload): Promise<SaveServingResponse> => {
+    const response = await api.post<SaveServingResponse>(
+      ENDPOINTS.AGENCIES.SERVING,
+      payload
+    );
+    return response.data;
+  },
+
+  /**
+   * Update serving countries and universities (when some were initially selected)
+   * @param payload - Serving data with agencyId, countryIds, universityIds
+   * @returns Promise with save response
+   */
+  updateServing: async (payload: SaveServingPayload): Promise<SaveServingResponse> => {
+    const response = await api.put<SaveServingResponse>(
+      ENDPOINTS.AGENCIES.SERVING,
+      payload
     );
     return response.data;
   },

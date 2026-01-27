@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useFormik } from "formik";
 import { Input, Button } from "../../../components";
 import PublicLayout from "../../../components/wrapper/PublicLayout";
-import { COLORS, ROUTES } from "../../../constants";
+import { COLORS, ROUTES, shadows } from "../../../constants";
 import { getResetPasswordSchema } from "../../../utils";
 import { authService } from "../../../services";
 import type { ResetPasswordState } from "../../../services";
@@ -98,7 +98,7 @@ const ResetPassword = () => {
             className="rounded-2xl p-6 md:p-8"
             style={{
               backgroundColor: COLORS.surface,
-              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+              boxShadow: shadows.card,
             }}
           >
             {/* Title */}
