@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useFormik } from "formik";
 import { Input, Button, Checkbox } from "../../../components";
 import PublicLayout from "../../../components/wrapper/PublicLayout";
-import { COLORS, ROUTES } from "../../../constants";
+import { COLORS, ROUTES, shadows } from "../../../constants";
 import { getLoginSchema } from "../../../utils";
 import { useAuth } from "../../../context";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
@@ -149,7 +149,7 @@ const Login = () => {
             className="rounded-2xl p-6 md:p-8"
             style={{
               backgroundColor: COLORS.surface,
-              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+              boxShadow: shadows.card,
             }}
           >
             <form onSubmit={formik.handleSubmit}>

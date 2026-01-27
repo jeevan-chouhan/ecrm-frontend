@@ -5,7 +5,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Input, Button, PhoneInput, Checkbox, Popup, FileUpload } from "../../../components";
 import PublicLayout from "../../../components/wrapper/PublicLayout";
-import { COLORS, ROUTES, termsAndConditions } from "../../../constants";
+import { COLORS, ROUTES, termsAndConditions, shadows } from "../../../constants";
 import { userService } from "../../../services";
 import { useAppDispatch } from "../../../redux/hooks";
 import { addToast } from "../../../redux/slices/toast/toastSlice";
@@ -119,7 +119,7 @@ const Register = () => {
             className="rounded-2xl p-6 md:p-8"
             style={{
               backgroundColor: COLORS.surface,
-              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+              boxShadow: shadows.card,
             }}
           >
             <form onSubmit={formik.handleSubmit}>

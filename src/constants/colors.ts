@@ -53,6 +53,12 @@ export const COLORS = {
   documentResume: "#EF4444",
   documentFinancial: "#6366F1",
   documentDefault: "#64748B",
+
+  // Chart Colors
+  chartYellow: "#F7C948",
+  chartRed: "#EF7B7B",
+  chartTeal: "#4ECDC4",
+  chartMint: "#95E1D3",
 } as const;
 
 // ==========================================
@@ -176,6 +182,7 @@ export const shadows = {
   md: "0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)",
   lg: "0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05)",
   xl: "0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04)",
+  card: "0 4px 20px rgba(0, 0, 0, 0.08)",
 } as const;
 
 // ==========================================

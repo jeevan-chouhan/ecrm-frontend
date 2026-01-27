@@ -6,7 +6,7 @@ import {
   getAccessToken,
   getRefreshToken,
   saveTokens,
-  redirectToLogin,
+  // redirectToLogin,
 } from "../utils";
 
 // ==========================================
@@ -163,20 +163,19 @@ api.interceptors.response.use(
     const statusCode = error.response?.status;
 
     // ----------------------------------------
-    // Handle 403 Forbidden - Redirect to Login
+    // Handle 401 Forbidden - Redirect to Login
     // ----------------------------------------
-    if (statusCode === 403) {
-      redirectToLogin();
-      return Promise.reject(error);
-    }
+    // if (statusCode === 401) {
+    //   redirectToLogin();
+    //   return Promise.reject(error);
+    // }
 
     // ----------------------------------------
-    // Handle 401 Unauthorized - Refresh Token
+    // Handle 403 Unauthorized - Refresh Token
     // ----------------------------------------
-    if (statusCode === 401 && !originalRequest._retry) {
+    if (statusCode === 403 && !originalRequest._retry) {
       // Don't refresh if the failed request was the refresh endpoint itself
       if (originalRequest.url?.includes(ENDPOINTS.AUTH.REFRESH)) {
-        redirectToLogin();
         return Promise.reject(error);
       }
 

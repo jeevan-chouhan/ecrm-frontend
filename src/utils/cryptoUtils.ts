@@ -8,7 +8,7 @@ import forge from "node-forge";
 
 const GCM_IV_LENGTH = 12; // 12 bytes = 96 bits (standard for AES-GCM)
 const GCM_TAG_LENGTH = 128; // 128 bits (standard for AES-GCM)
-const ENCRYPT_KEY = "d86d7bab3d6ac01a";
+const ENCRYPT_KEY = import.meta.env.VITE_PASSWORD_ENCRYPT_KEY;
 
 /**
  * Derive key using SHA-256 hash (to match backend's 256-bit key derivation)

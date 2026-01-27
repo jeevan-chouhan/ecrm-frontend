@@ -38,6 +38,8 @@ export const ENDPOINTS = {
     PARTNERS: "/agencies/partners",
     PARTNERS_LIST: "/agencies/partnersList",
     PARTNER_NAMES: "/agencies/global-agencyPartner-name",
+    GENERAL_SETTINGS: "/agencies/general-settings",
+    SERVING: "/agencies/serving",
   },
 
   // Plan Endpoints

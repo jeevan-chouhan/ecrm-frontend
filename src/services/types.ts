@@ -1035,3 +1035,39 @@ export interface UploadDocumentPayload {
 
 // Upload Document Response
 export type UploadDocumentResponse = ApiResponse<ApplicantDocument>;
+// General Settings Types
+// ==========================================
+
+// Global and Serving Country Item
+export interface GlobalAndServingCountry {
+  countryId: number;
+  countryName: string;
+  isSelect: boolean;
+}
+
+// Global and Serving University Item
+export interface GlobalAndServingUniversity {
+  universityId: number;
+  universityName: string;
+  isSelect: boolean;
+}
+
+// General Settings Data (from API response)
+export interface GeneralSettingsData {
+  agencyName: string;
+  globalAndServingCountries: GlobalAndServingCountry[];
+  globalAndServingUniversities: GlobalAndServingUniversity[];
+}
+
+// General Settings Response
+export type GeneralSettingsResponse = ApiResponse<GeneralSettingsData>;
+
+// Save Serving Payload (for POST and PUT)
+export interface SaveServingPayload {
+  agencyId: number;
+  countryIds: number[];
+  universityIds: number[];
+}
+
+// Save Serving Response
+export type SaveServingResponse = ApiResponse<null>;

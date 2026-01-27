@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../../components";
 import PublicLayout from "../../../components/wrapper/PublicLayout";
-import { COLORS, ROUTES, typography  } from "../../../constants";
+import { COLORS, ROUTES, typography, shadows } from "../../../constants";
 import { authService } from "../../../services";
 import type { OtpVerificationState } from "../../../services";
 import { useAppDispatch } from "../../../redux/hooks";
@@ -230,7 +230,7 @@ const OtpVerification = () => {
             className="rounded-2xl p-6 md:p-8"
             style={{
               backgroundColor: COLORS.surface,
-              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+              boxShadow: shadows.card,
             }}
           >
             {/* Verification Code Label */}
