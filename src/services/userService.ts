@@ -26,6 +26,8 @@ import type {
   UpdateProfileParams,
   UpdateProfilePayload,
   UpdateProfileResponse,
+  TeamOverviewParams,
+  TeamOverviewResponse,
 } from "./types";
 
 /**
@@ -324,6 +326,63 @@ const userService = {
         "Content-Type": "multipart/form-data",
       },
     });
+    return response.data;
+  },
+
+  /**
+   * Get team overview data with filters, pagination, and sorting
+   * @param params - Query parameters
+   * @returns Promise with team overview response
+   */
+  getTeamOverview: async (params: TeamOverviewParams): Promise<TeamOverviewResponse> => {
+    const queryParams = new URLSearchParams();
+    
+    // Required params
+    if (params.agencyId !== null && params.agencyId !== undefined) {
+      queryParams.append("agencyId", params.agencyId.toString());
+    }
+    
+    // Optional params - only append if they have values
+    if (params.search !== null && params.search !== undefined && params.search !== "") {
+      queryParams.append("search", params.search);
+    }
+    if (params.role !== null && params.role !== undefined && params.role !== "") {
+      queryParams.append("role", params.role);
+    }
+    if (params.page !== null && params.page !== undefined) {
+      queryParams.append("page", params.page.toString());
+    }
+    if (params.size !== null && params.size !== undefined) {
+      queryParams.append("size", params.size.toString());
+    }
+    if (params.sortBy !== null && params.sortBy !== undefined && params.sortBy !== "") {
+      queryParams.append("sortBy", params.sortBy);
+    }
+    if (params.asc !== null && params.asc !== undefined) {
+      queryParams.append("asc", params.asc.toString());
+    }
+    if (params.assignedAdminId !== null && params.assignedAdminId !== undefined) {
+      queryParams.append("assignedAdminId", params.assignedAdminId.toString());
+    }
+    if (params.assignedManagerId !== null && params.assignedManagerId !== undefined) {
+      queryParams.append("assignedManagerId", params.assignedManagerId.toString());
+    }
+    if (params.assignedCounselorId !== null && params.assignedCounselorId !== undefined) {
+      queryParams.append("assignedCounselorId", params.assignedCounselorId.toString());
+    }
+    if (params.enrollmentType !== null && params.enrollmentType !== undefined && params.enrollmentType !== "") {
+      queryParams.append("enrollmentType", params.enrollmentType);
+    }
+    if (params.fromDate !== null && params.fromDate !== undefined && params.fromDate !== "") {
+      queryParams.append("fromDate", params.fromDate);
+    }
+    if (params.toDate !== null && params.toDate !== undefined && params.toDate !== "") {
+      queryParams.append("toDate", params.toDate);
+    }
+
+    const response = await api.get<TeamOverviewResponse>(
+      `${ENDPOINTS.USERS.TEAM_OVERVIEW}?${queryParams.toString()}`
+    );
     return response.data;
   },
 };

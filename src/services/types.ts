@@ -1035,6 +1035,73 @@ export interface UploadDocumentPayload {
 
 // Upload Document Response
 export type UploadDocumentResponse = ApiResponse<ApplicantDocument>;
+
+// ==========================================
+// Team Overview Types
+// ==========================================
+
+export interface TeamOverviewParams {
+  agencyId: number | null;
+  search?: string | null;
+  role?: string | null;
+  page?: number | null;
+  size?: number | null;
+  sortBy?: string | null;
+  asc?: boolean | null;
+  assignedAdminId?: number | null;
+  assignedManagerId?: number | null;
+  assignedCounselorId?: number | null;
+  enrollmentType?: string | null;
+  fromDate?: string | null;
+  toDate?: string | null;
+}
+
+export interface TeamOverviewItemData {
+  userId: number;
+  userName: string;
+  role: string;
+  adminList: string[];
+  managerList: string[];
+  counselorList: string[];
+  countryList: string[];
+  totalApplications: number;
+  leads: number;
+  inProgressApplications: number;
+  enrolledApplications: number;
+  rejectedApplications: number;
+}
+
+// Mapped TeamOverviewItem for UI display (used in DataGrid)
+export interface TeamOverviewItem {
+  id: string; // Required by MUI DataGrid
+  name: string;
+  role: string;
+  reportingAdmins: string; // Comma-separated names
+  reportingManagers: string; // Comma-separated names
+  reportingCounselors: string; // Comma-separated names
+  country: string;
+  totalApplicants: number;
+  leads: number;
+  inProgressApplicants: number;
+  enrolledApplicants: number;
+  rejectedApplicants: number;
+}
+
+export interface TeamOverviewData {
+  content: TeamOverviewItemData[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+  numberOfElements: number;
+  nextPage: number | null;
+  prevPage: number | null;
+}
+
+export type TeamOverviewResponse = ApiResponse<TeamOverviewData>;
+
 // General Settings Types
 // ==========================================
 
@@ -1071,3 +1138,25 @@ export interface SaveServingPayload {
 
 // Save Serving Response
 export type SaveServingResponse = ApiResponse<null>;
+
+// ==========================================
+// Overall Counts Types
+// ==========================================
+
+// Overall Counts Data (from API response)
+export interface OverallCountsData {
+  totalAgencyPartners: number;
+  totalUsers: number;
+  totalApplicants: number;
+  totalApplications: number;
+  totalEnrolledApplications: number;
+  totalInProgressApplications: number;
+  totalRejectedApplications: number;
+  totalInactiveApplications: number;
+  totalActiveApplications: number;
+  totalActiveApplicants: number;
+  totalInactiveApplicants: number;
+}
+
+// Overall Counts Response
+export type OverallCountsResponse = ApiResponse<OverallCountsData>;

@@ -1,6 +1,6 @@
 import { useMemo, memo } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Select, DateRangePicker, type SelectOption, type DateRange } from "../../components";
+import { Button, Select, DatePicker, type SelectOption } from "../../components";
 import { enrollmentTypes } from "../../constants";
 
 interface TeamOverviewFiltersProps {
@@ -11,12 +11,14 @@ interface TeamOverviewFiltersProps {
   selectedManager: string;
   selectedCounselor: string;
   selectedEnrollmentType: string;
-  selectedDateRange: DateRange;
+  selectedFromDate: Date | null;
+  selectedToDate: Date | null;
   onAdminChange: (value: string) => void;
   onManagerChange: (value: string) => void;
   onCounselorChange: (value: string) => void;
   onEnrollmentTypeChange: (value: string) => void;
-  onDateRangeChange: (dateRange: DateRange) => void;
+  onFromDateChange: (date: Date | null) => void;
+  onToDateChange: (date: Date | null) => void;
   onApplyFilters: () => void;
   onClearFilters: () => void;
 }
@@ -29,16 +31,25 @@ const TeamOverviewFilters = ({
   selectedManager,
   selectedCounselor,
   selectedEnrollmentType,
-  selectedDateRange,
+  selectedFromDate,
+  selectedToDate,
   onAdminChange,
   onManagerChange,
   onCounselorChange,
   onEnrollmentTypeChange,
-  onDateRangeChange,
+  onFromDateChange,
+  onToDateChange,
   onApplyFilters,
   onClearFilters,
 }: TeamOverviewFiltersProps) => {
   const { t } = useTranslation();
+
+  // Set max date to today to disable future dates
+  const maxDate = useMemo(() => {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999); // Set to end of today
+    return today;
+  }, []);
 
   // Enrollment type options with placeholder
   const enrollmentTypeOptionsWithPlaceholder = useMemo(() => [
@@ -68,18 +79,15 @@ const TeamOverviewFilters = ({
   ], [counselorOptions, t]);
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-wrap items-end gap-3">
       <style>{`
         .team-overview-filter-placeholder button > span.block.truncate {
-          opacity: 0.7 !important;
-        }
-        .team-overview-date-range-placeholder button > span.block.truncate {
           opacity: 0.7 !important;
         }
       `}</style>
       
       {/* Admin Select */}
-      <div className="w-56 team-overview-filter-placeholder">
+      <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-7*0.75rem)/8)] lg:min-w-[180px] team-overview-filter-placeholder">
         <Select
           label={t("reportAnalysis.teamOverview.adminLabel", "Admin")}
           options={adminOptionsWithPlaceholder}
@@ -90,7 +98,7 @@ const TeamOverviewFilters = ({
       </div>
 
       {/* Manager Select */}
-      <div className="w-56 team-overview-filter-placeholder">
+      <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-7*0.75rem)/8)] lg:min-w-[180px] team-overview-filter-placeholder">
         <Select
           label={t("reportAnalysis.teamOverview.managerLabel", "Manager")}
           options={managerOptionsWithPlaceholder}
@@ -101,7 +109,7 @@ const TeamOverviewFilters = ({
       </div>
 
       {/* Counselor Select */}
-      <div className="w-56 team-overview-filter-placeholder">
+      <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-7*0.75rem)/8)] lg:min-w-[180px] team-overview-filter-placeholder">
         <Select
           label={t("reportAnalysis.teamOverview.counselorLabel", "Counselor")}
           options={counselorOptionsWithPlaceholder}
@@ -112,7 +120,7 @@ const TeamOverviewFilters = ({
       </div>
 
       {/* Enrolment Type Select */}
-      <div className="w-56 team-overview-filter-placeholder">
+      <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-7*0.75rem)/8)] lg:min-w-[180px] team-overview-filter-placeholder">
         <Select
           label={t("reportAnalysis.teamOverview.enrollmentTypeLabel", "Enrolment Type")}
           options={enrollmentTypeOptionsWithPlaceholder}
@@ -122,22 +130,50 @@ const TeamOverviewFilters = ({
         />
       </div>
 
-      {/* Date Range Picker */}
-      <div className="w-56 team-overview-date-range-placeholder">
-        <DateRangePicker
-          label={t("reportAnalysis.teamOverview.dateRangeLabel", "Date Range")}
-          value={selectedDateRange}
-          onChange={onDateRangeChange}
-          placeholder={t("reportAnalysis.teamOverview.selectDateRange", "Select Date Range")}
+      {/* From Date Picker */}
+      <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-7*0.75rem)/8)] lg:min-w-[180px]">
+        <DatePicker
+          label={t("reportAnalysis.teamOverview.fromDateLabel", "From Date")}
+          value={selectedFromDate}
+          onChange={onFromDateChange}
+          placeholder={t("reportAnalysis.teamOverview.selectFromDate", "Select From Date")}
+          fullWidth
+          maxDate={maxDate}
+        />
+      </div>
+
+      {/* To Date Picker */}
+      <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-7*0.75rem)/8)] lg:min-w-[180px]">
+        <DatePicker
+          label={t("reportAnalysis.teamOverview.toDateLabel", "To Date")}
+          value={selectedToDate}
+          onChange={onToDateChange}
+          placeholder={t("reportAnalysis.teamOverview.selectToDate", "Select To Date")}
+          fullWidth
+          maxDate={maxDate}
         />
       </div>
 
       {/* Filter Buttons */}
-      <div className="flex items-end gap-3 pt-6">
-        <Button variant="accent" size="sm" rounded onClick={onApplyFilters}>
+      <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-auto lg:w-auto flex items-end gap-3">
+        <Button 
+          variant="accent" 
+          size="sm" 
+          rounded 
+          onClick={onApplyFilters}
+          className="w-full sm:w-auto"
+          style={{ minWidth: "100px" }}
+        >
           {t("reportAnalysis.teamOverview.applyFilter", "Apply")}
         </Button>
-        <Button variant="cancel" size="sm" rounded onClick={onClearFilters}>
+        <Button 
+          variant="cancel" 
+          size="sm" 
+          rounded 
+          onClick={onClearFilters}
+          className="w-full sm:w-auto"
+          style={{ minWidth: "100px" }}
+        >
           {t("reportAnalysis.teamOverview.clearFilter", "Clear Filter")}
         </Button>
       </div>

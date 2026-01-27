@@ -38,6 +38,19 @@ export const getGenderLabel = (value: string | undefined): string => {
 };
 
 /**
+ * Convert string to title case
+ * @param value - The string to convert (e.g., "john doe", "JOHN DOE")
+ * @returns Title case string (e.g., "John Doe")
+ */
+export const toTitleCase = (value: string | null | undefined): string => {
+  if (!value) return "";
+  return value
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+};
+
+/**
  * Format status to capitalize first letter
  * @param value - The status value (e.g., "ACTIVE", "INACTIVE")
  * @returns Formatted status (e.g., "Active", "Inactive") or "N/A" if not found
@@ -45,10 +58,7 @@ export const getGenderLabel = (value: string | undefined): string => {
 export const formatStatus = (value: string | null | undefined): string => {
   if (!value) return "N/A";
   // Title case each word (e.g., "Primary Admin" stays "Primary Admin")
-  return value
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
+  return toTitleCase(value);
 };
 
 /**

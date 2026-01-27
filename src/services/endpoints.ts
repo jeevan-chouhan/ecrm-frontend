@@ -22,6 +22,7 @@ export const ENDPOINTS = {
     REGISTER: "users/add-member",
     UPDATE: "/users/update-userDetails",
     UPDATE_STATUS: "/users/update-userStatus",
+    TEAM_OVERVIEW: "/users/team-overview",
   },
 
   // Agency Endpoints
@@ -40,6 +41,7 @@ export const ENDPOINTS = {
     PARTNER_NAMES: "/agencies/global-agencyPartner-name",
     GENERAL_SETTINGS: "/agencies/general-settings",
     SERVING: "/agencies/serving",
+    OVERALL_COUNTS: "/agencies/overall-counts",
   },
 
   // Plan Endpoints

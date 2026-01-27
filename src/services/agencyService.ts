@@ -9,6 +9,7 @@ import type {
   GeneralSettingsResponse,
   SaveServingPayload,
   SaveServingResponse,
+  OverallCountsResponse,
 } from "./types";
 
 /**
@@ -128,6 +129,18 @@ const agencyService = {
     const response = await api.put<SaveServingResponse>(
       ENDPOINTS.AGENCIES.SERVING,
       payload
+    );
+    return response.data;
+  },
+
+  /**
+   * Get overall counts for an agency
+   * @param agencyId - Agency ID
+   * @returns Promise with overall counts data
+   */
+  getOverallCounts: async (agencyId: number): Promise<OverallCountsResponse> => {
+    const response = await api.get<OverallCountsResponse>(
+      `${ENDPOINTS.AGENCIES.OVERALL_COUNTS}?agencyId=${agencyId}`
     );
     return response.data;
   },

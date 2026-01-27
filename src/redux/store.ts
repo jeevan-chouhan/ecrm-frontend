@@ -19,6 +19,7 @@ import manageTeamReducer from "./slices/manageTeam/manageTeamSlice";
 import dashboardReducer from "./slices/dashboard/dashboardSlice";
 import documentVaultReducer from "./slices/documentVault/documentVaultSlice";
 import agencyPartnerReducer from "./slices/agencyPartner/agencyPartnerSlice";
+import teamOverviewReducer from "./slices/teamOverview/teamOverviewSlice";
 
 // Persist configuration for manageTeam - only persist filter/sort/pagination, not members data
 const manageTeamPersistConfig = {
@@ -48,6 +49,13 @@ const agencyPartnerPersistConfig = {
   whitelist: ["pagination", "sort", "filter"], // Only persist these, not partners/isLoading/error
 };
 
+// Persist configuration for teamOverview - only persist filter/pagination/sort, not data
+const teamOverviewPersistConfig = {
+  key: "teamOverview",
+  storage,
+  whitelist: ["pagination", "filter", "sort"], // Only persist these, not teamOverviewData/isLoading/error
+};
+
 // Create persisted manageTeam reducer
 const persistedManageTeamReducer = persistReducer(manageTeamPersistConfig, manageTeamReducer);
 
@@ -60,6 +68,9 @@ const persistedDocumentVaultReducer = persistReducer(documentVaultPersistConfig,
 // Create persisted agencyPartner reducer
 const persistedAgencyPartnerReducer = persistReducer(agencyPartnerPersistConfig, agencyPartnerReducer);
 
+// Create persisted teamOverview reducer
+const persistedTeamOverviewReducer = persistReducer(teamOverviewPersistConfig, teamOverviewReducer);
+
 // Combine all reducers
 const rootReducer = combineReducers({
   loader: loaderReducer,
@@ -69,6 +80,7 @@ const rootReducer = combineReducers({
   dashboard: persistedDashboardReducer,
   documentVault: persistedDocumentVaultReducer,
   agencyPartner: persistedAgencyPartnerReducer,
+  teamOverview: persistedTeamOverviewReducer,
 });
 
 // Root persist configuration
@@ -76,7 +88,7 @@ const persistConfig = {
   key: "root",
   version: 1,
   storage,
-  blacklist: ["loader", "toast", "manageTeam", "dashboard", "documentVault", "agencyPartner"], // Don't persist these at root level (they have their own config)
+  blacklist: ["loader", "toast", "manageTeam", "dashboard", "documentVault", "agencyPartner", "teamOverview"], // Don't persist these at root level (they have their own config)
   whitelist: ["auth"], // Persist auth state at root level
 };
 
