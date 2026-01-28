@@ -786,8 +786,8 @@
       "countriesDescription": "देश में सफल आवेदकों का वितरण",
       "topUniversities": "शीर्ष विश्वविद्यालय",
       "universityName": "शीर्ष विश्वविद्यालय",
-      "successfulApplicants": "सफल आवेदकों की संख्या",
-      "applicantProgressChart": "आवेदक प्रगति चार्ट अवलोकन",
+      "successfulApplicants": "सफल आवेदनों की संख्या",
+      "applicantProgressChart": "आवेदन प्रगति चार्ट अवलोकन",
       "noData": "कोई डेटा उपलब्ध नहीं"
     }
   },

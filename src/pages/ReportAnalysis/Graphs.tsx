@@ -153,25 +153,6 @@ const Graphs = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2
-          className="text-lg font-semibold"
-          style={{
-            color: COLORS.textDark,
-            fontSize: typography.fontSize.h3,
-            fontWeight: typography.fontWeight.semibold,
-          }}
-        >
-          {t("reportAnalysis.graphs.title", "Graphs")}
-        </h2>
-        <p style={{ color: COLORS.textMuted }}>
-          {t(
-            "reportAnalysis.graphs.description",
-            "View Analytics And Visual Reports"
-          )}
-        </p>
-      </div>
-
       {/* Countries Serving & Top Universities Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Countries Serving Pie Chart */}
@@ -224,12 +205,14 @@ const Graphs = () => {
               <p style={{ color: COLORS.textMuted }}>{t("common.loading", "Loading...")}</p>
             </div>
           ) : topUniversities.length > 0 ? (
-            <DataTable
-              rows={topUniversities}
-              columns={universityColumns}
-              hideFooter
-              disableRowSelectionOnClick
-            />
+            <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+              <DataTable
+                rows={topUniversities}
+                columns={universityColumns}
+                hideFooter
+                disableRowSelectionOnClick
+              />
+            </div>
           ) : (
             <div className="flex items-center justify-center h-64">
               <p style={{ color: COLORS.textMuted }}>

@@ -787,8 +787,8 @@
       "countriesDescription": "Distribution of successful applicants in the country",
       "topUniversities": "Top Universities",
       "universityName": "Top Universities",
-      "successfulApplicants": "No. of Successful Applicants",
-      "applicantProgressChart": "Applicant Progress Chart  Overview",
+      "successfulApplicants": "No. of Successful Applications",
+      "applicantProgressChart": "Applications Progress Chart Overview",
       "noData": "No data available"
     }
   },
