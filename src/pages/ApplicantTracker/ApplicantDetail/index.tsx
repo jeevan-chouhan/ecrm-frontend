@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, startTransition, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, startTransition, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { GridPaginationModel, GridSortModel } from "@mui/x-data-grid";
@@ -11,6 +11,16 @@ import type { CompleteDetailsData, ApplicationListItem, ApplicationPreferenceDoc
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { addToast } from "../../../redux/slices/toast/toastSlice";
 import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
+import {
+  setLoading as setApplicationsLoading,
+  setError,
+  setApplications,
+  setPage,
+  setPageSize,
+  setSort,
+  setApplicantId,
+} from "../../../redux/slices/applicantDetail/applicantDetailSlice";
+import type { PaginatedData } from "../../../services";
 import ApplicantHeader from "./ApplicantHeader";
 import UniversityApplicationTable from "./UniversityApplicationTable";
 import ApplicantCards from "./ApplicantCards";
@@ -233,17 +243,8 @@ const ApplicantDetailView = () => {
     }
     return null;
   });
-  const [loading, setLoading] = useState(false);
-  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-    page: 0,
-    pageSize: 10,
-  });
-  const [totalRowCount, setTotalRowCount] = useState(0);
-
-  // Sort state - default to lastUpdated desc
-  const [sortModel, setSortModel] = useState<GridSortModel>([
-    { field: "lastUpdated", sort: "desc" },
-  ]);
+  // Get applicantDetail state from Redux
+  const { applications, isLoading, pagination, sort } = useAppSelector((state) => state.applicantDetail);
   
   // Status change popup state (for applicant status)
   const [isStatusPopupOpen, setIsStatusPopupOpen] = useState(false);
@@ -281,7 +282,6 @@ const ApplicantDetailView = () => {
   const isMountedRef = useRef(true);
   const fetchedApplicationsForApplicantId = useRef<string | null>(null);
   const hasFetchedApplicationsOnMountRef = useRef(false);
-  const lastPaginationRef = useRef({ page: paginationModel.page, pageSize: paginationModel.pageSize });
 
   // Set mounted ref
   useEffect(() => {
@@ -291,23 +291,32 @@ const ApplicantDetailView = () => {
     };
   }, []);
 
+  // Reset Redux state when applicantId changes
+  useEffect(() => {
+    if (applicantId) {
+      dispatch(setApplicantId(applicantId));
+    }
+  }, [applicantId, dispatch]);
+
   // Fetch applicant applications
   const fetchApplicantApplications = useCallback(async (showLoaderFlag = false) => {
     if (!applicantId || !user?.agencyId) return;
 
     // Skip if already fetched for this applicantId (unless forced refresh)
-    // Note: We always refetch when pagination changes, so we check paginationModel too
     if (fetchedApplicationsForApplicantId.current === applicantId && !showLoaderFlag) return;
     
     // Mark as fetching for this applicantId
     fetchedApplicationsForApplicantId.current = applicantId;
 
     if (showLoaderFlag) {
-      setLoading(true);
+      dispatch(setApplicationsLoading(true));
       dispatch(showLoader());
     }
 
     try {
+      // Map sort field - lastUpdated -> updatedAt for API
+      const sortByField = sort.sortBy === "lastUpdated" ? "updatedAt" : (sort.sortBy || "updatedAt");
+
       // Fetch applications list with proper pagination and applicantId filter
       const response = await applicantService.getApplicationsList({
         agencyId: user.agencyId,
@@ -325,10 +334,10 @@ const ApplicantDetailView = () => {
         updatedFrom: null,
         updatedTo: null,
         search: null,
-        page: paginationModel.page,
-        size: paginationModel.pageSize, // Use pagination size from model
-        sortBy: sortModel.length > 0 ? (sortModel[0].field === "lastUpdated" ? "updatedAt" : sortModel[0].field) : "updatedAt",
-        asc: sortModel.length > 0 ? (sortModel[0].sort === "asc") : false,
+        page: pagination.page,
+        size: pagination.size,
+        sortBy: sortByField,
+        asc: sort.asc,
       });
 
       if (response.status === "success" && response.data) {
@@ -340,10 +349,22 @@ const ApplicantDetailView = () => {
           (item, index) => transformApplicationListItemToUniversityApplication(item, index)
         );
 
-        // Update total row count for pagination
-        setTotalRowCount(response.data.totalElements || 0);
+        // Create PaginatedData structure for Redux
+        const paginatedData: PaginatedData<UniversityApplication> = {
+          content: transformedApplications,
+          totalElements: response.data.totalElements,
+          totalPages: response.data.totalPages,
+          first: response.data.first,
+          last: response.data.last,
+          size: response.data.size || pagination.size,
+          number: response.data.page || pagination.page,
+          numberOfElements: response.data.numberOfElements || transformedApplications.length,
+          empty: transformedApplications.length === 0,
+        };
 
-        // Update applicant state with applications
+        dispatch(setApplications(paginatedData));
+
+        // Also update applicant state with applications for backward compatibility
         setApplicant((prevApplicant) =>
           prevApplicant
             ? {
@@ -353,23 +374,17 @@ const ApplicantDetailView = () => {
             : null
         );
       } else {
-        // If no applications found, set empty array
-        setApplicant((prevApplicant) =>
-          prevApplicant
-            ? {
-                ...prevApplicant,
-                applications: [],
-              }
-            : null
-        );
+        throw new Error(response.message || "Failed to fetch applications");
       }
     } catch (error) {
       // Reset ref on error so it can retry
       fetchedApplicationsForApplicantId.current = null;
       const { message } = handleApiError(error, "Failed to fetch applications");
       dispatch(addToast({ type: "error", message }));
+      dispatch(setError(message));
+      dispatch(setApplications([]));
       
-      // Set empty array on error
+      // Also update applicant state on error
       setApplicant((prevApplicant) =>
         prevApplicant
           ? {
@@ -380,11 +395,11 @@ const ApplicantDetailView = () => {
       );
     } finally {
       if (showLoaderFlag) {
-        setLoading(false);
+        dispatch(setApplicationsLoading(false));
         dispatch(hideLoader());
       }
     }
-  }, [applicantId, user?.agencyId, dispatch, paginationModel.page, paginationModel.pageSize, sortModel]);
+  }, [applicantId, user?.agencyId, dispatch, pagination.page, pagination.size, sort.sortBy, sort.asc]);
 
   // Fetch applicant data
   useEffect(() => {
@@ -400,7 +415,6 @@ const ApplicantDetailView = () => {
       hasFetchedApplicationsOnMountRef.current = false;
       fetchedApplicationsForApplicantId.current = null;
 
-      setLoading(true);
       dispatch(showLoader());
 
       try {
@@ -440,7 +454,6 @@ const ApplicantDetailView = () => {
         dispatch(addToast({ type: "error", message }));
       } finally {
         if (isMountedRef.current) {
-          setLoading(false);
           dispatch(hideLoader());
         }
       }
@@ -457,26 +470,34 @@ const ApplicantDetailView = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applicantId, user?.agencyId, dispatch]);
 
-  // Refetch applications when pagination changes (but not on initial mount or applicantId change)
+  // Refetch applications when pagination or sort changes (but not on initial mount or applicantId change)
   useEffect(() => {
     if (applicantId && user?.agencyId && hasFetchedApplicationsOnMountRef.current) {
-      // Check if pagination actually changed
-      const paginationChanged = 
-        lastPaginationRef.current.page !== paginationModel.page || 
-        lastPaginationRef.current.pageSize !== paginationModel.pageSize;
-      
-      if (paginationChanged) {
-        // Reset the ref to allow refetch when pagination changes
-        fetchedApplicationsForApplicantId.current = null;
-        lastPaginationRef.current = { page: paginationModel.page, pageSize: paginationModel.pageSize };
-        fetchApplicantApplications(false);
-      }
+      // Reset the ref to allow refetch when pagination/sort changes
+      fetchedApplicationsForApplicantId.current = null;
+      fetchApplicantApplications(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paginationModel.page, paginationModel.pageSize, applicantId, user?.agencyId]);
+  }, [pagination.page, pagination.size, sort.sortBy, sort.asc, applicantId, user?.agencyId, fetchApplicantApplications]);
 
-  // Get applications for table (no need for useMemo - just direct access)
-  const filteredApplications = applicant?.applications || [];
+  // Pagination model for DataTable (synced with Redux)
+  const paginationModel: GridPaginationModel = useMemo(
+    () => ({
+      page: pagination.page,
+      pageSize: pagination.size,
+    }),
+    [pagination.page, pagination.size]
+  );
+
+  // Sort model for DataTable (synced with Redux)
+  const sortModel: GridSortModel = useMemo(() => {
+    if (!sort.sortBy) return [];
+    // Map updatedAt back to lastUpdated for UI
+    const field = sort.sortBy === "updatedAt" ? "lastUpdated" : sort.sortBy;
+    return [{ field, sort: sort.asc ? "asc" : "desc" }];
+  }, [sort.sortBy, sort.asc]);
+
+  // Get applications for table from Redux
+  const filteredApplications = applications;
 
   // Helper function to get file type from file name or MIME type
   const getFileType = (fileName?: string, fileType?: string): string => {
@@ -546,8 +567,25 @@ const ApplicantDetailView = () => {
 
   // Handle pagination model change
   const handlePaginationModelChange = useCallback((model: GridPaginationModel) => {
-    setPaginationModel(model);
-  }, []);
+    if (model.page !== pagination.page) {
+      dispatch(setPage(model.page));
+    }
+    if (model.pageSize !== pagination.size) {
+      dispatch(setPageSize(model.pageSize));
+    }
+  }, [dispatch, pagination.page, pagination.size]);
+
+  // Handle sort model change
+  const handleSortModelChange = useCallback((model: GridSortModel) => {
+    if (model.length > 0) {
+      const { field, sort: sortOrder } = model[0];
+      // Map lastUpdated to updatedAt for API
+      const sortByField = field === "lastUpdated" ? "updatedAt" : field;
+      dispatch(setSort({ sortBy: sortByField, asc: sortOrder === "asc" }));
+    } else {
+      dispatch(setSort({ sortBy: "updatedAt", asc: false }));
+    }
+  }, [dispatch]);
 
   // Handle update application status - open popup for specific application
   const handleUpdateApplicationStatus = useCallback((application: UniversityApplication) => {
@@ -812,7 +850,7 @@ const ApplicantDetailView = () => {
     applicantName: applicant?.applicantName || "",
     applicantStage: applicant?.applicantStage || "",
     enrollmentType: applicant?.enrollmentType || "",
-    applications: applicant?.applications || mockApplicantDetail.applications,
+    applications: applications.length > 0 ? applications : (applicant?.applications || mockApplicantDetail.applications),
     notes: applicant?.notes || "",
     status: applicant?.status || "Active",
     personalDetails: applicant?.personalDetails,
@@ -839,12 +877,12 @@ const ApplicantDetailView = () => {
         {/* University Application Summary */}
         <UniversityApplicationTable
           applications={filteredApplications}
-          loading={loading}
+          loading={isLoading}
           paginationModel={paginationModel}
           onPaginationModelChange={handlePaginationModelChange}
           sortModel={sortModel}
-          onSortModelChange={setSortModel}
-          rowCount={totalRowCount}
+          onSortModelChange={handleSortModelChange}
+          rowCount={pagination.totalElements}
           onUpdateStatus={handleUpdateApplicationStatus}
           onApply={handleApplyClick}
           onViewStatusHistory={handleViewStatusHistory}
