@@ -1,20 +1,22 @@
-import { useState, useMemo, useCallback } from "react";
+import { useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Layout } from "../../components";
 import { COLORS, typography } from "../../constants";
+import { useAppSelector, useAppDispatch } from "../../redux/hooks";
+import { setActiveTab } from "../../redux/slices/settings/settingsSlice";
+import type { SettingsTabType } from "../../redux/slices/settings/settingsSlice";
 import GeneralSettings from "./GeneralSettings";
 import PlanManagement from "./PlanManagement";
 
-type TabType = "generalSettings" | "planManagement";
-
 interface Tab {
-  id: TabType;
+  id: SettingsTabType;
   labelKey: string;
 }
 
 const Settings = () => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<TabType>("generalSettings");
+  const dispatch = useAppDispatch();
+  const activeTab = useAppSelector((state) => state.settings.activeTab);
 
   // Memoize tabs array to prevent recreation on every render
   const tabs: Tab[] = useMemo(
@@ -26,9 +28,9 @@ const Settings = () => {
   );
 
   // Handle tab change
-  const handleTabChange = useCallback((tabId: TabType) => {
-    setActiveTab(tabId);
-  }, []);
+  const handleTabChange = useCallback((tabId: SettingsTabType) => {
+    dispatch(setActiveTab(tabId));
+  }, [dispatch]);
 
   // Render only the active tab content - memoized to prevent unnecessary re-renders
   const renderTabContent = useMemo(() => {

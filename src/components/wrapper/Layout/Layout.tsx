@@ -25,6 +25,7 @@ import { resetManageTeamState } from "../../../redux/slices/manageTeam/manageTea
 import { resetDashboardState } from "../../../redux/slices/dashboard/dashboardSlice";
 import { resetDocumentVaultState } from "../../../redux/slices/documentVault/documentVaultSlice";
 import { resetAgencyPartnerState } from "../../../redux/slices/agencyPartner/agencyPartnerSlice";
+import { resetActiveTab } from "../../../redux/slices/settings/settingsSlice";
 
 interface LayoutProps {
   children: ReactNode;
@@ -185,6 +186,10 @@ const Layout = ({
     // Reset agencyPartner state if navigating away from Agency Partner
     if (path !== ROUTES.AGENCY_PARTNER) {
       dispatch(resetAgencyPartnerState());
+    }
+    // Reset settings tab when navigating away from Settings
+    if (path !== ROUTES.SETTINGS) {
+      dispatch(resetActiveTab());
     }
   };
 

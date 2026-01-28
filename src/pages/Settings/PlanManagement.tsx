@@ -1,10 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { Tooltip } from "@mui/material";
 import { COLORS } from "../../constants";
 import { agencyService } from "../../services";
 import type { CurrentSubscriptionData } from "../../services";
 import { useAppSelector } from "../../redux/hooks";
 import PricingContent from "../Pricing/PricingContent";
+import { Spinner } from "../../assets";
+import { formatDateShort, getDaysRemaining } from "../../utils/dateUtils";
 
 const PlanManagement = () => {
   const { t } = useTranslation();
@@ -13,37 +16,41 @@ const PlanManagement = () => {
 
   const [subscription, setSubscription] = useState<CurrentSubscriptionData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Fetch current subscription on mount
-  useEffect(() => {
-    if (!user?.agencyId || hasFetched.current) return;
-    hasFetched.current = true;
-
-    const fetchSubscription = async () => {
+  // Fetch current subscription
+  const fetchSubscription = useCallback(async (isRefresh = false) => {
+    if (!user?.agencyId) return;
+    
+    if (isRefresh) {
+      setIsRefreshing(true);
+    } else {
       setIsLoading(true);
-      try {
-        const response = await agencyService.getCurrentSubscription(user.agencyId!);
-        if (response.status === "success" && response.data) {
-          setSubscription(response.data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch subscription:", error);
-      } finally {
-        setIsLoading(false);
+    }
+    
+    try {
+      const response = await agencyService.getCurrentSubscription(user.agencyId!);
+      if (response.status === "success" && response.data) {
+        setSubscription(response.data);
       }
-    };
-
-    fetchSubscription();
+    } catch (error) {
+      console.error("Failed to fetch subscription:", error);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
   }, [user?.agencyId]);
 
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+  // Fetch on mount
+  useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+    fetchSubscription();
+  }, [fetchSubscription]);
+
+  // Handle refresh
+  const handleRefresh = () => {
+    fetchSubscription(true);
   };
 
   // Get status color
@@ -84,39 +91,68 @@ const PlanManagement = () => {
           </p>
         </div>
 
-        {/* Right: Current Subscription Card */}
+        {/* Right: Current Plan Info */}
         {!isLoading && subscription && (
           <div
-            className="rounded-xl p-5 min-w-[280px] shrink-0"
+            className="rounded-xl p-5 min-w-[320px] shrink-0"
             style={{
               backgroundColor: COLORS.surface,
               border: `1px solid ${COLORS.border}`,
               boxShadow: "0 4px 20px rgba(0, 0, 0, 0.05)",
             }}
           >
-            <h3
-              className="text-base font-semibold mb-4"
-              style={{ color: COLORS.textDark }}
-            >
-              {t("settingsPage.currentSubscription", "Current Subscription")}
-            </h3>
-            
-            <div className="space-y-3">
-              {/* Plan */}
-              <div className="flex items-center justify-between gap-8">
-                <span className="text-sm" style={{ color: COLORS.textMuted }}>
-                  {t("settingsPage.plan", "Plan")}
-                </span>
+            {/* Plan Name with Billing Type Chip */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
                 <span
-                  className="text-sm font-semibold"
+                  className="text-lg font-bold"
                   style={{ color: COLORS.textDark }}
                 >
-                  {subscription.plan || "-"}
+                  {t("settingsPage.currentPlan", "Current Plan")}
                 </span>
+                {/* Billing Type Chip - show plan type */}
+                {subscription.plan && (
+                  <span
+                    className="text-xs font-medium px-2.5 py-1 rounded-full"
+                    style={{
+                      backgroundColor: subscription.plan?.toLowerCase() === "trial" 
+                        ? COLORS.accent 
+                        : `${COLORS.accent}15`,
+                      color: subscription.plan?.toLowerCase() === "trial" 
+                        ? COLORS.surface 
+                        : COLORS.accent,
+                    }}
+                  >
+                    {subscription.plan?.toLowerCase() === "trial" 
+                      ? "Trial" 
+                      : subscription.plan?.toLowerCase().includes("pro") 
+                        ? subscription.plan?.toLowerCase().includes("yearly") 
+                          ? "Pro Yearly" 
+                          : "Pro Monthly"
+                        : subscription.plan?.toLowerCase().includes("prime")
+                          ? subscription.plan?.toLowerCase().includes("yearly")
+                            ? "Prime Yearly"
+                            : "Prime Monthly"
+                          : subscription.plan}
+                  </span>
+                )}
               </div>
-
+              <Tooltip title={t("common.refresh", "Refresh")} arrow>
+                <button
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                  className="p-1.5 rounded-md transition-colors hover:bg-slate-100 disabled:opacity-50"
+                  style={{ color: COLORS.accent }}
+                  aria-label={t("common.refresh", "Refresh")}
+                >
+                  <Spinner className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                </button>
+              </Tooltip>
+            </div>
+            
+            <div className="space-y-2">
               {/* Status */}
-              <div className="flex items-center justify-between gap-8">
+              <div className="flex items-center justify-between">
                 <span className="text-sm" style={{ color: COLORS.textMuted }}>
                   {t("settingsPage.status", "Status")}
                 </span>
@@ -132,32 +168,46 @@ const PlanManagement = () => {
               </div>
 
               {/* Renews On */}
-              <div className="flex items-center justify-between gap-8">
-                <span className="text-sm" style={{ color: COLORS.textMuted }}>
-                  {t("settingsPage.renewsOn", "Renews On")}
-                </span>
-                <span
-                  className="text-sm font-semibold"
-                  style={{ color: COLORS.textDark }}
-                >
-                  {subscription.renewsOn ? formatDate(subscription.renewsOn) : "-"}
-                </span>
-              </div>
-
-              {/* Trial Used */}
-              {subscription.trialUsed && (
-                <div className="flex items-center justify-between gap-8">
+              {subscription.renewsOn && (
+                <div className="flex items-center justify-between">
                   <span className="text-sm" style={{ color: COLORS.textMuted }}>
-                    {t("settingsPage.trialUsed", "Trial")}
+                    {t("settingsPage.renewsOn", "Renews On")}
                   </span>
                   <span
-                    className="text-xs font-medium px-2 py-0.5 rounded-full"
-                    style={{
-                      color: COLORS.warning,
-                      backgroundColor: `${COLORS.warning}15`,
-                    }}
+                    className="text-sm font-semibold"
+                    style={{ color: COLORS.textDark }}
                   >
-                    {t("settingsPage.trialUsedLabel", "Used")}
+                    {formatDateShort(subscription.renewsOn)}
+                  </span>
+                </div>
+              )}
+
+              {/* Applicants Registered */}
+              {subscription.totalApplicants !== undefined && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm" style={{ color: COLORS.textMuted }}>
+                    {t("settingsPage.applicantsRegistered", "Applicants Registered")}
+                  </span>
+                  <span
+                    className="text-sm font-semibold"
+                    style={{ color: COLORS.textDark }}
+                  >
+                    {subscription.applicantsRegistered ?? 0} / {subscription.totalApplicants}
+                  </span>
+                </div>
+              )}
+
+              {/* Trial Info */}
+              {subscription.plan?.toLowerCase() === "trial" && subscription.renewsOn && (
+                <div
+                  className="mt-3 p-2 rounded-lg text-center"
+                  style={{ backgroundColor: `${COLORS.warning}10` }}
+                >
+                  <span
+                    className="text-sm font-medium"
+                    style={{ color: COLORS.warning }}
+                  >
+                    Trial ends in {getDaysRemaining(subscription.renewsOn)} days
                   </span>
                 </div>
               )}
@@ -167,7 +217,11 @@ const PlanManagement = () => {
       </div>
 
       {/* Pricing Cards - reuse PricingContent component */}
-      <PricingContent showHeader={false} maxWidth="max-w-full" />
+      <PricingContent 
+        showHeader={false} 
+        maxWidth="max-w-full" 
+        subscription={subscription}
+      />
     </div>
   );
 };

@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useFormik } from "formik";
-import { Layout, Button, Input, Select, PhoneInput, MultiSelect } from "../../../components";
+import { Layout, Button, Input, Select, PhoneInput, MultiSelect, RadioGroup } from "../../../components";
 import { ArrowLeft } from "../../../assets";
 import {
   COLORS,
@@ -34,6 +34,7 @@ export interface AddMemberFormValues {
   managerId: string;
   assignedCountries: string[];
   assignedUniversities: string[];
+  hasMasterLedgerAccess: string;
 }
 
 // Default initial form values
@@ -47,6 +48,7 @@ const defaultInitialValues: AddMemberFormValues = {
   managerId: "",
   assignedCountries: [],
   assignedUniversities: [],
+  hasMasterLedgerAccess: "no",
 };
 
 const AddMember = () => {
@@ -249,6 +251,7 @@ const AddMember = () => {
         managerId,
         assignedCountries: memberData.assignedCountries?.map((c: { id: number }) => c.id.toString()) || [],
         assignedUniversities: memberData.assignedUniversities?.map((u: { id: number }) => u.id.toString()) || [],
+        hasMasterLedgerAccess: memberData.hasMasterLedgerAccess ? "yes" : "no",
       };
     }
     return defaultInitialValues;
@@ -306,6 +309,10 @@ const AddMember = () => {
             const university = universities.find((u) => u.id.toString() === uniValue);
             return { id: parseInt(uniValue), name: university?.name || "" };
           }),
+          // Include Master Ledger access for admin and manager roles
+          ...(values.role === "admin" || values.role === "manager" 
+            ? { hasMasterLedgerAccess: values.hasMasterLedgerAccess === "yes" } 
+            : {}),
         };
 
         dispatch(showLoader());
@@ -343,6 +350,10 @@ const AddMember = () => {
           const university = universities.find((u) => u.id.toString() === uniValue);
           return { id: parseInt(uniValue), name: university?.name || "" };
         }),
+        // Include Master Ledger access for admin and manager roles
+        ...(values.role === "admin" || values.role === "manager" 
+          ? { hasMasterLedgerAccess: values.hasMasterLedgerAccess === "yes" } 
+          : {}),
       };
 
       // Add assigned_admin for manager, counselor, billing roles (mandatory)
@@ -391,6 +402,7 @@ const AddMember = () => {
     managerId: true,
     assignedCountries: true,
     assignedUniversities: true,
+    hasMasterLedgerAccess: true,
   }), []);
 
   // Handle form submit with touch all fields
@@ -419,6 +431,15 @@ const AddMember = () => {
   
   // Check if role requires manager field (Counselor)
   const showManagerField = formik.values.role === "counselor";
+
+  // Check if role shows Master Ledger access field (Admin or Manager)
+  const showMasterLedgerField = formik.values.role === "admin" || formik.values.role === "manager";
+
+  // Master Ledger access options
+  const masterLedgerOptions = useMemo(() => [
+    { value: "yes", label: t("common.yes", "Yes") },
+    { value: "no", label: t("common.no", "No") },
+  ], [t]);
 
   // Check if all mandatory fields are filled
   const isMandatoryFieldsFilled = useMemo(() => {
@@ -564,6 +585,18 @@ const AddMember = () => {
                     disabled={isLoadingAdmins}
                   />
                 )}
+                {/* Master Ledger Access (for Manager role - next to Admin field) */}
+                {showMasterLedgerField && formik.values.role === "manager" && (
+                  <div className="flex items-end pb-1">
+                    <RadioGroup
+                      name="hasMasterLedgerAccess"
+                      label={t("manageTeam.masterLedgerAccess", "Do you want this user to have access to Master Ledger?")}
+                      options={masterLedgerOptions}
+                      value={formik.values.hasMasterLedgerAccess}
+                      onChange={(value) => formik.setFieldValue("hasMasterLedgerAccess", value)}
+                    />
+                  </div>
+                )}
                 {showManagerField && (
                   <Select
                     label={<>{t("manageTeam.manager", "Manager")} <span style={{ color: COLORS.error }}>*</span></>}
@@ -578,6 +611,17 @@ const AddMember = () => {
                   />
                 )}
               </div>
+            )}
+
+            {/* Master Ledger Access (for Admin role - standalone row) */}
+            {showMasterLedgerField && formik.values.role === "admin" && (
+              <RadioGroup
+                name="hasMasterLedgerAccess"
+                label={t("manageTeam.masterLedgerAccess", "Do you want this user to have access to Master Ledger?")}
+                options={masterLedgerOptions}
+                value={formik.values.hasMasterLedgerAccess}
+                onChange={(value) => formik.setFieldValue("hasMasterLedgerAccess", value)}
+              />
             )}
 
             {/* Row 5: Assigned Country and Assigned University */}

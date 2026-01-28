@@ -147,8 +147,8 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
   const convertPreferenceToApiFormat = useCallback((pref: PreferenceItem) => {
     // Determine user role
     const userRole = user?.role?.toUpperCase() || "";
-    const isManager = userRole === UserRole.MANAGER;
-    const isAdmin = userRole === UserRole.ADMIN || user?.isPrimaryAdmin === true;
+    const isManager = userRole === UserRole.MANAGER || UserRole.MANGER_BILLING;
+    const isAdmin = userRole === UserRole.ADMIN || UserRole.ADMIN_BILLING || user?.isPrimaryAdmin === true;
 
     // Build base payload
     // Note: preferenceId is sent both as a query parameter and in the payload
