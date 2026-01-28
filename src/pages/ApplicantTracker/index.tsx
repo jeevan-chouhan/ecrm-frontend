@@ -20,11 +20,23 @@ import ApplicantTrackerFilters from "./ApplicantTrackerFilters";
 import ApplicationStatusHistoryPopup from "./ApplicantDetail/ApplicationStatusHistoryPopup";
 import type { ApplicationStatusHistory } from "./ApplicantDetail/types";
 import { applicantService, userService } from "../../services";
-import type { ApplicationListItem, AdminItem, ManagerItem, CounselorItem, UniversityItem, AgencyPartnerNameItem } from "../../services";
+import type { ApplicationListItem, AdminItem, ManagerItem, CounselorItem, UniversityItem, AgencyPartnerNameItem, PaginatedData } from "../../services";
 import type { SelectOption } from "../../components";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { addToast } from "../../redux/slices/toast/toastSlice";
 import { showLoader, hideLoader } from "../../redux/slices/loader/loaderSlice";
+import {
+  setLoading,
+  setError,
+  setApplicants,
+  setPage,
+  setPageSize,
+  setSort,
+  setSearch,
+  applyFilters,
+  clearFilters,
+} from "../../redux/slices/applicantTracker/applicantTrackerSlice";
+import { formatDateToYYYYMMDD, formatDateToISODateTime } from "../../utils";
 
 const ApplicantTracker = () => {
   const { t } = useTranslation();
@@ -34,39 +46,18 @@ const ApplicantTracker = () => {
   // Get user from Redux (decoded from token)
   const { user } = useAppSelector((state) => state.auth);
 
-  // Applicants state - will be updated from API
-  const [applicants, setApplicants] = useState<Applicant[]>([]);
+  // Get applicantTracker state from Redux
+  const { applicants, isLoading, pagination, filter, sort } = useAppSelector((state) => state.applicantTracker);
 
-  // Search state
-  const [searchQuery, setSearchQuery] = useState("");
+  // Local state for search input (for debounce) - sync with persisted filter
+  const [searchQuery, setSearchQuery] = useState(() => filter.search);
 
-  // Total count from API
-  const [totalCount, setTotalCount] = useState(0);
-
-  // Pagination state - must be declared before fetchApplications
-  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-    page: 0,
-    pageSize: 10,
-  });
-
-  // Sort state - default to updatedDate desc
-  const [sortModel, setSortModel] = useState<GridSortModel>([
-    { field: "lastUpdatedDate", sort: "desc" },
-  ]);
-
-  // Applied filter states (used for API calls and filtering) - must be declared before fetchApplications
-  const [appliedAdmin, setAppliedAdmin] = useState("");
-  const [appliedManager, setAppliedManager] = useState("");
-  const [appliedCounselor, setAppliedCounselor] = useState("");
-  const [appliedApplicationStage, setAppliedApplicationStage] = useState<string>("");
-  const [appliedApplicationStatus, setAppliedApplicationStatus] = useState<string>("");
-  const [appliedUniversity, setAppliedUniversity] = useState<string>("");
-  const [appliedIntake, setAppliedIntake] = useState<string>("");
-  const [appliedAgencyPartner, setAppliedAgencyPartner] = useState<string>("");
-  const [appliedAppliedFromDate, setAppliedAppliedFromDate] = useState<Date | null>(null);
-  const [appliedAppliedToDate, setAppliedAppliedToDate] = useState<Date | null>(null);
-  const [appliedLastUpdatedFromDate, setAppliedLastUpdatedFromDate] = useState<Date | null>(null);
-  const [appliedLastUpdatedToDate, setAppliedLastUpdatedToDate] = useState<Date | null>(null);
+  // Sync local searchQuery with Redux filter.search when it changes externally
+  useEffect(() => {
+    if (filter.search !== searchQuery) {
+      setSearchQuery(filter.search);
+    }
+  }, [filter.search]);
 
   // Filter options from API
   const [adminOptions, setAdminOptions] = useState<SelectOption[]>([]);
@@ -87,6 +78,7 @@ const ApplicantTracker = () => {
 
   /**
    * Map API response to Applicant type
+   * Note: Dates are stored as ISO strings (not Date objects) for Redux serialization
    */
   const mapApplicationListItemToApplicant = useCallback((item: ApplicationListItem): Applicant => {
     return {
@@ -98,43 +90,13 @@ const ApplicantTracker = () => {
       course: item.course,
       applicantStage: item.applicantStage,
       applicantStatus: item.applicantStatus,
-      appliedDate: item.appliedDate ? new Date(item.appliedDate) : undefined,
-      lastUpdatedDate: item.updatedAt ? new Date(item.updatedAt) : undefined,
+      // Store dates as ISO strings for Redux serialization (formatDateTime can handle strings)
+      appliedDate: item.appliedDate || undefined,
+      lastUpdatedDate: item.updatedAt || undefined,
       intake: item.desiredIntake,
     };
   }, []);
 
-  /**
-   * Format date to ISO DATE_TIME format (YYYY-MM-DDTHH:mm:ss) for appliedFrom/appliedTo
-   * Backend expects LocalDateTime, so we send full datetime with time set to 00:00:00
-   */
-  const formatDateToISO = useCallback((date: Date | null): string | null => {
-    if (!date) return null;
-    const d = new Date(date);
-    d.setHours(0, 0, 0, 0); // Set to start of day
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    const hours = String(d.getHours()).padStart(2, "0");
-    const minutes = String(d.getMinutes()).padStart(2, "0");
-    const seconds = String(d.getSeconds()).padStart(2, "0");
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-  }, []);
-
-  /**
-   * Format date to ISO DATE_TIME format (YYYY-MM-DDTHH:mm:ss) for updatedFrom/updatedTo
-   */
-  const formatDateToISODateTime = useCallback((date: Date | null): string | null => {
-    if (!date) return null;
-    const d = new Date(date);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    const hours = String(d.getHours()).padStart(2, "0");
-    const minutes = String(d.getMinutes()).padStart(2, "0");
-    const seconds = String(d.getSeconds()).padStart(2, "0");
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-  }, []);
 
   /**
    * Fetch applications from API
@@ -143,32 +105,38 @@ const ApplicantTracker = () => {
     const currentUser = userRef.current;
     
     // Don't fetch if user is not loaded yet or already loading
-    if (!currentUser || isLoadingRef.current) {
+    if (!currentUser?.agencyId || isLoadingRef.current) {
       return;
     }
 
     isLoadingRef.current = true;
+    dispatch(setLoading(true));
     dispatch(showLoader());
 
     try {
       // Get applied filter values (convert to numbers if needed) - these are optional filters
-      const assignedAdminIdValue = appliedAdmin ? parseInt(appliedAdmin) : null;
-      const assignedManagerIdValue = appliedManager ? parseInt(appliedManager) : null;
-      const assignedCounselorIdValue = appliedCounselor ? parseInt(appliedCounselor) : null;
+      const assignedAdminIdValue = filter.admin ? parseInt(filter.admin) : null;
+      const assignedManagerIdValue = filter.manager ? parseInt(filter.manager) : null;
+      const assignedCounselorIdValue = filter.counselor ? parseInt(filter.counselor) : null;
 
-      // Format dates for API
-      const appliedFromFormatted = formatDateToISO(appliedAppliedFromDate);
-      const appliedToFormatted = formatDateToISO(appliedAppliedToDate);
-      const updatedFromFormatted = formatDateToISODateTime(appliedLastUpdatedFromDate);
-      const updatedToFormatted = formatDateToISODateTime(appliedLastUpdatedToDate);
+      // Format dates for API - convert YYYY-MM-DD to ISO DATE_TIME format
+      // appliedFrom/appliedTo: set to start of day (00:00:00) and end of day (23:59:59) respectively
+      const appliedFromFormatted = formatDateToISODateTime(filter.appliedFromDate, true);
+      const appliedToFormatted = formatDateToISODateTime(filter.appliedToDate, false); // End of day for "to" date
+      // updatedFrom/updatedTo: convert to ISO DATE_TIME format
+      const updatedFromFormatted = formatDateToISODateTime(filter.lastUpdatedFromDate, true);
+      const updatedToFormatted = formatDateToISODateTime(filter.lastUpdatedToDate, false); // End of day for "to" date
 
-      // Get applicationStage - backend expects single value, take first from array if multiple selected
-      const applicationStageValue = appliedApplicationStage || null;
+      // Get applicationStage - backend expects single value
+      const applicationStageValue = filter.applicationStage || null;
 
       // Get universityId, desiredIntake, and agencyPartnerId values
-      const universityIdValue = appliedUniversity ? parseInt(appliedUniversity) : null;
-      const desiredIntakeValue = appliedIntake || null;
-      const agencyPartnerIdValue = appliedAgencyPartner ? parseInt(appliedAgencyPartner) : null;
+      const universityIdValue = filter.university ? parseInt(filter.university) : null;
+      const desiredIntakeValue = filter.intake || null;
+      const agencyPartnerIdValue = filter.agencyPartner ? parseInt(filter.agencyPartner) : null;
+
+      // Map sort field - lastUpdatedDate -> updatedAt for API
+      const sortByField = sort.sortBy === "lastUpdatedDate" ? "updatedAt" : (sort.sortBy || "updatedAt");
 
       const response = await applicantService.getApplicationsList({
         agencyId: currentUser.agencyId ?? null,
@@ -176,7 +144,7 @@ const ApplicantTracker = () => {
         assignedAdminId: assignedAdminIdValue,
         assignedManagerId: assignedManagerIdValue,
         assignedCounselorId: assignedCounselorIdValue,
-        applicationStatus: appliedApplicationStatus || null,
+        applicationStatus: filter.applicationStatus || null,
         applicationStage: applicationStageValue,
         universityId: universityIdValue,
         desiredIntake: desiredIntakeValue,
@@ -185,64 +153,52 @@ const ApplicantTracker = () => {
         appliedTo: appliedToFormatted,
         updatedFrom: updatedFromFormatted,
         updatedTo: updatedToFormatted,
-        search: searchQuery || null,
-        page: paginationModel.page,
-        size: paginationModel.pageSize,
-        sortBy: sortModel.length > 0 ? (sortModel[0].field === "lastUpdatedDate" ? "updatedAt" : sortModel[0].field) : "updatedAt",
-        asc: sortModel.length > 0 ? (sortModel[0].sort === "asc") : false, // Descending order (newest first)
+        search: filter.search || null,
+        page: pagination.page,
+        size: pagination.size,
+        sortBy: sortByField,
+        asc: sort.asc,
       });
 
       if (response.status === "success" && response.data) {
         // Map API response to Applicant type
         const mappedApplicants = response.data.content.map(mapApplicationListItemToApplicant);
-        setApplicants(mappedApplicants);
-        setTotalCount(response.data.totalElements);
+        
+        // Create PaginatedData structure for Redux
+        const paginatedData: PaginatedData<Applicant> = {
+          content: mappedApplicants,
+          totalElements: response.data.totalElements,
+          totalPages: response.data.totalPages,
+          first: response.data.first,
+          last: response.data.last,
+          size: response.data.size || pagination.size,
+          number: response.data.page || pagination.page,
+          numberOfElements: response.data.numberOfElements || mappedApplicants.length,
+          empty: mappedApplicants.length === 0,
+        };
+        
+        dispatch(setApplicants(paginatedData));
       } else {
-        dispatch(addToast({ 
-          type: "error", 
-          message: response.message || "Failed to fetch applications" 
-        }));
+        throw new Error(response.message || "Failed to fetch applications");
       }
     } catch (error: any) {
       const { message } = handleApiError(error, "Failed to fetch applications");
       dispatch(addToast({ type: "error", message }));
+      dispatch(setError(message));
+      dispatch(setApplicants([]));
     } finally {
       isLoadingRef.current = false;
+      dispatch(setLoading(false));
       dispatch(hideLoader());
     }
-  }, [
-    dispatch, 
-    searchQuery, 
-    paginationModel.page, 
-    paginationModel.pageSize, 
-    mapApplicationListItemToApplicant,
-    appliedAdmin,
-    appliedManager,
-    appliedCounselor,
-    appliedApplicationStatus,
-    appliedApplicationStage,
-    appliedUniversity,
-    appliedIntake,
-    appliedAgencyPartner,
-    appliedAppliedFromDate,
-    appliedAppliedToDate,
-    appliedLastUpdatedFromDate,
-    appliedLastUpdatedToDate,
-    formatDateToISO,
-    formatDateToISODateTime,
-    sortModel,
-  ]);
+  }, [dispatch, filter.admin, filter.manager, filter.counselor, filter.applicationStatus, filter.applicationStage, filter.university, filter.intake, filter.agencyPartner, filter.appliedFromDate, filter.appliedToDate, filter.lastUpdatedFromDate, filter.lastUpdatedToDate, filter.search, pagination.page, pagination.size, sort.sortBy, sort.asc, mapApplicationListItemToApplicant]);
 
-  // Debounced search effect
+  // Initial fetch when user is loaded
   useEffect(() => {
-    if (!user) return;
-    
-    const timer = setTimeout(() => {
+    if (user) {
       fetchApplications();
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, [searchQuery, fetchApplications, user]);
+    }
+  }, [user, fetchApplications]);
 
   /**
    * Fetch filter options (admins, managers, counselors, universities) from API
@@ -362,7 +318,7 @@ const ApplicantTracker = () => {
     };
   }, [user?.agencyId, fetchFilterOptions]);
 
-  // Temporary filter states (for UI selection)
+  // Temporary filter states (for UI selection before Apply button)
   const [selectedAdmin, setSelectedAdmin] = useState("");
   const [selectedManager, setSelectedManager] = useState("");
   const [selectedCounselor, setSelectedCounselor] = useState("");
@@ -374,6 +330,10 @@ const ApplicantTracker = () => {
   const [appliedToDate, setAppliedToDate] = useState<Date | null>(null);
   const [lastUpdatedFromDate, setLastUpdatedFromDate] = useState<Date | null>(null);
   const [lastUpdatedToDate, setLastUpdatedToDate] = useState<Date | null>(null);
+
+  // Initialize selected filters from Redux state on mount
+  const isInitialMount = useRef(true);
+  const isInitializingFromRedux = useRef(false);
 
 
   // Total count comes from API response
@@ -440,13 +400,18 @@ const ApplicantTracker = () => {
 
   // Fetch managers when admin is selected
   useEffect(() => {
+    // Skip during initial mount/initialization from Redux
+    if (isInitialMount.current || isInitializingFromRedux.current) {
+      return;
+    }
+    
     if (user?.agencyId && selectedAdmin) {
       // Reset manager and counselor when admin changes
       setSelectedManager("");
       setSelectedCounselor("");
       setCounselorOptions([]);
       fetchManagers(selectedAdmin);
-    } else {
+    } else if (!selectedAdmin) {
       // Clear managers when admin is cleared
       setManagerOptions([]);
       // Also clear selected manager and counselor when admin is cleared
@@ -458,11 +423,16 @@ const ApplicantTracker = () => {
 
   // Fetch counselors when manager is selected
   useEffect(() => {
+    // Skip during initial mount/initialization from Redux
+    if (isInitialMount.current || isInitializingFromRedux.current) {
+      return;
+    }
+    
     if (user?.agencyId && selectedManager) {
       // Reset counselor when manager changes
       setSelectedCounselor("");
       fetchCounselors(selectedManager);
-    } else {
+    } else if (!selectedManager) {
       // Clear counselors when manager is cleared
       setCounselorOptions([]);
       // Also clear selected counselor when manager is cleared
@@ -470,12 +440,46 @@ const ApplicantTracker = () => {
     }
   }, [selectedManager, user?.agencyId, fetchCounselors]);
 
-  // Initial fetch when user is loaded or when dependencies change
+  // Initialize selected filters from Redux state on mount (after fetchManagers and fetchCounselors are defined)
   useEffect(() => {
-    if (user) {
-      fetchApplications();
+    if (isInitialMount.current && user?.agencyId) {
+      isInitializingFromRedux.current = true;
+      
+      // Restore non-dependent filter values first
+      if (filter.university) setSelectedUniversity(filter.university);
+      if (filter.applicationStage) setSelectedApplicantStages([filter.applicationStage]);
+      if (filter.intake) setSelectedIntake(filter.intake);
+      if (filter.agencyPartner) setSelectedAgencyPartner(filter.agencyPartner);
+      if (filter.appliedFromDate) setAppliedFromDate(new Date(filter.appliedFromDate));
+      if (filter.appliedToDate) setAppliedToDate(new Date(filter.appliedToDate));
+      if (filter.lastUpdatedFromDate) setLastUpdatedFromDate(new Date(filter.lastUpdatedFromDate));
+      if (filter.lastUpdatedToDate) setLastUpdatedToDate(new Date(filter.lastUpdatedToDate));
+      
+      // Fetch dependent options (managers and counselors) first, then set selected values
+      const fetchInitialOptions = async () => {
+        if (filter.admin) {
+          await fetchManagers(filter.admin);
+          // After managers are fetched, fetch counselors if manager is also persisted
+          if (filter.manager) {
+            await fetchCounselors(filter.manager);
+          }
+        }
+        
+        // Now set the dependent filter values after options are fetched
+        if (filter.admin) setSelectedAdmin(filter.admin);
+        if (filter.manager) setSelectedManager(filter.manager);
+        if (filter.counselor) setSelectedCounselor(filter.counselor);
+        
+        // Mark initialization as complete
+        isInitializingFromRedux.current = false;
+        isInitialMount.current = false;
+      };
+      
+      fetchInitialOptions();
+    } else if (isInitialMount.current) {
+      isInitialMount.current = false;
     }
-  }, [user, paginationModel.page, paginationModel.pageSize, appliedAdmin, appliedManager, appliedCounselor, appliedApplicationStatus, appliedApplicationStage, appliedUniversity, appliedIntake, appliedAgencyPartner, appliedAppliedFromDate, appliedAppliedToDate, appliedLastUpdatedFromDate, appliedLastUpdatedToDate, fetchApplications]);
+  }, [filter, user?.agencyId, fetchManagers, fetchCounselors]);
 
   // Application status change popup state (reusing from University Application Summary)
   const [isApplicationStatusPopupOpen, setIsApplicationStatusPopupOpen] = useState(false);
@@ -508,32 +512,26 @@ const ApplicantTracker = () => {
 
   // Handle apply filters - triggers API call
   const handleApplyFilters = useCallback(() => {
-    setAppliedAdmin(selectedAdmin);
-    setAppliedManager(selectedManager);
-    setAppliedCounselor(selectedCounselor);
-    // Backend expects single applicationStage value, take first from array if multiple selected
-    setAppliedApplicationStage(selectedApplicantStages.length > 0 ? selectedApplicantStages[0] : "");
-    // Note: applicationStatus filter is not in UI yet, keeping empty for now
-    setAppliedApplicationStatus("");
-    // Store university, intake, and agency partner to trigger API call
-    setAppliedUniversity(selectedUniversity);
-    setAppliedIntake(selectedIntake);
-    setAppliedAgencyPartner(selectedAgencyPartner);
-    setAppliedAppliedFromDate(appliedFromDate);
-    setAppliedAppliedToDate(appliedToDate);
-    setAppliedLastUpdatedFromDate(lastUpdatedFromDate);
-    setAppliedLastUpdatedToDate(lastUpdatedToDate);
-    
-    // Reset pagination to first page - use functional update
-    setPaginationModel((prev) => ({ page: 0, pageSize: prev.pageSize }));
-
-    // Note: fetchApplications will be triggered by the useEffect that watches applied filters
-    // No need to call it explicitly here as it will be called automatically when state updates
-  }, [selectedAdmin, selectedManager, selectedCounselor, selectedApplicantStages, selectedUniversity, selectedIntake, selectedAgencyPartner, appliedFromDate, appliedToDate, lastUpdatedFromDate, lastUpdatedToDate]);
+    dispatch(applyFilters({
+      search: filter.search, // Keep existing search
+      admin: selectedAdmin,
+      manager: selectedManager,
+      counselor: selectedCounselor,
+      applicationStatus: "", // Note: applicationStatus filter is not in UI yet
+      applicationStage: selectedApplicantStages.length > 0 ? selectedApplicantStages[0] : "", // Backend expects single value
+      university: selectedUniversity,
+      intake: selectedIntake,
+      agencyPartner: selectedAgencyPartner,
+      appliedFromDate: formatDateToYYYYMMDD(appliedFromDate),
+      appliedToDate: formatDateToYYYYMMDD(appliedToDate),
+      lastUpdatedFromDate: formatDateToYYYYMMDD(lastUpdatedFromDate),
+      lastUpdatedToDate: formatDateToYYYYMMDD(lastUpdatedToDate),
+    }));
+  }, [selectedAdmin, selectedManager, selectedCounselor, selectedApplicantStages, selectedUniversity, selectedIntake, selectedAgencyPartner, appliedFromDate, appliedToDate, lastUpdatedFromDate, lastUpdatedToDate, filter.search, dispatch]);
 
   // Handle clear filters
   const handleClearFilters = useCallback(() => {
-    // Clear selected filters
+    // Clear selected filters (local state)
     setSelectedAdmin("");
     setSelectedManager("");
     setSelectedCounselor("");
@@ -546,41 +544,63 @@ const ApplicantTracker = () => {
     setLastUpdatedFromDate(null);
     setLastUpdatedToDate(null);
 
-    // Clear applied filters
-    setAppliedAdmin("");
-    setAppliedManager("");
-    setAppliedCounselor("");
-    setAppliedApplicationStage("");
-    setAppliedApplicationStatus("");
-    setAppliedUniversity("");
-    setAppliedIntake("");
-    setAppliedAgencyPartner("");
-    setAppliedAppliedFromDate(null);
-    setAppliedAppliedToDate(null);
-    setAppliedLastUpdatedFromDate(null);
-    setAppliedLastUpdatedToDate(null);
+    // Clear applied filters in Redux
+    dispatch(clearFilters());
+  }, [dispatch]);
 
-    // Reset pagination - use functional update
-    setPaginationModel((prev) => ({ page: 0, pageSize: prev.pageSize }));
-
-    // Note: fetchApplications will be triggered by the useEffect that watches applied filters
-  }, []);
-
-  // Handle search with debounce (SearchBar handles this internally)
+  // Handle search - updates local state which triggers debounced Redux update
   const handleSearch = useCallback((value: string) => {
     setSearchQuery(value);
-    setPaginationModel((prev) => ({ page: 0, pageSize: prev.pageSize }));
   }, []);
+
+  // Debounced search effect - updates Redux after user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (filter.search !== searchQuery) {
+        dispatch(setSearch(searchQuery));
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery, filter.search, dispatch]);
 
   // Handle pagination change
   const handlePaginationModelChange = useCallback((model: GridPaginationModel) => {
-    setPaginationModel(model);
-  }, []);
+    if (model.page !== pagination.page) {
+      dispatch(setPage(model.page));
+    }
+    if (model.pageSize !== pagination.size) {
+      dispatch(setPageSize(model.pageSize));
+    }
+  }, [dispatch, pagination.page, pagination.size]);
 
   // Handle sort model change
   const handleSortModelChange = useCallback((model: GridSortModel) => {
-    setSortModel(model);
-  }, []);
+    if (model.length > 0) {
+      const { field, sort: sortOrder } = model[0];
+      // Map lastUpdatedDate to updatedAt for API
+      const sortByField = field === "lastUpdatedDate" ? "updatedAt" : field;
+      dispatch(setSort({ sortBy: sortByField, asc: sortOrder === "asc" }));
+    } else {
+      dispatch(setSort({ sortBy: "updatedAt", asc: false }));
+    }
+  }, [dispatch]);
+
+  // Pagination model for DataTable (synced with Redux)
+  const paginationModel: GridPaginationModel = useMemo(
+    () => ({
+      page: pagination.page,
+      pageSize: pagination.size,
+    }),
+    [pagination.page, pagination.size]
+  );
+
+  // Sort model for DataTable (synced with Redux)
+  const sortModel: GridSortModel = useMemo(() => {
+    if (!sort.sortBy) return [];
+    // Map updatedAt back to lastUpdatedDate for UI
+    const field = sort.sortBy === "updatedAt" ? "lastUpdatedDate" : sort.sortBy;
+    return [{ field, sort: sort.asc ? "asc" : "desc" }];
+  }, [sort.sortBy, sort.asc]);
 
 
   // Handle update status (reusing from University Application Summary)
@@ -1082,7 +1102,7 @@ const ApplicantTracker = () => {
             className="text-xl md:text-2xl font-bold"
             style={{ color: COLORS.textDark }}
           >
-            {t("applicantTracker.title", "Applicant Tracker")} ({totalCount})
+            {t("applicantTracker.title", "Applicant Tracker")} ({pagination.totalElements})
           </h1>
           <div className="flex items-center gap-4">
             <div className="w-full md:w-72">
@@ -1132,11 +1152,12 @@ const ApplicantTracker = () => {
         <DataTable
           rows={applicants}
           columns={columns}
+          loading={isLoading}
           pageSizeOptions={[5, 10, 25, 50]}
           paginationMode="server"
           paginationModel={paginationModel}
           onPaginationModelChange={handlePaginationModelChange}
-          rowCount={totalCount}
+          rowCount={pagination.totalElements}
           sortingMode="server"
           sortModel={sortModel}
           onSortModelChange={handleSortModelChange}
