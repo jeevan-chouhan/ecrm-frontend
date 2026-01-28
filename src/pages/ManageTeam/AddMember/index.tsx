@@ -83,7 +83,6 @@ const AddMember = () => {
   // Ref to prevent duplicate API calls
   const hasFetchedCountries = useRef(false);
   const hasFetchedAdmins = useRef(false);
-  const hasFetchedManagers = useRef(false);
 
   // Get filtered role options based on user's permissions
   const filteredRoleOptions = useFilteredRoleOptions();
@@ -184,15 +183,14 @@ const AddMember = () => {
     }
   }, [user?.agencyId, dispatch]);
 
-  // Fetch managers from API
-  const fetchManagers = useCallback(async () => {
-    if (!user?.agencyId || hasFetchedManagers.current) return;
+  // Fetch managers from API - supports optional adminId filter
+  const fetchManagers = useCallback(async (adminId?: string | null) => {
+    if (!user?.agencyId) return;
     
-    hasFetchedManagers.current = true;
     setIsLoadingManagers(true);
     
     try {
-      const response = await userService.getManagers(user.agencyId);
+      const response = await userService.getManagers(user.agencyId, adminId || null);
       // Handle response formats: [...] or { data: [...] }
       if (Array.isArray(response)) {
         setManagers(response);
@@ -200,19 +198,17 @@ const AddMember = () => {
         setManagers((response as any).data);
       }
     } catch (error: any) {
-      hasFetchedManagers.current = false;
       dispatch(addToast({ type: "error", message: error.message || "Failed to fetch managers" }));
     } finally {
       setIsLoadingManagers(false);
     }
   }, [user?.agencyId, dispatch]);
 
-  // Fetch countries, admins, managers on mount
+  // Fetch countries and admins on mount
   useEffect(() => {
     fetchCountries();
     fetchAdmins();
-    // fetchManagers();
-  }, [fetchCountries, fetchAdmins, fetchManagers]);
+  }, [fetchCountries, fetchAdmins]);
 
   // Fetch universities when in edit mode with assigned countries
   useEffect(() => {
@@ -222,6 +218,13 @@ const AddMember = () => {
       fetchUniversities(countryIds);
     }
   }, [isEditMode, memberData, fetchUniversities]);
+
+  // Fetch managers when in edit mode with assigned admin
+  useEffect(() => {
+    if (isEditMode && memberData?.assignedAdmins?.[0]?.id) {
+      fetchManagers(memberData.assignedAdmins[0].id.toString());
+    }
+  }, [isEditMode, memberData, fetchManagers]);
 
   // Prepare initial values based on mode
   const initialValues = useMemo<AddMemberFormValues>(() => {
@@ -545,7 +548,15 @@ const AddMember = () => {
                     label={<>{t("manageTeam.admin", "Admin")} <span style={{ color: COLORS.error }}>*</span></>}
                     options={adminOptions}
                     value={formik.values.adminId}
-                    onChange={(value) => formik.setFieldValue("adminId", value)}
+                    onChange={(value) => {
+                      formik.setFieldValue("adminId", value);
+                      // Clear manager selection and fetch managers for selected admin
+                      formik.setFieldValue("managerId", "");
+                      setManagers([]);
+                      if (value) {
+                        fetchManagers(value);
+                      }
+                    }}
                     placeholder={isLoadingAdmins ? t("common.loading", "Loading...") : t("manageTeam.selectAdmin", "Select Admin")}
                     error={getAdminError()}
                     fullWidth

@@ -1,7 +1,8 @@
 import { useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Layout } from "../../components";
-import { COLORS, typography } from "../../constants";
+import { COLORS, typography, UserRole } from "../../constants";
+import { useAppSelector } from "../../redux/hooks";
 import TeamOverview from "./TeamOverview";
 import OverallCounts from "./OverallCounts";
 import Graphs from "./Graphs";
@@ -15,16 +16,27 @@ interface Tab {
 
 const ReportAnalysis = () => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<TabType>("teamOverview");
+  const { user } = useAppSelector((state) => state.auth);
+  
+  // Check if user is counselor
+  const isCounsellor = user?.role?.toUpperCase() === UserRole.COUNSELLOR;
+  
+  // Set default tab based on role - counselors only see graphs
+  const [activeTab, setActiveTab] = useState<TabType>(isCounsellor ? "graphs" : "teamOverview");
 
-  // Memoize tabs array to prevent recreation on every render
+  // Memoize tabs array - counselors only see graphs tab
   const tabs: Tab[] = useMemo(
-    () => [
-      { id: "teamOverview", labelKey: "reportAnalysis.tabs.teamOverview" },
-      { id: "overallCounts", labelKey: "reportAnalysis.tabs.overallCounts" },
-      { id: "graphs", labelKey: "reportAnalysis.tabs.graphs" },
-    ],
-    []
+    () => {
+      if (isCounsellor) {
+        return [{ id: "graphs", labelKey: "reportAnalysis.tabs.graphs" }];
+      }
+      return [
+        { id: "teamOverview", labelKey: "reportAnalysis.tabs.teamOverview" },
+        { id: "overallCounts", labelKey: "reportAnalysis.tabs.overallCounts" },
+        { id: "graphs", labelKey: "reportAnalysis.tabs.graphs" },
+      ];
+    },
+    [isCounsellor]
   );
 
   // Handle tab change

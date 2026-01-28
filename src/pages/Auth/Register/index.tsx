@@ -10,7 +10,7 @@ import { userService } from "../../../services";
 import { useAppDispatch } from "../../../redux/hooks";
 import { addToast } from "../../../redux/slices/toast/toastSlice";
 import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
-import { handleApiError } from "../../../utils";
+import { handleApiError, REGEX } from "../../../utils";
 
 interface RegisterFormValues {
   agencyName: string;
@@ -57,21 +57,41 @@ const Register = () => {
     onSubmit: async (values) => {
       dispatch(showLoader());
       try {
+        // Helper to trim and remove extra spaces
+        const cleanString = (str: string) => str.trim().replace(REGEX.WHITESPACE, " ");
+
         const response = await userService.registerAgency({
-          agencyName: values.agencyName,
-          fullName: values.fullName,
-          email: values.email,
-          contactNumber: values.phone,
+          agencyName: cleanString(values.agencyName),
+          fullName: cleanString(values.fullName),
+          email: values.email.trim(),
+          contactNumber: values.phone.trim(),
           logo: values.logo,
-        }) as { status: string; statusCode: number; message: string; data: unknown };
+        }) as { 
+          status: string; 
+          statusCode: number; 
+          message: string; 
+          data: {
+            agencyPrimeLink?: string;
+            agencyPrimeYearlyLink?: string;
+            agencyProYearlyLink?: string;
+          };
+        };
         
         dispatch(addToast({
           type: "success",
           message: response.message || t("auth.registrationSuccess", "Agency registered successfully."),
         }));
         
-        // Navigate to login page after successful registration
-        navigate(ROUTES.PRICING);
+        // Navigate to pricing page with stripe links
+        navigate(ROUTES.PRICING, { 
+          state: { 
+            stripeLinks: {
+              agencyPrimeLink: response.data?.agencyPrimeLink || "",
+              agencyPrimeYearlyLink: response.data?.agencyPrimeYearlyLink || "",
+              agencyProYearlyLink: response.data?.agencyProYearlyLink || "",
+            }
+          } 
+        });
       } catch (error) {
         console.error("Registration error:", error);
         const errorResponse = handleApiError(error);

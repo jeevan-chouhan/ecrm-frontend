@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Layout, Button } from "../../components";
-import { COLORS, ROUTES } from "../../constants";
+import { COLORS, ROUTES, UserRole } from "../../constants";
 import { useAppSelector } from "../../redux/hooks";
 import ApplicantOverview from "./ApplicantOverview";
 
@@ -17,6 +17,9 @@ const Dashboard = () => {
 
   // Check if applicant limit is reached
   const isApplicantLimitReached = pagination.totalElements >= MAX_APPLICANTS;
+  
+  // Check if user is counselor
+  const isCounsellor = user?.role?.toUpperCase() === UserRole.COUNSELLOR;
 
   // Decode and log access token on dashboard load (for debugging)
   useEffect(() => {
@@ -56,16 +59,19 @@ const Dashboard = () => {
           >
             {t("dashboard.title", "Dashboard")}
           </h1>
-          <Button 
-            variant="accent" 
-            size="md" 
-            rounded 
-            onClick={handleAddApplicant}
-            disabled={isApplicantLimitReached}
-            title={isApplicantLimitReached ? t("dashboard.applicantLimitReached", "Applicant limit (50) reached. Upgrade your plan to add more.") : undefined}
-          >
-            {t("dashboard.addApplicant", "Add Applicant")}
-          </Button>
+          {/* Hide Add Applicant button for counselors */}
+          {!isCounsellor && (
+            <Button 
+              variant="accent" 
+              size="md" 
+              rounded 
+              onClick={handleAddApplicant}
+              disabled={isApplicantLimitReached}
+              title={isApplicantLimitReached ? t("dashboard.applicantLimitReached", "Applicant limit (50) reached. Upgrade your plan to add more.") : undefined}
+            >
+              {t("dashboard.addApplicant", "Add Applicant")}
+            </Button>
+          )}
         </div>
 
         {/* Applicant Overview Section */}
