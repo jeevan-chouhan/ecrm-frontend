@@ -238,6 +238,7 @@ const ApplicantDetailView = () => {
     page: 0,
     pageSize: 10,
   });
+  const [totalRowCount, setTotalRowCount] = useState(0);
 
   // Sort state - default to lastUpdated desc
   const [sortModel, setSortModel] = useState<GridSortModel>([
@@ -338,6 +339,9 @@ const ApplicantDetailView = () => {
         const transformedApplications: UniversityApplication[] = applicantApplications.map(
           (item, index) => transformApplicationListItemToUniversityApplication(item, index)
         );
+
+        // Update total row count for pagination
+        setTotalRowCount(response.data.totalElements || 0);
 
         // Update applicant state with applications
         setApplicant((prevApplicant) =>
@@ -840,6 +844,7 @@ const ApplicantDetailView = () => {
           onPaginationModelChange={handlePaginationModelChange}
           sortModel={sortModel}
           onSortModelChange={setSortModel}
+          rowCount={totalRowCount}
           onUpdateStatus={handleUpdateApplicationStatus}
           onApply={handleApplyClick}
           onViewStatusHistory={handleViewStatusHistory}

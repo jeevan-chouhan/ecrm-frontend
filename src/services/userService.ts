@@ -1,10 +1,10 @@
 import api from "./api";
 import { ENDPOINTS } from "./endpoints";
-import type { 
-  UserListParams, 
-  UserListResponse, 
-  CountriesResponse, 
-  UniversitiesResponse, 
+import type {
+  UserListParams,
+  UserListResponse,
+  CountriesResponse,
+  UniversitiesResponse,
   UniversityParams,
   UserDetailsParams,
   UserDetailsResponse,
@@ -28,6 +28,7 @@ import type {
   UpdateProfileResponse,
   TeamOverviewParams,
   TeamOverviewResponse,
+  MenuResponse,
 } from "./types";
 
 /**
@@ -82,7 +83,7 @@ const userService = {
   getUniversities: async (params: UniversityParams): Promise<UniversitiesResponse> => {
     const queryParams = new URLSearchParams();
     queryParams.append("agencyId", params.agencyId?.toString() ?? "");
-    
+
     // Handle countryId - can be single value, array, or comma-separated string
     let countryIdValue = "";
     if (params.countryId) {
@@ -168,11 +169,18 @@ const userService = {
   /**
    * Get manager list for an agency
    * @param agencyId - Agency ID
+   * @param adminId - Optional Admin ID to filter managers
    * @returns Promise with manager list response
    */
-  getManagers: async (agencyId: number | string): Promise<ManagerListResponse> => {
+  getManagers: async (
+    agencyId: number | string,
+    adminId?: number | string | null
+  ): Promise<ManagerListResponse> => {
     const queryParams = new URLSearchParams();
     queryParams.append("agencyId", agencyId.toString());
+    if (adminId) {
+      queryParams.append("adminId", adminId.toString());
+    }
 
     const response = await api.get<ManagerListResponse>(
       `${ENDPOINTS.AGENCIES.MANAGERS}?${queryParams.toString()}`
@@ -336,12 +344,12 @@ const userService = {
    */
   getTeamOverview: async (params: TeamOverviewParams): Promise<TeamOverviewResponse> => {
     const queryParams = new URLSearchParams();
-    
+
     // Required params
     if (params.agencyId !== null && params.agencyId !== undefined) {
       queryParams.append("agencyId", params.agencyId.toString());
     }
-    
+
     // Optional params - only append if they have values
     if (params.search !== null && params.search !== undefined && params.search !== "") {
       queryParams.append("search", params.search);
@@ -382,6 +390,17 @@ const userService = {
 
     const response = await api.get<TeamOverviewResponse>(
       `${ENDPOINTS.USERS.TEAM_OVERVIEW}?${queryParams.toString()}`
+    );
+    return response.data;
+  },
+
+  /* Get menu items based on user role
+  * @param role - User role (e.g., "ADMIN", "MANAGER", "COUNSELOR")
+  * @returns Promise with menu items
+  */
+  getMenuByRole: async (role: string): Promise<MenuResponse> => {
+    const response = await api.get<MenuResponse>(
+      `${ENDPOINTS.MENU.GET_BY_ROLE}?role=${role}`
     );
     return response.data;
   },

@@ -10,6 +10,8 @@ import { useAuth } from "../../../context";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { addToast } from "../../../redux/slices/toast/toastSlice";
 import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
+import { setMenuItems } from "../../../redux/slices/menu/menuSlice";
+import { userService } from "../../../services";
 
 // Type for location state from ProtectedRoute
 interface LocationState {
@@ -89,6 +91,24 @@ const Login = () => {
             localStorage.setItem(REMEMBER_EMAIL_KEY, values.email);
           } else {
             localStorage.removeItem(REMEMBER_EMAIL_KEY);
+          }
+
+          // Fetch menu items based on user role and store in Redux
+          try {
+            // Decode token to get user role
+            const tokenParts = accessToken.split('.');
+            if (tokenParts.length === 3) {
+              const decodedPayload = JSON.parse(atob(tokenParts[1]));
+              const userRole = decodedPayload.role;
+              if (userRole) {
+                const menuResponse = await userService.getMenuByRole(userRole);
+                if (menuResponse.status === "success" && menuResponse.data) {
+                  dispatch(setMenuItems(menuResponse.data));
+                }
+              }
+            }
+          } catch (menuError) {
+            console.error("Failed to fetch menu:", menuError);
           }
 
           // Show success toast

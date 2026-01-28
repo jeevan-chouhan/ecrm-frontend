@@ -3,7 +3,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useTranslation } from "react-i18next";
 import { Button, ConfirmationPopup } from "../../../components";
-import { COLORS } from "../../../constants";
+import { COLORS, UserRole } from "../../../constants";
 import PreferenceForm from "./PreferenceForm";
 import PreferenceCard from "./PreferenceCard";
 import type { PreferenceItem, ApplicationPreferencesFormData } from "./types";
@@ -147,8 +147,8 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
   const convertPreferenceToApiFormat = useCallback((pref: PreferenceItem) => {
     // Determine user role
     const userRole = user?.role?.toUpperCase() || "";
-    const isManager = userRole === "MANAGER";
-    const isAdmin = userRole === "ADMIN" || user?.isPrimaryAdmin === true;
+    const isManager = userRole === UserRole.MANAGER;
+    const isAdmin = userRole === UserRole.ADMIN || user?.isPrimaryAdmin === true;
 
     // Build base payload
     // Note: preferenceId is sent both as a query parameter and in the payload

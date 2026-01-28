@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { GridColDef, GridPaginationModel, GridRenderCellParams, GridSortModel } from "@mui/x-data-grid";
 import { Tooltip } from "@mui/material";
 import { DataTable, StatusChangePopup, SearchBar, Select, Button } from "../../components";
-import { COLORS, ROUTES, typography, enrollmentTypes, statusFilterOptions } from "../../constants";
+import { COLORS, ROUTES, typography, enrollmentTypes, statusFilterOptions, UserRole } from "../../constants";
 import { Eye, ToggleStatus } from "../../assets";
 import { formatDateTime } from "../../utils/dateUtils";
 import { getEnrollmentTypeLabel, cleanContactNumber } from "../../utils/commonUtils";
@@ -56,6 +56,9 @@ const ApplicantOverview = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  
+  // Check if user is counselor
+  const isCounsellor = user?.role?.toUpperCase() === UserRole.COUNSELLOR;
 
   // Get dashboard state from Redux
   const { applicants, pagination, filter, sort } = useAppSelector((state) => state.dashboard);
@@ -404,24 +407,27 @@ const ApplicantOverview = () => {
           <Eye className="w-5 h-5" />
         </button>
       </Tooltip>
-      <Tooltip title={t("dashboard.changeStatus", "Change Status")} arrow>
-        <button
-          onClick={() => handleStatusToggle(params.row)}
-          className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
-          style={{
-            color: params.row.status === "Active" ? COLORS.error : COLORS.success,
-          }}
-          aria-label={
-            params.row.status === "Active"
-              ? t("dashboard.deactivate", "Deactivate")
-              : t("dashboard.activate", "Activate")
-          }
-        >
-          <ToggleStatus className="w-5 h-5" />
-        </button>
-      </Tooltip>
+      {/* Hide status toggle for counselors */}
+      {!isCounsellor && (
+        <Tooltip title={t("dashboard.changeStatus", "Change Status")} arrow>
+          <button
+            onClick={() => handleStatusToggle(params.row)}
+            className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
+            style={{
+              color: params.row.status === "Active" ? COLORS.error : COLORS.success,
+            }}
+            aria-label={
+              params.row.status === "Active"
+                ? t("dashboard.deactivate", "Deactivate")
+                : t("dashboard.activate", "Activate")
+            }
+          >
+            <ToggleStatus className="w-5 h-5" />
+          </button>
+        </Tooltip>
+      )}
     </div>
-  ), [t, handleView, handleStatusToggle]);
+  ), [t, handleView, handleStatusToggle, isCounsellor]);
 
   // Memoize columns to prevent recreation
   const columns: GridColDef[] = useMemo(() => [

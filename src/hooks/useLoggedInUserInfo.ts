@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useAppSelector } from "../redux/hooks";
 import type { UserData } from "../services/types";
+import { UserRole, ROLE_DISPLAY_NAMES } from "../constants";
 
 /**
  * Logged in user info with computed properties for easy access
@@ -53,24 +54,15 @@ export const useLoggedInUserInfo = (): LoggedInUserInfo | null => {
 
     const role = user.role?.toUpperCase() || "";
     const isPrimary = user.isPrimaryAdmin === true;
-    const isAdmin = role === "ADMIN" || isPrimary;
-    const isManager = role === "MANAGER";
-    const isCounsellor = role === "COUNSELLOR";
-    const isBilling = role === "BILLING";
-
-    // Role display name mapping
-    const roleDisplayNames: Record<string, string> = {
-      PRIMARY_ADMIN: "Primary Admin",
-      ADMIN: "Admin",
-      MANAGER: "Manager",
-      COUNSELLOR: "Counsellor",
-      BILLING: "Billing",
-    };
+    const isAdmin = role === UserRole.ADMIN || isPrimary;
+    const isManager = role === UserRole.MANAGER;
+    const isCounsellor = role === UserRole.COUNSELLOR;
+    const isBilling = role === UserRole.BILLING;
 
     return {
       ...user,
       displayName: user.name || user.email || "User",
-      roleDisplayName: isPrimary ? "Primary Admin" : (roleDisplayNames[role] || user.role || "Unknown"),
+      roleDisplayName: isPrimary ? ROLE_DISPLAY_NAMES[UserRole.PRIMARY_ADMIN] : (ROLE_DISPLAY_NAMES[role] || user.role || "Unknown"),
       fullPhoneNumber: `${user.countryCode || ""}${user.contactNumber || ""}`,
       isPrimary,
       isAdmin,
