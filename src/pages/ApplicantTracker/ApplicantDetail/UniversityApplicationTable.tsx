@@ -15,6 +15,7 @@ interface UniversityApplicationTableProps {
   onPaginationModelChange: (model: GridPaginationModel) => void;
   sortModel: GridSortModel;
   onSortModelChange: (model: GridSortModel) => void;
+  rowCount: number;
   onUpdateStatus: (application: UniversityApplication) => void;
   onApply: (application: UniversityApplication) => void;
   onViewStatusHistory: (application: UniversityApplication) => void;
@@ -27,6 +28,7 @@ const UniversityApplicationTable = ({
   onPaginationModelChange,
   sortModel,
   onSortModelChange,
+  rowCount,
   onUpdateStatus,
   onApply,
   onViewStatusHistory,
@@ -281,6 +283,7 @@ const UniversityApplicationTable = ({
         paginationModel={paginationModel}
         onPaginationModelChange={onPaginationModelChange}
         paginationMode="server"
+        rowCount={rowCount}
         sortingMode="server"
         sortModel={sortModel}
         onSortModelChange={onSortModelChange}

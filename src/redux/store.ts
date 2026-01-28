@@ -15,6 +15,7 @@ import storage from "redux-persist/lib/storage";
 import loaderReducer from "./slices/loader/loaderSlice";
 import toastReducer from "./slices/toast/toastSlice";
 import authReducer from "./slices/auth/authSlice";
+import menuReducer from "./slices/menu/menuSlice";
 import manageTeamReducer from "./slices/manageTeam/manageTeamSlice";
 import dashboardReducer from "./slices/dashboard/dashboardSlice";
 import documentVaultReducer from "./slices/documentVault/documentVaultSlice";
@@ -76,6 +77,7 @@ const rootReducer = combineReducers({
   loader: loaderReducer,
   toast: toastReducer,
   auth: authReducer,
+  menu: menuReducer,
   manageTeam: persistedManageTeamReducer,
   dashboard: persistedDashboardReducer,
   documentVault: persistedDocumentVaultReducer,
@@ -89,7 +91,7 @@ const persistConfig = {
   version: 1,
   storage,
   blacklist: ["loader", "toast", "manageTeam", "dashboard", "documentVault", "agencyPartner", "teamOverview"], // Don't persist these at root level (they have their own config)
-  whitelist: ["auth"], // Persist auth state at root level
+  whitelist: ["auth", "menu"], // Persist auth and menu state at root level
 };
 
 // Create persisted reducer

@@ -10,6 +10,8 @@ import type {
   SaveServingPayload,
   SaveServingResponse,
   OverallCountsResponse,
+  StartTrialResponse,
+  CurrentSubscriptionResponse,
 } from "./types";
 
 /**
@@ -141,6 +143,29 @@ const agencyService = {
   getOverallCounts: async (agencyId: number): Promise<OverallCountsResponse> => {
     const response = await api.get<OverallCountsResponse>(
       `${ENDPOINTS.AGENCIES.OVERALL_COUNTS}?agencyId=${agencyId}`
+    );
+    return response.data;
+  },
+
+  /* Start 14-day free trial for an agency
+   * @param agencyId - Agency ID
+   * @returns Promise with start trial response
+   */
+  startTrial: async (agencyId: number): Promise<StartTrialResponse> => {
+    const response = await api.post<StartTrialResponse>(
+      ENDPOINTS.AGENCIES.START_TRIAL(agencyId)
+    );
+    return response.data;
+  },
+
+  /**
+   * Get current subscription for an agency
+   * @param agencyId - Agency ID
+   * @returns Promise with current subscription data
+   */
+  getCurrentSubscription: async (agencyId: number): Promise<CurrentSubscriptionResponse> => {
+    const response = await api.get<CurrentSubscriptionResponse>(
+      ENDPOINTS.AGENCIES.CURRENT_SUBSCRIPTION(agencyId)
     );
     return response.data;
   },

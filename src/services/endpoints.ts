@@ -42,11 +42,18 @@ export const ENDPOINTS = {
     GENERAL_SETTINGS: "/agencies/general-settings",
     SERVING: "/agencies/serving",
     OVERALL_COUNTS: "/agencies/overall-counts",
+    START_TRIAL: (agencyId: number | string) => `/agencies/start-trial/${agencyId}`,
+    CURRENT_SUBSCRIPTION: (agencyId: number | string) => `/agencies/currentSubscription/${agencyId}`,
   },
 
   // Plan Endpoints
   PLAN: {
     GET_ALL: "/plan/getAll",
+  },
+
+  // Menu Endpoints
+  MENU: {
+    GET_BY_ROLE: "/menu",
   },
 
   // Applicants Endpoints
@@ -77,7 +84,7 @@ export const ENDPOINTS = {
     UPDATE_ACHIEVEMENT: (achievementId: number | string, applicantId: number | string) => `/applicants/achievements?achievementId=${achievementId}&applicantId=${applicantId}`,
     DELETE_ACHIEVEMENT: (achievementId: number | string, applicantId: number | string) => `/applicants/achievements?achievementId=${achievementId}&applicantId=${applicantId}`,
     DOCUMENTS: (applicantId: number | string) => `/applicants/documents?applicantId=${applicantId}`,
-    APPLICATION_PREFERENCE_DOCUMENTS: (applicantId: number | string, applicationPrefId: number | string) => 
+    APPLICATION_PREFERENCE_DOCUMENTS: (applicantId: number | string, applicationPrefId: number | string) =>
       `/applicants/application-preference-documents?applicantId=${applicantId}&applicationPrefId=${applicationPrefId}`,
     UPLOAD_DOCUMENT: (applicantId: number | string, applicationPrefId?: number | string) => {
       const baseUrl = `/applicants/documents?applicantId=${applicantId}`;
@@ -87,57 +94,57 @@ export const ENDPOINTS = {
     VERIFY_DOCUMENT: (applicantId: number | string, documentId: number | string, isVerified: boolean) => `/applicants/verify?applicantId=${applicantId}&documentId=${documentId}&isVerified=${isVerified}`,
   },
 
-//   // User Endpoints
-//   USER: {
-//     PROFILE: "/user/profile",
-//     UPDATE_PROFILE: "/user/profile",
-//     LIST: "/user/list",
-//     GET_BY_ID: (id: number | string) => `/user/${id}`,
-//     CREATE: "/user/create",
-//     UPDATE: (id: number | string) => `/user/${id}`,
-//     DELETE: (id: number | string) => `/user/${id}`,
-//   },
+  //   // User Endpoints
+  //   USER: {
+  //     PROFILE: "/user/profile",
+  //     UPDATE_PROFILE: "/user/profile",
+  //     LIST: "/user/list",
+  //     GET_BY_ID: (id: number | string) => `/user/${id}`,
+  //     CREATE: "/user/create",
+  //     UPDATE: (id: number | string) => `/user/${id}`,
+  //     DELETE: (id: number | string) => `/user/${id}`,
+  //   },
 
-//   // Candidate Endpoints
-//   CANDIDATE: {
-//     LIST: "/candidate/list",
-//     GET_BY_ID: (id: number | string) => `/candidate/${id}`,
-//     CREATE: "/candidate/create",
-//     UPDATE: (id: number | string) => `/candidate/${id}`,
-//     DELETE: (id: number | string) => `/candidate/${id}`,
-//     SEARCH: "/candidate/search",
-//   },
+  //   // Candidate Endpoints
+  //   CANDIDATE: {
+  //     LIST: "/candidate/list",
+  //     GET_BY_ID: (id: number | string) => `/candidate/${id}`,
+  //     CREATE: "/candidate/create",
+  //     UPDATE: (id: number | string) => `/candidate/${id}`,
+  //     DELETE: (id: number | string) => `/candidate/${id}`,
+  //     SEARCH: "/candidate/search",
+  //   },
 
-//   // Application Endpoints
-//   APPLICATION: {
-//     LIST: "/application/list",
-//     GET_BY_ID: (id: number | string) => `/application/${id}`,
-//     CREATE: "/application/create",
-//     UPDATE: (id: number | string) => `/application/${id}`,
-//     DELETE: (id: number | string) => `/application/${id}`,
-//     UPDATE_STATUS: (id: number | string) => `/application/${id}/status`,
-//   },
+  //   // Application Endpoints
+  //   APPLICATION: {
+  //     LIST: "/application/list",
+  //     GET_BY_ID: (id: number | string) => `/application/${id}`,
+  //     CREATE: "/application/create",
+  //     UPDATE: (id: number | string) => `/application/${id}`,
+  //     DELETE: (id: number | string) => `/application/${id}`,
+  //     UPDATE_STATUS: (id: number | string) => `/application/${id}/status`,
+  //   },
 
-//   // Dashboard Endpoints
-//   DASHBOARD: {
-//     STATS: "/dashboard/stats",
-//     RECENT_ACTIVITY: "/dashboard/recent-activity",
-//     CHARTS: "/dashboard/charts",
-//   },
+  //   // Dashboard Endpoints
+  //   DASHBOARD: {
+  //     STATS: "/dashboard/stats",
+  //     RECENT_ACTIVITY: "/dashboard/recent-activity",
+  //     CHARTS: "/dashboard/charts",
+  //   },
 
-//   // Settings Endpoints
-//   SETTINGS: {
-//     GET: "/settings",
-//     UPDATE: "/settings",
-//   },
+  //   // Settings Endpoints
+  //   SETTINGS: {
+  //     GET: "/settings",
+  //     UPDATE: "/settings",
+  //   },
 
-//   // Common/Utility Endpoints
-//   COMMON: {
-//     UPLOAD_FILE: "/upload",
-//     COUNTRIES: "/common/countries",
-//     STATES: (countryId: number | string) => `/common/states/${countryId}`,
-//     CITIES: (stateId: number | string) => `/common/cities/${stateId}`,
-//   },
+  //   // Common/Utility Endpoints
+  //   COMMON: {
+  //     UPLOAD_FILE: "/upload",
+  //     COUNTRIES: "/common/countries",
+  //     STATES: (countryId: number | string) => `/common/states/${countryId}`,
+  //     CITIES: (stateId: number | string) => `/common/cities/${stateId}`,
+  //   },
 } as const;
 
 export default ENDPOINTS;

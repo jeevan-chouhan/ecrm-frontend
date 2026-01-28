@@ -1,9 +1,13 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "../../components";
 import { COLORS, ROUTES } from "../../constants";
 import { Check, Close } from "../../assets";
-import { userService } from "../../services";
+import { userService, agencyService } from "../../services";
+import { useAppSelector, useAppDispatch } from "../../redux/hooks";
+import { showLoader, hideLoader } from "../../redux/slices/loader/loaderSlice";
+import { addToast } from "../../redux/slices/toast/toastSlice";
 
 interface PlanFeature {
   text: string;
@@ -47,13 +51,23 @@ interface DynamicPrices {
   primeYearly: number;
 }
 
+interface StripeLinks {
+  agencyPrimeLink?: string;
+  agencyPrimeYearlyLink?: string;
+  agencyProYearlyLink?: string;
+}
+
 interface PricingContentProps {
   showHeader?: boolean;
   maxWidth?: string;
+  stripeLinks?: StripeLinks;
 }
 
-const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl" }: PricingContentProps) => {
+const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks }: PricingContentProps) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [dynamicPrices, setDynamicPrices] = useState<DynamicPrices>({
     proMonthly: 0,
@@ -62,6 +76,29 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl" }: PricingCo
     primeYearly: 0,
   });
   const hasFetched = useRef(false);
+
+  // Handle Start Free Trial
+  const handleStartFreeTrial = async () => {
+    if (!user?.agencyId) {
+      dispatch(addToast({ type: "error", message: t("common.loginRequired", "Please login to start trial") }));
+      navigate(ROUTES.LOGIN);
+      return;
+    }
+
+    dispatch(showLoader());
+    try {
+      const response = await agencyService.startTrial(user.agencyId);
+      if (response.status === "success") {
+        dispatch(addToast({ type: "success", message: response.message || t("pricing.trialStarted", "Trial started successfully") }));
+        navigate(ROUTES.DASHBOARD);
+      }
+    } catch (error) {
+      console.error("Failed to start trial:", error);
+      dispatch(addToast({ type: "error", message: t("pricing.trialFailed", "Failed to start trial") }));
+    } finally {
+      dispatch(hideLoader());
+    }
+  };
 
   // Fetch plans from API
   useEffect(() => {
@@ -159,12 +196,6 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl" }: PricingCo
 
   const handleCardClick = (planId: string) => {
     setSelectedPlan(planId);
-  };
-
-  const handleButtonClick = (plan: PricingPlan) => {
-    setSelectedPlan(plan.id);
-    // Navigate to register page with selected plan
-    navigate(ROUTES.REGISTER, { state: { selectedPlan: plan.id, planName: plan.name } });
   };
 
   return (
@@ -305,19 +336,96 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl" }: PricingCo
                 ))}
               </ul>
 
-              {/* Button */}
-              <Button
-                variant="accent"
-                size="lg"
-                fullWidth
-                rounded
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleButtonClick(plan);
-                }}
-              >
-                {plan.buttonText}
-              </Button>
+              {/* Buttons */}
+              <div className="space-y-3">
+                {/* Check if stripe links available (came from Register) */}
+                {stripeLinks ? (
+                  // 4 Buttons: After Registration
+                  plan.id === "pro" ? (
+                    <>
+                      {/* Agency Pro - Start Free Trial (calls API) */}
+                      <Button
+                        variant="accent"
+                        size="lg"
+                        fullWidth
+                        rounded
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStartFreeTrial();
+                        }}
+                      >
+                        {plan.buttonText}
+                      </Button>
+                      {/* Agency Pro - Yearly Plan */}
+                      <Button
+                        variant="secondary"
+                        size="lg"
+                        fullWidth
+                        rounded
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (stripeLinks.agencyProYearlyLink) {
+                            window.open(stripeLinks.agencyProYearlyLink, "_blank");
+                          }
+                        }}
+                        disabled={!stripeLinks.agencyProYearlyLink}
+                      >
+                        Yearly Plan
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      {/* Agency Prime - Monthly Plan */}
+                      <Button
+                        variant="accent"
+                        size="lg"
+                        fullWidth
+                        rounded
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (stripeLinks.agencyPrimeLink) {
+                            window.open(stripeLinks.agencyPrimeLink, "_blank");
+                          }
+                        }}
+                        disabled={!stripeLinks.agencyPrimeLink}
+                      >
+                        Monthly Plan
+                      </Button>
+                      {/* Agency Prime - Yearly Plan */}
+                      <Button
+                        variant="secondary"
+                        size="lg"
+                        fullWidth
+                        rounded
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (stripeLinks.agencyPrimeYearlyLink) {
+                            window.open(stripeLinks.agencyPrimeYearlyLink, "_blank");
+                          }
+                        }}
+                        disabled={!stripeLinks.agencyPrimeYearlyLink}
+                      >
+                        Yearly Plan
+                      </Button>
+                    </>
+                  )
+                ) : (
+                  // 2 Buttons: From Header (navigate to Register)
+                  <Button
+                    variant="accent"
+                    size="lg"
+                    fullWidth
+                    rounded
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedPlan(plan.id);
+                      navigate(ROUTES.REGISTER, { state: { selectedPlan: plan.id, planName: plan.name } });
+                    }}
+                  >
+                    {plan.buttonText}
+                  </Button>
+                )}
+              </div>
             </div>
           );
         })}

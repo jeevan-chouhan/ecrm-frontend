@@ -6,7 +6,7 @@ import {
   getAccessToken,
   getRefreshToken,
   saveTokens,
-  // redirectToLogin,
+  redirectToLogin,
 } from "../utils";
 
 // ==========================================
@@ -163,12 +163,12 @@ api.interceptors.response.use(
     const statusCode = error.response?.status;
 
     // ----------------------------------------
-    // Handle 401 Forbidden - Redirect to Login
+    // Handle 403 Forbidden - Redirect to Login
     // ----------------------------------------
-    // if (statusCode === 401) {
-    //   redirectToLogin();
-    //   return Promise.reject(error);
-    // }
+    if (statusCode === 403) {
+      redirectToLogin();
+      return Promise.reject(error);
+    }
 
     // ----------------------------------------
     // Handle 403 Unauthorized - Refresh Token

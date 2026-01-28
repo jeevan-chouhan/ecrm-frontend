@@ -1160,3 +1160,30 @@ export interface OverallCountsData {
 
 // Overall Counts Response
 export type OverallCountsResponse = ApiResponse<OverallCountsData>;
+// Start Trial Response
+export type StartTrialResponse = ApiResponse<null>;
+
+// Current Subscription Data
+export interface CurrentSubscriptionData {
+  subscriptionStatus: string;
+  plan: string;
+  renewsOn: string;
+  trialUsed: boolean;
+}
+
+// Current Subscription Response
+export type CurrentSubscriptionResponse = ApiResponse<CurrentSubscriptionData>;
+
+// ==========================================
+// Menu Types
+// ==========================================
+
+// Menu Item from API
+export interface MenuItem {
+  id: number;
+  menuIcon: string;
+  menuName: string;
+}
+
+// Menu Response
+export type MenuResponse = ApiResponse<MenuItem[]>;
