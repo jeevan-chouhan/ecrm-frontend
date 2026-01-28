@@ -9,11 +9,13 @@ import { Eye, ToggleStatus } from "../../assets";
 import { formatDateTime } from "../../utils/dateUtils";
 import { getEnrollmentTypeLabel, cleanContactNumber } from "../../utils/commonUtils";
 import { userService } from "../../services";
-import type { ApplicantOverviewItem } from "../../services";
+import type { ApplicantOverviewItem, PaginatedData } from "../../services";
 import { useAppSelector, useAppDispatch } from "../../redux/hooks";
 import { showLoader, hideLoader } from "../../redux/slices/loader/loaderSlice";
 import { addToast } from "../../redux/slices/toast/toastSlice";
 import {
+  setLoading,
+  setError,
   setApplicants,
   setPage,
   setPageSize,
@@ -61,7 +63,7 @@ const ApplicantOverview = () => {
   const isCounsellor = user?.role?.toUpperCase() === UserRole.COUNSELLOR;
 
   // Get dashboard state from Redux
-  const { applicants, pagination, filter, sort } = useAppSelector((state) => state.dashboard);
+  const { applicants, isLoading, pagination, filter, sort } = useAppSelector((state) => state.dashboard);
 
   // Local state for input fields (for controlled inputs with debounce)
   const [searchInput, setSearchInput] = useState(() => filter.search);
@@ -76,7 +78,11 @@ const ApplicantOverview = () => {
   // Refs
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInitialMount = useRef(true);
-  const lastFetchParamsRef = useRef<string>("");
+  const userRef = useRef(user);
+  const isLoadingRef = useRef(false);
+  
+  // Update userRef when user changes
+  userRef.current = user;
 
   // Sync local state when Redux filter changes (e.g., from persist)
   useEffect(() => {
@@ -88,61 +94,74 @@ const ApplicantOverview = () => {
     }
   }, [filter.search, filter.enrollmentType, filter.status]);
 
-  // Fetch applicant overview data
-  useEffect(() => {
-    if (!user?.agencyId) return;
-
-    // Create a unique key for current fetch params
-    const fetchParamsKey = `${user.agencyId}-${filter.search}-${filter.status}-${filter.enrollmentType}-${pagination.page}-${pagination.size}-${sort.sortBy}-${sort.asc}`;
+  /**
+   * Fetch applicant overview data from API
+   */
+  const fetchApplicantOverview = useCallback(async () => {
+    const currentUser = userRef.current;
     
-    // Skip if same params as last fetch attempt
-    if (lastFetchParamsRef.current === fetchParamsKey) return;
-    
-    // Mark this params as being fetched BEFORE the async call
-    lastFetchParamsRef.current = fetchParamsKey;
+    // Don't fetch if user is not loaded yet or already loading
+    if (!currentUser?.agencyId || isLoadingRef.current) {
+      return;
+    }
 
-    const fetchApplicantOverview = async () => {
-      try {
-        dispatch(showLoader());
+    isLoadingRef.current = true;
+    dispatch(setLoading(true));
+    dispatch(showLoader());
 
-        const response = await userService.getApplicantOverview({
-          agencyId: user.agencyId,
-          assignedAdminId: null,
-          assignedManagerId: null,
-          search: filter.search || null,
-          status: filter.status || null,
-          enrollmentType: filter.enrollmentType || null,
-          page: pagination.page,
-          size: pagination.size,
-          sortBy: sort.sortBy || null,
-          asc: sort.asc,
-        });
+    try {
+      const response = await userService.getApplicantOverview({
+        agencyId: currentUser.agencyId,
+        assignedAdminId: null,
+        assignedManagerId: null,
+        search: filter.search || null,
+        status: filter.status || null,
+        enrollmentType: filter.enrollmentType || null,
+        page: pagination.page,
+        size: pagination.size,
+        sortBy: sort.sortBy || null,
+        asc: sort.asc,
+      });
 
-        if (response.status === "success" && response.data) {
-          // Transform API data to table format
-          const transformedApplicants = transformApiData(response.data.content);
-          
-          dispatch(setApplicants({
-            applicants: transformedApplicants,
-            totalElements: response.data.totalElements,
-            totalPages: response.data.totalPages,
-            first: response.data.first,
-            last: response.data.last,
-          }));
-        }
-      } catch (error) {
-        // Reset params ref on error to allow retry
-        lastFetchParamsRef.current = "";
+      if (response.status === "success" && response.data) {
+        // Transform API data to table format
+        const transformedApplicants = transformApiData(response.data.content);
         
-        const errorMessage = handleApiError(error);
-        dispatch(addToast({ type: "error", message: typeof errorMessage === 'string' ? errorMessage : 'An error occurred' }));
-      } finally {
-        dispatch(hideLoader());
+        // Create PaginatedData structure for Redux
+        const paginatedData: PaginatedData<ApplicantOverviewRow> = {
+          content: transformedApplicants,
+          totalElements: response.data.totalElements,
+          totalPages: response.data.totalPages,
+          first: response.data.first,
+          last: response.data.last,
+          size: response.data.size || pagination.size,
+          number: response.data.page || pagination.page,
+          numberOfElements: response.data.numberOfElements || transformedApplicants.length,
+          empty: transformedApplicants.length === 0,
+        };
+        
+        dispatch(setApplicants(paginatedData));
+      } else {
+        throw new Error(response.message || "Failed to fetch applicants");
       }
-    };
+    } catch (error: any) {
+      const { message } = handleApiError(error, "Failed to fetch applicants");
+      dispatch(addToast({ type: "error", message }));
+      dispatch(setError(message));
+      dispatch(setApplicants([]));
+    } finally {
+      isLoadingRef.current = false;
+      dispatch(setLoading(false));
+      dispatch(hideLoader());
+    }
+  }, [dispatch, filter.search, filter.status, filter.enrollmentType, pagination.page, pagination.size, sort.sortBy, sort.asc]);
 
-    fetchApplicantOverview();
-  }, [user?.agencyId, filter.search, filter.status, filter.enrollmentType, pagination.page, pagination.size, sort.sortBy, sort.asc, dispatch]);
+  // Initial fetch when user is loaded
+  useEffect(() => {
+    if (user) {
+      fetchApplicantOverview();
+    }
+  }, [user, fetchApplicantOverview]);
 
   // Cleanup debounce on unmount
   useEffect(() => {
@@ -575,6 +594,7 @@ const ApplicantOverview = () => {
       <DataTable
         rows={applicants}
         columns={columns}
+        loading={isLoading}
         pageSize={pagination.size}
         pageSizeOptions={[5, 10, 25, 50]}
         paginationModel={paginationModel}
