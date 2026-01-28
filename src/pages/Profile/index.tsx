@@ -213,7 +213,7 @@ const Profile = () => {
             <FileUpload
               label={t("profile.uploadImage", "Upload Image")}
               accept="image/png,image/jpeg,image/jpg"
-              maxSizeMB={5}
+              maxSizeMB={2}
               value={profileImage}
               onChange={handleImageChange}
               onRemove={handleRemoveImage}

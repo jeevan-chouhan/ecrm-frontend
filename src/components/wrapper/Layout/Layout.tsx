@@ -166,6 +166,7 @@ const Layout = ({
   const locationState = location.state as { from?: string } | null;
   const isFromDashboard = locationState?.from === "dashboard";
   const isApplicantDetailPage = location.pathname.startsWith("/applicant-tracker") && location.pathname !== ROUTES.APPLICANT_TRACKER;
+  const isCreateApplicantPage = location.pathname === ROUTES.CREATE_APPLICANT;
 
   // Handle sidebar item click - reset state when navigating away
   const handleSidebarItemClick = (path: string) => {
@@ -192,13 +193,14 @@ const Layout = ({
     const path = pathMap[menuIcon];
     if (!path) return false;
 
-    // Special handling for Dashboard with applicant detail
+    // Special handling for Dashboard with applicant detail and create/edit
     if (menuIcon === "DASHBOARD") {
-      return location.pathname === ROUTES.DASHBOARD || (isApplicantDetailPage && isFromDashboard);
+      return location.pathname === ROUTES.DASHBOARD || (isApplicantDetailPage && isFromDashboard) || isCreateApplicantPage;
     }
-    // Special handling for Application Tracker
+    // Special handling for Application Tracker - exclude create/edit pages
     if (menuIcon === "APPLICATION_TRACKER") {
-      return (location.pathname.startsWith(ROUTES.APPLICANT_TRACKER) || location.pathname.startsWith("/applicant-tracker")) && !(isApplicantDetailPage && isFromDashboard);
+      const isApplicantTrackerPage = (location.pathname.startsWith(ROUTES.APPLICANT_TRACKER) || location.pathname.startsWith("/applicant-tracker")) && !isCreateApplicantPage;
+      return isApplicantTrackerPage && !(isApplicantDetailPage && isFromDashboard);
     }
     // For other routes, check if current path starts with the menu path
     return location.pathname.startsWith(path);
@@ -215,7 +217,7 @@ const Layout = ({
         isActive: isPathActive(item.menuIcon),
       };
     });
-  }, [sortedMenuItems, t, location.pathname, isApplicantDetailPage, isFromDashboard]);
+  }, [sortedMenuItems, t, location.pathname, isApplicantDetailPage, isFromDashboard, isCreateApplicantPage]);
 
   return (
     <div

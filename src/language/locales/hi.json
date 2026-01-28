@@ -390,6 +390,7 @@
     "type": "प्रकार",
     "invalidFormat": "{{fileName}}: अमान्य प्रारूप। समर्थित: {{formats}}",
     "fileSizeExceeded": "{{fileName}}: आकार {{maxSize}}MB सीमा से अधिक है",
+    "maxFileSize": "अधिकतम फ़ाइल आकार {{maxSize}} MB है",
     "previewNotAvailable": "पूर्वावलोकन उपलब्ध नहीं है"
   },
   "profile": {
@@ -737,12 +738,12 @@
   "reportAnalysis": {
     "title": "रिपोर्ट और विश्लेषण",
     "tabs": {
-      "teamOverview": "टीम अवलोकन",
-      "overallCounts": "कुल गणना",
+      "teamOverview": "टीम और आवेदन अवलोकन",
+      "agencyOverview": "एजेंसी अवलोकन",
       "graphs": "ग्राफ़"
     },
     "teamOverview": {
-      "title": "टीम अवलोकन",
+      "title": "टीम और आवेदन अवलोकन",
       "adminLabel": "एडमिन",
       "managerLabel": "मैनेजर",
       "counselorLabel": "काउंसलर",
@@ -757,14 +758,14 @@
       "tableReportingManagers": "रिपोर्टिंग मैनेजर",
       "tableReportingCounselors": "रिपोर्टिंग काउंसलर",
       "tableCountry": "देश",
-      "tableTotalApplicants": "कुल आवेदन",
+      "tableTotalApplicants": "कुल",
       "tableLeads": "लीड्स",
-      "tableInProgressApplications": "प्रगति में आवेदन",
-      "tableEnrolledApplications": "नामांकित आवेदन",
-      "tableRejectedApplications": "अस्वीकृत आवेदन"
+      "tableInProgressApplications": "प्रगति में",
+      "tableEnrolledApplications": "नामांकित",
+      "tableRejectedApplications": "अस्वीकृत"
     },
     "overallCounts": {
-      "title": "कुल गणना",
+      "title": "एजेंसी अवलोकन",
       "description": "कुल आंकड़े और गणना देखें",
       "totalAgencyPartners": "कुल एजेंसी पार्टनर",
       "totalUsers": "कुल उपयोगकर्ता",
@@ -785,8 +786,9 @@
       "countriesDescription": "देश में सफल आवेदकों का वितरण",
       "topUniversities": "शीर्ष विश्वविद्यालय",
       "universityName": "शीर्ष विश्वविद्यालय",
-      "successfulApplicants": "सफल आवेदकों की संख्या",
-      "applicantProgressChart": "आवेदक प्रगति चार्ट अवलोकन"
+      "successfulApplicants": "सफल आवेदनों की संख्या",
+      "applicantProgressChart": "आवेदन प्रगति चार्ट अवलोकन",
+      "noData": "कोई डेटा उपलब्ध नहीं"
     }
   },
   "masterLedger": {

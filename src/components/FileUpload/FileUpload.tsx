@@ -41,7 +41,7 @@ const FileUpload = ({
   formikTouched,
   label = "Upload file",
   accept = "image/png,image/jpeg,image/jpg",
-  maxSizeMB = 10,
+  maxSizeMB = 2,
   value,
   onChange,
   onRemove,
@@ -57,6 +57,7 @@ const FileUpload = ({
 }: FileUploadProps) => {
   const { t } = useTranslation();
   const [showSection, setShowSection] = useState(true);
+  const [localError, setLocalError] = useState<string | undefined>(undefined);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Internal Formik for standalone validation (only if not using external Formik)
@@ -91,13 +92,23 @@ const FileUpload = ({
     : (isStandaloneMode ? internalFormik.values.file : formikValue);
   const currentError = error !== undefined
     ? error
-    : (isStandaloneMode ? internalFormik.errors.file : formikError);
-  const isTouched = isStandaloneMode ? internalFormik.touched.file : formikTouched ?? false;
-  const showError = isTouched && currentError;
+    : (isStandaloneMode ? (localError || internalFormik.errors.file) : formikError);
+  // Show error if we have localError (always show) or if Formik error with touched
+  const isTouched = error !== undefined 
+    ? true 
+    : (isStandaloneMode ? (localError ? true : internalFormik.touched.file) : formikTouched ?? false);
+  // Always show error if localError exists, otherwise check touched state
+  const showError = localError ? true : (isTouched && currentError);
 
 
   const handleChange = useCallback(
     (file: File | File[] | null) => {
+      // Clear error when file is changed (either set or removed)
+      setLocalError(undefined);
+      if (isStandaloneMode && value === undefined) {
+        internalFormik.setFieldError("file", undefined);
+      }
+      
       // Always call external onChange if provided (for parent Formik or standalone)
       if (onChange) {
         onChange(file);
@@ -115,10 +126,21 @@ const FileUpload = ({
   const setError = useCallback(
     (errorMessage: string) => {
       if (isStandaloneMode) {
-        internalFormik.setFieldError("file", errorMessage);
+        // If value is provided (standalone with value prop), use local error state
+        if (value !== undefined) {
+          setLocalError(errorMessage || undefined);
+        } else {
+          // Otherwise use internal Formik
+          if (errorMessage) {
+            internalFormik.setFieldError("file", errorMessage);
+            internalFormik.setFieldTouched("file", true); // Mark as touched to show error
+          } else {
+            internalFormik.setFieldError("file", undefined);
+          }
+        }
       }
     },
-    [isStandaloneMode, internalFormik]
+    [isStandaloneMode, internalFormik, value]
   );
 
   const {
@@ -141,16 +163,21 @@ const FileUpload = ({
     multiple,
     onChange: handleChange,
     isFormikMode: false, // Using internal state management
-    setError,
+    setError, // Always provide setError to show inline errors instead of alert
   });
 
 
   const handleRemoveWithCallback = useCallback(
     (index: number) => {
       handleRemove(index);
+      // Clear error when file is removed
+      setLocalError(undefined);
+      if (isStandaloneMode && value === undefined) {
+        internalFormik.setFieldError("file", undefined);
+      }
       onRemove?.();
     },
-    [handleRemove, onRemove]
+    [handleRemove, onRemove, isStandaloneMode, internalFormik, value]
   );
 
   if (!showSection) return null;
@@ -222,12 +249,13 @@ const FileUpload = ({
             supportedFormats={supportedFormats}
             isDragging={isDragging}
             error={showError ? currentError : undefined}
+            maxSizeMB={maxSizeMB}
             onFileSelect={handleFileSelect}
             onDragStateChange={setIsDragging}
           />
         )}
 
-        {showError && (
+        {showError && currentError && (
           <p className="mt-2 text-xs" style={{ color: COLORS.error }}>
             {currentError}
           </p>

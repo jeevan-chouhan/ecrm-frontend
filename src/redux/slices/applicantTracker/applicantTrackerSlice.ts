@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import type { TeamOverviewItem, PaginatedData } from "../../../services/types";
+import type { Applicant } from "../../../constants";
+import type { PaginatedData } from "../../../services";
 
 // ==========================================
 // Types
@@ -21,17 +22,24 @@ interface SortState {
 }
 
 interface FilterState {
+  search: string;
   admin: string;
   manager: string;
   counselor: string;
-  enrollmentType: string;
-  fromDate: string | null; // ISO string format for serialization
-  toDate: string | null; // ISO string format for serialization
+  applicationStatus: string;
+  applicationStage: string;
+  university: string;
+  intake: string;
+  agencyPartner: string;
+  appliedFromDate: string | null; // ISO string format for serialization
+  appliedToDate: string | null; // ISO string format for serialization
+  lastUpdatedFromDate: string | null; // ISO string format for serialization
+  lastUpdatedToDate: string | null; // ISO string format for serialization
 }
 
-interface TeamOverviewState {
+interface ApplicantTrackerState {
   // Data
-  teamOverviewData: TeamOverviewItem[];
+  applicants: Applicant[];
   
   // Loading states
   isLoading: boolean;
@@ -51,8 +59,8 @@ interface TeamOverviewState {
 // Initial State
 // ==========================================
 
-const initialState: TeamOverviewState = {
-  teamOverviewData: [],
+const initialState: ApplicantTrackerState = {
+  applicants: [],
   isLoading: false,
   error: null,
   pagination: {
@@ -64,16 +72,23 @@ const initialState: TeamOverviewState = {
     last: true,
   },
   sort: {
-    sortBy: "name", // Default sort by name
-    asc: true, // Default ascending
+    sortBy: "updatedAt", // Default sort by updatedAt
+    asc: false, // Descending order (newest first)
   },
   filter: {
+    search: "",
     admin: "",
     manager: "",
     counselor: "",
-    enrollmentType: "",
-    fromDate: null,
-    toDate: null,
+    applicationStatus: "",
+    applicationStage: "",
+    university: "",
+    intake: "",
+    agencyPartner: "",
+    appliedFromDate: null,
+    appliedToDate: null,
+    lastUpdatedFromDate: null,
+    lastUpdatedToDate: null,
   },
 };
 
@@ -81,8 +96,8 @@ const initialState: TeamOverviewState = {
 // Slice
 // ==========================================
 
-const teamOverviewSlice = createSlice({
-  name: "teamOverview",
+const applicantTrackerSlice = createSlice({
+  name: "applicantTracker",
   initialState,
   reducers: {
     // Loading state actions
@@ -98,23 +113,23 @@ const teamOverviewSlice = createSlice({
       state.isLoading = false;
     },
 
-    // Set team overview data (handles both array and paginated response)
-    setTeamOverviewData: (
+    // Set applicants data (handles both array and paginated response)
+    setApplicants: (
       state,
-      action: PayloadAction<TeamOverviewItem[] | PaginatedData<TeamOverviewItem>>
+      action: PayloadAction<Applicant[] | PaginatedData<Applicant>>
     ) => {
       const data = action.payload;
       state.isLoading = false;
       state.error = null;
 
       if (Array.isArray(data)) {
-        state.teamOverviewData = data;
+        state.applicants = data;
         state.pagination.totalElements = data.length;
         state.pagination.totalPages = 1;
         state.pagination.first = true;
         state.pagination.last = true;
       } else if (data && "content" in data) {
-        state.teamOverviewData = data.content || [];
+        state.applicants = data.content || [];
         state.pagination.totalElements = data.totalElements || 0;
         state.pagination.totalPages = data.totalPages || 0;
         state.pagination.first = data.first ?? true;
@@ -138,8 +153,8 @@ const teamOverviewSlice = createSlice({
       
       // If sortBy is empty, use default
       if (!sortBy) {
-        state.sort.sortBy = "name";
-        state.sort.asc = true;
+        state.sort.sortBy = "updatedAt";
+        state.sort.asc = false;
         return;
       }
       
@@ -154,11 +169,16 @@ const teamOverviewSlice = createSlice({
     },
 
     clearSort: (state) => {
-      state.sort.sortBy = "name";
-      state.sort.asc = true;
+      state.sort.sortBy = "updatedAt";
+      state.sort.asc = false;
     },
 
     // Filter actions
+    setSearch: (state, action: PayloadAction<string>) => {
+      state.filter.search = action.payload;
+      state.pagination.page = 0; // Reset to first page
+    },
+
     setAdminFilter: (state, action: PayloadAction<string>) => {
       state.filter.admin = action.payload;
       state.pagination.page = 0;
@@ -174,18 +194,48 @@ const teamOverviewSlice = createSlice({
       state.pagination.page = 0;
     },
 
-    setEnrollmentTypeFilter: (state, action: PayloadAction<string>) => {
-      state.filter.enrollmentType = action.payload;
+    setApplicationStatusFilter: (state, action: PayloadAction<string>) => {
+      state.filter.applicationStatus = action.payload;
       state.pagination.page = 0;
     },
 
-    setFromDateFilter: (state, action: PayloadAction<string | null>) => {
-      state.filter.fromDate = action.payload;
+    setApplicationStageFilter: (state, action: PayloadAction<string>) => {
+      state.filter.applicationStage = action.payload;
       state.pagination.page = 0;
     },
 
-    setToDateFilter: (state, action: PayloadAction<string | null>) => {
-      state.filter.toDate = action.payload;
+    setUniversityFilter: (state, action: PayloadAction<string>) => {
+      state.filter.university = action.payload;
+      state.pagination.page = 0;
+    },
+
+    setIntakeFilter: (state, action: PayloadAction<string>) => {
+      state.filter.intake = action.payload;
+      state.pagination.page = 0;
+    },
+
+    setAgencyPartnerFilter: (state, action: PayloadAction<string>) => {
+      state.filter.agencyPartner = action.payload;
+      state.pagination.page = 0;
+    },
+
+    setAppliedFromDateFilter: (state, action: PayloadAction<string | null>) => {
+      state.filter.appliedFromDate = action.payload;
+      state.pagination.page = 0;
+    },
+
+    setAppliedToDateFilter: (state, action: PayloadAction<string | null>) => {
+      state.filter.appliedToDate = action.payload;
+      state.pagination.page = 0;
+    },
+
+    setLastUpdatedFromDateFilter: (state, action: PayloadAction<string | null>) => {
+      state.filter.lastUpdatedFromDate = action.payload;
+      state.pagination.page = 0;
+    },
+
+    setLastUpdatedToDateFilter: (state, action: PayloadAction<string | null>) => {
+      state.filter.lastUpdatedToDate = action.payload;
       state.pagination.page = 0;
     },
 
@@ -196,17 +246,24 @@ const teamOverviewSlice = createSlice({
     },
 
     clearFilters: (state) => {
+      state.filter.search = "";
       state.filter.admin = "";
       state.filter.manager = "";
       state.filter.counselor = "";
-      state.filter.enrollmentType = "";
-      state.filter.fromDate = null;
-      state.filter.toDate = null;
+      state.filter.applicationStatus = "";
+      state.filter.applicationStage = "";
+      state.filter.university = "";
+      state.filter.intake = "";
+      state.filter.agencyPartner = "";
+      state.filter.appliedFromDate = null;
+      state.filter.appliedToDate = null;
+      state.filter.lastUpdatedFromDate = null;
+      state.filter.lastUpdatedToDate = null;
       state.pagination.page = 0;
     },
 
     // Reset state
-    resetTeamOverviewState: () => initialState,
+    resetApplicantTrackerState: () => initialState,
   },
 });
 
@@ -217,21 +274,28 @@ const teamOverviewSlice = createSlice({
 export const {
   setLoading,
   setError,
-  setTeamOverviewData,
+  setApplicants,
   setPage,
   setPageSize,
   setSort,
   clearSort,
+  setSearch,
   setAdminFilter,
   setManagerFilter,
   setCounselorFilter,
-  setEnrollmentTypeFilter,
-  setFromDateFilter,
-  setToDateFilter,
+  setApplicationStatusFilter,
+  setApplicationStageFilter,
+  setUniversityFilter,
+  setIntakeFilter,
+  setAgencyPartnerFilter,
+  setAppliedFromDateFilter,
+  setAppliedToDateFilter,
+  setLastUpdatedFromDateFilter,
+  setLastUpdatedToDateFilter,
   applyFilters,
   clearFilters,
-  resetTeamOverviewState,
-} = teamOverviewSlice.actions;
+  resetApplicantTrackerState,
+} = applicantTrackerSlice.actions;
 
-export default teamOverviewSlice.reducer;
+export default applicantTrackerSlice.reducer;
 

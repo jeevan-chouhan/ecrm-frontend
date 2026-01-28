@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
+import type { PaginatedData } from "../../../services";
 
 // ==========================================
 // Types
@@ -104,25 +105,28 @@ const dashboardSlice = createSlice({
       state.isLoading = false;
     },
 
-    // Set applicants data (already transformed)
+    // Set applicants data (handles both array and paginated response)
     setApplicants: (
       state,
-      action: PayloadAction<{
-        applicants: ApplicantOverviewRow[];
-        totalElements: number;
-        totalPages: number;
-        first: boolean;
-        last: boolean;
-      }>
+      action: PayloadAction<ApplicantOverviewRow[] | PaginatedData<ApplicantOverviewRow>>
     ) => {
       const data = action.payload;
       state.isLoading = false;
       state.error = null;
-      state.applicants = data.applicants;
-      state.pagination.totalElements = data.totalElements;
-      state.pagination.totalPages = data.totalPages;
-      state.pagination.first = data.first;
-      state.pagination.last = data.last;
+
+      if (Array.isArray(data)) {
+        state.applicants = data;
+        state.pagination.totalElements = data.length;
+        state.pagination.totalPages = 1;
+        state.pagination.first = true;
+        state.pagination.last = true;
+      } else if (data && "content" in data) {
+        state.applicants = data.content || [];
+        state.pagination.totalElements = data.totalElements || 0;
+        state.pagination.totalPages = data.totalPages || 0;
+        state.pagination.first = data.first ?? true;
+        state.pagination.last = data.last ?? true;
+      }
     },
 
     // Pagination actions

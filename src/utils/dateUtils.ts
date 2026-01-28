@@ -11,6 +11,41 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 /**
+ * Formats a date to YYYY-MM-DD format (date only) without timezone conversion
+ * Use this for API parameters where you want to preserve the local date as selected
+ * @param date - Date object or null
+ * @returns Formatted date string in YYYY-MM-DD format (e.g., "2025-01-20") or null if date is null
+ */
+export const formatDateToYYYYMMDD = (date: Date | null): string | null => {
+  if (!date) return null;
+  // Use local date components to avoid timezone conversion
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+/**
+ * Converts a YYYY-MM-DD date string to ISO DATE_TIME format (YYYY-MM-DDTHH:mm:ss)
+ * For appliedFrom/appliedTo: sets time to 00:00:00 (start of day)
+ * @param dateStr - Date string in YYYY-MM-DD format or null
+ * @returns Formatted date string in ISO DATE_TIME format or null if dateStr is null
+ */
+export const formatDateToISODateTime = (dateStr: string | null, setToStartOfDay = true): string | null => {
+  if (!dateStr) return null;
+  // Parse YYYY-MM-DD and convert to ISO DATE_TIME
+  const [year, month, day] = dateStr.split("-");
+  if (!year || !month || !day) return null;
+  
+  if (setToStartOfDay) {
+    return `${year}-${month}-${day}T00:00:00`;
+  } else {
+    // For end of day, use 23:59:59
+    return `${year}-${month}-${day}T23:59:59`;
+  }
+};
+
+/**
  * Formats a date to DD MMM YYYY format (date only, no time) - converts UTC to local timezone
  * Use this for dates like dateOfBirth, passingYear, work experience dates, etc.
  * @param date - Date object or date string (assumed to be in UTC from backend)

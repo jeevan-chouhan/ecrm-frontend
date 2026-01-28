@@ -1,13 +1,13 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Layout } from "../../components";
-import { COLORS, typography, UserRole } from "../../constants";
+import { COLORS, typography } from "../../constants";
 import { useAppSelector } from "../../redux/hooks";
 import TeamOverview from "./TeamOverview";
 import OverallCounts from "./OverallCounts";
 import Graphs from "./Graphs";
 
-type TabType = "teamOverview" | "overallCounts" | "graphs";
+type TabType = "teamOverview" | "agencyOverview" | "graphs";
 
 interface Tab {
   id: TabType;
@@ -17,27 +17,39 @@ interface Tab {
 const ReportAnalysis = () => {
   const { t } = useTranslation();
   const { user } = useAppSelector((state) => state.auth);
-  
-  // Check if user is counselor
-  const isCounsellor = user?.role?.toUpperCase() === UserRole.COUNSELLOR;
-  
-  // Set default tab based on role - counselors only see graphs
-  const [activeTab, setActiveTab] = useState<TabType>(isCounsellor ? "graphs" : "teamOverview");
+  const [activeTab, setActiveTab] = useState<TabType>("teamOverview");
 
-  // Memoize tabs array - counselors only see graphs tab
+  // Get user role and check if tabs should be hidden
+  const userRole = (user?.role || "").toUpperCase().trim();
+  const isCounsellor = userRole === "COUNSELLOR";
+  const isBilling = userRole === "BILLING";
+  const shouldHideTabs = isCounsellor || isBilling;
+
+  // Memoize tabs array to prevent recreation on every render
+  // Hide "teamOverview" and "agencyOverview" tabs for COUNSELLOR and BILLING roles
   const tabs: Tab[] = useMemo(
     () => {
-      if (isCounsellor) {
-        return [{ id: "graphs", labelKey: "reportAnalysis.tabs.graphs" }];
-      }
-      return [
+      const allTabs: Tab[] = [
         { id: "teamOverview", labelKey: "reportAnalysis.tabs.teamOverview" },
-        { id: "overallCounts", labelKey: "reportAnalysis.tabs.overallCounts" },
+        { id: "agencyOverview", labelKey: "reportAnalysis.tabs.agencyOverview" },
         { id: "graphs", labelKey: "reportAnalysis.tabs.graphs" },
       ];
+
+      if (shouldHideTabs) {
+        return allTabs.filter(tab => tab.id === "graphs");
+      }
+
+      return allTabs;
     },
-    [isCounsellor]
+    [shouldHideTabs]
   );
+
+  // Update activeTab if current tab is hidden for this role
+  useEffect(() => {
+    if (shouldHideTabs && (activeTab === "teamOverview" || activeTab === "agencyOverview")) {
+      setActiveTab("graphs");
+    }
+  }, [shouldHideTabs, activeTab]);
 
   // Handle tab change
   const handleTabChange = useCallback((tabId: TabType) => {
@@ -49,7 +61,7 @@ const ReportAnalysis = () => {
     switch (activeTab) {
       case "teamOverview":
         return <TeamOverview />;
-      case "overallCounts":
+      case "agencyOverview":
         return <OverallCounts />;
       case "graphs":
         return <Graphs />;

@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import type { TeamOverviewItem, PaginatedData } from "../../../services/types";
+import type { UniversityApplication } from "../../../pages/ApplicantTracker/ApplicantDetail/types";
+import type { PaginatedData } from "../../../services";
 
 // ==========================================
 // Types
@@ -20,18 +21,9 @@ interface SortState {
   asc: boolean;
 }
 
-interface FilterState {
-  admin: string;
-  manager: string;
-  counselor: string;
-  enrollmentType: string;
-  fromDate: string | null; // ISO string format for serialization
-  toDate: string | null; // ISO string format for serialization
-}
-
-interface TeamOverviewState {
+interface ApplicantDetailState {
   // Data
-  teamOverviewData: TeamOverviewItem[];
+  applications: UniversityApplication[];
   
   // Loading states
   isLoading: boolean;
@@ -43,16 +35,16 @@ interface TeamOverviewState {
   // Sorting
   sort: SortState;
   
-  // Filters
-  filter: FilterState;
+  // Current applicantId (to reset state when applicant changes)
+  currentApplicantId: string | null;
 }
 
 // ==========================================
 // Initial State
 // ==========================================
 
-const initialState: TeamOverviewState = {
-  teamOverviewData: [],
+const initialState: ApplicantDetailState = {
+  applications: [],
   isLoading: false,
   error: null,
   pagination: {
@@ -64,25 +56,18 @@ const initialState: TeamOverviewState = {
     last: true,
   },
   sort: {
-    sortBy: "name", // Default sort by name
-    asc: true, // Default ascending
+    sortBy: "updatedAt", // Default sort by updatedAt
+    asc: false, // Descending order (newest first)
   },
-  filter: {
-    admin: "",
-    manager: "",
-    counselor: "",
-    enrollmentType: "",
-    fromDate: null,
-    toDate: null,
-  },
+  currentApplicantId: null,
 };
 
 // ==========================================
 // Slice
 // ==========================================
 
-const teamOverviewSlice = createSlice({
-  name: "teamOverview",
+const applicantDetailSlice = createSlice({
+  name: "applicantDetail",
   initialState,
   reducers: {
     // Loading state actions
@@ -98,27 +83,35 @@ const teamOverviewSlice = createSlice({
       state.isLoading = false;
     },
 
-    // Set team overview data (handles both array and paginated response)
-    setTeamOverviewData: (
+    // Set applications data (handles both array and paginated response)
+    setApplications: (
       state,
-      action: PayloadAction<TeamOverviewItem[] | PaginatedData<TeamOverviewItem>>
+      action: PayloadAction<UniversityApplication[] | PaginatedData<UniversityApplication> | { applications: UniversityApplication[]; totalElements: number }>
     ) => {
       const data = action.payload;
       state.isLoading = false;
       state.error = null;
 
       if (Array.isArray(data)) {
-        state.teamOverviewData = data;
+        state.applications = data;
         state.pagination.totalElements = data.length;
         state.pagination.totalPages = 1;
         state.pagination.first = true;
         state.pagination.last = true;
       } else if (data && "content" in data) {
-        state.teamOverviewData = data.content || [];
+        // PaginatedData format
+        state.applications = data.content || [];
         state.pagination.totalElements = data.totalElements || 0;
         state.pagination.totalPages = data.totalPages || 0;
         state.pagination.first = data.first ?? true;
         state.pagination.last = data.last ?? true;
+      } else if (data && "applications" in data) {
+        // Custom format with applications array and totalElements
+        state.applications = data.applications || [];
+        state.pagination.totalElements = data.totalElements || 0;
+        state.pagination.totalPages = Math.ceil((data.totalElements || 0) / state.pagination.size);
+        state.pagination.first = state.pagination.page === 0;
+        state.pagination.last = state.pagination.page >= state.pagination.totalPages - 1;
       }
     },
 
@@ -138,8 +131,8 @@ const teamOverviewSlice = createSlice({
       
       // If sortBy is empty, use default
       if (!sortBy) {
-        state.sort.sortBy = "name";
-        state.sort.asc = true;
+        state.sort.sortBy = "updatedAt";
+        state.sort.asc = false;
         return;
       }
       
@@ -154,59 +147,30 @@ const teamOverviewSlice = createSlice({
     },
 
     clearSort: (state) => {
-      state.sort.sortBy = "name";
-      state.sort.asc = true;
+      state.sort.sortBy = "updatedAt";
+      state.sort.asc = false;
     },
 
-    // Filter actions
-    setAdminFilter: (state, action: PayloadAction<string>) => {
-      state.filter.admin = action.payload;
-      state.pagination.page = 0;
-    },
-
-    setManagerFilter: (state, action: PayloadAction<string>) => {
-      state.filter.manager = action.payload;
-      state.pagination.page = 0;
-    },
-
-    setCounselorFilter: (state, action: PayloadAction<string>) => {
-      state.filter.counselor = action.payload;
-      state.pagination.page = 0;
-    },
-
-    setEnrollmentTypeFilter: (state, action: PayloadAction<string>) => {
-      state.filter.enrollmentType = action.payload;
-      state.pagination.page = 0;
-    },
-
-    setFromDateFilter: (state, action: PayloadAction<string | null>) => {
-      state.filter.fromDate = action.payload;
-      state.pagination.page = 0;
-    },
-
-    setToDateFilter: (state, action: PayloadAction<string | null>) => {
-      state.filter.toDate = action.payload;
-      state.pagination.page = 0;
-    },
-
-    // Apply all filters at once
-    applyFilters: (state, action: PayloadAction<FilterState>) => {
-      state.filter = action.payload;
-      state.pagination.page = 0;
-    },
-
-    clearFilters: (state) => {
-      state.filter.admin = "";
-      state.filter.manager = "";
-      state.filter.counselor = "";
-      state.filter.enrollmentType = "";
-      state.filter.fromDate = null;
-      state.filter.toDate = null;
-      state.pagination.page = 0;
+    // Set current applicantId and reset state when applicant changes
+    setApplicantId: (state, action: PayloadAction<string | null>) => {
+      const newApplicantId = action.payload;
+      
+      // Only reset if applicantId actually changed
+      if (state.currentApplicantId !== newApplicantId) {
+        state.currentApplicantId = newApplicantId;
+        state.applications = [];
+        state.pagination.page = 0;
+        state.pagination.totalElements = 0;
+        state.pagination.totalPages = 0;
+        state.pagination.first = true;
+        state.pagination.last = true;
+        state.error = null;
+        // Keep sort state as it's user preference
+      }
     },
 
     // Reset state
-    resetTeamOverviewState: () => initialState,
+    resetApplicantDetailState: () => initialState,
   },
 });
 
@@ -217,21 +181,14 @@ const teamOverviewSlice = createSlice({
 export const {
   setLoading,
   setError,
-  setTeamOverviewData,
+  setApplications,
   setPage,
   setPageSize,
   setSort,
   clearSort,
-  setAdminFilter,
-  setManagerFilter,
-  setCounselorFilter,
-  setEnrollmentTypeFilter,
-  setFromDateFilter,
-  setToDateFilter,
-  applyFilters,
-  clearFilters,
-  resetTeamOverviewState,
-} = teamOverviewSlice.actions;
+  setApplicantId,
+  resetApplicantDetailState,
+} = applicantDetailSlice.actions;
 
-export default teamOverviewSlice.reducer;
+export default applicantDetailSlice.reducer;
 

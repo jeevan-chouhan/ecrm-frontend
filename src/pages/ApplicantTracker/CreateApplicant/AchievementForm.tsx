@@ -79,7 +79,7 @@ const AchievementForm = ({
               value={achievement.documents}
               onChange={(file) => onFieldChange(index, "documents", file as File | null)}
               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-              maxSizeMB={10}
+              maxSizeMB={2}
               supportedFormats="PDF, DOC, DOCX, JPG, PNG"
               multiple={false}
               dismissible={dismissibleFileUpload}

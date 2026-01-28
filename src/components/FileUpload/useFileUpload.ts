@@ -92,17 +92,24 @@ export const useFileUpload = ({
         validFiles.push(file);
       }
 
-      // Show errors if any
+      // Show errors if any - always use setError if provided, otherwise show alert
       if (errors.length > 0) {
         const errorMessage = errors.join(", ");
-        if (isFormikMode && setError) {
+        if (setError) {
           setError(errorMessage);
         } else {
           alert(errors.join("\n"));
         }
+        // Don't update files if there are errors - return early
+        return;
       }
 
-      // Update files
+      // Clear any previous errors if files are valid
+      if (setError && validFiles.length > 0) {
+        setError("");
+      }
+
+      // Update files only if we have valid files
       if (validFiles.length > 0) {
         if (multiple) {
           const existingFiles = Array.isArray(value) ? value : value ? [value] : [];

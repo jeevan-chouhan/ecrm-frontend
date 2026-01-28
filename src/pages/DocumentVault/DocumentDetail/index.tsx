@@ -272,6 +272,20 @@ const DocumentDetail = () => {
       return;
     }
 
+    // Validate file size (2 MB = 2 * 1024 * 1024 bytes)
+    const maxSizeBytes = 2 * 1024 * 1024; // 2 MB
+    if (file.size > maxSizeBytes) {
+      dispatch(addToast({
+        type: "error",
+        message: t("fileUpload.fileSizeExceeded", { fileName: file.name, maxSize: 2 })
+      }));
+      // Reset input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      return;
+    }
+
     const doc = documents.find((d) => d.id === uploadingDocId);
     if (!doc) {
       if (fileInputRef.current) {
@@ -722,18 +736,23 @@ const DocumentDetail = () => {
                 )}
               </>
             ) : (
-              <Button
-                variant="accent"
-                size="sm"
-                rounded
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleUploadClick(doc.id);
-                }}
-                disabled={doc.isNew && !doc.name}
-              >
-                {t("documentVault.upload", "Upload")}
-              </Button>
+              <div className="flex flex-col items-end gap-1">
+                <Button
+                  variant="accent"
+                  size="sm"
+                  rounded
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleUploadClick(doc.id);
+                  }}
+                  disabled={doc.isNew && !doc.name}
+                >
+                  {t("documentVault.upload", "Upload")}
+                </Button>
+                <p className="text-xs" style={{ color: COLORS.textMuted }}>
+                  {t("fileUpload.maxFileSize", { maxSize: 2 })}
+                </p>
+              </div>
             )}
           </div>
         );
