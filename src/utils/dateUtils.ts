@@ -11,6 +11,21 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 /**
+ * Formats a date to YYYY-MM-DD format (date only) without timezone conversion
+ * Use this for API parameters where you want to preserve the local date as selected
+ * @param date - Date object or null
+ * @returns Formatted date string in YYYY-MM-DD format (e.g., "2025-01-20") or null if date is null
+ */
+export const formatDateToYYYYMMDD = (date: Date | null): string | null => {
+  if (!date) return null;
+  // Use local date components to avoid timezone conversion
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+/**
  * Formats a date to DD MMM YYYY format (date only, no time) - converts UTC to local timezone
  * Use this for dates like dateOfBirth, passingYear, work experience dates, etc.
  * @param date - Date object or date string (assumed to be in UTC from backend)

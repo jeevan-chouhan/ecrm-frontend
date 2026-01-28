@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import type { TeamOverviewItem } from "../../../services/types";
+import type { TeamOverviewItem, PaginatedData } from "../../../services/types";
 
 // ==========================================
 // Types
@@ -98,25 +98,28 @@ const teamOverviewSlice = createSlice({
       state.isLoading = false;
     },
 
-    // Set team overview data
+    // Set team overview data (handles both array and paginated response)
     setTeamOverviewData: (
       state,
-      action: PayloadAction<{
-        data: TeamOverviewItem[];
-        totalElements: number;
-        totalPages: number;
-        first: boolean;
-        last: boolean;
-      }>
+      action: PayloadAction<TeamOverviewItem[] | PaginatedData<TeamOverviewItem>>
     ) => {
-      const { data, totalElements, totalPages, first, last } = action.payload;
+      const data = action.payload;
       state.isLoading = false;
       state.error = null;
-      state.teamOverviewData = data;
-      state.pagination.totalElements = totalElements;
-      state.pagination.totalPages = totalPages;
-      state.pagination.first = first;
-      state.pagination.last = last;
+
+      if (Array.isArray(data)) {
+        state.teamOverviewData = data;
+        state.pagination.totalElements = data.length;
+        state.pagination.totalPages = 1;
+        state.pagination.first = true;
+        state.pagination.last = true;
+      } else if (data && "content" in data) {
+        state.teamOverviewData = data.content || [];
+        state.pagination.totalElements = data.totalElements || 0;
+        state.pagination.totalPages = data.totalPages || 0;
+        state.pagination.first = data.first ?? true;
+        state.pagination.last = data.last ?? true;
+      }
     },
 
     // Pagination actions

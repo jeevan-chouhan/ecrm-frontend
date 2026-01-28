@@ -5,7 +5,7 @@ import { Tooltip } from "@mui/material";
 import { DataTable } from "../../components";
 import type { SelectOption } from "../../components";
 import { COLORS, typography } from "../../constants";
-import { toTitleCase } from "../../utils";
+import { toTitleCase, formatDateToYYYYMMDD, handleApiError } from "../../utils";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { showLoader, hideLoader } from "../../redux/slices/loader/loaderSlice";
 import { addToast } from "../../redux/slices/toast/toastSlice";
@@ -20,8 +20,7 @@ import {
   clearFilters,
 } from "../../redux/slices/teamOverview/teamOverviewSlice";
 import { applicantService, userService } from "../../services";
-import type { AdminItem, ManagerItem, CounselorItem, TeamOverviewItemData, TeamOverviewItem } from "../../services";
-import { handleApiError } from "../../utils";
+import type { AdminItem, ManagerItem, CounselorItem, TeamOverviewItemData, TeamOverviewItem, PaginatedData } from "../../services";
 import TeamOverviewFilters from "./TeamOverviewFilters";
 
 const TeamOverview = () => {
@@ -61,6 +60,7 @@ const TeamOverview = () => {
   const hasFetchedFilterOptionsRef = useRef(false);
   const isLoadingTeamOverviewRef = useRef(false);
   const userRef = useRef(user);
+  const isSettingCounselorRef = useRef(false);
   userRef.current = user;
 
   /**
@@ -196,11 +196,13 @@ const TeamOverview = () => {
       fetchManagers(adminToUse);
     } else {
       setManagerOptions([]);
-      if (!selectedAdmin) {
+      // Only clear manager if admin is cleared and counselor is not selected
+      if (!selectedAdmin && !selectedCounselor && !isSettingCounselorRef.current) {
         setSelectedManager("");
       }
       setCounselorOptions([]);
-      if (!selectedCounselor) {
+      // Only clear counselor if admin is cleared and counselor is not explicitly selected
+      if (!selectedAdmin && !selectedCounselor && !isSettingCounselorRef.current) {
         setSelectedCounselor("");
       }
     }
@@ -213,11 +215,13 @@ const TeamOverview = () => {
       fetchCounselors(managerToUse);
     } else {
       setCounselorOptions([]);
-      if (!selectedManager) {
+      // Only clear counselor if manager is cleared and counselor is not explicitly selected
+      if (!selectedManager && !selectedCounselor && !isSettingCounselorRef.current) {
         setSelectedCounselor("");
       }
     }
-  }, [selectedManager, filter.manager, user?.agencyId, fetchCounselors]);
+  }, [selectedManager, filter.manager, user?.agencyId, fetchCounselors, selectedCounselor]);
+
 
   /**
    * Map API response to TeamOverviewItem
@@ -243,12 +247,10 @@ const TeamOverview = () => {
    * Fetch team overview data from API
    */
   const fetchTeamOverview = useCallback(async () => {
-    if (!user?.agencyId || !user?.userId) {
-      return;
-    }
-
-    // Prevent multiple simultaneous calls
-    if (isLoadingTeamOverviewRef.current) {
+    const currentUser = userRef.current;
+    
+    // Don't fetch if user is not loaded yet or already loading
+    if (!currentUser?.agencyId || !currentUser?.userId || isLoadingTeamOverviewRef.current) {
       return;
     }
 
@@ -257,7 +259,7 @@ const TeamOverview = () => {
     dispatch(showLoader());
 
     try {
-      // Determine query parameters based on logged-in user role and selected filters
+      // Determine query parameters based on priority: counselor > manager > admin
       let assignedAdminId: number | null = null;
       let assignedManagerId: number | null = null;
       let assignedCounselorId: number | null = null;
@@ -267,34 +269,37 @@ const TeamOverview = () => {
       const hasManagerFilter = filter.manager && filter.manager.trim() !== "";
       const hasCounselorFilter = filter.counselor && filter.counselor.trim() !== "";
 
-      // Always set logged-in user's ID based on their role FIRST (default behavior)
-      // This ensures the logged-in user's ID is sent when no filters are selected
-      // Handle role comparison case-insensitively and support PRIMARY_ADMIN
-      const userRole = (user.role || "").toUpperCase().trim();
-      
-      // Set logged-in user's ID based on role (this is the default behavior)
-      if (userRole === "ADMIN" || userRole === "PRIMARY_ADMIN") {
-        assignedAdminId = user.userId;
-      } else if (userRole === "MANAGER") {
-        assignedManagerId = user.userId;
-      } else if (userRole === "COUNSELOR" || userRole === "COUNSELLOR") {
-        assignedCounselorId = user.userId;
-      }
-
-      // Then apply selected filters (these override the logged-in user's ID if for the same role)
-      // or add additional IDs if for different roles
-      if (hasAdminFilter) {
-        assignedAdminId = parseInt(filter.admin, 10);
-      }
-      if (hasManagerFilter) {
-        assignedManagerId = parseInt(filter.manager, 10);
-      }
+      // Priority-based logic:
+      // 1. If counselor is selected → send only assignedCounselorId
+      // 2. If admin & manager are selected → send only assignedManagerId
+      // 3. If only admin is selected → send only assignedAdminId
+      // 4. If no filters are selected, use logged-in user's role as default
       if (hasCounselorFilter) {
+        // Priority 1: Counselor selected - send only assignedCounselorId
         assignedCounselorId = parseInt(filter.counselor, 10);
+      } else if (hasAdminFilter && hasManagerFilter) {
+        // Priority 2: Both admin and manager selected - send only assignedManagerId
+        assignedManagerId = parseInt(filter.manager, 10);
+      } else if (hasManagerFilter) {
+        // Manager only selected - send assignedManagerId
+        assignedManagerId = parseInt(filter.manager, 10);
+      } else if (hasAdminFilter) {
+        // Priority 3: Only admin selected - send only assignedAdminId
+        assignedAdminId = parseInt(filter.admin, 10);
+      } else {
+        // No filters selected - use logged-in user's role as default
+        const userRole = (currentUser.role || "").toUpperCase().trim();
+        if (userRole === "ADMIN" || userRole === "PRIMARY_ADMIN") {
+          assignedAdminId = currentUser.userId;
+        } else if (userRole === "MANAGER") {
+          assignedManagerId = currentUser.userId;
+        } else if (userRole === "COUNSELOR" || userRole === "COUNSELLOR") {
+          assignedCounselorId = currentUser.userId;
+        }
       }
 
       const response = await userService.getTeamOverview({
-        agencyId: user.agencyId,
+        agencyId: currentUser.agencyId,
         search: null,
         role: null,
         page: pagination.page,
@@ -310,15 +315,23 @@ const TeamOverview = () => {
       });
 
       if (response.status === "success" && response.data) {
+        // Map API response to TeamOverviewItem format
         const mappedData = response.data.content.map(mapApiResponseToTeamOverviewItem);
         
-        dispatch(setTeamOverviewData({
-          data: mappedData,
+        // Create PaginatedData structure for Redux
+        const paginatedData: PaginatedData<TeamOverviewItem> = {
+          content: mappedData,
           totalElements: response.data.totalElements,
           totalPages: response.data.totalPages,
           first: response.data.first,
           last: response.data.last,
-        }));
+          size: response.data.size || pagination.size,
+          number: response.data.page || pagination.page,
+          numberOfElements: response.data.numberOfElements || mappedData.length,
+          empty: mappedData.length === 0,
+        };
+        
+        dispatch(setTeamOverviewData(paginatedData));
       } else {
         throw new Error(response.message || "Failed to fetch team overview");
       }
@@ -326,59 +339,20 @@ const TeamOverview = () => {
       const { message } = handleApiError(error, "Failed to fetch team overview");
       dispatch(addToast({ type: "error", message }));
       dispatch(setError(message));
-      dispatch(setTeamOverviewData({
-        data: [],
-        totalElements: 0,
-        totalPages: 0,
-        first: true,
-        last: true,
-      }));
+      dispatch(setTeamOverviewData([]));
     } finally {
       isLoadingTeamOverviewRef.current = false;
       dispatch(setLoading(false));
       dispatch(hideLoader());
     }
-  }, [
-    user?.agencyId,
-    user?.role,
-    user?.userId,
-    filter.admin,
-    filter.manager,
-    filter.counselor,
-    filter.enrollmentType,
-    filter.fromDate,
-    filter.toDate,
-    pagination.page,
-    pagination.size,
-    sort.sortBy,
-    sort.asc,
-    mapApiResponseToTeamOverviewItem,
-    dispatch,
-  ]);
+  }, [dispatch, filter.admin, filter.manager, filter.counselor, filter.enrollmentType, filter.fromDate, filter.toDate, pagination.page, pagination.size, sort.sortBy, sort.asc, mapApiResponseToTeamOverviewItem]);
 
-  // Fetch team overview data when filters, pagination, or sorting change
+  // Initial fetch when user is loaded
   useEffect(() => {
-    // Ensure user object is fully loaded (has agencyId, userId, and role) before fetching
-    if (user?.agencyId && user?.userId && user?.role) {
+    if (user) {
       fetchTeamOverview();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    user?.agencyId,
-    user?.userId,
-    user?.role,
-    filter.admin,
-    filter.manager,
-    filter.counselor,
-    filter.enrollmentType,
-    filter.fromDate,
-    filter.toDate,
-    pagination.page,
-    pagination.size,
-    sort.sortBy,
-    sort.asc,
-    fetchTeamOverview,
-  ]);
+  }, [user, fetchTeamOverview]);
 
   // Handle apply filters
   const handleApplyFilters = useCallback(() => {
@@ -387,10 +361,36 @@ const TeamOverview = () => {
       manager: selectedManager,
       counselor: selectedCounselor,
       enrollmentType: selectedEnrollmentType,
-      fromDate: selectedFromDate?.toISOString() || null,
-      toDate: selectedToDate?.toISOString() || null,
+      fromDate: formatDateToYYYYMMDD(selectedFromDate),
+      toDate: formatDateToYYYYMMDD(selectedToDate),
     }));
   }, [selectedAdmin, selectedManager, selectedCounselor, selectedEnrollmentType, selectedFromDate, selectedToDate, dispatch]);
+
+  // Handle admin change - clear manager and counselor when admin changes
+  const handleAdminChange = useCallback((value: string) => {
+    setSelectedAdmin(value);
+    // Clear dependent filters when admin changes
+    if (value) {
+      setSelectedManager("");
+      setSelectedCounselor("");
+    }
+  }, []);
+
+  // Handle manager change - clear counselor when manager changes
+  const handleManagerChange = useCallback((value: string) => {
+    setSelectedManager(value);
+    // Clear dependent filter when manager changes
+    if (value) {
+      setSelectedCounselor("");
+    }
+  }, []);
+
+  // Handle counselor change - don't clear admin/manager, but they won't be sent to API (priority logic)
+  const handleCounselorChange = useCallback((value: string) => {
+    setSelectedCounselor(value);
+    // Note: We don't clear admin/manager here - they can remain selected in UI
+    // but only counselor will be sent to API due to priority logic
+  }, []);
 
   // Handle clear filters
   const handleClearFilters = useCallback(() => {
@@ -678,9 +678,9 @@ const TeamOverview = () => {
         selectedEnrollmentType={selectedEnrollmentType}
         selectedFromDate={selectedFromDate}
         selectedToDate={selectedToDate}
-        onAdminChange={setSelectedAdmin}
-        onManagerChange={setSelectedManager}
-        onCounselorChange={setSelectedCounselor}
+        onAdminChange={handleAdminChange}
+        onManagerChange={handleManagerChange}
+        onCounselorChange={handleCounselorChange}
         onEnrollmentTypeChange={setSelectedEnrollmentType}
         onFromDateChange={setSelectedFromDate}
         onToDateChange={setSelectedToDate}
