@@ -487,6 +487,7 @@
           "type": "Type",
     "invalidFormat": "{{fileName}}: Invalid Format. Supported: {{formats}}",
     "fileSizeExceeded": "{{fileName}}: Size Exceeds {{maxSize}}MB Limit",
+    "maxFileSize": "Maximum file size allowed is {{maxSize}} MB",
     "previewNotAvailable": "Preview Not Available"
   },
   "profile": {

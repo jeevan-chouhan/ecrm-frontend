@@ -10,6 +10,7 @@ interface FileDropZoneProps {
   supportedFormats: string;
   isDragging: boolean;
   error?: string;
+  maxSizeMB?: number;
   onFileSelect: (files: FileList) => void;
   onDragStateChange: (isDragging: boolean) => void;
 }
@@ -21,6 +22,7 @@ const FileDropZone = memo(({
   supportedFormats,
   isDragging,
   error,
+  maxSizeMB = 2,
   onFileSelect,
   onDragStateChange,
 }: FileDropZoneProps) => {
@@ -115,6 +117,9 @@ const FileDropZone = memo(({
           </p>
           <p className="text-xs" style={{ color: COLORS.textMuted }}>
             {supportedFormats}
+          </p>
+          <p className="text-xs mt-1" style={{ color: COLORS.textMuted }}>
+            {t("fileUpload.maxFileSize", { maxSize: maxSizeMB })}
           </p>
         </div>
       </div>

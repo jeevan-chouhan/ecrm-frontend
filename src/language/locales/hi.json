@@ -390,6 +390,7 @@
     "type": "प्रकार",
     "invalidFormat": "{{fileName}}: अमान्य प्रारूप। समर्थित: {{formats}}",
     "fileSizeExceeded": "{{fileName}}: आकार {{maxSize}}MB सीमा से अधिक है",
+    "maxFileSize": "अधिकतम फ़ाइल आकार {{maxSize}} MB है",
     "previewNotAvailable": "पूर्वावलोकन उपलब्ध नहीं है"
   },
   "profile": {
