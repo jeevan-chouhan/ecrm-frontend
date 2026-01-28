@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { COLORS, typography } from "../../constants";
 import {
@@ -9,42 +9,121 @@ import {
 } from "../../components";
 import type { GridColDef } from "../../components/DataTable/DataTable";
 import type { PieChartDataItem, BarChartDataItem } from "../../components";
+import { agencyService } from "../../services";
+import type { TopUniversity } from "../../services/types";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { showLoader, hideLoader } from "../../redux/slices/loader/loaderSlice";
+import { addToast } from "../../redux/slices/toast/toastSlice";
+import { handleApiError } from "../../utils";
+import { getApplicationStageLabel } from "../../utils";
 
-// Mock data for Countries Serving pie chart
-const countriesData: PieChartDataItem[] = [
-  { name: "USA", value: 30, color: COLORS.chartYellow },
-  { name: "Canada", value: 30, color: COLORS.chartRed },
-  { name: "Australia", value: 30, color: COLORS.chartTeal },
-  { name: "Other", value: 10, color: COLORS.chartMint },
-];
-
-// Mock data for Top Universities table
-const topUniversities = [
-  { id: 1, name: "Harvard University", count: 45 },
-  { id: 2, name: "University of Toronto", count: 38 },
-  { id: 3, name: "Oxford University", count: 32 },
-  { id: 4, name: "MIT", count: 28 },
-  { id: 5, name: "Other", count: 25 },
-];
-
-// Mock data for Applicant Progress bar chart
-const applicantProgressData: BarChartDataItem[] = [
-  { name: "Lead", value: 26 },
-  { name: "Application In Progress", value: 15 },
-  { name: "Application Submitted", value: 14 },
-  { name: "Offer Awaiting", value: 8 },
-  { name: "Offer Received", value: 11 },
-  { name: "Offer Status - Accepted", value: 7 },
-  { name: "Deposits", value: 9 },
-  { name: "Application Rejected", value: 6 },
-  { name: "Application Accepted", value: 4 },
-  { name: "Visa", value: 13 },
-  { name: "Applicant Rejected", value: 2 },
-  { name: "Applicant Enrolled", value: 13 },
+// Chart colors for pie chart (cycling through available colors)
+const chartColors = [
+  COLORS.chartYellow,
+  COLORS.chartRed,
+  COLORS.chartTeal,
+  COLORS.chartMint,
+  COLORS.primary,
+  COLORS.secondary,
+  COLORS.accent,
+  COLORS.success,
+  COLORS.info,
+  COLORS.warning,
 ];
 
 const Graphs = () => {
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
+
+  // State for analytics data
+  const [topUniversities, setTopUniversities] = useState<TopUniversity[]>([]);
+  const [countriesData, setCountriesData] = useState<PieChartDataItem[]>([]);
+  const [applicantProgressData, setApplicantProgressData] = useState<BarChartDataItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Refs to prevent duplicate API calls
+  const isLoadingRef = useRef(false);
+  const hasFetchedRef = useRef(false);
+  const lastAgencyIdRef = useRef<number | null>(null);
+
+  // Fetch analytics data
+  const fetchAnalytics = useCallback(async () => {
+    if (!user?.agencyId) {
+      return;
+    }
+
+    // Prevent duplicate calls
+    if (isLoadingRef.current) {
+      return;
+    }
+
+    // Skip if already fetched for this agencyId
+    if (hasFetchedRef.current && lastAgencyIdRef.current === user.agencyId) {
+      return;
+    }
+
+    isLoadingRef.current = true;
+    setIsLoading(true);
+    dispatch(showLoader());
+
+    try {
+      const response = await agencyService.getAnalytics(user.agencyId, user.userId);
+
+      if (response.status === "success" && response.data) {
+        const data = response.data;
+
+        // Map top universities
+        setTopUniversities(data.topUniversities || []);
+
+        // Map countries distribution to pie chart data
+        const countriesChartData: PieChartDataItem[] = (data.countriesDistribution || []).map(
+          (country, index) => ({
+            name: country.name,
+            value: country.count,
+            color: chartColors[index % chartColors.length],
+          })
+        );
+        setCountriesData(countriesChartData);
+
+        // Map application stage counts to bar chart data
+        const stageChartData: BarChartDataItem[] = (data.applicationStageCounts || [])
+          .map((stageCount) => ({
+            name: getApplicationStageLabel(stageCount.stage),
+            value: stageCount.count,
+          }))
+          .sort((a, b) => b.value - a.value); // Sort by count descending
+        setApplicantProgressData(stageChartData);
+
+        hasFetchedRef.current = true;
+        lastAgencyIdRef.current = user.agencyId;
+      } else {
+        throw new Error(response.message || "Failed to fetch analytics");
+      }
+    } catch (error) {
+      const { message } = handleApiError(error, "Failed to fetch analytics data");
+      dispatch(addToast({ type: "error", message }));
+      // Set empty arrays on error
+      setTopUniversities([]);
+      setCountriesData([]);
+      setApplicantProgressData([]);
+    } finally {
+      isLoadingRef.current = false;
+      setIsLoading(false);
+      dispatch(hideLoader());
+    }
+  }, [user?.agencyId, user?.userId, dispatch]);
+
+  // Fetch analytics on mount and when user/agencyId changes
+  useEffect(() => {
+    if (user?.agencyId) {
+      // Reset fetch flag if agencyId changed
+      if (lastAgencyIdRef.current !== user.agencyId) {
+        hasFetchedRef.current = false;
+      }
+      fetchAnalytics();
+    }
+  }, [user?.agencyId, fetchAnalytics]);
 
   // Columns for Top Universities table
   const universityColumns: GridColDef[] = useMemo(
@@ -113,7 +192,19 @@ const Graphs = () => {
               "Distribution of successful applicants in the country"
             )}
           </p>
-          <PieChartComponent data={countriesData} />
+          {isLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <p style={{ color: COLORS.textMuted }}>{t("common.loading", "Loading...")}</p>
+            </div>
+          ) : countriesData.length > 0 ? (
+            <PieChartComponent data={countriesData} />
+          ) : (
+            <div className="flex items-center justify-center h-64">
+              <p style={{ color: COLORS.textMuted }}>
+                {t("reportAnalysis.graphs.noData", "No data available")}
+              </p>
+            </div>
+          )}
         </Card>
 
         {/* Top Universities Table */}
@@ -128,12 +219,24 @@ const Graphs = () => {
           >
             {t("reportAnalysis.graphs.topUniversities", "Top Universities")}
           </h3>
-          <DataTable
-            rows={topUniversities}
-            columns={universityColumns}
-            hideFooter
-            disableRowSelectionOnClick
-          />
+          {isLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <p style={{ color: COLORS.textMuted }}>{t("common.loading", "Loading...")}</p>
+            </div>
+          ) : topUniversities.length > 0 ? (
+            <DataTable
+              rows={topUniversities}
+              columns={universityColumns}
+              hideFooter
+              disableRowSelectionOnClick
+            />
+          ) : (
+            <div className="flex items-center justify-center h-64">
+              <p style={{ color: COLORS.textMuted }}>
+                {t("reportAnalysis.graphs.noData", "No data available")}
+              </p>
+            </div>
+          )}
         </Card>
       </div>
 
@@ -152,7 +255,19 @@ const Graphs = () => {
             "Applicant Progress Chart  Overview"
           )}
         </h3>
-        <BarChartComponent data={applicantProgressData} />
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <p style={{ color: COLORS.textMuted }}>{t("common.loading", "Loading...")}</p>
+          </div>
+        ) : applicantProgressData.length > 0 ? (
+          <BarChartComponent data={applicantProgressData} />
+        ) : (
+          <div className="flex items-center justify-center h-64">
+            <p style={{ color: COLORS.textMuted }}>
+              {t("reportAnalysis.graphs.noData", "No data available")}
+            </p>
+          </div>
+        )}
       </Card>
     </div>
   );

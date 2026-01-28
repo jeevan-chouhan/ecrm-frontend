@@ -1160,6 +1160,37 @@ export interface OverallCountsData {
 
 // Overall Counts Response
 export type OverallCountsResponse = ApiResponse<OverallCountsData>;
+
+// ==========================================
+// Analytics Types
+// ==========================================
+
+export interface TopUniversity {
+  id: number;
+  name: string;
+  count: number;
+}
+
+export interface CountryDistribution {
+  id: number;
+  name: string;
+  count: number;
+  percentage: number;
+}
+
+export interface ApplicationStageCount {
+  stage: string;
+  count: number;
+}
+
+export interface AnalyticsData {
+  topUniversities: TopUniversity[];
+  countriesDistribution: CountryDistribution[];
+  applicationStageCounts: ApplicationStageCount[];
+}
+
+export type AnalyticsResponse = ApiResponse<AnalyticsData>;
+
 // Start Trial Response
 export type StartTrialResponse = ApiResponse<null>;
 

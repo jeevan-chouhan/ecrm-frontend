@@ -788,7 +788,8 @@
       "topUniversities": "Top Universities",
       "universityName": "Top Universities",
       "successfulApplicants": "No. of Successful Applicants",
-      "applicantProgressChart": "Applicant Progress Chart  Overview"
+      "applicantProgressChart": "Applicant Progress Chart  Overview",
+      "noData": "No data available"
     }
   },
   "masterLedger": {

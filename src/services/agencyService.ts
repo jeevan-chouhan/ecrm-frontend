@@ -10,6 +10,7 @@ import type {
   SaveServingPayload,
   SaveServingResponse,
   OverallCountsResponse,
+  AnalyticsResponse,
   StartTrialResponse,
   CurrentSubscriptionResponse,
 } from "./types";
@@ -143,6 +144,24 @@ const agencyService = {
   getOverallCounts: async (agencyId: number): Promise<OverallCountsResponse> => {
     const response = await api.get<OverallCountsResponse>(
       `${ENDPOINTS.AGENCIES.OVERALL_COUNTS}?agencyId=${agencyId}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Get analytics data for reports (top universities, countries distribution, application stage counts)
+   * @param agencyId - Agency ID
+   * @param userId - User ID (optional)
+   * @returns Promise with analytics data
+   */
+  getAnalytics: async (agencyId: number, userId?: number): Promise<AnalyticsResponse> => {
+    const queryParams = new URLSearchParams();
+    queryParams.append("agencyId", agencyId.toString());
+    if (userId) {
+      queryParams.append("userId", userId.toString());
+    }
+    const response = await api.get<AnalyticsResponse>(
+      `${ENDPOINTS.AGENCIES.ANALYTICS}?${queryParams.toString()}`
     );
     return response.data;
   },

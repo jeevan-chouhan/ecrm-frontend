@@ -42,6 +42,7 @@ export const ENDPOINTS = {
     GENERAL_SETTINGS: "/agencies/general-settings",
     SERVING: "/agencies/serving",
     OVERALL_COUNTS: "/agencies/overall-counts",
+    ANALYTICS: "/reports/analytics",
     START_TRIAL: (agencyId: number | string) => `/agencies/start-trial/${agencyId}`,
     CURRENT_SUBSCRIPTION: (agencyId: number | string) => `/agencies/currentSubscription/${agencyId}`,
   },
