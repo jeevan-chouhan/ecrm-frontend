@@ -738,12 +738,12 @@
   "reportAnalysis": {
     "title": "Report & Analysis",
     "tabs": {
-      "teamOverview": "Team Overview",
-      "overallCounts": "Overall Counts",
+      "teamOverview": "Team And Applications Overview",
+      "agencyOverview": "Agency Overview",
       "graphs": "Graphs"
     },
     "teamOverview": {
-      "title": "Team Overview",
+      "title": "Team And Applications Overview",
       "adminLabel": "Admin",
       "managerLabel": "Manager",
       "counselorLabel": "Counselor",
@@ -758,14 +758,14 @@
       "tableReportingManagers": "Reporting Managers",
       "tableReportingCounselors": "Reporting Counselors",
       "tableCountry": "Country",
-      "tableTotalApplicants": "Total Applications",
+      "tableTotalApplicants": "Total",
       "tableLeads": "Leads",
-      "tableInProgressApplications": "In Progress Applications",
-      "tableEnrolledApplications": "Enrolled Applications",
-      "tableRejectedApplications": "Rejected Applications"
+      "tableInProgressApplications": "In Progress",
+      "tableEnrolledApplications": "Enrolled",
+      "tableRejectedApplications": "Rejected"
     },
     "overallCounts": {
-      "title": "Overall Counts",
+      "title": "Agency Overview",
       "description": "View Overall Statistics And Counts",
       "totalAgencyPartners": "Total Agency Partners",
       "totalUsers": "Total Users",
