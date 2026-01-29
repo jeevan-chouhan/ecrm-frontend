@@ -13,7 +13,7 @@ import {
   Checkbox,
   ConfirmationPopup,
 } from "../../components";
-import { COLORS, applicationStatusOptions, typography, type Applicant, ROUTES } from "../../constants";
+import { COLORS, applicationStatusOptions, typography, type Applicant, ROUTES, UserRole } from "../../constants";
 import { Calendar, Edit, Document } from "../../assets";
 import { formatDateTime, handleApiError, getApplicationStatusLabel, getApplicationStageLabel } from "../../utils";
 import ApplicantTrackerFilters from "./ApplicantTrackerFilters";
@@ -48,6 +48,14 @@ const ApplicantTracker = () => {
 
   // Get applicantTracker state from Redux
   const { applicants, isLoading, pagination, filter, sort } = useAppSelector((state) => state.applicantTracker);
+
+  // Determine user role for conditional filtering
+  const userRole = user?.role?.toUpperCase() || "";
+  const isPrimaryAdmin = user?.isPrimaryAdmin === true || userRole === UserRole.PRIMARY_ADMIN;
+  // ADMIN_BILLING should be treated as ADMIN
+  const isAdmin = userRole === UserRole.ADMIN || userRole === "ADMIN_BILLING" || isPrimaryAdmin;
+  // MANAGER_BILLING should be treated as MANAGER
+  const isManager = userRole === UserRole.MANAGER || userRole === "MANAGER_BILLING";
 
   // Local state for search input (for debounce) - sync with persisted filter
   const [searchQuery, setSearchQuery] = useState(() => filter.search);
@@ -115,9 +123,29 @@ const ApplicantTracker = () => {
 
     try {
       // Get applied filter values (convert to numbers if needed) - these are optional filters
-      const assignedAdminIdValue = filter.admin ? parseInt(filter.admin) : null;
-      const assignedManagerIdValue = filter.manager ? parseInt(filter.manager) : null;
-      const assignedCounselorIdValue = filter.counselor ? parseInt(filter.counselor) : null;
+      // For ADMIN role: use logged-in user's ID as default admin ID if not specified
+      // For MANAGER role: use logged-in user's ID as default manager ID if not specified
+      let assignedAdminIdValue = filter.admin ? parseInt(filter.admin) : null;
+      let assignedManagerIdValue = filter.manager ? parseInt(filter.manager) : null;
+      let assignedCounselorIdValue = filter.counselor ? parseInt(filter.counselor) : null;
+
+      // Apply role-based defaults
+      // Check role from currentUser to ensure we have the latest role info
+      const currentUserRole = currentUser?.role?.toUpperCase() || "";
+      const currentIsPrimaryAdmin = currentUser?.isPrimaryAdmin === true || currentUserRole === UserRole.PRIMARY_ADMIN;
+      // ADMIN_BILLING should be treated as ADMIN
+      const currentIsAdmin = currentUserRole === UserRole.ADMIN || currentUserRole === "ADMIN_BILLING" || currentIsPrimaryAdmin;
+      // MANAGER_BILLING should be treated as MANAGER
+      const currentIsManager = currentUserRole === UserRole.MANAGER || currentUserRole === "MANAGER_BILLING";
+
+      if (currentIsAdmin && !currentIsPrimaryAdmin && !assignedAdminIdValue && currentUser?.userId) {
+        // Admin or Admin_Billing logged in: use their ID as admin ID
+        assignedAdminIdValue = currentUser.userId;
+      }
+      if (currentIsManager && !assignedManagerIdValue && currentUser?.userId) {
+        // Manager or Manager_Billing logged in: use their ID as manager ID
+        assignedManagerIdValue = currentUser.userId;
+      }
 
       // Format dates for API - convert YYYY-MM-DD to ISO DATE_TIME format
       // appliedFrom/appliedTo: set to start of day (00:00:00) and end of day (23:59:59) respectively
@@ -215,39 +243,55 @@ const ApplicantTracker = () => {
 
     isLoadingFilterOptionsRef.current = true;
     try {
-      
-      // Fetch filter options independently so one failure doesn't break the other
-      // Use userService.getAdmins() to match the working implementation in AddMember form
-      const [adminsResult, universitiesResult, agencyPartnersResult] = await Promise.allSettled([
-        userService.getAdmins(user.agencyId),
+      const currentUserRole = user?.role?.toUpperCase() || "";
+      const currentIsPrimaryAdmin = user?.isPrimaryAdmin === true || currentUserRole === UserRole.PRIMARY_ADMIN;
+      // ADMIN_BILLING should be treated as ADMIN
+      const currentIsAdmin = currentUserRole === UserRole.ADMIN || currentUserRole === "ADMIN_BILLING" || currentIsPrimaryAdmin;
+      // MANAGER_BILLING should be treated as MANAGER
+      const currentIsManager = currentUserRole === UserRole.MANAGER || currentUserRole === "MANAGER_BILLING";
+
+      // Only fetch admins if user is PRIMARY_ADMIN
+      const fetchPromises: Promise<any>[] = [
         applicantService.getUniversities(user.agencyId),
         applicantService.getAgencyPartnerNames(user.agencyId),
-      ]);
+      ];
 
-      // Process admins response
-      if (adminsResult.status === 'fulfilled') {
-        const adminsResponse = adminsResult.value;
-        
-        // Handle response formats: [...] or { data: [...] } (matching AddMember form implementation)
-        let admins: AdminItem[] = [];
-        if (Array.isArray(adminsResponse)) {
-          admins = adminsResponse;
-        } else if ((adminsResponse as any)?.data) {
-          admins = (adminsResponse as any).data;
+      if (currentIsPrimaryAdmin) {
+        fetchPromises.push(userService.getAdmins(user.agencyId));
+      }
+
+      const results = await Promise.allSettled(fetchPromises);
+
+      // Process admins response (only if PRIMARY_ADMIN)
+      if (currentIsPrimaryAdmin) {
+        const adminsResult = results[2]; // Third promise is admins
+        if (adminsResult.status === 'fulfilled') {
+          const adminsResponse = adminsResult.value;
+          
+          // Handle response formats: [...] or { data: [...] } (matching AddMember form implementation)
+          let admins: AdminItem[] = [];
+          if (Array.isArray(adminsResponse)) {
+            admins = adminsResponse;
+          } else if ((adminsResponse as any)?.data) {
+            admins = (adminsResponse as any).data;
+          }
+          
+          // Convert to SelectOption format (matching AddMember form implementation)
+          const adminOptionsData = admins.map((admin: AdminItem) => ({
+            value: admin.id.toString(),
+            label: admin.name,
+          }));
+          
+          setAdminOptions(adminOptionsData);
+        } else {
+          dispatch(addToast({ type: "error", message: "Failed to fetch admins" }));
         }
-        
-        // Convert to SelectOption format (matching AddMember form implementation)
-        const adminOptionsData = admins.map((admin: AdminItem) => ({
-          value: admin.id.toString(),
-          label: admin.name,
-        }));
-        
-        setAdminOptions(adminOptionsData);
       } else {
-        dispatch(addToast({ type: "error", message: "Failed to fetch admins" }));
+        setAdminOptions([]);
       }
 
       // Process universities response
+      const universitiesResult = results[0];
       if (universitiesResult.status === 'fulfilled') {
         const universitiesResponse = universitiesResult.value;
         
@@ -271,6 +315,7 @@ const ApplicantTracker = () => {
       }
 
       // Process agency partners response
+      const agencyPartnersResult = results[1];
       if (agencyPartnersResult.status === 'fulfilled') {
         const agencyPartnersResponse = agencyPartnersResult.value;
         
@@ -291,16 +336,58 @@ const ApplicantTracker = () => {
         dispatch(addToast({ type: "error", message: "Failed to fetch agency partners" }));
       }
 
-      // Counselors will be fetched when manager is selected
-      // Keep empty array initially
-      setCounselorOptions([]);
+      // For ADMIN role: automatically fetch managers using logged-in admin's ID
+      if (currentIsAdmin && !currentIsPrimaryAdmin && user?.userId) {
+        try {
+          const managersResponse = await applicantService.getManagers(
+            user.agencyId,
+            user.userId.toString()
+          );
+          const managers = Array.isArray(managersResponse) ? managersResponse : [];
+          setManagerOptions(
+            managers.map((manager: ManagerItem) => ({
+              value: manager.id.toString(),
+              label: manager.name,
+            }))
+          );
+        } catch (error: any) {
+          // Silently fail - managers will be empty
+          setManagerOptions([]);
+        }
+      }
+
+      // For MANAGER role: automatically fetch counselors using logged-in manager's ID
+      if (currentIsManager && user?.userId) {
+        try {
+          const counselorsResponse = await applicantService.getCounselors(
+            user.agencyId,
+            user.userId.toString()
+          );
+          const counselors = Array.isArray(counselorsResponse) ? counselorsResponse : [];
+          setCounselorOptions(
+            counselors.map((counselor: CounselorItem) => ({
+              value: counselor.id.toString(),
+              label: counselor.name,
+            }))
+          );
+        } catch (error: any) {
+          // Silently fail - counselors will be empty
+          setCounselorOptions([]);
+        }
+      }
+
+      // For other roles, keep empty arrays
+      if (!currentIsAdmin && !currentIsManager) {
+        setManagerOptions([]);
+        setCounselorOptions([]);
+      }
     } catch (error: any) {
       const { message } = handleApiError(error, "Failed to fetch filter options");
       dispatch(addToast({ type: "error", message }));
     } finally {
       isLoadingFilterOptionsRef.current = false;
     }
-  }, [user?.agencyId, dispatch]);
+  }, [user?.agencyId, user?.role, user?.isPrimaryAdmin, user?.userId, dispatch]);
 
   // Fetch filter options when user is loaded (only once)
   useEffect(() => {
@@ -398,10 +485,15 @@ const ApplicantTracker = () => {
     }
   }, [user?.agencyId, dispatch]);
 
-  // Fetch managers when admin is selected
+  // Fetch managers when admin is selected (only for PRIMARY_ADMIN)
   useEffect(() => {
     // Skip during initial mount/initialization from Redux
     if (isInitialMount.current || isInitializingFromRedux.current) {
+      return;
+    }
+    
+    // Only fetch managers when admin is selected if user is PRIMARY_ADMIN
+    if (!isPrimaryAdmin) {
       return;
     }
     
@@ -419,12 +511,17 @@ const ApplicantTracker = () => {
       setSelectedCounselor("");
       setCounselorOptions([]);
     }
-  }, [selectedAdmin, user?.agencyId, fetchManagers]);
+  }, [selectedAdmin, user?.agencyId, isPrimaryAdmin, fetchManagers]);
 
-  // Fetch counselors when manager is selected
+  // Fetch counselors when manager is selected (for PRIMARY_ADMIN and ADMIN)
   useEffect(() => {
     // Skip during initial mount/initialization from Redux
     if (isInitialMount.current || isInitializingFromRedux.current) {
+      return;
+    }
+    
+    // Don't fetch counselors when manager is selected if user is MANAGER (they're already fetched)
+    if (isManager) {
       return;
     }
     
@@ -438,7 +535,7 @@ const ApplicantTracker = () => {
       // Also clear selected counselor when manager is cleared
       setSelectedCounselor("");
     }
-  }, [selectedManager, user?.agencyId, fetchCounselors]);
+  }, [selectedManager, user?.agencyId, isManager, fetchCounselors]);
 
   // Initialize selected filters from Redux state on mount (after fetchManagers and fetchCounselors are defined)
   useEffect(() => {
@@ -457,18 +554,34 @@ const ApplicantTracker = () => {
       
       // Fetch dependent options (managers and counselors) first, then set selected values
       const fetchInitialOptions = async () => {
-        if (filter.admin) {
-          await fetchManagers(filter.admin);
-          // After managers are fetched, fetch counselors if manager is also persisted
+        // For PRIMARY_ADMIN: restore admin/manager/counselor if persisted
+        if (isPrimaryAdmin) {
+          if (filter.admin) {
+            await fetchManagers(filter.admin);
+            if (filter.manager) {
+              await fetchCounselors(filter.manager);
+            }
+          }
+          if (filter.admin) setSelectedAdmin(filter.admin);
+          if (filter.manager) setSelectedManager(filter.manager);
+          if (filter.counselor) setSelectedCounselor(filter.counselor);
+        }
+        // For ADMIN: managers should already be fetched in fetchFilterOptions, restore manager/counselor if persisted
+        else if (isAdmin && !isPrimaryAdmin) {
+          // Managers are already fetched in fetchFilterOptions with admin's ID
           if (filter.manager) {
             await fetchCounselors(filter.manager);
           }
+          // Don't set admin - it's hidden and handled by default in API call
+          if (filter.manager) setSelectedManager(filter.manager);
+          if (filter.counselor) setSelectedCounselor(filter.counselor);
         }
-        
-        // Now set the dependent filter values after options are fetched
-        if (filter.admin) setSelectedAdmin(filter.admin);
-        if (filter.manager) setSelectedManager(filter.manager);
-        if (filter.counselor) setSelectedCounselor(filter.counselor);
+        // For MANAGER: counselors should already be fetched in fetchFilterOptions, restore counselor if persisted
+        else if (isManager) {
+          // Counselors are already fetched in fetchFilterOptions with manager's ID
+          // Don't set admin/manager - they're hidden and handled by default in API call
+          if (filter.counselor) setSelectedCounselor(filter.counselor);
+        }
         
         // Mark initialization as complete
         isInitializingFromRedux.current = false;
@@ -479,7 +592,7 @@ const ApplicantTracker = () => {
     } else if (isInitialMount.current) {
       isInitialMount.current = false;
     }
-  }, [filter, user?.agencyId, fetchManagers, fetchCounselors]);
+  }, [filter, user?.agencyId, isPrimaryAdmin, isAdmin, isManager, fetchManagers, fetchCounselors]);
 
   // Application status change popup state (reusing from University Application Summary)
   const [isApplicationStatusPopupOpen, setIsApplicationStatusPopupOpen] = useState(false);
@@ -1146,6 +1259,8 @@ const ApplicantTracker = () => {
           onLastUpdatedToDateChange={setLastUpdatedToDate}
           onApplyFilters={handleApplyFilters}
           onClearFilters={handleClearFilters}
+          userRole={user?.role}
+          isPrimaryAdmin={isPrimaryAdmin}
         />
 
         {/* DataTable */}
