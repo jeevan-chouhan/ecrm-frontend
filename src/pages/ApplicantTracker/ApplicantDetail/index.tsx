@@ -477,7 +477,8 @@ const ApplicantDetailView = () => {
       fetchedApplicationsForApplicantId.current = null;
       fetchApplicantApplications(false);
     }
-  }, [pagination.page, pagination.size, sort.sortBy, sort.asc, applicantId, user?.agencyId, fetchApplicantApplications]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagination.page, pagination.size, sort.sortBy, sort.asc, applicantId, user?.agencyId]);
 
   // Pagination model for DataTable (synced with Redux)
   const paginationModel: GridPaginationModel = useMemo(

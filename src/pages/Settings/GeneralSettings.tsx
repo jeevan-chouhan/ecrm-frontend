@@ -117,23 +117,6 @@ const GeneralSettings = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2
-          className="text-lg font-semibold"
-          style={{
-            color: COLORS.textDark,
-            fontSize: typography.fontSize.h3,
-            fontWeight: typography.fontWeight.semibold,
-          }}
-        >
-          {t("settingsPage.generalSetting", "General Setting")}
-        </h2>
-        <p style={{ color: COLORS.textMuted }}>
-          {t("settingsPage.generalSettingDescription", "Change Name, Country & University")}
-        </p>
-      </div>
-
       {/* Form */}
       <div className="max-w-2xl space-y-5">
         {/* Agency Name (Read-only) */}
@@ -149,7 +132,13 @@ const GeneralSettings = () => {
           label={t("settingsPage.addCountriesServing", "Countries Serving")}
           options={countryOptions}
           value={selectedCountries}
-          onChange={setSelectedCountries}
+          onChange={(countries) => {
+            setSelectedCountries(countries);
+            // Clear universities if all countries are deselected
+            if (countries.length === 0) {
+              setSelectedUniversities([]);
+            }
+          }}
           placeholder={t("settingsPage.multiSelectCountries", "Select Countries")}
           fullWidth
           searchable
@@ -161,9 +150,10 @@ const GeneralSettings = () => {
           options={universityOptions}
           value={selectedUniversities}
           onChange={setSelectedUniversities}
-          placeholder={t("settingsPage.multiSelectUniversities", "Select Universities")}
+          placeholder={selectedCountries.length > 0 ? t("settingsPage.multiSelectUniversities", "Select Universities") : t("settingsPage.selectCountriesFirst", "Please select countries first")}
           fullWidth
           searchable
+          disabled={selectedCountries.length === 0}
         />
 
         {/* Save Button */}

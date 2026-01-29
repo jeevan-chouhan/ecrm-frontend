@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Button, Select, MultiSelect, DatePicker, IntakeSelector, type SelectOption } from "../../components";
 import {
   applicantStageOptions,
+  UserRole,
 } from "../../constants";
 
 interface ApplicantTrackerFiltersProps {
@@ -35,6 +36,8 @@ interface ApplicantTrackerFiltersProps {
   onLastUpdatedToDateChange: (date: Date | null) => void;
   onApplyFilters: () => void;
   onClearFilters: () => void;
+  userRole?: string | null;
+  isPrimaryAdmin?: boolean;
 }
 
 const ApplicantTrackerFilters = ({
@@ -67,8 +70,58 @@ const ApplicantTrackerFilters = ({
   onLastUpdatedToDateChange,
   onApplyFilters,
   onClearFilters,
+  userRole,
+  isPrimaryAdmin,
 }: ApplicantTrackerFiltersProps) => {
   const { t } = useTranslation();
+
+  // Determine which filters to show based on user role
+  const showAdminFilter = useMemo(() => {
+    const role = userRole?.toUpperCase() || "";
+    return isPrimaryAdmin || role === UserRole.PRIMARY_ADMIN;
+  }, [userRole, isPrimaryAdmin]);
+
+  const showManagerFilter = useMemo(() => {
+    const role = userRole?.toUpperCase() || "";
+    // Show for PRIMARY_ADMIN, ADMIN, and ADMIN_BILLING
+    return isPrimaryAdmin || role === UserRole.PRIMARY_ADMIN || role === UserRole.ADMIN || role === "ADMIN_BILLING";
+  }, [userRole, isPrimaryAdmin]);
+
+  const showCounselorFilter = useMemo(() => {
+    const role = userRole?.toUpperCase() || "";
+    // Show for PRIMARY_ADMIN, ADMIN, ADMIN_BILLING, MANAGER, and MANAGER_BILLING
+    return isPrimaryAdmin || role === UserRole.PRIMARY_ADMIN || role === UserRole.ADMIN || role === "ADMIN_BILLING" || role === UserRole.MANAGER || role === "MANAGER_BILLING";
+  }, [userRole, isPrimaryAdmin]);
+
+  // Check if any dropdown is hidden (to determine if Agency should move to first row)
+  const hasHiddenDropdowns = useMemo(() => {
+    return !showAdminFilter || !showManagerFilter || !showCounselorFilter;
+  }, [showAdminFilter, showManagerFilter, showCounselorFilter]);
+
+  // Check if user is Manager, Manager_Billing, or Counsellor
+  // For these roles, we show Applied dates in first row after Agency
+  const isCounselorOnly = useMemo(() => {
+    const role = userRole?.toUpperCase() || "";
+    // For MANAGER/MANAGER_BILLING: Admin and Manager filters are hidden, only Counselor filter is visible
+    // For COUNSELLOR: Admin, Manager, and Counselor filters are all hidden
+    const isManagerOrManagerBilling = role === UserRole.MANAGER || role === "MANAGER_BILLING";
+    const isCounsellor = role === UserRole.COUNSELLOR;
+    
+    // For Manager/Manager_Billing: Admin hidden AND Manager hidden AND Counselor visible
+    if (isManagerOrManagerBilling) {
+      return !showAdminFilter && !showManagerFilter && showCounselorFilter;
+    }
+    
+    // For Counsellor: Admin hidden AND Manager hidden AND Counselor hidden
+    if (isCounsellor) {
+      return !showAdminFilter && !showManagerFilter && !showCounselorFilter;
+    }
+    
+    return false;
+  }, [userRole, showAdminFilter, showManagerFilter, showCounselorFilter]);
+
+  // Fixed width class to maintain original dropdown size
+  const filterWidthClass = "w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px]";
 
   // Set max date to today to disable future dates
   const maxDate = useMemo(() => {
@@ -114,41 +167,47 @@ const ApplicantTrackerFilters = ({
       `}</style>
       {/* First Row - Filter Dropdowns */}
       <div className="flex flex-wrap items-center gap-3">
-        {/* Admin Select */}
-        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px] applicant-tracker-filter-placeholder">
-          <Select
-            label={t("applicantTracker.adminLabel", "Admin")}
-            options={adminOptionsWithPlaceholder}
-            value={selectedAdmin}
-            onChange={onAdminChange}
-            searchable
-          />
-        </div>
+        {/* Admin Select - Only show for PRIMARY_ADMIN */}
+        {showAdminFilter && (
+          <div className={`${filterWidthClass} applicant-tracker-filter-placeholder`}>
+            <Select
+              label={t("applicantTracker.adminLabel", "Admin")}
+              options={adminOptionsWithPlaceholder}
+              value={selectedAdmin}
+              onChange={onAdminChange}
+              searchable
+            />
+          </div>
+        )}
 
-        {/* Manager Select */}
-        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px] applicant-tracker-filter-placeholder">
-          <Select
-            label={t("applicantTracker.managerLabel", "Manager")}
-            options={managerOptionsWithPlaceholder}
-            value={selectedManager}
-            onChange={onManagerChange}
-            searchable
-          />
-        </div>
+        {/* Manager Select - Show for PRIMARY_ADMIN and ADMIN */}
+        {showManagerFilter && (
+          <div className={`${filterWidthClass} applicant-tracker-filter-placeholder`}>
+            <Select
+              label={t("applicantTracker.managerLabel", "Manager")}
+              options={managerOptionsWithPlaceholder}
+              value={selectedManager}
+              onChange={onManagerChange}
+              searchable
+            />
+          </div>
+        )}
 
-        {/* Counselor Select */}
-        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px] applicant-tracker-filter-placeholder">
-          <Select
-            label={t("applicantTracker.counselorLabel", "Counselor")}
-            options={counselorOptionsWithPlaceholder}
-            value={selectedCounselor}
-            onChange={onCounselorChange}
-            searchable
-          />
-        </div>
+        {/* Counselor Select - Show for PRIMARY_ADMIN, ADMIN, and MANAGER */}
+        {showCounselorFilter && (
+          <div className={`${filterWidthClass} applicant-tracker-filter-placeholder`}>
+            <Select
+              label={t("applicantTracker.counselorLabel", "Counselor")}
+              options={counselorOptionsWithPlaceholder}
+              value={selectedCounselor}
+              onChange={onCounselorChange}
+              searchable
+            />
+          </div>
+        )}
 
         {/* University Select */}
-        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px] applicant-tracker-filter-placeholder">
+        <div className={`${filterWidthClass} applicant-tracker-filter-placeholder`}>
           <Select
             label={t("applicantTracker.universityLabel", "University")}
             options={universityOptionsWithPlaceholder}
@@ -159,7 +218,7 @@ const ApplicantTrackerFilters = ({
         </div>
 
         {/* Applicant Stage MultiSelect */}
-        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px]">
+        <div className={filterWidthClass}>
           <MultiSelect
             label={t("applicantTracker.applicantStageLabel", "Applicant Stage")}
             options={applicantStageOptions}
@@ -171,7 +230,7 @@ const ApplicantTrackerFilters = ({
         </div>
 
         {/* Intake Select */}
-        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px]">
+        <div className={filterWidthClass}>
           <IntakeSelector
             label={t("applicantTracker.intakeLabel", "Intake")}
             value={selectedIntake}
@@ -180,47 +239,94 @@ const ApplicantTrackerFilters = ({
             fullWidth
           />
         </div>
+
+        {/* Agency Partner Select - Show in first row if any dropdowns are hidden */}
+        {hasHiddenDropdowns && (
+          <div className={`${filterWidthClass} applicant-tracker-filter-placeholder`}>
+            <Select
+              label={t("applicantTracker.agencyPartnerLabel", "Agency Partner")}
+              options={agencyPartnerOptionsWithPlaceholder}
+              value={selectedAgencyPartner}
+              onChange={onAgencyPartnerChange}
+              searchable
+            />
+          </div>
+        )}
+
+        {/* Applied From Date - Show in first row after Agency for Counselor role */}
+        {isCounselorOnly && (
+          <div className={filterWidthClass}>
+            <DatePicker
+              label={t("applicantTracker.appliedFromDateLabel", "Applied From Date")}
+              value={appliedFromDate}
+              onChange={onAppliedFromDateChange}
+              placeholder={t("applicantTracker.appliedFromDate", "Applied From Date")}
+              fullWidth
+              maxDate={maxDate}
+            />
+          </div>
+        )}
+
+        {/* Applied To Date - Show in first row after Agency for Counselor role */}
+        {isCounselorOnly && (
+          <div className={filterWidthClass}>
+            <DatePicker
+              label={t("applicantTracker.appliedToDateLabel", "Applied To Date")}
+              value={appliedToDate}
+              onChange={onAppliedToDateChange}
+              placeholder={t("applicantTracker.appliedToDate", "Applied To Date")}
+              fullWidth
+              maxDate={maxDate}
+            />
+          </div>
+        )}
       </div>
 
-      {/* Second Row - Agency Partner, Date Pickers and Buttons */}
+      {/* Second Row - Agency Partner (if no dropdowns hidden), Date Pickers and Buttons */}
       <div className="flex flex-wrap items-center gap-3">
-        {/* Agency Partner Select */}
-        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px] applicant-tracker-filter-placeholder">
-          <Select
-            label={t("applicantTracker.agencyPartnerLabel", "Agency Partner")}
-            options={agencyPartnerOptionsWithPlaceholder}
-            value={selectedAgencyPartner}
-            onChange={onAgencyPartnerChange}
-            searchable
-          />
-        </div>
+        {/* Agency Partner Select - Show in second row only if no dropdowns are hidden */}
+        {!hasHiddenDropdowns && (
+          <div className={`${filterWidthClass} applicant-tracker-filter-placeholder`}>
+            <Select
+              label={t("applicantTracker.agencyPartnerLabel", "Agency Partner")}
+              options={agencyPartnerOptionsWithPlaceholder}
+              value={selectedAgencyPartner}
+              onChange={onAgencyPartnerChange}
+              searchable
+            />
+          </div>
+        )}
 
-        {/* Applied From Date Picker */}
-        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px]">
-          <DatePicker
-            label={t("applicantTracker.appliedFromDateLabel", "Applied From Date")}
-            value={appliedFromDate}
-            onChange={onAppliedFromDateChange}
-            placeholder={t("applicantTracker.appliedFromDate", "Applied From Date")}
-            fullWidth
-            maxDate={maxDate}
-          />
-        </div>
+        {/* Applied From Date Picker - Show in second row only if NOT Counselor role */}
+        {!isCounselorOnly && (
+          <div className={filterWidthClass}>
+            <DatePicker
+              label={t("applicantTracker.appliedFromDateLabel", "Applied From Date")}
+              value={appliedFromDate}
+              onChange={onAppliedFromDateChange}
+              placeholder={t("applicantTracker.appliedFromDate", "Applied From Date")}
+              fullWidth
+              maxDate={maxDate}
+            />
+          </div>
+        )}
 
-        {/* Applied To Date Picker */}
-        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px]">
-          <DatePicker
-            label={t("applicantTracker.appliedToDateLabel", "Applied To Date")}
-            value={appliedToDate}
-            onChange={onAppliedToDateChange}
-            placeholder={t("applicantTracker.appliedToDate", "Applied To Date")}
-            fullWidth
-            maxDate={maxDate}
-          />
-        </div>
+        {/* Applied To Date Picker - Show in second row only if NOT Counselor role */}
+        {!isCounselorOnly && (
+          <div className={filterWidthClass}>
+            <DatePicker
+              label={t("applicantTracker.appliedToDateLabel", "Applied To Date")}
+              value={appliedToDate}
+              onChange={onAppliedToDateChange}
+              placeholder={t("applicantTracker.appliedToDate", "Applied To Date")}
+              fullWidth
+              maxDate={maxDate}
+            />
+          </div>
+        )}
 
         {/* Last Updated From Date Picker */}
-        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px]">
+        <div className={filterWidthClass}>
           <DatePicker
             label={t("applicantTracker.lastUpdatedFromDateLabel", "Last Updated From Date")}
             value={lastUpdatedFromDate}
@@ -232,7 +338,7 @@ const ApplicantTrackerFilters = ({
         </div>
 
         {/* Last Updated To Date Picker */}
-        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-5*0.75rem)/6)] lg:min-w-[200px]">
+        <div className={filterWidthClass}>
           <DatePicker
             label={t("applicantTracker.lastUpdatedToDateLabel", "Last Updated To Date")}
             value={lastUpdatedToDate}

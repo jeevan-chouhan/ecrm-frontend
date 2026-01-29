@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Tooltip } from "@mui/material";
 import { Layout, Card, Button, Popup, DataTable, ConfirmationPopup } from "../../../components";
 import type { GridColDef, GridRowId } from "../../../components";
 import { COLORS } from "../../../constants";
@@ -736,22 +737,27 @@ const DocumentDetail = () => {
                 )}
               </>
             ) : (
-              <div className="flex flex-col items-end gap-1">
-                <Button
-                  variant="accent"
-                  size="sm"
-                  rounded
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleUploadClick(doc.id);
-                  }}
-                  disabled={doc.isNew && !doc.name}
+              <div className="flex items-end">
+                <Tooltip 
+                  title={t("fileUpload.maxFileSize", { maxSize: 2 })} 
+                  arrow 
+                  placement="top"
                 >
-                  {t("documentVault.upload", "Upload")}
-                </Button>
-                <p className="text-xs" style={{ color: COLORS.textMuted }}>
-                  {t("fileUpload.maxFileSize", { maxSize: 2 })}
-                </p>
+                  <span>
+                    <Button
+                      variant="accent"
+                      size="sm"
+                      rounded
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleUploadClick(doc.id);
+                      }}
+                      disabled={doc.isNew && !doc.name}
+                    >
+                      {t("documentVault.upload", "Upload")}
+                    </Button>
+                  </span>
+                </Tooltip>
               </div>
             )}
           </div>

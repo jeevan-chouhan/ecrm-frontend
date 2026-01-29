@@ -2,7 +2,6 @@ import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Input } from "../../../components";
 import { COLORS } from "../../../constants";
-import { EyeOff, Eye } from "../../../assets";
 import { authService } from "../../../services";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { addToast } from "../../../redux/slices/toast/toastSlice";
@@ -38,11 +37,6 @@ const ChangePassword = ({ onSuccess, onCancel }: ChangePasswordProps) => {
 
   const [errors, setErrors] = useState<PasswordErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Visibility toggles for each password field
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Handle field change
   const handleFieldChange = useCallback((field: keyof PasswordData, value: string) => {
@@ -137,25 +131,13 @@ const ChangePassword = ({ onSuccess, onCancel }: ChangePasswordProps) => {
             <span style={{ color: COLORS.error }}>*</span>
           </>
         }
-        type={showCurrentPassword ? "text" : "password"}
+        type="password"
         placeholder={t("auth.enterCurrentPassword", "Enter Current Password")}
         value={passwordData.currentPassword}
         onChange={(e) => handleFieldChange("currentPassword", e.target.value)}
         error={errors.currentPassword}
         fullWidth
-        rightIcon={
-          <button
-            type="button"
-            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-            className="p-1 hover:opacity-70 transition-opacity"
-          >
-            {showCurrentPassword ? (
-              <EyeOff className="h-5 w-5" style={{ color: COLORS.textMuted }} />
-            ) : (
-              <Eye className="h-5 w-5" style={{ color: COLORS.textMuted }} />
-            )}
-          </button>
-        }
+        showPasswordToggle
       />
 
       {/* New Password */}
@@ -166,25 +148,13 @@ const ChangePassword = ({ onSuccess, onCancel }: ChangePasswordProps) => {
             <span style={{ color: COLORS.error }}>*</span>
           </>
         }
-        type={showNewPassword ? "text" : "password"}
+        type="password"
         placeholder={t("auth.enterNewPassword", "Enter New Password")}
         value={passwordData.newPassword}
         onChange={(e) => handleFieldChange("newPassword", e.target.value)}
         error={errors.newPassword}
         fullWidth
-        rightIcon={
-          <button
-            type="button"
-            onClick={() => setShowNewPassword(!showNewPassword)}
-            className="p-1 hover:opacity-70 transition-opacity"
-          >
-            {showNewPassword ? (
-              <EyeOff className="h-5 w-5" style={{ color: COLORS.textMuted }} />
-            ) : (
-              <Eye className="h-5 w-5" style={{ color: COLORS.textMuted }} />
-            )}
-          </button>
-        }
+        showPasswordToggle
       />
 
       {/* Confirm New Password */}
@@ -195,25 +165,13 @@ const ChangePassword = ({ onSuccess, onCancel }: ChangePasswordProps) => {
             <span style={{ color: COLORS.error }}>*</span>
           </>
         }
-        type={showConfirmPassword ? "text" : "password"}
+        type="password"
         placeholder={t("auth.enterConfirmPassword", "Confirm New Password")}
         value={passwordData.confirmPassword}
         onChange={(e) => handleFieldChange("confirmPassword", e.target.value)}
         error={errors.confirmPassword}
         fullWidth
-        rightIcon={
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="p-1 hover:opacity-70 transition-opacity"
-          >
-            {showConfirmPassword ? (
-              <EyeOff className="h-5 w-5" style={{ color: COLORS.textMuted }} />
-            ) : (
-              <Eye className="h-5 w-5" style={{ color: COLORS.textMuted }} />
-            )}
-          </button>
-        }
+        showPasswordToggle
       />
 
       {/* Action Buttons */}
