@@ -6,11 +6,38 @@ export interface Course {
   duration: string;
   tuitionFees: string;
   examsAccepted: string[];
+  degreeType?: string;
+  department?: string;
+  credits?: number;
+  description?: string;
 }
 
 export interface FeeItem {
   label: string;
   amount: string;
+}
+
+// Fee Structure for courses
+export interface FeeStructure {
+  id: number;
+  courseProgram: string;
+  tuitionFeePerYear: number;
+  admissionFee: number;
+  hostelFeePerYear: number;
+  otherFees: number;
+  totalFeePerYear: number;
+}
+
+// College/Campus Information
+export interface CollegeInfo {
+  campusName: string;
+  dliNumber?: string;
+  location?: string;
+  city: string;
+  state: string;
+  email?: string;
+  phone?: string;
+  description?: string;
 }
 
 export interface AdmissionStep {
@@ -44,6 +71,9 @@ export interface UniversityDetail {
   admissionSteps: AdmissionStep[];
   documents?: string[];
   scholarships: ScholarshipItem[];
+  // New fields for College Info tab
+  collegeInfo?: CollegeInfo;
+  feeStructures?: FeeStructure[];
 }
 
 // Tab types - Logical sequence following student journey

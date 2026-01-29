@@ -310,13 +310,14 @@ const userService = {
 
   /**
    * Register a new agency
-   * @param payload - Agency registration data (agencyName, fullName, email, contactNumber, logo)
+   * @param payload - Agency registration data (agencyName, fullName, email, countryCode, contactNumber, logo)
    * @returns Promise with registration response
    */
   registerAgency: async (payload: {
     agencyName: string;
     fullName: string;
     email: string;
+    countryCode: string;
     contactNumber: string;
     logo?: File | null;
   }): Promise<unknown> => {
@@ -324,6 +325,7 @@ const userService = {
     formData.append("agencyName", payload.agencyName);
     formData.append("fullName", payload.fullName);
     formData.append("email", payload.email);
+    formData.append("countryCode", payload.countryCode);
     formData.append("contactNumber", payload.contactNumber);
     if (payload.logo) {
       formData.append("logo", payload.logo);

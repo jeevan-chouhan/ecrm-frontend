@@ -322,6 +322,7 @@ export interface AddMemberPayload {
   agencyId: { id: number };
   assignedCountries: Array<{ id: number; name: string }>;
   assignedUniversities: Array<{ id: number; name: string }>;
+  hasMasterLedgerAccess?: boolean;
 }
 
 export type AddMemberResponse = ApiResponse<null>;
@@ -343,6 +344,7 @@ export interface UpdateMemberPayload {
   role: string;
   assignedCountries: Array<{ id: number; name: string }>;
   assignedUniversities: Array<{ id: number; name: string }>;
+  hasMasterLedgerAccess?: boolean;
 }
 
 export type UpdateMemberResponse = ApiResponse<null>;
@@ -1200,10 +1202,23 @@ export interface CurrentSubscriptionData {
   plan: string;
   renewsOn: string;
   trialUsed: boolean;
+  applicantsRegistered?: number;
+  totalApplicants?: number;
 }
 
 // Current Subscription Response
 export type CurrentSubscriptionResponse = ApiResponse<CurrentSubscriptionData>;
+
+// Payment Links Data
+export interface PaymentLinksData {
+  agencyProLink?: string;
+  agencyProYearlyLink?: string;
+  agencyPrimeLink?: string;
+  agencyPrimeYearlyLink?: string;
+}
+
+// Payment Links Response
+export type PaymentLinksResponse = ApiResponse<PaymentLinksData>;
 
 // ==========================================
 // Menu Types

@@ -23,6 +23,7 @@ import agencyPartnerReducer from "./slices/agencyPartner/agencyPartnerSlice";
 import teamOverviewReducer from "./slices/teamOverview/teamOverviewSlice";
 import applicantTrackerReducer from "./slices/applicantTracker/applicantTrackerSlice";
 import applicantDetailReducer from "./slices/applicantDetail/applicantDetailSlice";
+import settingsReducer from "./slices/settings/settingsSlice";
 
 // Persist configuration for manageTeam - only persist filter/sort/pagination, not members data
 const manageTeamPersistConfig = {
@@ -100,6 +101,7 @@ const rootReducer = combineReducers({
   toast: toastReducer,
   auth: authReducer,
   menu: menuReducer,
+  settings: settingsReducer,
   manageTeam: persistedManageTeamReducer,
   dashboard: persistedDashboardReducer,
   documentVault: persistedDocumentVaultReducer,
@@ -115,7 +117,7 @@ const persistConfig = {
   version: 1,
   storage,
   blacklist: ["loader", "toast", "manageTeam", "dashboard", "documentVault", "agencyPartner", "teamOverview", "applicantTracker", "applicantDetail"], // Don't persist these at root level (they have their own config)
-  whitelist: ["auth", "menu"], // Persist auth and menu state at root level
+  whitelist: ["auth", "menu", "settings"], // Persist auth, menu and settings state at root level
 };
 
 // Create persisted reducer
@@ -137,6 +139,7 @@ export const store = configureStore({
 export const persistor = persistStore(store);
 
 // Export types for TypeScript
-export type RootState = ReturnType<typeof store.getState>;
+// Use rootReducer for RootState to avoid PersistPartial type issues
+export type RootState = ReturnType<typeof rootReducer>;
 export type AppDispatch = typeof store.dispatch;
 

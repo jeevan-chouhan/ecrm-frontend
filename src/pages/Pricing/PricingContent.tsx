@@ -5,7 +5,8 @@ import { Button } from "../../components";
 import { COLORS, ROUTES } from "../../constants";
 import { Check, Close } from "../../assets";
 import { userService, agencyService } from "../../services";
-import { useAppSelector, useAppDispatch } from "../../redux/hooks";
+import type { PaymentLinksData } from "../../services";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { showLoader, hideLoader } from "../../redux/slices/loader/loaderSlice";
 import { addToast } from "../../redux/slices/toast/toastSlice";
 
@@ -57,13 +58,22 @@ interface StripeLinks {
   agencyProYearlyLink?: string;
 }
 
+interface SubscriptionData {
+  subscriptionStatus: string;
+  plan: string;
+  renewsOn: string;
+  trialUsed: boolean;
+}
+
 interface PricingContentProps {
   showHeader?: boolean;
   maxWidth?: string;
   stripeLinks?: StripeLinks;
+  agencyId?: number;
+  subscription?: SubscriptionData | null;
 }
 
-const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks }: PricingContentProps) => {
+const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks, agencyId, subscription }: PricingContentProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -75,11 +85,45 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
     primeMonthly: 0,
     primeYearly: 0,
   });
+  const [paymentLinks, setPaymentLinks] = useState<PaymentLinksData | null>(null);
   const hasFetched = useRef(false);
+  const hasFetchedPaymentLinks = useRef(false);
+
+  // Fetch payment links on mount (for Plan Management - when subscription exists)
+  useEffect(() => {
+    if (!subscription || !user?.agencyId || hasFetchedPaymentLinks.current) return;
+    hasFetchedPaymentLinks.current = true;
+
+    const fetchPaymentLinks = async () => {
+      try {
+        const response = await agencyService.getPaymentLinks(user.agencyId!);
+        if (response.status === "success" && response.data) {
+          setPaymentLinks(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch payment links:", error);
+      }
+    };
+
+    fetchPaymentLinks();
+  }, [subscription, user?.agencyId]);
+
+  // Handle payment link button click
+  const handlePaymentLinkClick = (linkType: keyof PaymentLinksData) => {
+    const link = paymentLinks?.[linkType];
+    if (link) {
+      window.open(link, "_blank");
+    } else {
+      dispatch(addToast({ type: "error", message: t("pricing.linkNotAvailable", "Payment link not available") }));
+    }
+  };
 
   // Handle Start Free Trial
   const handleStartFreeTrial = async () => {
-    if (!user?.agencyId) {
+    // Use agencyId from register response (passed via props) or fallback to logged-in user's agencyId
+    const trialUserId = agencyId;
+    
+    if (!trialUserId) {
       dispatch(addToast({ type: "error", message: t("common.loginRequired", "Please login to start trial") }));
       navigate(ROUTES.LOGIN);
       return;
@@ -87,10 +131,10 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
 
     dispatch(showLoader());
     try {
-      const response = await agencyService.startTrial(user.agencyId);
+      const response = await agencyService.startTrial(trialUserId);
       if (response.status === "success") {
         dispatch(addToast({ type: "success", message: response.message || t("pricing.trialStarted", "Trial started successfully") }));
-        navigate(ROUTES.DASHBOARD);
+        navigate(ROUTES.LOGIN);
       }
     } catch (error) {
       console.error("Failed to start trial:", error);
@@ -338,8 +382,69 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
 
               {/* Buttons */}
               <div className="space-y-3">
-                {/* Check if stripe links available (came from Register) */}
-                {stripeLinks ? (
+                {/* Check if subscription exists (from Plan Management) */}
+                {subscription ? (
+                  // 4 Buttons: For logged-in users with subscription
+                  plan.id === "pro" ? (
+                    <>
+                      {/* Renew Pro Monthly */}
+                      <Button
+                        variant="accent"
+                        size="lg"
+                        fullWidth
+                        rounded
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePaymentLinkClick("agencyProLink");
+                        }}
+                      >
+                        {t("pricing.renewProMonthly", "Renew Pro Monthly")}
+                      </Button>
+                      {/* Renew Pro Yearly */}
+                      <Button
+                        variant="accent"
+                        size="lg"
+                        fullWidth
+                        rounded
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePaymentLinkClick("agencyProYearlyLink");
+                        }}
+                      >
+                        {t("pricing.renewProYearly", "Renew Pro Yearly")}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      {/* Upgrade to Prime Monthly */}
+                      <Button
+                        variant="accent"
+                        size="lg"
+                        fullWidth
+                        rounded
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePaymentLinkClick("agencyPrimeLink");
+                        }}
+                      >
+                        {t("pricing.upgradePrimeMonthly", "Upgrade to Prime Monthly")}
+                      </Button>
+                      {/* Upgrade to Prime Yearly */}
+                      <Button
+                        variant="accent"
+                        size="lg"
+                        fullWidth
+                        rounded
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePaymentLinkClick("agencyPrimeYearlyLink");
+                        }}
+                      >
+                        {t("pricing.upgradePrimeYearly", "Upgrade to Prime Yearly")}
+                      </Button>
+                    </>
+                  )
+                ) : stripeLinks ? (
                   // 4 Buttons: After Registration
                   plan.id === "pro" ? (
                     <>
@@ -358,7 +463,7 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
                       </Button>
                       {/* Agency Pro - Yearly Plan */}
                       <Button
-                        variant="secondary"
+                        variant="accent"
                         size="lg"
                         fullWidth
                         rounded
@@ -370,7 +475,7 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
                         }}
                         disabled={!stripeLinks.agencyProYearlyLink}
                       >
-                        Yearly Plan
+                        {t("pricing.yearlyPlan", "Yearly Plan")}
                       </Button>
                     </>
                   ) : (
@@ -389,11 +494,11 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
                         }}
                         disabled={!stripeLinks.agencyPrimeLink}
                       >
-                        Monthly Plan
+                        {t("pricing.monthlyPlan", "Monthly Plan")}
                       </Button>
                       {/* Agency Prime - Yearly Plan */}
                       <Button
-                        variant="secondary"
+                        variant="accent"
                         size="lg"
                         fullWidth
                         rounded
@@ -405,7 +510,7 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
                         }}
                         disabled={!stripeLinks.agencyPrimeYearlyLink}
                       >
-                        Yearly Plan
+                        {t("pricing.yearlyPlan", "Yearly Plan")}
                       </Button>
                     </>
                   )

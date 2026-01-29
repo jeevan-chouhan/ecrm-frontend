@@ -128,6 +128,8 @@ export type {
   OverallCountsResponse,
   StartTrialResponse,
   CurrentSubscriptionData,
+  PaymentLinksData,
+  PaymentLinksResponse,
   CurrentSubscriptionResponse,
   MenuItem,
   MenuResponse,

@@ -45,6 +45,7 @@ export const ENDPOINTS = {
     ANALYTICS: "/reports/analytics",
     START_TRIAL: (agencyId: number | string) => `/agencies/start-trial/${agencyId}`,
     CURRENT_SUBSCRIPTION: (agencyId: number | string) => `/agencies/currentSubscription/${agencyId}`,
+    PAYMENT_LINKS: (agencyId: number | string) => `/agencies/paymentLinks/${agencyId}`,
   },
 
   // Plan Endpoints

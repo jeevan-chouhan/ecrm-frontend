@@ -223,3 +223,58 @@ export const formatDateTime = (date: Date | string): string => {
   }
 };
 
+
+/**
+ * Formats a date to "MMM D, YYYY" format (e.g., "Jan 28, 2026")
+ * Use this for short date display like subscription renewal dates
+ * @param date - Date object or date string (assumed to be in UTC from backend)
+ * @returns Formatted date string in "MMM D, YYYY" format
+ */
+export const formatDateShort = (date: Date | string): string => {
+  if (!date) {
+    console.warn("Invalid date provided to formatDateShort:", date);
+    return "";
+  }
+  
+  try {
+    // Parse the date and convert from UTC to local timezone
+    const dayjsDate = dayjs(date).local();
+    
+    // Validate date
+    if (!dayjsDate.isValid()) {
+      console.warn("Invalid date provided to formatDateShort:", date);
+      return "";
+    }
+    
+    return dayjsDate.format("MMM D, YYYY");
+  } catch (error) {
+    console.warn("Error formatting date:", date, error);
+    return "";
+  }
+};
+
+/**
+ * Calculate days remaining from today until a given date
+ * Use this for calculating trial period remaining days
+ * @param renewsOn - Date string for the target date
+ * @returns Number of days remaining (0 if date has passed)
+ */
+export const getDaysRemaining = (renewsOn: string): number => {
+  if (!renewsOn) return 0;
+  
+  try {
+    const today = dayjs().startOf("day");
+    const renewDate = dayjs(renewsOn).startOf("day");
+    
+    if (!renewDate.isValid()) {
+      console.warn("Invalid date provided to getDaysRemaining:", renewsOn);
+      return 0;
+    }
+    
+    const diffDays = renewDate.diff(today, "day");
+    return diffDays > 0 ? diffDays : 0;
+  } catch (error) {
+    console.warn("Error calculating days remaining:", renewsOn, error);
+    return 0;
+  }
+};

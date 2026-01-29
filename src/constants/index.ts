@@ -103,6 +103,8 @@ export const UserRole = {
   ADMIN: "ADMIN",
   MANAGER: "MANAGER",
   COUNSELLOR: "COUNSELLOR",
+  ADMIN_BILLING: "ADMIN_BILLING",
+  MANGER_BILLING: "MANAGER_BILLING",
   BILLING: "BILLING",
 } as const;
 
@@ -115,6 +117,8 @@ export const ROLE_DISPLAY_NAMES: Record<string, string> = {
   [UserRole.ADMIN]: "Admin",
   [UserRole.MANAGER]: "Manager",
   [UserRole.COUNSELLOR]: "Counsellor",
+  [UserRole.ADMIN_BILLING]: "Admin Billing",
+  [UserRole.MANGER_BILLING]: "Manager Billing",
   [UserRole.BILLING]: "Billing",
 };
 

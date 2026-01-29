@@ -16,6 +16,7 @@ interface RegisterFormValues {
   agencyName: string;
   fullName: string;
   email: string;
+  countryCode: string;
   phone: string;
   logo: File | null;
   agreeToTerms: boolean;
@@ -49,6 +50,7 @@ const Register = () => {
       agencyName: "",
       fullName: "",
       email: "",
+      countryCode: "",
       phone: "",
       logo: null,
       agreeToTerms: false,
@@ -60,17 +62,25 @@ const Register = () => {
         // Helper to trim and remove extra spaces
         const cleanString = (str: string) => str.trim().replace(REGEX.WHITESPACE, " ");
 
+        // Extract phone number without country code
+        const dialCode = values.countryCode.replace("+", "");
+        const phoneNumber = values.phone.startsWith(dialCode)
+          ? values.phone.slice(dialCode.length)
+          : values.phone;
+
         const response = await userService.registerAgency({
           agencyName: cleanString(values.agencyName),
           fullName: cleanString(values.fullName),
           email: values.email.trim(),
-          contactNumber: values.phone.trim(),
+          countryCode: values.countryCode,
+          contactNumber: phoneNumber.trim(),
           logo: values.logo,
         }) as { 
           status: string; 
           statusCode: number; 
           message: string; 
           data: {
+            agencyId?: number;
             agencyPrimeLink?: string;
             agencyPrimeYearlyLink?: string;
             agencyProYearlyLink?: string;
@@ -82,9 +92,10 @@ const Register = () => {
           message: response.message || t("auth.registrationSuccess", "Agency registered successfully."),
         }));
         
-        // Navigate to pricing page with stripe links
+        // Navigate to pricing page with stripe links and agencyId
         navigate(ROUTES.PRICING, { 
           state: { 
+            agencyId: response.data?.agencyId,
             stripeLinks: {
               agencyPrimeLink: response.data?.agencyPrimeLink || "",
               agencyPrimeYearlyLink: response.data?.agencyPrimeYearlyLink || "",
@@ -187,7 +198,12 @@ const Register = () => {
                   <PhoneInput
                     label={<>{t("auth.contactNumber")} <span style={{ color: COLORS.error }}>*</span></>}
                     value={formik.values.phone}
-                    onChange={(value) => formik.setFieldValue("phone", value)}
+                    onChange={(value, countryData) => {
+                      formik.setFieldValue("phone", value);
+                      if (countryData?.dialCode) {
+                        formik.setFieldValue("countryCode", `+${countryData.dialCode}`);
+                      }
+                    }}
                     error={formik.touched.phone ? formik.errors.phone : undefined}
                     placeholder={t("auth.contactNumberPlaceholder")}
                     fullWidth
