@@ -328,27 +328,41 @@ const ApplicantOverview = () => {
   }, [t]);
 
   // Memoize renderCell functions to prevent recreation
-  const renderApplicantNameCell = useCallback((params: GridRenderCellParams<ApplicantOverviewRow>) => (
-    <div className="flex flex-col gap-1">
-      <span className="font-medium text-sm" style={{ color: COLORS.textDark }}>
-        {params.row.applicantName}
-      </span>
-      <span className="text-xs" style={{ color: COLORS.textMuted }}>
-        {params.row.contactNo}
-      </span>
-    </div>
-  ), []);
+  const renderApplicantNameCell = useCallback((params: GridRenderCellParams<ApplicantOverviewRow>) => {
+    const nameText = params.row.applicantName || "-";
+    const contactText = params.row.contactNo || "-";
+    const fullText = `${nameText}${contactText !== "-" ? ` (${contactText})` : ""}`;
+    
+    return (
+      <Tooltip title={fullText} arrow placement="top">
+        <div className="flex flex-col gap-1">
+          <span className="font-medium text-sm truncate" style={{ color: COLORS.textDark }}>
+            {nameText}
+          </span>
+          <span className="text-xs truncate" style={{ color: COLORS.textMuted }}>
+            {contactText}
+          </span>
+        </div>
+      </Tooltip>
+    );
+  }, []);
 
-  const renderEmailCell = useCallback((params: GridRenderCellParams<ApplicantOverviewRow>) => (
-    <span
-      style={{
-        color: COLORS.textDark,
-        fontSize: typography.fontSize.small,
-      }}
-    >
-      {params.row.email}
-    </span>
-  ), []);
+  const renderEmailCell = useCallback((params: GridRenderCellParams<ApplicantOverviewRow>) => {
+    const email = params.row.email || "-";
+    return (
+      <Tooltip title={email} arrow placement="top">
+        <span
+          className="truncate block cursor-default"
+          style={{
+            color: COLORS.textDark,
+            fontSize: typography.fontSize.small,
+          }}
+        >
+          {email}
+        </span>
+      </Tooltip>
+    );
+  }, []);
 
   const renderNotesCell = useCallback((params: GridRenderCellParams<ApplicantOverviewRow>) => {
     const notes = params.row.notes;
@@ -370,34 +384,45 @@ const ApplicantOverview = () => {
     );
   }, [t]);
 
-  const renderStatusCell = useCallback((params: GridRenderCellParams<ApplicantOverviewRow>) => (
-    <span
-      className="px-3 py-1 rounded-full text-xs font-medium"
-      style={{
-        backgroundColor: params.row.status === "Active" 
-          ? `${COLORS.success}20` 
-          : `${COLORS.error}20`,
-        color: params.row.status === "Active" 
-          ? COLORS.success 
-          : COLORS.error,
-        fontSize: typography.fontSize.caption,
-        fontWeight: typography.fontWeight.medium,
-      }}
-    >
-      {params.row.status}
-    </span>
-  ), []);
+  const renderStatusCell = useCallback((params: GridRenderCellParams<ApplicantOverviewRow>) => {
+    const status = params.row.status || "-";
+    return (
+      <Tooltip title={status} arrow placement="top">
+        <span
+          className="px-3 py-1 rounded-full text-xs font-medium"
+          style={{
+            backgroundColor: params.row.status === "Active" 
+              ? `${COLORS.success}20` 
+              : `${COLORS.error}20`,
+            color: params.row.status === "Active" 
+              ? COLORS.success 
+              : COLORS.error,
+            fontSize: typography.fontSize.caption,
+            fontWeight: typography.fontWeight.medium,
+          }}
+        >
+          {status}
+        </span>
+      </Tooltip>
+    );
+  }, []);
 
-  const renderEnrollmentTypeCell = useCallback((params: GridRenderCellParams<ApplicantOverviewRow>) => (
-    <span
-      style={{
-        color: COLORS.textDark,
-        fontSize: typography.fontSize.small,
-      }}
-    >
-      {getEnrollmentTypeLabel(params.row.enrollmentType)}
-    </span>
-  ), []);
+  const renderEnrollmentTypeCell = useCallback((params: GridRenderCellParams<ApplicantOverviewRow>) => {
+    const enrollmentType = getEnrollmentTypeLabel(params.row.enrollmentType) || "-";
+    return (
+      <Tooltip title={enrollmentType} arrow placement="top">
+        <span
+          className="truncate block cursor-default"
+          style={{
+            color: COLORS.textDark,
+            fontSize: typography.fontSize.small,
+          }}
+        >
+          {enrollmentType}
+        </span>
+      </Tooltip>
+    );
+  }, []);
 
   const renderCreatedDateCell = useCallback((params: GridRenderCellParams<ApplicantOverviewRow>) => {
     const dateValue = params.row.createdAt ? formatDateTime(params.row.createdAt) : "-";
@@ -449,6 +474,24 @@ const ApplicantOverview = () => {
     </div>
   ), [t, handleView, handleStatusToggle, isCounsellor]);
 
+  // Render ID cell with tooltip
+  const renderIdCell = useCallback((params: GridRenderCellParams<ApplicantOverviewRow>) => {
+    const id = params.row.applicantId?.toString() || "-";
+    return (
+      <Tooltip title={id} arrow placement="top">
+        <span
+          className="truncate block cursor-default"
+          style={{
+            color: COLORS.textDark,
+            fontSize: typography.fontSize.small,
+          }}
+        >
+          {id}
+        </span>
+      </Tooltip>
+    );
+  }, []);
+
   // Memoize columns to prevent recreation
   const columns: GridColDef[] = useMemo(() => [
     {
@@ -457,6 +500,7 @@ const ApplicantOverview = () => {
       flex: 0.8,
       minWidth: 120,
       sortable: true,
+      renderCell: renderIdCell,
     },
     {
       field: "applicantName",
@@ -516,7 +560,7 @@ const ApplicantOverview = () => {
       headerAlign: "center",
       renderCell: renderActionsCell,
     },
-  ], [t, renderApplicantNameCell, renderEmailCell, renderEnrollmentTypeCell, renderNotesCell, renderStatusCell, renderCreatedDateCell, renderActionsCell]);
+  ], [t, renderIdCell, renderApplicantNameCell, renderEmailCell, renderEnrollmentTypeCell, renderNotesCell, renderStatusCell, renderCreatedDateCell, renderActionsCell]);
 
   return (
     <div className="space-y-4">

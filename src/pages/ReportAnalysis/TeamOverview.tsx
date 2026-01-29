@@ -576,10 +576,25 @@ const TeamOverview = () => {
         </span>
       );
     }
+    const titleCaseValue = toTitleCase(value);
     return (
-      <span className="text-sm" style={{ color: COLORS.textDark }}>
-        {toTitleCase(value)}
-      </span>
+      <Tooltip title={titleCaseValue} arrow placement="top">
+        <span className="text-sm truncate cursor-default" style={{ color: COLORS.textDark }}>
+          {titleCaseValue}
+        </span>
+      </Tooltip>
+    );
+  }, []);
+
+  // Render numeric cell with tooltip
+  const renderNumericCell = useCallback((params: GridRenderCellParams<TeamOverviewItem>) => {
+    const value = params.value?.toString() || "0";
+    return (
+      <Tooltip title={value} arrow placement="top">
+        <span className="text-sm cursor-default" style={{ color: COLORS.textDark }}>
+          {value}
+        </span>
+      </Tooltip>
     );
   }, []);
 
@@ -670,6 +685,7 @@ const TeamOverview = () => {
         sortable: true,
         align: "left",
         headerAlign: "left",
+        renderCell: renderNumericCell,
       },
       {
         field: "leads",
@@ -679,6 +695,7 @@ const TeamOverview = () => {
         sortable: true,
         align: "left",
         headerAlign: "left",
+        renderCell: renderNumericCell,
       },
       {
         field: "inProgressApplicants",
@@ -688,6 +705,7 @@ const TeamOverview = () => {
         sortable: true,
         align: "left",
         headerAlign: "left",
+        renderCell: renderNumericCell,
       },
       {
         field: "enrolledApplicants",
@@ -697,6 +715,7 @@ const TeamOverview = () => {
         sortable: true,
         align: "left",
         headerAlign: "left",
+        renderCell: renderNumericCell,
       },
       {
         field: "rejectedApplicants",
@@ -706,6 +725,7 @@ const TeamOverview = () => {
         sortable: true,
         align: "left",
         headerAlign: "left",
+        renderCell: renderNumericCell,
       },
     ];
 
@@ -719,7 +739,7 @@ const TeamOverview = () => {
       }
       return true;
     });
-  }, [t, renderNameCell, renderRoleCell, renderCommaSeparatedNamesCell, shouldHideReportingAdmins, shouldHideReportingManagers]);
+  }, [t, renderNameCell, renderRoleCell, renderCommaSeparatedNamesCell, renderNumericCell, shouldHideReportingAdmins, shouldHideReportingManagers]);
 
   return (
     <div className="space-y-4">

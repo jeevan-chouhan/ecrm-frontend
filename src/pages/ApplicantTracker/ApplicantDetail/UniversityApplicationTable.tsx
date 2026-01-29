@@ -36,29 +36,50 @@ const UniversityApplicationTable = ({
   const { t } = useTranslation();
 
   // Memoize renderCell functions to prevent recreation
-  const renderCourseCell = useCallback((params: GridRenderCellParams) => (
-    <span style={{ color: COLORS.textDark }}>
-      {params.value.length > 20 ? `${params.value.substring(0, 20)}...` : params.value}
-    </span>
-  ), []);
+  const renderCourseCell = useCallback((params: GridRenderCellParams) => {
+    const course = params.value || "";
+    const displayValue = course.length > 20 ? `${course.substring(0, 20)}...` : course;
+    return (
+      <Tooltip title={course || "-"} arrow placement="top">
+        <span className="truncate block cursor-default" style={{ color: COLORS.textDark }}>
+          {displayValue}
+        </span>
+      </Tooltip>
+    );
+  }, []);
 
-  const renderCountryCell = useCallback((params: GridRenderCellParams) => (
-    <span style={{ color: params.value === "-" ? COLORS.textMuted : COLORS.textDark }}>
-      {params.value || "-"}
-    </span>
-  ), []);
+  const renderCountryCell = useCallback((params: GridRenderCellParams) => {
+    const country = params.value || "-";
+    return (
+      <Tooltip title={country} arrow placement="top">
+        <span className="truncate block cursor-default" style={{ color: params.value === "-" ? COLORS.textMuted : COLORS.textDark }}>
+          {country}
+        </span>
+      </Tooltip>
+    );
+  }, []);
 
-  const renderCounselorCell = useCallback((params: GridRenderCellParams) => (
-    <span style={{ color: params.value === "-" ? COLORS.textMuted : COLORS.textDark }}>
-      {params.value || "-"}
-    </span>
-  ), []);
+  const renderCounselorCell = useCallback((params: GridRenderCellParams) => {
+    const counselor = params.value || "-";
+    return (
+      <Tooltip title={counselor} arrow placement="top">
+        <span className="truncate block cursor-default" style={{ color: params.value === "-" ? COLORS.textMuted : COLORS.textDark }}>
+          {counselor}
+        </span>
+      </Tooltip>
+    );
+  }, []);
 
-  const renderAgencyPartnerCell = useCallback((params: GridRenderCellParams) => (
-    <span style={{ color: params.value && params.value !== "-" ? COLORS.textDark : COLORS.textMuted }}>
-      {params.value || "-"}
-    </span>
-  ), []);
+  const renderAgencyPartnerCell = useCallback((params: GridRenderCellParams) => {
+    const agencyPartner = params.value || "-";
+    return (
+      <Tooltip title={agencyPartner} arrow placement="top">
+        <span className="truncate block cursor-default" style={{ color: params.value && params.value !== "-" ? COLORS.textDark : COLORS.textMuted }}>
+          {agencyPartner}
+        </span>
+      </Tooltip>
+    );
+  }, []);
 
   const renderStageCell = useCallback((params: GridRenderCellParams<UniversityApplication>) => {
     if (!params.value) {
@@ -72,19 +93,21 @@ const UniversityApplicationTable = ({
     const isOfferReceived = stageLabel.toLowerCase() === "offer received";
     
     return (
-      <span
-        className="px-3 py-1 rounded-full text-xs font-medium"
-        style={{
-          backgroundColor: isOfferReceived 
-            ? `${COLORS.success}20` 
-            : `${COLORS.accent}20`,
-          color: isOfferReceived 
-            ? COLORS.success 
-            : COLORS.accent,
-        }}
-      >
-        {stageLabel}
-      </span>
+      <Tooltip title={stageLabel} arrow placement="top">
+        <span
+          className="px-3 py-1 rounded-full text-xs font-medium"
+          style={{
+            backgroundColor: isOfferReceived 
+              ? `${COLORS.success}20` 
+              : `${COLORS.accent}20`,
+            color: isOfferReceived 
+              ? COLORS.success 
+              : COLORS.accent,
+          }}
+        >
+          {stageLabel}
+        </span>
+      </Tooltip>
     );
   }, []);
 
@@ -111,19 +134,21 @@ const UniversityApplicationTable = ({
     }
     
     return (
-      <span
-        className="px-3 py-1 rounded-full text-xs font-medium"
-        style={{
-          backgroundColor: isOfferReceived 
-            ? `${COLORS.success}20` 
-            : `${COLORS.accent}20`,
-          color: isOfferReceived 
-            ? COLORS.success 
-            : COLORS.accent,
-        }}
-      >
-        {statusLabel}
-      </span>
+      <Tooltip title={statusLabel} arrow placement="top">
+        <span
+          className="px-3 py-1 rounded-full text-xs font-medium"
+          style={{
+            backgroundColor: isOfferReceived 
+              ? `${COLORS.success}20` 
+              : `${COLORS.accent}20`,
+            color: isOfferReceived 
+              ? COLORS.success 
+              : COLORS.accent,
+          }}
+        >
+          {statusLabel}
+        </span>
+      </Tooltip>
     );
   }, [onApply]);
 
@@ -131,8 +156,44 @@ const UniversityApplicationTable = ({
     const dateValue = params.value || "-";
     return (
       <Tooltip title={dateValue} arrow placement="top">
-        <span style={{ color: params.value ? COLORS.textDark : COLORS.textMuted }}>
+        <span className="truncate block cursor-default" style={{ color: params.value ? COLORS.textDark : COLORS.textMuted }}>
           {dateValue}
+        </span>
+      </Tooltip>
+    );
+  }, []);
+
+  // Render No. cell with tooltip
+  const renderNoCell = useCallback((params: GridRenderCellParams) => {
+    const no = params.value?.toString() || "-";
+    return (
+      <Tooltip title={no} arrow placement="top">
+        <span className="truncate block cursor-default" style={{ color: COLORS.textDark }}>
+          {no}
+        </span>
+      </Tooltip>
+    );
+  }, []);
+
+  // Render University cell with tooltip
+  const renderUniversityCell = useCallback((params: GridRenderCellParams) => {
+    const university = params.value || "-";
+    return (
+      <Tooltip title={university} arrow placement="top">
+        <span className="truncate block cursor-default" style={{ color: params.value ? COLORS.textDark : COLORS.textMuted }}>
+          {university}
+        </span>
+      </Tooltip>
+    );
+  }, []);
+
+  // Render Intake cell with tooltip
+  const renderIntakeCell = useCallback((params: GridRenderCellParams) => {
+    const intake = params.value || "-";
+    return (
+      <Tooltip title={intake} arrow placement="top">
+        <span className="truncate block cursor-default" style={{ color: params.value ? COLORS.textDark : COLORS.textMuted }}>
+          {intake}
         </span>
       </Tooltip>
     );
@@ -176,6 +237,7 @@ const UniversityApplicationTable = ({
       flex: 0.5,
       minWidth: 60,
       sortable: false,
+      renderCell: renderNoCell,
     },
     {
       field: "country",
@@ -191,6 +253,7 @@ const UniversityApplicationTable = ({
       flex: 1.5,
       minWidth: 150,
       sortable: true,
+      renderCell: renderUniversityCell,
     },
     {
       field: "course",
@@ -222,6 +285,7 @@ const UniversityApplicationTable = ({
       flex: 1,
       minWidth: 100,
       sortable: true,
+      renderCell: renderIntakeCell,
     },
     {
       field: "counselor",
@@ -263,7 +327,7 @@ const UniversityApplicationTable = ({
       sortable: false,
       renderCell: renderActionsCell,
     },
-  ], [t, onApply, onUpdateStatus, renderCourseCell, renderCountryCell, renderCounselorCell, renderAgencyPartnerCell, renderStageCell, renderStatusCell, renderDateCell, renderActionsCell]);
+  ], [t, onApply, onUpdateStatus, renderNoCell, renderCourseCell, renderCountryCell, renderUniversityCell, renderIntakeCell, renderCounselorCell, renderAgencyPartnerCell, renderStageCell, renderStatusCell, renderDateCell, renderActionsCell]);
 
   return (
     <div className="space-y-4">

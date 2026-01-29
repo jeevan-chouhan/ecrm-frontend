@@ -936,15 +936,21 @@ const ApplicantTracker = () => {
         </span>
       );
     }
+    const nameText = params.row.applicantName || "-";
+    const contactText = params.row.contactNo || "-";
+    const fullText = `${nameText}${contactText !== "-" ? ` (${contactText})` : ""}`;
+    
     return (
-      <div className="flex flex-col gap-1">
-        <span className="font-medium text-sm" style={{ color: COLORS.textDark }}>
-          {params.row.applicantName}
-        </span>
-        <span className="text-xs" style={{ color: COLORS.textMuted }}>
-          {params.row.contactNo || "-"}
-        </span>
-      </div>
+      <Tooltip title={fullText} arrow placement="top">
+        <div className="flex flex-col gap-1">
+          <span className="font-medium text-sm truncate" style={{ color: COLORS.textDark }}>
+            {nameText}
+          </span>
+          <span className="text-xs truncate" style={{ color: COLORS.textMuted }}>
+            {contactText}
+          </span>
+        </div>
+      </Tooltip>
     );
   }, []);
 
@@ -980,33 +986,45 @@ const ApplicantTracker = () => {
     }
     // Format intake like "jan-2026" to "Jan 2026" or just "2026"
     const intakeParts = params.row.intake.split("-");
+    let displayValue: string;
     if (intakeParts.length === 2) {
       const month = intakeParts[0].charAt(0).toUpperCase() + intakeParts[0].slice(1);
       const year = intakeParts[1];
-      return (
-        <span className="text-sm" style={{ color: COLORS.textDark }}>
-          {`${month} ${year}`}
-        </span>
-      );
+      displayValue = `${month} ${year}`;
+    } else {
+      displayValue = params.row.intake;
     }
+    
     return (
-      <span className="text-sm" style={{ color: COLORS.textDark }}>
-        {params.row.intake}
-      </span>
+      <Tooltip title={displayValue} arrow placement="top">
+        <span className="text-sm truncate cursor-default" style={{ color: COLORS.textDark }}>
+          {displayValue}
+        </span>
+      </Tooltip>
     );
   }, []);
 
-  const renderUniversityCell = useCallback((params: GridRenderCellParams<Applicant>) => (
-    <span className="text-sm" style={{ color: params.value ? COLORS.textDark : COLORS.textMuted }}>
-      {params.value || "-"}
-    </span>
-  ), []);
+  const renderUniversityCell = useCallback((params: GridRenderCellParams<Applicant>) => {
+    const university = params.value || "-";
+    return (
+      <Tooltip title={university} arrow placement="top">
+        <span className="text-sm truncate cursor-default" style={{ color: params.value ? COLORS.textDark : COLORS.textMuted }}>
+          {university}
+        </span>
+      </Tooltip>
+    );
+  }, []);
 
-  const renderCourseCell = useCallback((params: GridRenderCellParams<Applicant>) => (
-    <span className="text-sm" style={{ color: params.value ? COLORS.textDark : COLORS.textMuted }}>
-      {params.value || "-"}
-    </span>
-  ), []);
+  const renderCourseCell = useCallback((params: GridRenderCellParams<Applicant>) => {
+    const course = params.value || "-";
+    return (
+      <Tooltip title={course} arrow placement="top">
+        <span className="text-sm truncate cursor-default" style={{ color: params.value ? COLORS.textDark : COLORS.textMuted }}>
+          {course}
+        </span>
+      </Tooltip>
+    );
+  }, []);
 
   // Render status cell similar to University Application Summary
   const renderStatusCell = useCallback((params: GridRenderCellParams<Applicant>) => {
@@ -1032,19 +1050,21 @@ const ApplicantTracker = () => {
     }
     
     return (
-      <span
-        className="px-3 py-1 rounded-full text-xs font-medium"
-        style={{
-          backgroundColor: isOfferReceived 
-            ? `${COLORS.success}20` 
-            : `${COLORS.accent}20`,
-          color: isOfferReceived 
-            ? COLORS.success 
-            : COLORS.accent,
-        }}
-      >
-        {statusLabel}
-      </span>
+      <Tooltip title={statusLabel} arrow placement="top">
+        <span
+          className="px-3 py-1 rounded-full text-xs font-medium"
+          style={{
+            backgroundColor: isOfferReceived 
+              ? `${COLORS.success}20` 
+              : `${COLORS.accent}20`,
+            color: isOfferReceived 
+              ? COLORS.success 
+              : COLORS.accent,
+          }}
+        >
+          {statusLabel}
+        </span>
+      </Tooltip>
     );
   }, [handleApplyClick]);
 
@@ -1061,19 +1081,21 @@ const ApplicantTracker = () => {
     const isOfferReceived = stageLabel.toLowerCase() === "offer received";
     
     return (
-      <span
-        className="px-3 py-1 rounded-full text-xs font-medium"
-        style={{
-          backgroundColor: isOfferReceived 
-            ? `${COLORS.success}20` 
-            : `${COLORS.accent}20`,
-          color: isOfferReceived 
-            ? COLORS.success 
-            : COLORS.accent,
-        }}
-      >
-        {stageLabel}
-      </span>
+      <Tooltip title={stageLabel} arrow placement="top">
+        <span
+          className="px-3 py-1 rounded-full text-xs font-medium"
+          style={{
+            backgroundColor: isOfferReceived 
+              ? `${COLORS.success}20` 
+              : `${COLORS.accent}20`,
+            color: isOfferReceived 
+              ? COLORS.success 
+              : COLORS.accent,
+          }}
+        >
+          {stageLabel}
+        </span>
+      </Tooltip>
     );
   }, []);
 
@@ -1121,6 +1143,24 @@ const ApplicantTracker = () => {
     </div>
   ), [t, handleViewDocuments, handleViewStatusHistory, handleUpdateStatus]);
 
+  // Render ID cell with tooltip
+  const renderIdCell = useCallback((params: GridRenderCellParams<Applicant>) => {
+    const id = params.row.applicantId?.toString() || "-";
+    return (
+      <Tooltip title={id} arrow placement="top">
+        <span
+          className="truncate block cursor-default"
+          style={{
+            color: COLORS.textDark,
+            fontSize: typography.fontSize.small,
+          }}
+        >
+          {id}
+        </span>
+      </Tooltip>
+    );
+  }, []);
+
   // Table columns - memoized to prevent recreation
   const columns: GridColDef[] = useMemo(() => [
     {
@@ -1129,6 +1169,7 @@ const ApplicantTracker = () => {
       flex: 0.8,
       minWidth: 100,
       sortable: true,
+      renderCell: renderIdCell,
     },
     {
       field: "applicantName",
@@ -1202,7 +1243,7 @@ const ApplicantTracker = () => {
       sortable: false,
       renderCell: renderActionsCell,
     },
-  ], [t, renderApplicantNameCell, renderUniversityCell, renderCourseCell, renderAppliedDateCell, renderLastUpdatedDateCell, renderIntakeYearCell, renderStageCell, renderStatusCell, renderActionsCell]);
+  ], [t, renderIdCell, renderApplicantNameCell, renderUniversityCell, renderCourseCell, renderAppliedDateCell, renderLastUpdatedDateCell, renderIntakeYearCell, renderStageCell, renderStatusCell, renderActionsCell]);
 
   return (
     <Layout>
