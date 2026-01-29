@@ -424,12 +424,13 @@ const TeamOverview = () => {
     }
   }, [dispatch, filter.admin, filter.manager, filter.counselor, filter.enrollmentType, filter.fromDate, filter.toDate, pagination.page, pagination.size, sort.sortBy, sort.asc, mapApiResponseToTeamOverviewItem]);
 
-  // Initial fetch when user is loaded
+  // Initial fetch when user is loaded or filters/pagination/sort change
   useEffect(() => {
-    if (user) {
+    if (user?.agencyId && user?.userId) {
       fetchTeamOverview();
     }
-  }, [user, fetchTeamOverview]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.agencyId, user?.userId, filter.admin, filter.manager, filter.counselor, filter.enrollmentType, filter.fromDate, filter.toDate, pagination.page, pagination.size, sort.sortBy, sort.asc]);
 
   // Handle apply filters
   const handleApplyFilters = useCallback(() => {
