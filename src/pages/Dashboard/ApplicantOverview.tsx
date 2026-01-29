@@ -156,12 +156,13 @@ const ApplicantOverview = () => {
     }
   }, [dispatch, filter.search, filter.status, filter.enrollmentType, pagination.page, pagination.size, sort.sortBy, sort.asc]);
 
-  // Initial fetch when user is loaded
+  // Initial fetch when user is loaded or filters/pagination/sort change
   useEffect(() => {
-    if (user) {
+    if (user?.agencyId) {
       fetchApplicantOverview();
     }
-  }, [user, fetchApplicantOverview]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.agencyId, filter.search, filter.status, filter.enrollmentType, pagination.page, pagination.size, sort.sortBy, sort.asc]);
 
   // Cleanup debounce on unmount
   useEffect(() => {

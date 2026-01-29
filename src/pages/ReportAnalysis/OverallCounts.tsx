@@ -136,7 +136,8 @@ const OverallCounts = () => {
         lastAgencyIdRef.current = null;
       }
     };
-  }, [user?.agencyId, fetchOverallCounts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.agencyId]);
 
   return (
     <div className="space-y-6">

@@ -221,12 +221,13 @@ const ApplicantTracker = () => {
     }
   }, [dispatch, filter.admin, filter.manager, filter.counselor, filter.applicationStatus, filter.applicationStage, filter.university, filter.intake, filter.agencyPartner, filter.appliedFromDate, filter.appliedToDate, filter.lastUpdatedFromDate, filter.lastUpdatedToDate, filter.search, pagination.page, pagination.size, sort.sortBy, sort.asc, mapApplicationListItemToApplicant]);
 
-  // Initial fetch when user is loaded
+  // Initial fetch when user is loaded or filters/pagination/sort change
   useEffect(() => {
-    if (user) {
+    if (user?.agencyId) {
       fetchApplications();
     }
-  }, [user, fetchApplications]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.agencyId, filter.admin, filter.manager, filter.counselor, filter.applicationStatus, filter.applicationStage, filter.university, filter.intake, filter.agencyPartner, filter.appliedFromDate, filter.appliedToDate, filter.lastUpdatedFromDate, filter.lastUpdatedToDate, filter.search, pagination.page, pagination.size, sort.sortBy, sort.asc]);
 
   /**
    * Fetch filter options (admins, managers, counselors, universities) from API

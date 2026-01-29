@@ -123,7 +123,8 @@ const Graphs = () => {
       }
       fetchAnalytics();
     }
-  }, [user?.agencyId, fetchAnalytics]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.agencyId, user?.userId]);
 
   // Columns for Top Universities table
   const universityColumns: GridColDef[] = useMemo(
