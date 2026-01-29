@@ -4,7 +4,7 @@ import type { GridColDef, GridPaginationModel, GridRenderCellParams, GridSortMod
 import { Tooltip } from "@mui/material";
 import { DataTable } from "../../components";
 import type { SelectOption } from "../../components";
-import { COLORS, typography } from "../../constants";
+import { COLORS, typography, UserRole } from "../../constants";
 import { toTitleCase, formatDateToYYYYMMDD, handleApiError } from "../../utils";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { showLoader, hideLoader } from "../../redux/slices/loader/loaderSlice";
@@ -32,6 +32,12 @@ const TeamOverview = () => {
   const { teamOverviewData, isLoading, pagination, sort, filter } = useAppSelector(
     (state) => state.teamOverview
   );
+
+  // Determine user role for conditional filtering
+  const userRole = user?.role?.toUpperCase() || "";
+  const isPrimaryAdmin = user?.isPrimaryAdmin === true || userRole === UserRole.PRIMARY_ADMIN;
+  // MANAGER_BILLING should be treated as MANAGER
+  const isManager = userRole === UserRole.MANAGER || userRole === "MANAGER_BILLING";
 
   // Filter states (selected - what user is choosing, before Apply button)
   const [selectedAdmin, setSelectedAdmin] = useState("");
@@ -77,40 +83,95 @@ const TeamOverview = () => {
 
     isLoadingFilterOptionsRef.current = true;
     try {
-      const [adminsResult] = await Promise.allSettled([
-        userService.getAdmins(user.agencyId),
-      ]);
+      const currentUserRole = user?.role?.toUpperCase() || "";
+      const currentIsPrimaryAdmin = user?.isPrimaryAdmin === true || currentUserRole === UserRole.PRIMARY_ADMIN;
+      // ADMIN_BILLING should be treated as ADMIN
+      const currentIsAdmin = currentUserRole === UserRole.ADMIN || currentUserRole === "ADMIN_BILLING" || currentIsPrimaryAdmin;
+      // MANAGER_BILLING should be treated as MANAGER
+      const currentIsManager = currentUserRole === UserRole.MANAGER || currentUserRole === "MANAGER_BILLING";
 
-      // Process admins response
-      if (adminsResult.status === 'fulfilled') {
-        const adminsResponse = adminsResult.value;
-        
-        let admins: AdminItem[] = [];
-        if (Array.isArray(adminsResponse)) {
-          admins = adminsResponse;
-        } else if ((adminsResponse as any)?.data) {
-          admins = (adminsResponse as any).data;
+      // Only fetch admins if user is PRIMARY_ADMIN
+      if (currentIsPrimaryAdmin) {
+        const [adminsResult] = await Promise.allSettled([
+          userService.getAdmins(user.agencyId),
+        ]);
+
+        // Process admins response
+        if (adminsResult.status === 'fulfilled') {
+          const adminsResponse = adminsResult.value;
+          
+          let admins: AdminItem[] = [];
+          if (Array.isArray(adminsResponse)) {
+            admins = adminsResponse;
+          } else if ((adminsResponse as any)?.data) {
+            admins = (adminsResponse as any).data;
+          }
+          
+          const adminOptionsData = admins.map((admin: AdminItem) => ({
+            value: admin.id.toString(),
+            label: admin.name,
+          }));
+          
+          setAdminOptions(adminOptionsData);
+        } else {
+          dispatch(addToast({ type: "error", message: "Failed to fetch admins" }));
         }
-        
-        const adminOptionsData = admins.map((admin: AdminItem) => ({
-          value: admin.id.toString(),
-          label: admin.name,
-        }));
-        
-        setAdminOptions(adminOptionsData);
       } else {
-        dispatch(addToast({ type: "error", message: "Failed to fetch admins" }));
+        setAdminOptions([]);
       }
 
-      // Counselors will be fetched when manager is selected
-      setCounselorOptions([]);
+      // For ADMIN role: automatically fetch managers using logged-in admin's ID
+      if (currentIsAdmin && !currentIsPrimaryAdmin && user?.userId) {
+        try {
+          const managersResponse = await applicantService.getManagers(
+            user.agencyId,
+            user.userId.toString()
+          );
+          const managers = Array.isArray(managersResponse) ? managersResponse : [];
+          setManagerOptions(
+            managers.map((manager: ManagerItem) => ({
+              value: manager.id.toString(),
+              label: manager.name,
+            }))
+          );
+        } catch (error: any) {
+          // Silently fail - managers will be empty
+          setManagerOptions([]);
+        }
+      }
+
+      // For MANAGER role: automatically fetch counselors using logged-in manager's ID
+      if (currentIsManager && user?.userId) {
+        try {
+          const counselorsResponse = await applicantService.getCounselors(
+            user.agencyId,
+            user.userId.toString()
+          );
+          const counselors = Array.isArray(counselorsResponse) ? counselorsResponse : [];
+          setCounselorOptions(
+            counselors.map((counselor: CounselorItem) => ({
+              value: counselor.id.toString(),
+              label: counselor.name,
+            }))
+          );
+        } catch (error: any) {
+          // Silently fail - counselors will be empty
+          setCounselorOptions([]);
+        }
+      }
+
+      // For other roles, keep empty arrays
+      if (!currentIsAdmin && !currentIsManager) {
+        setManagerOptions([]);
+        setCounselorOptions([]);
+      }
     } catch (error: any) {
       const { message } = handleApiError(error, "Failed to fetch filter options");
       dispatch(addToast({ type: "error", message }));
     } finally {
       isLoadingFilterOptionsRef.current = false;
     }
-  }, [user?.agencyId, dispatch]);
+  }, [user?.agencyId, user?.role, user?.isPrimaryAdmin, user?.userId, dispatch]);
 
   // Initialize selected filters from Redux state on mount
   useEffect(() => {
@@ -189,8 +250,13 @@ const TeamOverview = () => {
     }
   }, [user?.agencyId, dispatch]);
 
-  // Fetch managers when admin is selected (use selectedAdmin for UI, filter.admin for Redux)
+  // Fetch managers when admin is selected (only for PRIMARY_ADMIN)
   useEffect(() => {
+    // Only fetch managers when admin is selected if user is PRIMARY_ADMIN
+    if (!isPrimaryAdmin) {
+      return;
+    }
+    
     const adminToUse = selectedAdmin || filter.admin;
     if (user?.agencyId && adminToUse) {
       fetchManagers(adminToUse);
@@ -206,10 +272,15 @@ const TeamOverview = () => {
         setSelectedCounselor("");
       }
     }
-  }, [selectedAdmin, filter.admin, user?.agencyId, fetchManagers, selectedCounselor]);
+  }, [selectedAdmin, filter.admin, user?.agencyId, isPrimaryAdmin, fetchManagers, selectedCounselor]);
 
-  // Fetch counselors when manager is selected
+  // Fetch counselors when manager is selected (for PRIMARY_ADMIN and ADMIN)
   useEffect(() => {
+    // Don't fetch counselors when manager is selected if user is MANAGER (they're already fetched)
+    if (isManager) {
+      return;
+    }
+    
     const managerToUse = selectedManager || filter.manager;
     if (user?.agencyId && managerToUse) {
       fetchCounselors(managerToUse);
@@ -220,7 +291,7 @@ const TeamOverview = () => {
         setSelectedCounselor("");
       }
     }
-  }, [selectedManager, filter.manager, user?.agencyId, fetchCounselors, selectedCounselor]);
+  }, [selectedManager, filter.manager, user?.agencyId, isManager, fetchCounselors, selectedCounselor]);
 
 
   /**
@@ -288,12 +359,18 @@ const TeamOverview = () => {
         assignedAdminId = parseInt(filter.admin, 10);
       } else {
         // No filters selected - use logged-in user's role as default
-        const userRole = (currentUser.role || "").toUpperCase().trim();
-        if (userRole === "ADMIN" || userRole === "PRIMARY_ADMIN") {
+        const currentUserRole = (currentUser.role || "").toUpperCase().trim();
+        const currentIsPrimaryAdmin = currentUser.isPrimaryAdmin === true || currentUserRole === UserRole.PRIMARY_ADMIN;
+        // ADMIN_BILLING should be treated as ADMIN
+        const currentIsAdmin = currentUserRole === UserRole.ADMIN || currentUserRole === "ADMIN_BILLING" || currentIsPrimaryAdmin;
+        // MANAGER_BILLING should be treated as MANAGER
+        const currentIsManager = currentUserRole === UserRole.MANAGER || currentUserRole === "MANAGER_BILLING";
+        
+        if (currentIsAdmin && !currentIsPrimaryAdmin) {
           assignedAdminId = currentUser.userId;
-        } else if (userRole === "MANAGER") {
+        } else if (currentIsManager) {
           assignedManagerId = currentUser.userId;
-        } else if (userRole === "COUNSELOR" || userRole === "COUNSELLOR") {
+        } else if (currentUserRole === "COUNSELOR" || currentUserRole === "COUNSELLOR") {
           assignedCounselorId = currentUser.userId;
         }
       }
@@ -686,6 +763,8 @@ const TeamOverview = () => {
         onToDateChange={setSelectedToDate}
         onApplyFilters={handleApplyFilters}
         onClearFilters={handleClearFilters}
+        userRole={user?.role}
+        isPrimaryAdmin={isPrimaryAdmin}
       />
 
       {/* Team Overview Table */}

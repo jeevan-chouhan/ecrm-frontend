@@ -1,7 +1,7 @@
 import { useMemo, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Select, DatePicker, type SelectOption } from "../../components";
-import { enrollmentTypes } from "../../constants";
+import { enrollmentTypes, UserRole } from "../../constants";
 
 interface TeamOverviewFiltersProps {
   adminOptions: SelectOption[];
@@ -21,6 +21,8 @@ interface TeamOverviewFiltersProps {
   onToDateChange: (date: Date | null) => void;
   onApplyFilters: () => void;
   onClearFilters: () => void;
+  userRole?: string | null;
+  isPrimaryAdmin?: boolean;
 }
 
 const TeamOverviewFilters = ({
@@ -41,8 +43,28 @@ const TeamOverviewFilters = ({
   onToDateChange,
   onApplyFilters,
   onClearFilters,
+  userRole,
+  isPrimaryAdmin,
 }: TeamOverviewFiltersProps) => {
   const { t } = useTranslation();
+
+  // Determine which filters to show based on user role
+  const showAdminFilter = useMemo(() => {
+    const role = userRole?.toUpperCase() || "";
+    return isPrimaryAdmin || role === UserRole.PRIMARY_ADMIN;
+  }, [userRole, isPrimaryAdmin]);
+
+  const showManagerFilter = useMemo(() => {
+    const role = userRole?.toUpperCase() || "";
+    // Show for PRIMARY_ADMIN, ADMIN, and ADMIN_BILLING
+    return isPrimaryAdmin || role === UserRole.PRIMARY_ADMIN || role === UserRole.ADMIN || role === "ADMIN_BILLING";
+  }, [userRole, isPrimaryAdmin]);
+
+  const showCounselorFilter = useMemo(() => {
+    const role = userRole?.toUpperCase() || "";
+    // Show for PRIMARY_ADMIN, ADMIN, ADMIN_BILLING, MANAGER, and MANAGER_BILLING
+    return isPrimaryAdmin || role === UserRole.PRIMARY_ADMIN || role === UserRole.ADMIN || role === "ADMIN_BILLING" || role === UserRole.MANAGER || role === "MANAGER_BILLING";
+  }, [userRole, isPrimaryAdmin]);
 
   // Set max date to today to disable future dates
   const maxDate = useMemo(() => {
@@ -86,38 +108,44 @@ const TeamOverviewFilters = ({
         }
       `}</style>
       
-      {/* Admin Select */}
-      <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-7*0.75rem)/8)] lg:min-w-[180px] team-overview-filter-placeholder">
-        <Select
-          label={t("reportAnalysis.teamOverview.adminLabel", "Admin")}
-          options={adminOptionsWithPlaceholder}
-          value={selectedAdmin}
-          onChange={(value) => onAdminChange(value as string)}
-          searchable
-        />
-      </div>
+      {/* Admin Select - Only show for PRIMARY_ADMIN */}
+      {showAdminFilter && (
+        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-7*0.75rem)/8)] lg:min-w-[180px] team-overview-filter-placeholder">
+          <Select
+            label={t("reportAnalysis.teamOverview.adminLabel", "Admin")}
+            options={adminOptionsWithPlaceholder}
+            value={selectedAdmin}
+            onChange={(value) => onAdminChange(value as string)}
+            searchable
+          />
+        </div>
+      )}
 
-      {/* Manager Select */}
-      <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-7*0.75rem)/8)] lg:min-w-[180px] team-overview-filter-placeholder">
-        <Select
-          label={t("reportAnalysis.teamOverview.managerLabel", "Manager")}
-          options={managerOptionsWithPlaceholder}
-          value={selectedManager}
-          onChange={(value) => onManagerChange(value as string)}
-          searchable
-        />
-      </div>
+      {/* Manager Select - Show for PRIMARY_ADMIN and ADMIN */}
+      {showManagerFilter && (
+        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-7*0.75rem)/8)] lg:min-w-[180px] team-overview-filter-placeholder">
+          <Select
+            label={t("reportAnalysis.teamOverview.managerLabel", "Manager")}
+            options={managerOptionsWithPlaceholder}
+            value={selectedManager}
+            onChange={(value) => onManagerChange(value as string)}
+            searchable
+          />
+        </div>
+      )}
 
-      {/* Counselor Select */}
-      <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-7*0.75rem)/8)] lg:min-w-[180px] team-overview-filter-placeholder">
-        <Select
-          label={t("reportAnalysis.teamOverview.counselorLabel", "Counselor")}
-          options={counselorOptionsWithPlaceholder}
-          value={selectedCounselor}
-          onChange={(value) => onCounselorChange(value as string)}
-          searchable
-        />
-      </div>
+      {/* Counselor Select - Show for PRIMARY_ADMIN, ADMIN, and MANAGER */}
+      {showCounselorFilter && (
+        <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-7*0.75rem)/8)] lg:min-w-[180px] team-overview-filter-placeholder">
+          <Select
+            label={t("reportAnalysis.teamOverview.counselorLabel", "Counselor")}
+            options={counselorOptionsWithPlaceholder}
+            value={selectedCounselor}
+            onChange={(value) => onCounselorChange(value as string)}
+            searchable
+          />
+        </div>
+      )}
 
       {/* Enrolment Type Select */}
       <div className="w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc((100%-7*0.75rem)/8)] lg:min-w-[180px] team-overview-filter-placeholder">
