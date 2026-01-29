@@ -139,6 +139,7 @@ export const store = configureStore({
 export const persistor = persistStore(store);
 
 // Export types for TypeScript
-export type RootState = ReturnType<typeof store.getState>;
+// Use rootReducer for RootState to avoid PersistPartial type issues
+export type RootState = ReturnType<typeof rootReducer>;
 export type AppDispatch = typeof store.dispatch;
 
