@@ -5,6 +5,7 @@ import { COLORS, ROUTES } from "../../constants";
 import PricingContent from "./PricingContent";
 
 interface LocationState {
+  agencyId?: number;
   stripeLinks?: {
     agencyPrimeLink?: string;
     agencyPrimeYearlyLink?: string;
@@ -22,7 +23,8 @@ const Pricing = () => {
   // Wrapper component based on route
   const Wrapper = isProtectedRoute ? Layout : PublicLayout;
 
-  // Get stripe links from navigation state (passed from Register page)
+  // Get agencyId and stripe links from navigation state (passed from Register page)
+  const agencyId = state?.agencyId;
   const stripeLinks = state?.stripeLinks;
 
   return (
@@ -31,7 +33,7 @@ const Pricing = () => {
         className="min-h-[calc(100vh-4rem)] py-12 px-4"
         style={{ backgroundColor: COLORS.background }}
       >
-        <PricingContent showHeader={true} stripeLinks={stripeLinks} />
+        <PricingContent showHeader={true} stripeLinks={stripeLinks} agencyId={agencyId} />
       </div>
     </Wrapper>
   );

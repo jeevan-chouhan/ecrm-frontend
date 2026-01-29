@@ -12,6 +12,7 @@ export { default as Chip } from "./Chip/Chip";
 export { default as StatusChangePopup } from "./StatusChangePopup/StatusChangePopup";
 export { default as ConfirmationPopup } from "./ConfirmationPopup/ConfirmationPopup";
 export { default as Checkbox } from "./Checkbox/Checkbox";
+export { default as RadioGroup } from "./RadioGroup/RadioGroup";
 export { default as PhoneInput } from "./PhoneInput/PhoneInput";
 export { default as FileUpload } from "./FileUpload/FileUpload";
 export { default as DataTable } from "./DataTable/DataTable";
@@ -35,4 +36,5 @@ export { Header, Sidebar, Footer, Layout } from "./wrapper";
 export type { SelectOption } from "./Select/Select";
 export type { MultiSelectOption } from "./MultiSelect/MultiSelect";
 export type { DateRange } from "./DateRangePicker/DateRangePicker";
+export type { RadioOption, RadioGroupProps } from "./RadioGroup/RadioGroup";
 

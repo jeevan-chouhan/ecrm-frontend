@@ -173,7 +173,7 @@ api.interceptors.response.use(
     // ----------------------------------------
     // Handle 403 Unauthorized - Refresh Token
     // ----------------------------------------
-    if (statusCode === 403 && !originalRequest._retry) {
+    if (statusCode === 401 && !originalRequest._retry) {
       // Don't refresh if the failed request was the refresh endpoint itself
       if (originalRequest.url?.includes(ENDPOINTS.AUTH.REFRESH)) {
         return Promise.reject(error);
