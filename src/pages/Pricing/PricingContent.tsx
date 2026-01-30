@@ -244,6 +244,17 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
 
   return (
     <div className={`${maxWidth} mx-auto`}>
+      {/* Scoped hover styles for pricing buttons */}
+      <style>{`
+        .pricing-card-container button:not(:disabled) {
+          position: relative;
+        }
+        .pricing-card-container button:not(:disabled):hover {
+          background-color: #6A1F9E !important;
+          box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.4) !important;
+          z-index: 20 !important;
+        }
+      `}</style>
       {/* Header */}
       {showHeader && (
         <div className="text-center mb-10">
@@ -266,7 +277,7 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
       )}
 
       {/* Pricing Cards */}
-      <div className="grid md:grid-cols-2 gap-8">
+      <div className="grid md:grid-cols-2 gap-8 pricing-card-container">
         {pricingPlans.map((plan) => {
           const isSelected = selectedPlan === plan.id;
           return (
