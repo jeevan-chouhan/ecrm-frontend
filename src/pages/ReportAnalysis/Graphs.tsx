@@ -171,7 +171,7 @@ const Graphs = () => {
           <p className="text-sm mb-4" style={{ color: COLORS.textMuted }}>
             {t(
               "reportAnalysis.graphs.countriesDescription",
-              "Distribution of successful applicants in the country"
+              "Distribution Of Successful Applications In The Country"
             )}
           </p>
           {isLoading ? (
