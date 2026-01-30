@@ -126,10 +126,12 @@
     "enterCurrentPassword": "Enter Current Password",
     "enterNewPassword": "Enter New Password",
     "enterConfirmPassword": "Confirm New Password",
-    "passwordChangedSuccess": "Password changed successfully",
-    "passwordUpdatedSuccess": "Password updated successfully",
-    "passwordUpdateFailed": "Failed to update password",
-    "emailNotFound": "Email not found"
+    "passwordChangedSuccess": "Password Changed Successfully",
+    "passwordUpdatedSuccess": "Password Updated Successfully",
+    "passwordUpdatedSuccessRelogin": "Password Updated Successfully. Please Log In Again",
+    "passwordUpdateFailed": "Failed To Update Password",
+    "emailNotFound": "Email Not Found",
+    "passwordChangeRequired": "You Must Change Your Password Before Accessing The Application"
   },
   "dashboard": {
     "title": "Dashboard",

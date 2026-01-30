@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Input, MultiSelect, Button } from "../../components";
-import { COLORS, typography } from "../../constants";
 import { agencyService } from "../../services";
 import type { GlobalAndServingCountry, GlobalAndServingUniversity } from "../../services";
 import { useAppSelector, useAppDispatch } from "../../redux/hooks";

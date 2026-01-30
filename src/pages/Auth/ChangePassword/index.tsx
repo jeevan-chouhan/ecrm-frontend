@@ -6,6 +6,11 @@ import { authService } from "../../../services";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { addToast } from "../../../redux/slices/toast/toastSlice";
 import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
+import { updateTokens, updatePasswordChangedStatus } from "../../../redux/slices/auth/authSlice";
+import { decodeToken } from "../../../utils";
+import api from "../../../services/api";
+import { ENDPOINTS } from "../../../services/endpoints";
+import type { RefreshTokenResponse } from "../../../services/types";
 
 interface ChangePasswordProps {
   onSuccess?: () => void;
@@ -91,22 +96,83 @@ const ChangePassword = ({ onSuccess, onCancel }: ChangePasswordProps) => {
       });
 
       if (response.status === "success") {
-        dispatch(addToast({
-          type: "success",
-          message: response.message || t("auth.passwordUpdatedSuccess", "Password updated successfully"),
-        }));
-        onSuccess?.();
+        // After password change, refresh the token to get a new token with updated isPasswordChanged
+        try {
+          const refreshToken = authService.getRefreshToken();
+          if (refreshToken) {
+            const refreshResponse = await api.post<RefreshTokenResponse>(
+              ENDPOINTS.AUTH.REFRESH,
+              { refreshToken }
+            );
+
+            if (refreshResponse.data.status === "success" && refreshResponse.data.data) {
+              const { accessToken: newAccessToken, refreshToken: newRefreshToken } = refreshResponse.data.data;
+              
+              // Update Redux state with new tokens
+              dispatch(updateTokens({
+                accessToken: newAccessToken,
+                refreshToken: newRefreshToken,
+              }));
+
+              // Verify the new token has isPasswordChanged: true
+              const decodedUser = decodeToken(newAccessToken);
+              if (decodedUser?.isPasswordChanged) {
+                dispatch(addToast({
+                  type: "success",
+                  message: response.message || t("auth.passwordUpdatedSuccess", "Password Updated Successfully"),
+                }));
+                // Small delay to ensure state is updated before navigation
+                setTimeout(() => {
+                  onSuccess?.();
+                }, 100);
+              } else {
+                // Token still shows password not changed, manually update the status as fallback
+                dispatch(updatePasswordChangedStatus(true));
+                dispatch(addToast({
+                  type: "success",
+                  message: response.message || t("auth.passwordUpdatedSuccess", "Password Updated Successfully"),
+                }));
+                // Small delay to ensure state is updated before navigation
+                setTimeout(() => {
+                  onSuccess?.();
+                }, 100);
+              }
+            } else {
+              // Refresh failed, but password was updated
+              dispatch(addToast({
+                type: "success",
+                message: response.message || t("auth.passwordUpdatedSuccessRelogin", "Password Updated Successfully. Please Log In Again"),
+              }));
+              onSuccess?.();
+            }
+          } else {
+            // No refresh token, but password was updated
+            dispatch(addToast({
+              type: "success",
+              message: response.message || t("auth.passwordUpdatedSuccessRelogin", "Password Updated Successfully. Please Log In Again"),
+            }));
+            onSuccess?.();
+          }
+        } catch (refreshError) {
+          // Token refresh failed, but password was updated
+          console.error("Failed to refresh token after password change:", refreshError);
+          dispatch(addToast({
+            type: "success",
+            message: response.message || t("auth.passwordUpdatedSuccessRelogin", "Password Updated Successfully. Please Log In Again"),
+          }));
+          onSuccess?.();
+        }
       } else {
         dispatch(addToast({
           type: "error",
-          message: response.message || t("auth.passwordUpdateFailed", "Failed to update password"),
+          message: response.message || t("auth.passwordUpdateFailed", "Failed To Update Password"),
         }));
       }
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
-        t("auth.passwordUpdateFailed", "Failed to update password");
+        t("auth.passwordUpdateFailed", "Failed To Update Password");
 
       dispatch(addToast({ type: "error", message: errorMessage }));
     } finally {

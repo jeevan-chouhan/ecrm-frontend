@@ -128,8 +128,10 @@
     "enterConfirmPassword": "नए पासवर्ड की पुष्टि करें",
     "passwordChangedSuccess": "पासवर्ड सफलतापूर्वक बदल दिया गया",
     "passwordUpdatedSuccess": "पासवर्ड सफलतापूर्वक अपडेट किया गया",
+    "passwordUpdatedSuccessRelogin": "पासवर्ड सफलतापूर्वक अपडेट किया गया। कृपया फिर से लॉग इन करें",
     "passwordUpdateFailed": "पासवर्ड अपडेट करने में विफल",
-    "emailNotFound": "ईमेल नहीं मिला"
+    "emailNotFound": "ईमेल नहीं मिला",
+    "passwordChangeRequired": "आपको एप्लिकेशन तक पहुंचने से पहले अपना पासवर्ड बदलना होगा"
   },
   "dashboard": {
     "title": "डैशबोर्ड",
