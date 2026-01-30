@@ -11,6 +11,7 @@ export const ROUTES = {
   FORGOT_PASSWORD: "/forgot-password",
   OTP_VERIFICATION: "/otp-verification",
   RESET_PASSWORD: "/reset-password",
+  PAYMENT_STATUS: "/payment-status",
 
   // Protected routes (logged-in users)
   DASHBOARD: "/dashboard",
