@@ -89,6 +89,13 @@ const authSlice = createSlice({
         localStorage.removeItem("refreshToken");
       }
     },
+
+    // Manually update user's password changed status (fallback if token refresh doesn't work)
+    updatePasswordChangedStatus: (state, action: PayloadAction<boolean>) => {
+      if (state.user) {
+        state.user.isPasswordChanged = action.payload;
+      }
+    },
   },
 });
 
@@ -98,6 +105,7 @@ export const {
   updateTokens,
   clearCredentials,
   initializeAuth,
+  updatePasswordChangedStatus,
 } = authSlice.actions;
 
 export default authSlice.reducer;

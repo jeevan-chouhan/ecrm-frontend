@@ -68,14 +68,16 @@ const Login = () => {
         });
 
         if (response.status === "success" && response.data) {
-          // Decode and log the access token
+          // Decode token once and reuse
           const accessToken = response.data.accessToken;
+          let decodedPayload: any = null;
+          
           if (accessToken) {
             try {
               // JWT token has 3 parts: header.payload.signature
               const tokenParts = accessToken.split('.');
               if (tokenParts.length === 3) {
-                const decodedPayload = JSON.parse(atob(tokenParts[1]));
+                decodedPayload = JSON.parse(atob(tokenParts[1]));
                 console.log('=== Decoded Access Token ===');
                 console.log('Token:', accessToken);
                 console.log('Decoded Payload:', decodedPayload);
@@ -94,11 +96,8 @@ const Login = () => {
           }
 
           // Fetch menu items based on user role and store in Redux
-          try {
-            // Decode token to get user role
-            const tokenParts = accessToken.split('.');
-            if (tokenParts.length === 3) {
-              const decodedPayload = JSON.parse(atob(tokenParts[1]));
+          if (decodedPayload) {
+            try {
               const userRole = decodedPayload.role;
               if (userRole) {
                 const menuResponse = await userService.getMenuByRole(userRole);
@@ -106,10 +105,13 @@ const Login = () => {
                   dispatch(setMenuItems(menuResponse.data));
                 }
               }
+            } catch (menuError) {
+              console.error("Failed to fetch menu:", menuError);
             }
-          } catch (menuError) {
-            console.error("Failed to fetch menu:", menuError);
           }
+
+          // Check if password needs to be changed (reuse decoded payload)
+          const isPasswordChanged = decodedPayload?.isPasswordChanged ?? true;
 
           // Show success toast
           dispatch(
@@ -119,8 +121,13 @@ const Login = () => {
             })
           );
 
-          // Navigate to the originally requested URL or dashboard
-          navigate(from, { replace: true });
+          // If password not changed, redirect to change-password page
+          if (!isPasswordChanged) {
+            navigate(ROUTES.CHANGE_PASSWORD, { replace: true });
+          } else {
+            // Navigate to the originally requested URL or dashboard
+            navigate(from, { replace: true });
+          }
         } else {
           // Show error toast for non-success response
           dispatch(

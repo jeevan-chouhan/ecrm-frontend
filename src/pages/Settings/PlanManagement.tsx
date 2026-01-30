@@ -80,12 +80,6 @@ const PlanManagement = () => {
           >
             {t("settingsPage.planManagement", "Plan Management")}
           </h2>
-          <p
-            className="text-base md:text-lg mb-4"
-            style={{ color: COLORS.textMuted }}
-          >
-            {t("settingsPage.planManagementSubtitle", "Explore features included in your current plan. Upgrade anytime to unlock more capabilities.")}
-          </p>
           <p className="text-xs" style={{ color: COLORS.textMuted }}>
             * Prices exclude applicable taxes (VAT/GST/Sales Tax), which will be calculated at checkout.
           </p>

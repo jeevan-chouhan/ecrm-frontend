@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Button } from "../../components";
+import { Button, ConfirmationPopup } from "../../components";
 import { COLORS, ROUTES } from "../../constants";
 import { Check, Close } from "../../assets";
 import { userService, agencyService } from "../../services";
@@ -88,6 +88,13 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
   const [paymentLinks, setPaymentLinks] = useState<PaymentLinksData | null>(null);
   const hasFetched = useRef(false);
   const hasFetchedPaymentLinks = useRef(false);
+  
+  // Confirmation popup state
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{
+    type: "trial" | "paymentLink" | "stripeLink" | "register";
+    data?: any;
+  } | null>(null);
 
   // Fetch payment links on mount (for Plan Management - when subscription exists)
   useEffect(() => {
@@ -112,15 +119,20 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
   const handlePaymentLinkClick = (linkType: keyof PaymentLinksData) => {
     const link = paymentLinks?.[linkType];
     if (link) {
-      window.open(link, "_blank");
+      setPendingAction({ type: "paymentLink", data: link });
+      setShowConfirmation(true);
     } else {
       dispatch(addToast({ type: "error", message: t("pricing.linkNotAvailable", "Payment link not available") }));
     }
   };
 
-  // Handle Start Free Trial
-  const handleStartFreeTrial = async () => {
-    // Use agencyId from register response (passed via props) or fallback to logged-in user's agencyId
+  // Execute payment link click after confirmation
+  const executePaymentLinkClick = (link: string) => {
+    window.open(link, "_blank");
+  };
+
+  // Handle Start Free Trial - show confirmation first
+  const handleStartFreeTrial = () => {
     const trialUserId = agencyId;
     
     if (!trialUserId) {
@@ -129,6 +141,12 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
       return;
     }
 
+    setPendingAction({ type: "trial", data: trialUserId });
+    setShowConfirmation(true);
+  };
+
+  // Execute Start Free Trial after confirmation
+  const executeStartFreeTrial = async (trialUserId: number) => {
     dispatch(showLoader());
     try {
       const response = await agencyService.startTrial(trialUserId);
@@ -141,6 +159,76 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
       dispatch(addToast({ type: "error", message: t("pricing.trialFailed", "Failed to start trial") }));
     } finally {
       dispatch(hideLoader());
+    }
+  };
+
+  // Handle Stripe link click - show confirmation first
+  const handleStripeLinkClick = (link: string) => {
+    setPendingAction({ type: "stripeLink", data: link });
+    setShowConfirmation(true);
+  };
+
+  // Execute Stripe link click after confirmation
+  const executeStripeLinkClick = (link: string) => {
+    window.open(link, "_blank");
+  };
+
+  // Handle Register navigation - show confirmation first
+  const handleRegisterNavigation = (planId: string, planName: string) => {
+    setPendingAction({ type: "register", data: { planId, planName } });
+    setShowConfirmation(true);
+  };
+
+  // Execute Register navigation after confirmation
+  const executeRegisterNavigation = (planId: string, planName: string) => {
+    setSelectedPlan(planId);
+    navigate(ROUTES.REGISTER, { state: { selectedPlan: planId, planName } });
+  };
+
+  // Handle confirmation popup confirm
+  const handleConfirm = () => {
+    if (!pendingAction) return;
+
+    switch (pendingAction.type) {
+      case "trial":
+        executeStartFreeTrial(pendingAction.data);
+        break;
+      case "paymentLink":
+        executePaymentLinkClick(pendingAction.data);
+        break;
+      case "stripeLink":
+        executeStripeLinkClick(pendingAction.data);
+        break;
+      case "register":
+        executeRegisterNavigation(pendingAction.data.planId, pendingAction.data.planName);
+        break;
+    }
+
+    setShowConfirmation(false);
+    setPendingAction(null);
+  };
+
+  // Handle confirmation popup cancel
+  const handleCancel = () => {
+    setShowConfirmation(false);
+    setPendingAction(null);
+  };
+
+  // Get confirmation message based on action type
+  const getConfirmationMessage = () => {
+    if (!pendingAction) return "";
+
+    switch (pendingAction.type) {
+      case "trial":
+        return t("pricing.confirmStartTrial", "Are you sure you want to start the 14-day free trial?");
+      case "paymentLink":
+        return t("pricing.confirmPaymentLink", "Are you sure you want to proceed with this payment?");
+      case "stripeLink":
+        return t("pricing.confirmStripeLink", "Are you sure you want to proceed with this plan?");
+      case "register":
+        return t("pricing.confirmRegister", "Are you sure you want to proceed with registration?");
+      default:
+        return t("common.confirmAction", "Are you sure you want to proceed?");
     }
   };
 
@@ -244,6 +332,17 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
 
   return (
     <div className={`${maxWidth} mx-auto`}>
+      {/* Scoped hover styles for pricing buttons */}
+      <style>{`
+        .pricing-card-container button:not(:disabled) {
+          position: relative;
+        }
+        .pricing-card-container button:not(:disabled):hover {
+          background-color: #6A1F9E !important;
+          box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.4) !important;
+          z-index: 20 !important;
+        }
+      `}</style>
       {/* Header */}
       {showHeader && (
         <div className="text-center mb-10">
@@ -253,12 +352,6 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
           >
             Choose The Right Plan For Your Agency
           </h1>
-          <p
-            className="text-base md:text-lg max-w-2xl mx-auto mb-4"
-            style={{ color: COLORS.textMuted }}
-          >
-            Explore features included in your current plan. Upgrade anytime to unlock more capabilities.
-          </p>
           <p className="text-xs" style={{ color: COLORS.textMuted }}>
             * Prices exclude applicable taxes (VAT/GST/Sales Tax), which will be calculated at checkout.
           </p>
@@ -266,7 +359,7 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
       )}
 
       {/* Pricing Cards */}
-      <div className="grid md:grid-cols-2 gap-8">
+      <div className="grid md:grid-cols-2 gap-8 pricing-card-container">
         {pricingPlans.map((plan) => {
           const isSelected = selectedPlan === plan.id;
           return (
@@ -470,7 +563,7 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
                         onClick={(e) => {
                           e.stopPropagation();
                           if (stripeLinks.agencyProYearlyLink) {
-                            window.open(stripeLinks.agencyProYearlyLink, "_blank");
+                            handleStripeLinkClick(stripeLinks.agencyProYearlyLink);
                           }
                         }}
                         disabled={!stripeLinks.agencyProYearlyLink}
@@ -489,7 +582,7 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
                         onClick={(e) => {
                           e.stopPropagation();
                           if (stripeLinks.agencyPrimeLink) {
-                            window.open(stripeLinks.agencyPrimeLink, "_blank");
+                            handleStripeLinkClick(stripeLinks.agencyPrimeLink);
                           }
                         }}
                         disabled={!stripeLinks.agencyPrimeLink}
@@ -505,7 +598,7 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
                         onClick={(e) => {
                           e.stopPropagation();
                           if (stripeLinks.agencyPrimeYearlyLink) {
-                            window.open(stripeLinks.agencyPrimeYearlyLink, "_blank");
+                            handleStripeLinkClick(stripeLinks.agencyPrimeYearlyLink);
                           }
                         }}
                         disabled={!stripeLinks.agencyPrimeYearlyLink}
@@ -523,8 +616,7 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
                     rounded
                     onClick={(e) => {
                       e.stopPropagation();
-                      setSelectedPlan(plan.id);
-                      navigate(ROUTES.REGISTER, { state: { selectedPlan: plan.id, planName: plan.name } });
+                      handleRegisterNavigation(plan.id, plan.name);
                     }}
                   >
                     {plan.buttonText}
@@ -535,6 +627,17 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
           );
         })}
       </div>
+
+      {/* Confirmation Popup */}
+      <ConfirmationPopup
+        isOpen={showConfirmation}
+        title={t("pricing.confirmAction", "Confirm Action")}
+        message={getConfirmationMessage()}
+        onConfirm={handleConfirm}
+        onClose={handleCancel}
+        confirmLabel={t("common.confirm", "Confirm")}
+        cancelLabel={t("common.cancel", "Cancel")}
+      />
     </div>
   );
 };

@@ -128,8 +128,10 @@
     "enterConfirmPassword": "नए पासवर्ड की पुष्टि करें",
     "passwordChangedSuccess": "पासवर्ड सफलतापूर्वक बदल दिया गया",
     "passwordUpdatedSuccess": "पासवर्ड सफलतापूर्वक अपडेट किया गया",
+    "passwordUpdatedSuccessRelogin": "पासवर्ड सफलतापूर्वक अपडेट किया गया। कृपया फिर से लॉग इन करें",
     "passwordUpdateFailed": "पासवर्ड अपडेट करने में विफल",
-    "emailNotFound": "ईमेल नहीं मिला"
+    "emailNotFound": "ईमेल नहीं मिला",
+    "passwordChangeRequired": "आपको एप्लिकेशन तक पहुंचने से पहले अपना पासवर्ड बदलना होगा"
   },
   "dashboard": {
     "title": "डैशबोर्ड",
@@ -693,7 +695,6 @@
     "generalSetting": "सामान्य सेटिंग",
     "planManagement": "योजना प्रबंधन",
     "planManagementDescription": "सदस्यता योजनाएं (फ्री, प्रीमियम) अपग्रेड/नवीनीकरण",
-    "planManagementSubtitle": "अपनी वर्तमान योजना में शामिल सुविधाओं का अन्वेषण करें। अधिक क्षमताओं को अनलॉक करने के लिए कभी भी अपग्रेड करें।",
     "agencyName": "एजेंसी का नाम",
     "agencyNamePlaceholder": "एजेंसी का नाम दर्ज करें",
     "addCountriesServing": "सेवारत देश",
@@ -832,5 +833,18 @@
     "enterAmount": "राशि दर्ज करें",
     "amountRequired": "राशि आवश्यक है",
     "amountInvalid": "कृपया एक वैध राशि दर्ज करें"
+  },
+  "paymentStatus": {
+    "successTitle": "भुगतान सफल!",
+    "successMessage": "आपका पंजीकरण सफलतापूर्वक पूरा हो गया है। पुष्टिकरण और लॉगिन क्रेडेंशियल आपके ईमेल पर भेजे गए हैं",
+    "successMessageLine1": "आपका पंजीकरण सफलतापूर्वक पूरा हो गया है।",
+    "successMessageLine2": "पुष्टिकरण और लॉगिन क्रेडेंशियल आपके ईमेल पर भेजे गए हैं",
+    "failureTitle": "भुगतान विफल",
+    "failureMessage": "ऐसा लगता है कि हमें पैसा प्राप्त नहीं हुआ है",
+    "pendingTitle": "भुगतान लंबित",
+    "pendingMessage": "आपका भुगतान प्रसंस्करण में है। कृपया पुष्टि की प्रतीक्षा करें",
+    "pendingMessageLine1": "आपका भुगतान प्रसंस्करण में है। कृपया पुष्टि की प्रतीक्षा करें",
+    "pendingMessageLine2": "एक बार भुगतान की पुष्टि होने के बाद हम आपको मेल भेजेंगे",
+    "tryAgain": "पुनः प्रयास करें"
   }
 }

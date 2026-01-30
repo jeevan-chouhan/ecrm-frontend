@@ -126,10 +126,12 @@
     "enterCurrentPassword": "Enter Current Password",
     "enterNewPassword": "Enter New Password",
     "enterConfirmPassword": "Confirm New Password",
-    "passwordChangedSuccess": "Password changed successfully",
-    "passwordUpdatedSuccess": "Password updated successfully",
-    "passwordUpdateFailed": "Failed to update password",
-    "emailNotFound": "Email not found"
+    "passwordChangedSuccess": "Password Changed Successfully",
+    "passwordUpdatedSuccess": "Password Updated Successfully",
+    "passwordUpdatedSuccessRelogin": "Password Updated Successfully. Please Log In Again",
+    "passwordUpdateFailed": "Failed To Update Password",
+    "emailNotFound": "Email Not Found",
+    "passwordChangeRequired": "You Must Change Your Password Before Accessing The Application"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -371,7 +373,6 @@
     "generalSetting": "General Setting",
     "planManagement": "Plan Management",
     "planManagementDescription": "Subscription Plans (Free, Premium) Upgrade/Renew",
-    "planManagementSubtitle": "Explore features included in your current plan. Upgrade anytime to unlock more capabilities.",
     "agencyName": "Agency Name",
     "agencyNamePlaceholder": "Enter Agency Name",
     "addCountriesServing": "Countries Serving",
@@ -783,7 +784,7 @@
       "title": "Graphs",
       "description": "View Analytics And Visual Reports",
       "countriesServing": "Countries Serving",
-      "countriesDescription": "Distribution of successful applicants in the country",
+      "countriesDescription": "Distribution Of Successful Applications In The Country",
       "topUniversities": "Top Universities",
       "universityName": "Top Universities",
       "successfulApplicants": "No. of Successful Applications",
@@ -833,5 +834,18 @@
     "enterAmount": "Enter Amount",
     "amountRequired": "Amount Is Required",
     "amountInvalid": "Please Enter A Valid Amount"
+  },
+  "paymentStatus": {
+    "successTitle": "Payment Success!",
+    "successMessage": "Your Registration Has Been Completed Successfully. Confirmation And Login Credentials Sent To Your Email",
+    "successMessageLine1": "Your Registration Has Been Completed Successfully.",
+    "successMessageLine2": "Confirmation And Login Credentials Sent To Your Email",
+    "failureTitle": "Payment Failed",
+    "failureMessage": "It Seems We Have Not Received Money",
+    "pendingTitle": "Payment Pending",
+    "pendingMessage": "Your Payment Is Being Processed. Please Wait For Confirmation",
+    "pendingMessageLine1": "Your Payment Is Being Processed. Please Wait For Confirmation",
+    "pendingMessageLine2": "Once Payment Confirmed We Will Send You Mail",
+    "tryAgain": "Try Again"
   }
 }

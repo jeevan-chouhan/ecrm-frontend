@@ -22,6 +22,9 @@ const OtpVerification = lazy(() => import("./pages/Auth/OtpVerification"));
 const ResetPassword = lazy(() => import("./pages/Auth/ResetPassword"));
 const ChangePasswordPage = lazy(() => import("./pages/Auth/ChangePassword/ChangePasswordPage"));
 
+// Payment Status Page (No auth required)
+const PaymentStatus = lazy(() => import("./pages/PaymentStatus"));
+
 // Error Pages
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -108,6 +111,9 @@ function App() {
         {protectedRoutes.map(({ path, element }) => (
           <Route key={path} path={path} element={<ProtectedRoute>{element}</ProtectedRoute>} />
         ))}
+
+        {/* Payment Status - No auth required (accessible to all) */}
+        <Route path={ROUTES.PAYMENT_STATUS} element={<PaymentStatus />} />
 
         {/* 404 - Catch all unmatched routes */}
         <Route path="*" element={<NotFound />} />

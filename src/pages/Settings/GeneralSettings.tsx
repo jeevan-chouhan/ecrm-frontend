@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Input, MultiSelect, Button } from "../../components";
-import { COLORS, typography } from "../../constants";
 import { agencyService } from "../../services";
 import type { GlobalAndServingCountry, GlobalAndServingUniversity } from "../../services";
 import { useAppSelector, useAppDispatch } from "../../redux/hooks";
@@ -16,6 +15,9 @@ const GeneralSettings = () => {
   
   // Track if any country or university was initially selected (to decide POST vs PUT)
   const hasInitialSelection = useRef(false);
+  
+  // Track if we should fetch universities on country change (skip on initial load)
+  const shouldFetchUniversitiesOnChange = useRef(false);
 
   // Form state
   const [agencyName, setAgencyName] = useState("");
@@ -25,6 +27,48 @@ const GeneralSettings = () => {
   // Dropdown options from API
   const [countryOptions, setCountryOptions] = useState<{ value: string; label: string }[]>([]);
   const [universityOptions, setUniversityOptions] = useState<{ value: string; label: string }[]>([]);
+
+  // Function to fetch universities based on selected countries
+  const fetchUniversitiesByCountries = async (countryIds: string[], preserveSelection: boolean = false) => {
+    if (!user?.agencyId || countryIds.length === 0) {
+      setUniversityOptions([]);
+      setSelectedUniversities([]);
+      return;
+    }
+
+    try {
+      const response = await agencyService.getSettingUniversityList(
+        user.agencyId,
+        countryIds.map((id) => parseInt(id, 10))
+      );
+
+      if (response.status === "success" && response.data) {
+        // Update university options
+        const newUniversityOptions = response.data.map((u) => ({
+          value: u.universityId.toString(),
+          label: u.universityName,
+        }));
+        setUniversityOptions(newUniversityOptions);
+
+        if (preserveSelection) {
+          // Use isSelect from API response to set selected universities
+          const selectedUniIds = response.data
+            .filter((u) => u.isSelect)
+            .map((u) => u.universityId.toString());
+          setSelectedUniversities(selectedUniIds);
+        } else {
+          // Preserve selected universities that are still in the new list
+          const validUniversityIds = new Set(newUniversityOptions.map((u) => u.value));
+          setSelectedUniversities((prev) =>
+            prev.filter((id) => validUniversityIds.has(id))
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch universities:", error);
+      dispatch(addToast({ type: "error", message: t("common.fetchFailed", "Failed to fetch universities") }));
+    }
+  };
 
   // Fetch general settings on mount
   useEffect(() => {
@@ -53,26 +97,24 @@ const GeneralSettings = () => {
               value: c.countryId.toString(),
               label: c.countryName,
             })));
-            setSelectedCountries(
-              globalAndServingCountries
-                .filter((c: GlobalAndServingCountry) => c.isSelect)
-                .map((c: GlobalAndServingCountry) => c.countryId.toString())
-            );
+            const selectedCountryIds = globalAndServingCountries
+              .filter((c: GlobalAndServingCountry) => c.isSelect)
+              .map((c: GlobalAndServingCountry) => c.countryId.toString());
+            setSelectedCountries(selectedCountryIds);
+
+            // Fetch universities for selected countries on initial load
+            // Use preserveSelection=true to set selected universities from API response
+            if (selectedCountryIds.length > 0) {
+              await fetchUniversitiesByCountries(selectedCountryIds, true);
+            } else {
+              // No countries selected, clear universities
+              setUniversityOptions([]);
+              setSelectedUniversities([]);
+            }
           }
 
-          // Set university options from globalAndServingUniversities
-          // Select only universities where isSelect is true
-          if (globalAndServingUniversities?.length) {
-            setUniversityOptions(globalAndServingUniversities.map((u: GlobalAndServingUniversity) => ({
-              value: u.universityId.toString(),
-              label: u.universityName,
-            })));
-            setSelectedUniversities(
-              globalAndServingUniversities
-                .filter((u: GlobalAndServingUniversity) => u.isSelect)
-                .map((u: GlobalAndServingUniversity) => u.universityId.toString())
-            );
-          }
+          // Enable fetching universities on country change after initial load
+          shouldFetchUniversitiesOnChange.current = true;
         }
       } catch (error) {
         console.error("Failed to fetch general settings:", error);
@@ -106,6 +148,12 @@ const GeneralSettings = () => {
         hasInitialSelection.current = true;
       }
 
+      // Fetch universities after save to refresh the list
+      // Use preserveSelection=true to maintain selected universities from API response
+      if (selectedCountries.length > 0) {
+        await fetchUniversitiesByCountries(selectedCountries, true);
+      }
+
       dispatch(addToast({ type: "success", message: t("common.savedSuccessfully", "Saved successfully") }));
     } catch (error) {
       console.error("Failed to save settings:", error);
@@ -132,11 +180,16 @@ const GeneralSettings = () => {
           label={t("settingsPage.addCountriesServing", "Countries Serving")}
           options={countryOptions}
           value={selectedCountries}
-          onChange={(countries) => {
+          onChange={async (countries) => {
             setSelectedCountries(countries);
             // Clear universities if all countries are deselected
             if (countries.length === 0) {
+              setUniversityOptions([]);
               setSelectedUniversities([]);
+            } else if (shouldFetchUniversitiesOnChange.current) {
+              // Fetch universities when countries change
+              // Use preserveSelection=true to set selected universities from API response isSelect field
+              await fetchUniversitiesByCountries(countries, true);
             }
           }}
           placeholder={t("settingsPage.multiSelectCountries", "Select Countries")}
