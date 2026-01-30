@@ -112,6 +112,34 @@ const agencyService = {
   },
 
   /**
+   * Get universities list for settings based on selected countries
+   * @param agencyId - Agency ID
+   * @param countryIds - Array of country IDs (comma-separated string or array)
+   * @returns Promise with universities list response
+   */
+  getSettingUniversityList: async (
+    agencyId: number,
+    countryIds: number[] | string
+  ): Promise<{ status: string; statusCode: number; message: string; data: Array<{ universityId: number; universityName: string; isSelect: boolean }> }> => {
+    const queryParams = new URLSearchParams();
+    queryParams.append("agencyId", agencyId.toString());
+    
+    // Handle countryIds - can be array or comma-separated string
+    let countryIdValue = "";
+    if (Array.isArray(countryIds)) {
+      countryIdValue = countryIds.join(",");
+    } else {
+      countryIdValue = countryIds.toString();
+    }
+    queryParams.append("countryId", countryIdValue);
+
+    const response = await api.get<{ status: string; statusCode: number; message: string; data: Array<{ universityId: number; universityName: string; isSelect: boolean }> }>(
+      `${ENDPOINTS.AGENCIES.SETTING_UNIVERSITY_LIST}?${queryParams.toString()}`
+    );
+    return response.data;
+  },
+
+  /**
    * Create serving countries and universities (when none were initially selected)
    * @param payload - Serving data with agencyId, countryIds, universityIds
    * @returns Promise with save response

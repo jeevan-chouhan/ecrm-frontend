@@ -41,6 +41,7 @@ export const ENDPOINTS = {
     PARTNER_NAMES: "/agencies/global-agencyPartner-name",
     GENERAL_SETTINGS: "/agencies/general-settings",
     SERVING: "/agencies/serving",
+    SETTING_UNIVERSITY_LIST: "/agencies/setting-universityList",
     OVERALL_COUNTS: "/agencies/overall-counts",
     ANALYTICS: "/reports/analytics",
     START_TRIAL: (agencyId: number | string) => `/agencies/start-trial/${agencyId}`,
