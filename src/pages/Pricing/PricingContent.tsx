@@ -352,12 +352,6 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
           >
             Choose The Right Plan For Your Agency
           </h1>
-          <p
-            className="text-base md:text-lg max-w-2xl mx-auto mb-4"
-            style={{ color: COLORS.textMuted }}
-          >
-            Explore features included in your current plan. Upgrade anytime to unlock more capabilities.
-          </p>
           <p className="text-xs" style={{ color: COLORS.textMuted }}>
             * Prices exclude applicable taxes (VAT/GST/Sales Tax), which will be calculated at checkout.
           </p>
