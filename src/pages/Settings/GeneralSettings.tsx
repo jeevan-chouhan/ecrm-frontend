@@ -189,7 +189,8 @@ const GeneralSettings = () => {
               setSelectedUniversities([]);
             } else if (shouldFetchUniversitiesOnChange.current) {
               // Fetch universities when countries change
-              await fetchUniversitiesByCountries(countries);
+              // Use preserveSelection=true to set selected universities from API response isSelect field
+              await fetchUniversitiesByCountries(countries, true);
             }
           }}
           placeholder={t("settingsPage.multiSelectCountries", "Select Countries")}
