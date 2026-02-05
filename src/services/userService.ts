@@ -282,7 +282,7 @@ const userService = {
   /**
    * Update user profile details
    * @param params - Query parameters (userId)
-   * @param payload - Profile data to update
+   * @param payload - Profile data to update (name, countryCode, contactNumber, profilePhoto as File)
    * @returns Promise with update profile response
    */
   updateProfile: async (
@@ -292,9 +292,22 @@ const userService = {
     const queryParams = new URLSearchParams();
     queryParams.append("userId", params.userId.toString());
 
+    const formData = new FormData();
+    formData.append("name", payload.name);
+    formData.append("countryCode", payload.countryCode);
+    formData.append("contactNumber", payload.contactNumber);
+    if (payload.profilePhoto) {
+      formData.append("profilePhoto", payload.profilePhoto);
+    }
+
     const response = await api.put<UpdateProfileResponse>(
       `${ENDPOINTS.USERS.PROFILE_DETAILS}?${queryParams.toString()}`,
-      payload
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
     );
     return response.data;
   },

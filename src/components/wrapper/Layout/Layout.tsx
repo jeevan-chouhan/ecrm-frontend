@@ -20,6 +20,7 @@ import { COLORS, ROUTES, APP_CONFIG, getRoleDisplayName } from "../../../constan
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { clearCredentials } from "../../../redux/slices/auth/authSlice";
 import { clearMenu } from "../../../redux/slices/menu/menuSlice";
+import { clearBranding } from "../../../redux/slices/branding/brandingSlice";
 import { addToast } from "../../../redux/slices/toast/toastSlice";
 import { resetManageTeamState } from "../../../redux/slices/manageTeam/manageTeamSlice";
 import { resetDashboardState } from "../../../redux/slices/dashboard/dashboardSlice";
@@ -108,9 +109,10 @@ const Layout = ({
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   
-  // Get user data and menu items from Redux store
+  // Get user data, menu items and branding from Redux store
   const { user } = useAppSelector((state) => state.auth);
   const { items: menuItems } = useAppSelector((state) => state.menu);
+  const { agencyName, logoUrl } = useAppSelector((state) => state.branding);
   
   // Sort menu items by displayOrderMap to maintain proper sequence
   const sortedMenuItems = useMemo(() => {
@@ -141,6 +143,9 @@ const Layout = ({
     
     // Clear menu state
     dispatch(clearMenu());
+    
+    // Clear branding state
+    dispatch(clearBranding());
     
     // Reset manageTeam, dashboard, documentVault and agencyPartner state on logout
     dispatch(resetManageTeamState());
@@ -231,7 +236,8 @@ const Layout = ({
     >
       {/* Sidebar */}
       <Sidebar
-        logoText={APP_CONFIG.name}
+        logoText={agencyName || APP_CONFIG.name}
+        logoUrl={logoUrl || undefined}
         items={sidebarItems}
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -267,7 +273,7 @@ const Layout = ({
         </main>
 
         {/* Footer */}
-        <Footer companyName={APP_CONFIG.name} />
+        <Footer companyName={agencyName || APP_CONFIG.name} />
       </div>
     </div>
   );

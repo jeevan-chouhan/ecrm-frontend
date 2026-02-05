@@ -11,6 +11,7 @@ interface FilePreviewPopupProps {
   currentIndex: number;
   onIndexChange: (index: number) => void;
   multiple: boolean;
+  existingPreviewUrl?: string | null;
 }
 
 const FilePreviewPopup = memo(({
@@ -21,19 +22,23 @@ const FilePreviewPopup = memo(({
   currentIndex,
   onIndexChange,
   multiple,
+  existingPreviewUrl,
 }: FilePreviewPopupProps) => {
   const { t } = useTranslation();
 
-  if (!isOpen || !files[currentIndex]) return null;
-
   const currentFile = files[currentIndex];
   const currentPreviewUrl = previewUrls[currentIndex];
+  const isExistingImage = !currentFile && existingPreviewUrl;
+  const displayUrl = currentPreviewUrl || existingPreviewUrl;
+
+  // Show popup if open and has either a file or existing image URL
+  if (!isOpen || (!currentFile && !existingPreviewUrl)) return null;
 
   return (
     <Popup
       isOpen={isOpen}
       onClose={onClose}
-      title={currentFile.name}
+      title={currentFile?.name || t("fileUpload.currentImage", "Current image")}
       size="xl"
       showCloseButton={true}
       closeOnOverlayClick={true}
@@ -44,10 +49,10 @@ const FilePreviewPopup = memo(({
           className="relative w-full flex items-center justify-center bg-slate-100 rounded-lg p-4"
           style={{ minHeight: "400px" }}
         >
-          {currentPreviewUrl ? (
+          {displayUrl ? (
             <img
-              src={currentPreviewUrl}
-              alt={currentFile.name}
+              src={displayUrl}
+              alt={currentFile?.name || t("fileUpload.currentImage", "Current image")}
               className="max-w-full max-h-[70vh] object-contain rounded"
             />
           ) : (
@@ -91,14 +96,17 @@ const FilePreviewPopup = memo(({
           </div>
         )}
 
-        <div className="w-full text-sm" style={{ color: COLORS.textMuted }}>
-          <p>
-            <strong>{t("fileUpload.size")}:</strong> {(currentFile.size / (1024 * 1024)).toFixed(2)} MB
-          </p>
-          <p>
-            <strong>{t("fileUpload.type")}:</strong> {currentFile.type}
-          </p>
-        </div>
+        {/* Show file info only for uploaded files, not existing images */}
+        {currentFile && !isExistingImage && (
+          <div className="w-full text-sm" style={{ color: COLORS.textMuted }}>
+            <p>
+              <strong>{t("fileUpload.size")}:</strong> {(currentFile.size / (1024 * 1024)).toFixed(2)} MB
+            </p>
+            <p>
+              <strong>{t("fileUpload.type")}:</strong> {currentFile.type}
+            </p>
+          </div>
+        )}
       </div>
     </Popup>
   );

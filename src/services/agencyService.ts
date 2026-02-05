@@ -14,6 +14,7 @@ import type {
   StartTrialResponse,
   CurrentSubscriptionResponse,
   PaymentLinksResponse,
+  AgencyBrandingResponse,
 } from "./types";
 
 /**
@@ -226,6 +227,18 @@ const agencyService = {
   getPaymentLinks: async (agencyId: number): Promise<PaymentLinksResponse> => {
     const response = await api.get<PaymentLinksResponse>(
       ENDPOINTS.AGENCIES.PAYMENT_LINKS(agencyId)
+    );
+    return response.data;
+  },
+
+  /**
+   * Get agency branding (name and logo)
+   * @param agencyId - The agency ID
+   * @returns Promise with agency branding data
+   */
+  getBranding: async (agencyId: number): Promise<AgencyBrandingResponse> => {
+    const response = await api.get<AgencyBrandingResponse>(
+      ENDPOINTS.AGENCIES.BRANDING(agencyId)
     );
     return response.data;
   },

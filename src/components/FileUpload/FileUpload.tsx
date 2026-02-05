@@ -32,6 +32,7 @@ interface FileUploadProps {
   multiple?: boolean;
   required?: boolean; // For validation
   validationSchema?: Yup.Schema<any>; // Custom validation schema
+  existingPreviewUrl?: string | null; // URL of existing image to show as preview
 }
 
 const FileUpload = ({
@@ -54,6 +55,7 @@ const FileUpload = ({
   multiple = false,
   required = false,
   validationSchema,
+  existingPreviewUrl,
 }: FileUploadProps) => {
   const { t } = useTranslation();
   const [showSection, setShowSection] = useState(true);
@@ -182,7 +184,7 @@ const FileUpload = ({
 
   if (!showSection) return null;
 
-  const shouldShowPreview = showPreview && files.length > 0;
+  const shouldShowPreview = showPreview && (files.length > 0 || existingPreviewUrl);
 
   return (
     <FormikProvider value={internalFormik}>
@@ -225,6 +227,7 @@ const FileUpload = ({
                   fileInputRef.current.click();
                 }
               }}
+              existingPreviewUrl={existingPreviewUrl}
             />
             <input
               ref={fileInputRef}
@@ -270,6 +273,7 @@ const FileUpload = ({
         currentIndex={previewIndex}
         onIndexChange={setPreviewIndex}
         multiple={multiple}
+        existingPreviewUrl={existingPreviewUrl}
       />
     </FormikProvider>
   );

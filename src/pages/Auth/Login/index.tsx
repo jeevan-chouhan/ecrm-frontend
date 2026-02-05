@@ -11,7 +11,8 @@ import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { addToast } from "../../../redux/slices/toast/toastSlice";
 import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
 import { setMenuItems } from "../../../redux/slices/menu/menuSlice";
-import { userService } from "../../../services";
+import { setBranding } from "../../../redux/slices/branding/brandingSlice";
+import { userService, agencyService } from "../../../services";
 
 // Type for location state from ProtectedRoute
 interface LocationState {
@@ -107,6 +108,19 @@ const Login = () => {
               }
             } catch (menuError) {
               console.error("Failed to fetch menu:", menuError);
+            }
+
+            // Fetch agency branding and store in Redux
+            try {
+              const agencyId = decodedPayload.agencyId;
+              if (agencyId) {
+                const brandingResponse = await agencyService.getBranding(agencyId);
+                if (brandingResponse.status === "success" && brandingResponse.data) {
+                  dispatch(setBranding(brandingResponse.data));
+                }
+              }
+            } catch (brandingError) {
+              console.error("Failed to fetch branding:", brandingError);
             }
           }
 

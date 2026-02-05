@@ -16,6 +16,7 @@ import loaderReducer from "./slices/loader/loaderSlice";
 import toastReducer from "./slices/toast/toastSlice";
 import authReducer from "./slices/auth/authSlice";
 import menuReducer from "./slices/menu/menuSlice";
+import brandingReducer from "./slices/branding/brandingSlice";
 import manageTeamReducer from "./slices/manageTeam/manageTeamSlice";
 import dashboardReducer from "./slices/dashboard/dashboardSlice";
 import documentVaultReducer from "./slices/documentVault/documentVaultSlice";
@@ -101,6 +102,7 @@ const rootReducer = combineReducers({
   toast: toastReducer,
   auth: authReducer,
   menu: menuReducer,
+  branding: brandingReducer,
   settings: settingsReducer,
   manageTeam: persistedManageTeamReducer,
   dashboard: persistedDashboardReducer,
@@ -117,7 +119,7 @@ const persistConfig = {
   version: 1,
   storage,
   blacklist: ["loader", "toast", "manageTeam", "dashboard", "documentVault", "agencyPartner", "teamOverview", "applicantTracker", "applicantDetail"], // Don't persist these at root level (they have their own config)
-  whitelist: ["auth", "menu", "settings"], // Persist auth, menu and settings state at root level
+  whitelist: ["auth", "menu", "branding", "settings"], // Persist auth, menu, branding and settings state at root level
 };
 
 // Create persisted reducer

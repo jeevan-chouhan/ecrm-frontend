@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { Layout, Button, Input, FileUpload, PhoneInput } from "../../components";
 import { COLORS } from "../../constants";
 import { userService } from "../../services";
-import type { ProfilePhotoInfo } from "../../services";
 import { useAppSelector, useAppDispatch } from "../../redux/hooks";
 import { showLoader, hideLoader } from "../../redux/slices/loader/loaderSlice";
 import { addToast } from "../../redux/slices/toast/toastSlice";
@@ -15,7 +14,7 @@ interface ProfileData {
   countryCode: string;
   contactNumber: string;
   role: string;
-  profilePhotoInfo: ProfilePhotoInfo | null;
+  profilePhotoUrl: string | null; // fileFormat from API
   isPrimaryAdmin ?: boolean;
 }
 
@@ -31,23 +30,13 @@ const Profile = () => {
     countryCode: "",
     contactNumber: "",
     role: "",
-    profilePhotoInfo: null,
-    isPrimaryAdmin:false
+    profilePhotoUrl: null,
+    isPrimaryAdmin: false
   });
   const [isSaving, setIsSaving] = useState(false);
 
   // Ref to prevent duplicate API calls
   const hasFetchedProfile = useRef(false);
-
-  // Parse profile photo JSON string
-  const parseProfilePhoto = (photoString: string | null): ProfilePhotoInfo | null => {
-    if (!photoString) return null;
-    try {
-      return JSON.parse(photoString);
-    } catch {
-      return null;
-    }
-  };
 
   // Fetch profile details
   const fetchProfileDetails = useCallback(async () => {
@@ -60,8 +49,7 @@ const Profile = () => {
       const response = await userService.getProfileDetails({ userId: user.userId });
       
       if (response.status === "success" && response.data) {
-        const data = response.data;
-        const photoInfo = parseProfilePhoto(data.profilePhoto);
+        const data = response.data as any; // API response with fileFormat
         
         // Build full phone number for PhoneInput (dialCode + number)
         const dialCode = data.countryCode?.replace("+", "") || "";
@@ -73,7 +61,7 @@ const Profile = () => {
           countryCode: data.countryCode || "",
           contactNumber: fullPhone,
           role: formatStatus(data?.isPrimaryAdmin == true ? "Primary Admin" : data.role || ""),
-          profilePhotoInfo: photoInfo,
+          profilePhotoUrl: data.fileFormat || null, // Use fileFormat from API
         });
       }
     } catch (error: any) {
@@ -97,14 +85,38 @@ const Profile = () => {
     }));
   };
 
+  // Allowed profile image file types
+  const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png"];
+  const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png"];
+
   const handleImageChange = (file: File | File[] | null) => {
     // Handle single file (Profile only uses single file upload)
     const singleFile = Array.isArray(file) ? file[0] || null : file;
+    
+    if (singleFile) {
+      // Validate file type
+      const fileExtension = singleFile.name.toLowerCase().slice(singleFile.name.lastIndexOf("."));
+      const isValidType = ALLOWED_IMAGE_TYPES.includes(singleFile.type) || ALLOWED_EXTENSIONS.includes(fileExtension);
+      
+      if (!isValidType) {
+        dispatch(addToast({
+          type: "error",
+          message: t("validation.invalidImageType", "Only JPG, JPEG, and PNG files are allowed."),
+        }));
+        return;
+      }
+    }
+    
     setProfileImage(singleFile);
   };
 
   const handleRemoveImage = () => {
     setProfileImage(null);
+    // Also clear the existing image URL when user removes the image
+    setProfileData((prev) => ({
+      ...prev,
+      profilePhotoUrl: null,
+    }));
   };
 
   const handleSave = async () => {
@@ -116,20 +128,6 @@ const Profile = () => {
       ? profileData.contactNumber.slice(dialCode.length)
       : profileData.contactNumber;
 
-    // Build profile photo info
-    let profilePhotoPayload: ProfilePhotoInfo | null = profileData.profilePhotoInfo;
-    
-    // If a new image is uploaded, create new photo info
-    if (profileImage) {
-      profilePhotoPayload = {
-        size: profileImage.size,
-        fileName: profileImage.name,
-        filePath: `/uploads/${profileImage.name}`,
-        fileType: profileImage.type,
-        accessUrl: URL.createObjectURL(profileImage), // This will be replaced by actual URL after upload
-      };
-    }
-
     setIsSaving(true);
     dispatch(showLoader());
 
@@ -140,7 +138,7 @@ const Profile = () => {
           name: profileData.name.trim(),
           countryCode: profileData.countryCode,
           contactNumber: phoneNumber,
-          profilePhoto: profilePhotoPayload,
+          profilePhoto: profileImage, // Send file directly like register
         }
       );
 
@@ -193,34 +191,18 @@ const Profile = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Section - File Upload */}
           <div className="w-full lg:w-80 shrink-0">
-            {/* Show existing profile photo if available */}
-            {profileData.profilePhotoInfo?.accessUrl && !profileImage && (
-              <div className="mb-4">
-                <p
-                  className="text-sm font-medium mb-2"
-                  style={{ color: COLORS.textDark }}
-                >
-                  {t("profile.currentPhoto", "Current Photo")}
-                </p>
-                <img
-                  src={profileData.profilePhotoInfo.accessUrl}
-                  alt="Profile"
-                  className="w-32 h-32 rounded-lg object-cover border"
-                  style={{ borderColor: COLORS.border }}
-                />
-              </div>
-            )}
             <FileUpload
               label={t("profile.uploadImage", "Upload Image")}
-              accept="image/png,image/jpeg,image/jpg"
+              accept=".jpg,.jpeg,.png,image/jpeg,image/png"
               maxSizeMB={2}
               value={profileImage}
               onChange={handleImageChange}
               onRemove={handleRemoveImage}
               showPreview={true}
               previewSize="lg"
-              supportedFormats="PNG, JPG"
+              supportedFormats="PNG, JPG, JPEG"
               dismissible={false}
+              existingPreviewUrl={profileImage ? null : profileData.profilePhotoUrl}
             />
           </div>
 

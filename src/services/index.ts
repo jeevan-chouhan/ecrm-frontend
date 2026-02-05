@@ -131,6 +131,8 @@ export type {
   PaymentLinksData,
   PaymentLinksResponse,
   CurrentSubscriptionResponse,
+  AgencyBrandingData,
+  AgencyBrandingResponse,
   MenuItem,
   MenuResponse,
 } from "./types";
