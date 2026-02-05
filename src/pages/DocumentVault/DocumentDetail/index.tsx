@@ -12,6 +12,7 @@ import {
   Eye,
   Download,
   Close,
+  Upload,
 } from "../../../assets";
 import UploadDocView from "./UploadDocView";
 import type { ViewerFile } from "./UploadDocView";
@@ -722,18 +723,32 @@ const DocumentDetail = () => {
                   <Download className="w-4 h-4" />
                 </button>
                 {!doc.verified && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteClick(doc.id);
-                    }}
-                    className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
-                    style={{ color: COLORS.error }}
-                    aria-label={t("documentVault.deleteDocument", "Delete Document")}
-                    title={t("documentVault.deleteDocument", "Delete Document")}
-                  >
-                    <Close className="w-4 h-4" />
-                  </button>
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleUploadClick(doc.id);
+                      }}
+                      className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
+                      style={{ color: COLORS.accent }}
+                      aria-label={t("documentVault.reUpload", "Re-upload")}
+                      title={t("documentVault.reUpload", "Re-upload")}
+                    >
+                      <Upload className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteClick(doc.id);
+                      }}
+                      className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
+                      style={{ color: COLORS.error }}
+                      aria-label={t("documentVault.deleteDocument", "Delete Document")}
+                      title={t("documentVault.deleteDocument", "Delete Document")}
+                    >
+                      <Close className="w-4 h-4" />
+                    </button>
+                  </>
                 )}
               </>
             ) : (

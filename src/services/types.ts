@@ -197,7 +197,7 @@ export interface UpdateProfilePayload {
   name: string;
   countryCode: string;
   contactNumber: string;
-  profilePhoto?: ProfilePhotoInfo | null;
+  profilePhoto?: File | null;
 }
 
 export interface UpdateProfileData {
@@ -1219,6 +1219,15 @@ export interface PaymentLinksData {
 
 // Payment Links Response
 export type PaymentLinksResponse = ApiResponse<PaymentLinksData>;
+
+// Agency Branding Data
+export interface AgencyBrandingData {
+  agencyName: string;
+  logoUrl: string | null;
+}
+
+// Agency Branding Response
+export type AgencyBrandingResponse = ApiResponse<AgencyBrandingData>;
 
 // ==========================================
 // Menu Types

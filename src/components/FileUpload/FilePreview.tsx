@@ -11,6 +11,7 @@ interface FilePreviewProps {
   onRemove: (index: number) => void;
   onPreview: (index: number) => void;
   onChangeFile?: () => void;
+  existingPreviewUrl?: string | null;
 }
 
 const previewSizes = {
@@ -27,6 +28,7 @@ const FilePreview = memo(({
   onRemove,
   onPreview,
   onChangeFile,
+  existingPreviewUrl,
 }: FilePreviewProps) => {
   const { t } = useTranslation();
 
@@ -86,13 +88,15 @@ const FilePreview = memo(({
   // Single file preview
   const file = files[0];
   const previewUrl = previewUrls[0];
+  const isExistingImage = !file && existingPreviewUrl;
+  const displayUrl = previewUrl || existingPreviewUrl;
 
   return (
     <div className="flex items-center gap-3">
       <div className="relative group">
-        {previewUrl ? (
+        {displayUrl ? (
           <img
-            src={previewUrl}
+            src={displayUrl}
             alt="Preview"
             className={`${previewSizes[previewSize]} object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity`}
             style={{ borderColor: COLORS.border }}
@@ -128,14 +132,22 @@ const FilePreview = memo(({
         </button>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium truncate" style={{ color: COLORS.textDark }}>
-          {file?.name}
-        </p>
-        <p className="text-xs mt-0.5" style={{ color: COLORS.textMuted }}>
-          {file && ((file.size / (1024 * 1024)).toFixed(2))} MB
-        </p>
+        {file ? (
+          <>
+            <p className="text-xs font-medium truncate" style={{ color: COLORS.textDark }}>
+              {file.name}
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: COLORS.textMuted }}>
+              {(file.size / (1024 * 1024)).toFixed(2)} MB
+            </p>
+          </>
+        ) : isExistingImage ? (
+          <p className="text-xs font-medium" style={{ color: COLORS.textDark }}>
+            {t("fileUpload.currentImage", "Current image")}
+          </p>
+        ) : null}
         <div className="flex flex-wrap gap-2 mt-1">
-          {previewUrl && (
+          {displayUrl && (
             <button
               type="button"
               onClick={() => onPreview(0)}

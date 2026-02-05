@@ -16,6 +16,7 @@ interface SidebarItem {
 interface SidebarProps {
   logo?: ReactNode;
   logoText?: string;
+  logoUrl?: string;
   items?: SidebarItem[];
   footer?: ReactNode;
   collapsed?: boolean;
@@ -28,6 +29,7 @@ interface SidebarProps {
 const Sidebar = ({
   logo,
   logoText = APP_CONFIG.name,
+  logoUrl,
   items = [],
   footer,
   collapsed = false,
@@ -75,9 +77,13 @@ const Sidebar = ({
               {logo || (
                 <>
                   <img
-                    src={LogoImage}
-                    alt="AgencyOS Logo"
+                    src={logoUrl || LogoImage}
+                    alt={logoText || "AgencyOS Logo"}
                     className="h-9 w-9 rounded-lg object-contain shrink-0"
+                    onError={(e) => {
+                      // Fallback to default logo if custom logo fails to load
+                      e.currentTarget.src = LogoImage;
+                    }}
                   />
                   {!collapsed && (
                     <span
