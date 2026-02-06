@@ -23,6 +23,7 @@ interface Query {
   subject: string;
   content: string;
   createdAt: Date;
+  respondedAt?: Date | null;
 }
 
 interface QueryFormValues {
@@ -86,6 +87,7 @@ const SupportFeedback = () => {
             subject: values.subject,
             content: values.content,
             createdAt: new Date(),
+            respondedAt: null,
           };
           setQueries((prev) => [newQuery, ...prev]);
           resetForm();
@@ -140,7 +142,7 @@ const SupportFeedback = () => {
   const columns: GridColDef[] = useMemo(() => [
     {
       field: "submittedBy",
-      headerName: t("supportFeedback.submittedBy", "Submitted By"),
+      headerName: t("supportFeedback.submittedBy", "Submitted by"),
       flex: 1,
       minWidth: 180,
       renderCell: (params) => (
@@ -156,13 +158,13 @@ const SupportFeedback = () => {
     },
     {
       field: "subject",
-      headerName: t("supportFeedback.subject", "Subject"),
+      headerName: t("supportFeedback.subject", "subject"),
       flex: 1,
       minWidth: 150,
     },
     {
       field: "createdAt",
-      headerName: t("supportFeedback.date", "Date"),
+      headerName: t("supportFeedback.createdDate", "Created Date"),
       flex: 0.8,
       minWidth: 150,
       renderCell: (params) => {
@@ -177,8 +179,26 @@ const SupportFeedback = () => {
       },
     },
     {
+      field: "respondedAt",
+      headerName: t("supportFeedback.respondedDate", "Responded Date"),
+      flex: 0.8,
+      minWidth: 150,
+      renderCell: (params) => {
+        const dateValue = params.row.respondedAt
+          ? formatDateTime(params.row.respondedAt)
+          : "—";
+        return (
+          <Tooltip title={dateValue} arrow placement="top">
+            <span style={{ color: COLORS.textMuted }}>
+              {dateValue}
+            </span>
+          </Tooltip>
+        );
+      },
+    },
+    {
       field: "actions",
-      headerName: t("supportFeedback.action", "Action"),
+      headerName: t("supportFeedback.action", "action"),
       width: 100,
       sortable: false,
       align: "center",

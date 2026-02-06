@@ -720,6 +720,8 @@
     "submit": "जमा करें",
     "noQueries": "अभी तक कोई प्रश्न जमा नहीं किया गया।",
     "date": "तारीख",
+    "createdDate": "निर्माण तिथि",
+    "respondedDate": "प्रतिक्रिया तिथि",
     "action": "कार्रवाई",
     "viewQuery": "प्रश्न देखें",
     "viewQueryDetails": "प्रश्न विवरण",
