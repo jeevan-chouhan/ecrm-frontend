@@ -1033,6 +1033,10 @@ export type ApplicationPreferenceDocumentsResponse = ApiResponse<ApplicationPref
 // The API returns the download URL as a string in the data field
 export type DownloadDocumentUrlResponse = ApiResponse<string>;
 
+// View Document URL Response
+// The API returns the view URL as a string in the data field
+export type ViewDocumentUrlResponse = ApiResponse<string>;
+
 // Download Zip URL Response
 // The API returns the download URL as a string in the data field
 export type DownloadZipUrlResponse = ApiResponse<string>;

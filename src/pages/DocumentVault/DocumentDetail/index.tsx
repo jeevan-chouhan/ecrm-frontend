@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mui/material";
@@ -259,10 +259,10 @@ const DocumentDetail = () => {
     setSelectedDocs(newSelection);
   };
 
-  const handleUploadClick = (docId: string) => {
+  const handleUploadClick = useCallback((docId: string) => {
     setUploadingDocId(docId);
     fileInputRef.current?.click();
-  };
+  }, []);
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -380,10 +380,10 @@ const DocumentDetail = () => {
     }
   }, [uploadingDocId, applicantId, documents, dispatch, fetchDocuments]);
 
-  const handleDeleteClick = (docId: string) => {
+  const handleDeleteClick = useCallback((docId: string) => {
     setDeletingDocId(docId);
     setDeletePopupOpen(true);
-  };
+  }, []);
 
   const handleDeleteConfirm = useCallback(async () => {
     if (!deletingDocId || !applicantId) return;
@@ -440,10 +440,10 @@ const DocumentDetail = () => {
     setDeletingDocId(null);
   };
 
-  const handleVerifyClick = (docId: string) => {
+  const handleVerifyClick = useCallback((docId: string) => {
     setApprovingDocId(docId);
     setApprovePopupOpen(true);
-  };
+  }, []);
 
   const handleVerifyConfirm = useCallback(async () => {
     if (!approvingDocId || !applicantId) return;
@@ -500,7 +500,7 @@ const DocumentDetail = () => {
     setApprovingDocId(null);
   };
 
-  const handleDownload = async (doc: DocumentItem) => {
+  const handleDownload = useCallback(async (doc: DocumentItem) => {
     if (!doc.id || !applicantId) return;
 
     dispatch(showLoader());
@@ -542,42 +542,65 @@ const DocumentDetail = () => {
     } finally {
       dispatch(hideLoader());
     }
-  };
+  }, [applicantId, dispatch, t]);
 
-  const handleViewDocument = (doc: DocumentItem) => {
-    if (doc.fileUrl) {
-      // Use fileType from API if available, otherwise detect from fileName
-      let detectedType = "other";
-      if (doc.fileType) {
-        // Use MIME type from API - normalize to lowercase for comparison
-        const fileTypeLower = doc.fileType.toLowerCase();
-        if (fileTypeLower.includes("pdf")) {
-          detectedType = "pdf";
-        } else if (fileTypeLower.startsWith("image/")) {
-          detectedType = "image";
-        } else if (fileTypeLower.includes("text")) {
-          detectedType = "text";
-        } else if (fileTypeLower.includes("csv")) {
-          detectedType = "csv";
-        } else if (fileTypeLower.includes("excel") || fileTypeLower.includes("spreadsheet")) {
-          detectedType = "excel";
-        } else if (fileTypeLower.includes("word") || fileTypeLower.includes("document")) {
-          detectedType = "word";
+  const handleViewDocument = useCallback(async (doc: DocumentItem) => {
+    if (!doc.id || !applicantId) return;
+
+    dispatch(showLoader());
+    try {
+      const response = await applicantService.getDocumentViewUrl(applicantId, doc.id);
+      
+      if (response.status === "success" && response.data) {
+        const viewUrl = response.data; // data is a string URL
+        
+        // Use fileType from API if available, otherwise detect from fileName
+        let detectedType = "other";
+        if (doc.fileType) {
+          // Use MIME type from API - normalize to lowercase for comparison
+          const fileTypeLower = doc.fileType.toLowerCase();
+          if (fileTypeLower.includes("pdf")) {
+            detectedType = "pdf";
+          } else if (fileTypeLower.startsWith("image/")) {
+            detectedType = "image";
+          } else if (fileTypeLower.includes("text")) {
+            detectedType = "text";
+          } else if (fileTypeLower.includes("csv")) {
+            detectedType = "csv";
+          } else if (fileTypeLower.includes("excel") || fileTypeLower.includes("spreadsheet")) {
+            detectedType = "excel";
+          } else if (fileTypeLower.includes("word") || fileTypeLower.includes("document")) {
+            detectedType = "word";
+          } else {
+            detectedType = getFileType(doc.fileName || "");
+          }
         } else {
           detectedType = getFileType(doc.fileName || "");
         }
+        
+        setViewerFile({
+          url: viewUrl,
+          name: doc.fileName || doc.name,
+          type: detectedType,
+          documentId: doc.id,
+          applicantId: applicantId,
+        });
+        setViewerOpen(true);
       } else {
-        detectedType = getFileType(doc.fileName || "");
+        throw new Error(response.message || "Failed to get view URL");
       }
-      
-      setViewerFile({
-        url: doc.fileUrl,
-        name: doc.fileName || doc.name,
-        type: detectedType,
-      });
-      setViewerOpen(true);
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      dispatch(
+        addToast({
+          type: "error",
+          message: typeof errorMessage === "string" ? errorMessage : "Failed to view document",
+        })
+      );
+    } finally {
+      dispatch(hideLoader());
     }
-  };
+  }, [applicantId, dispatch, t]);
 
   const getFileType = (fileName: string): string => {
     const ext = fileName.split(".").pop()?.toLowerCase() || "";
@@ -604,7 +627,7 @@ const DocumentDetail = () => {
     setDocuments([...documents, newDoc]);
   };
 
-  const handleDownloadSelected = async () => {
+  const handleDownloadSelected = useCallback(async () => {
     if (!applicantId || selectedDocs.length === 0) return;
 
     // Get only uploaded documents from selected
@@ -661,21 +684,23 @@ const DocumentDetail = () => {
     } finally {
       dispatch(hideLoader());
     }
-  };
+  }, [applicantId, selectedDocs, documents, dispatch, t]);
 
-  // Check if any selected documents have files to download
-  const hasDownloadableSelection = selectedDocs.some((docId) => {
-    const doc = documents.find((d) => d.id === String(docId));
-    return doc?.uploaded && doc?.fileUrl;
-  });
+  // Check if any selected documents have files to download - memoized to prevent recalculation
+  const hasDownloadableSelection = useMemo(() => {
+    return selectedDocs.some((docId) => {
+      const doc = documents.find((d) => d.id === String(docId));
+      return doc?.uploaded && doc?.fileUrl;
+    });
+  }, [selectedDocs, documents]);
 
-  const handleUpdateDocName = (docId: string, name: string) => {
-    setDocuments(
-      documents.map((doc) =>
+  const handleUpdateDocName = useCallback((docId: string, name: string) => {
+    setDocuments((prevDocs) =>
+      prevDocs.map((doc) =>
         doc.id === docId ? { ...doc, name } : doc
       )
     );
-  };
+  }, []);
 
 
   const closeViewer = () => {
@@ -683,8 +708,8 @@ const DocumentDetail = () => {
     setViewerFile(null);
   };
 
-  // DataTable columns
-  const columns: GridColDef[] = [
+  // DataTable columns - memoized to prevent recreation on every render
+  const columns: GridColDef[] = useMemo(() => [
     {
       field: "name",
       headerName: t("documentVault.documentName", "Document Name"),
@@ -864,7 +889,7 @@ const DocumentDetail = () => {
         );
       },
     },
-  ];
+  ], [t, handleUpdateDocName, handleVerifyClick, handleViewDocument, handleDownload, handleUploadClick, handleDeleteClick]);
 
   return (
     <Layout>

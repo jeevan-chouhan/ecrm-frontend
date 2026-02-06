@@ -97,6 +97,7 @@ export const ENDPOINTS = {
     DELETE_DOCUMENT: (applicantId: number | string, documentId: number | string) => `/applicants/documents?applicantId=${applicantId}&documentId=${documentId}`,
     VERIFY_DOCUMENT: (applicantId: number | string, documentId: number | string, isVerified: boolean) => `/applicants/verify?applicantId=${applicantId}&documentId=${documentId}&isVerified=${isVerified}`,
     DOWNLOAD_DOCUMENT_URL: (applicantId: number | string, documentId: number | string) => `/applicants/documents/download-url?applicantId=${applicantId}&documentId=${documentId}`,
+    VIEW_DOCUMENT_URL: (applicantId: number | string, documentId: number | string) => `/applicants/documents/view?applicantId=${applicantId}&documentId=${documentId}`,
     DOWNLOAD_ZIP_URL: (applicantId: number | string, documentIds: (number | string)[]) => {
       const idsParam = documentIds.join(",");
       return `/applicants/documents/download-zip-url?applicantId=${applicantId}&documentIds=${idsParam}`;

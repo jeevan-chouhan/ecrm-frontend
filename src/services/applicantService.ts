@@ -54,6 +54,7 @@ import type {
   UploadDocumentResponse,
   ApplicationPreferenceDocumentsResponse,
   DownloadDocumentUrlResponse,
+  ViewDocumentUrlResponse,
 } from "./types";
 
 /**
@@ -864,6 +865,22 @@ const applicantService = {
   ): Promise<DownloadDocumentUrlResponse> => {
     const url = ENDPOINTS.APPLICANTS.DOWNLOAD_DOCUMENT_URL(applicantId, documentId);
     const response = await api.get<DownloadDocumentUrlResponse>(url);
+    
+    return response.data;
+  },
+
+  /**
+   * Get view URL for a document
+   * @param applicantId - Applicant ID
+   * @param documentId - Document ID
+   * @returns Promise with view URL response
+   */
+  getDocumentViewUrl: async (
+    applicantId: number | string,
+    documentId: number | string
+  ): Promise<ViewDocumentUrlResponse> => {
+    const url = ENDPOINTS.APPLICANTS.VIEW_DOCUMENT_URL(applicantId, documentId);
+    const response = await api.get<ViewDocumentUrlResponse>(url);
     
     return response.data;
   },
