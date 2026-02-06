@@ -501,7 +501,7 @@ const ApplicantDetailView = () => {
   const filteredApplications = applications;
 
   // Helper function to get file type from file name or MIME type
-  const getFileType = (fileName?: string, fileType?: string): string => {
+  const getFileType = useCallback((fileName?: string, fileType?: string): string => {
     if (fileType) {
       const fileTypeLower = fileType.toLowerCase();
       if (fileTypeLower.includes("pdf")) return "pdf";
@@ -523,32 +523,110 @@ const ApplicantDetailView = () => {
     }
     
     return "other";
-  };
-
-  // Handle document view
-  const handleDocumentView = useCallback((doc: DocumentItem | ApplicationSpecificDocumentItem) => {
-    if (doc.fileUrl) {
-      const detectedType = getFileType(doc.fileName, doc.fileType);
-      setViewerFile({
-        url: doc.fileUrl,
-        name: doc.fileName || doc.name,
-        type: detectedType,
-      });
-      setViewerOpen(true);
-    }
   }, []);
 
-  // Handle document download
-  const handleDocumentDownload = useCallback((doc: DocumentItem | ApplicationSpecificDocumentItem) => {
-    if (doc.fileUrl && doc.fileName) {
-      const link = document.createElement("a");
-      link.href = doc.fileUrl;
-      link.download = doc.fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+  // Handle document view - using same API as document vault
+  const handleDocumentView = useCallback(async (doc: DocumentItem | ApplicationSpecificDocumentItem) => {
+    if (!doc.id || !applicantId) return;
+
+    dispatch(showLoader());
+    try {
+      const response = await applicantService.getDocumentViewUrl(applicantId, doc.id);
+      
+      if (response.status === "success" && response.data) {
+        const viewUrl = response.data; // data is a string URL
+        
+        // Use fileType from API if available, otherwise detect from fileName
+        let detectedType = "other";
+        if (doc.fileType) {
+          // Use MIME type from API - normalize to lowercase for comparison
+          const fileTypeLower = doc.fileType.toLowerCase();
+          if (fileTypeLower.includes("pdf")) {
+            detectedType = "pdf";
+          } else if (fileTypeLower.startsWith("image/")) {
+            detectedType = "image";
+          } else if (fileTypeLower.includes("text")) {
+            detectedType = "text";
+          } else if (fileTypeLower.includes("csv")) {
+            detectedType = "csv";
+          } else if (fileTypeLower.includes("excel") || fileTypeLower.includes("spreadsheet")) {
+            detectedType = "excel";
+          } else if (fileTypeLower.includes("word") || fileTypeLower.includes("document")) {
+            detectedType = "word";
+          } else {
+            detectedType = getFileType(doc.fileName);
+          }
+        } else {
+          detectedType = getFileType(doc.fileName);
+        }
+        
+        setViewerFile({
+          url: viewUrl,
+          name: doc.fileName || doc.name,
+          type: detectedType,
+          documentId: doc.id,
+          applicantId: applicantId,
+        });
+        setViewerOpen(true);
+      } else {
+        throw new Error(response.message || "Failed to get view URL");
+      }
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      dispatch(
+        addToast({
+          type: "error",
+          message: typeof errorMessage === "string" ? errorMessage : "Failed to view document",
+        })
+      );
+    } finally {
+      dispatch(hideLoader());
     }
-  }, []);
+  }, [applicantId, dispatch, getFileType]);
+
+  // Handle document download - using same API as document vault
+  const handleDocumentDownload = useCallback(async (doc: DocumentItem | ApplicationSpecificDocumentItem) => {
+    if (!doc.id || !applicantId) return;
+
+    dispatch(showLoader());
+    try {
+      const response = await applicantService.getDocumentDownloadUrl(applicantId, doc.id);
+      
+      if (response.status === "success" && response.data) {
+        const downloadUrl = response.data; // data is a string URL
+        
+        // Create a link and trigger download directly to avoid CORS issues
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.download = doc.fileName || doc.name;
+        link.target = "_blank"; // Open in new tab as fallback
+        link.rel = "noopener noreferrer"; // Security best practice
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Show success message
+        dispatch(
+          addToast({
+            type: "success",
+            message: t("documentVault.downloadStarted", "Download started"),
+          })
+        );
+      } else {
+        throw new Error(response.message || "Failed to get download URL");
+      }
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      dispatch(
+        addToast({
+          type: "error",
+          message: typeof errorMessage === "string" ? errorMessage : "Failed to download document",
+        })
+      );
+    } finally {
+      dispatch(hideLoader());
+    }
+  }, [applicantId, dispatch, t]);
 
   // Handle back navigation - navigate to dashboard
   const handleBack = useCallback(() => {
