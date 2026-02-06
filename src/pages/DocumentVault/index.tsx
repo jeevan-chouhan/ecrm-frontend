@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
@@ -155,7 +155,7 @@ const DocumentVault = () => {
     });
   }, [navigate]);
 
-  const columns: GridColDef[] = [
+  const columns: GridColDef[] = useMemo(() => [
     {
       field: "applicantId",
       headerName: t("documentVault.id", "ID"),
@@ -230,7 +230,7 @@ const DocumentVault = () => {
         />
       ),
     },
-  ];
+  ], [t, handleViewDocuments]);
 
   // Pagination model for DataTable
   const paginationModel: GridPaginationModel = {

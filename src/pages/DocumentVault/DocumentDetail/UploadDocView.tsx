@@ -3,8 +3,12 @@ import { useTranslation } from "react-i18next";
 import * as pdfjsLib from "pdfjs-dist";
 import { Button } from "../../../components";
 import { COLORS } from "../../../constants";
-import { File, Close } from "../../../assets";
-import { getAccessToken } from "../../../utils";
+import { File, Close, Download } from "../../../assets";
+import { handleApiError } from "../../../utils";
+import { applicantService } from "../../../services";
+import { useAppDispatch } from "../../../redux/hooks";
+import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
+import { addToast } from "../../../redux/slices/toast/toastSlice";
 
 // Set up PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
@@ -13,6 +17,8 @@ export interface ViewerFile {
   url: string;
   name: string;
   type: string;
+  documentId?: number | string;
+  applicantId?: number | string;
 }
 
 interface UploadDocViewProps {
@@ -23,13 +29,80 @@ interface UploadDocViewProps {
 
 const UploadDocView = ({ isOpen, file, onClose }: UploadDocViewProps) => {
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [numPages, setNumPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [pdfDocument, setPdfDocument] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
+  const [pdfScale, setPdfScale] = useState(1.0);
+  // Image viewer states
+  const [imageScale, setImageScale] = useState(1.0);
+  const [imageRotation, setImageRotation] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Handle download using the same API as actions column
+  const handleDownload = useCallback(async () => {
+    if (!file?.documentId || !file?.applicantId) return;
+
+    dispatch(showLoader());
+    try {
+      const response = await applicantService.getDocumentDownloadUrl(file.applicantId, file.documentId);
+      
+      if (response.status === "success" && response.data) {
+        const downloadUrl = response.data; // data is a string URL
+        
+        // Create a link and trigger download directly to avoid CORS issues
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.download = file.name;
+        link.target = "_blank"; // Open in new tab as fallback
+        link.rel = "noopener noreferrer"; // Security best practice
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Show success message
+        dispatch(
+          addToast({
+            type: "success",
+            message: t("documentVault.downloadStarted", "Download started"),
+          })
+        );
+      } else {
+        throw new Error(response.message || "Failed to get download URL");
+      }
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      dispatch(
+        addToast({
+          type: "error",
+          message: typeof errorMessage === "string" ? errorMessage : "Failed to download document",
+        })
+      );
+    } finally {
+      dispatch(hideLoader());
+    }
+  }, [file, dispatch, t]);
+
+  // Image viewer handlers
+  const handleImageZoomIn = useCallback(() => {
+    setImageScale((prev) => Math.min(prev + 0.25, 3.0));
+  }, []);
+
+  const handleImageZoomOut = useCallback(() => {
+    setImageScale((prev) => Math.max(prev - 0.25, 0.5));
+  }, []);
+
+  const handleImageReset = useCallback(() => {
+    setImageScale(1.0);
+    setImageRotation(0);
+  }, []);
+
+  const handleImageRotate = useCallback(() => {
+    setImageRotation((prev) => (prev + 90) % 360);
+  }, []);
 
   useEffect(() => {
     // Reset states when file changes
@@ -37,47 +110,44 @@ const UploadDocView = ({ isOpen, file, onClose }: UploadDocViewProps) => {
     setNumPages(0);
     setCurrentPage(1);
     setPdfDocument(null);
+    setPdfScale(1.0);
+    setImageScale(1.0);
+    setImageRotation(0);
 
     if (file?.type === "pdf" && file.url) {
+      // For S3 pre-signed URLs with inline disposition, use iframe to avoid CORS
+      // Check if URL is a pre-signed S3 URL
+      if (file.url.includes('s3.amazonaws.com') && file.url.includes('response-content-disposition=inline')) {
+        // Use iframe for S3 pre-signed URLs to avoid CORS issues
+        setLoading(false);
+        return;
+      }
+      
+      // For other PDFs, try PDF.js loading
       setLoading(true);
       
-      const token = getAccessToken();
-      
-      // Fetch PDF data
-      const fetchPdfData = async () => {
+      const loadPdf = async () => {
         try {
-          // Use fetch with auth headers for all URLs
-          const headers: HeadersInit = {};
-          if (token) {
-            headers.Authorization = `Bearer ${token}`;
-          }
-          
-          const response = await fetch(file.url, {
-            method: "GET",
-            headers,
-            credentials: "include",
+          // Try loading directly with the URL (works for some servers)
+          let loadingTask = pdfjsLib.getDocument({ 
+            url: file.url,
+            httpHeaders: {},
+            withCredentials: false,
+            verbosity: 0 // Suppress warnings
           });
           
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
-          
-          const pdfData = await response.arrayBuffer();
-          
-          // Load PDF using PDF.js
-          const loadingTask = pdfjsLib.getDocument({ data: pdfData });
           const pdf = await loadingTask.promise;
-          
-                setPdfDocument(pdf);
-                setNumPages(pdf.numPages);
-                setLoading(false);
-              } catch (err) {
-                setError("Failed to load PDF. Please use 'Open in New Tab' to view.");
-                setLoading(false);
-              }
+          setPdfDocument(pdf);
+          setNumPages(pdf.numPages);
+          setLoading(false);
+        } catch (err) {
+          console.error("PDF loading error:", err);
+          // If PDF.js fails, fall back to iframe
+          setLoading(false);
+        }
       };
       
-      fetchPdfData();
+      loadPdf();
     }
   }, [file]);
 
@@ -93,18 +163,19 @@ const UploadDocView = ({ isOpen, file, onClose }: UploadDocViewProps) => {
       const context = canvas.getContext("2d");
       if (!context) return;
 
-      // Calculate scale to fit container
+      // Calculate scale to fit container with zoom support
       const container = containerRef.current;
       const containerWidth = container?.clientWidth || 800;
       const containerHeight = container?.clientHeight || 600;
       
       const viewport = page.getViewport({ scale: 1.0 });
-      const scale = Math.min(
+      const baseScale = Math.min(
         containerWidth / viewport.width,
-        containerHeight / viewport.height,
-        2.0 // Max scale for quality
+        containerHeight / viewport.height
       );
       
+      // Apply user zoom
+      const scale = baseScale * pdfScale;
       const scaledViewport = page.getViewport({ scale });
       
       canvas.height = scaledViewport.height;
@@ -117,11 +188,12 @@ const UploadDocView = ({ isOpen, file, onClose }: UploadDocViewProps) => {
     } catch (err) {
       setError("Failed to render PDF page.");
     }
-  }, [pdfDocument, currentPage]);
+  }, [pdfDocument, currentPage, pdfScale]);
 
   useEffect(() => {
     renderPage();
   }, [renderPage]);
+
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {
@@ -135,7 +207,23 @@ const UploadDocView = ({ isOpen, file, onClose }: UploadDocViewProps) => {
     }
   };
 
+  const handleZoomIn = () => {
+    setPdfScale((prev) => Math.min(prev + 0.25, 3.0));
+  };
+
+  const handleZoomOut = () => {
+    setPdfScale((prev) => Math.max(prev - 0.25, 0.5));
+  };
+
+  const handleResetZoom = () => {
+    setPdfScale(1.0);
+  };
+
   if (!isOpen || !file) return null;
+
+  // For images and other file types, use custom modal
+  const popupMaxWidth = file.type === "image" ? "max-w-[50vw]" : "max-w-3xl";
+  const popupMaxHeight = "max-h-[60vh]";
 
   return (
     <div
@@ -143,7 +231,7 @@ const UploadDocView = ({ isOpen, file, onClose }: UploadDocViewProps) => {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col"
+        className={`bg-white rounded-lg shadow-xl w-full ${popupMaxWidth} ${popupMaxHeight} overflow-hidden flex flex-col`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Viewer Header */}
@@ -163,10 +251,110 @@ const UploadDocView = ({ isOpen, file, onClose }: UploadDocViewProps) => {
         </div>
 
         {/* Viewer Content */}
-        <div className="flex-1 overflow-hidden p-4" style={{ minHeight: "calc(95vh - 80px)" }}>
+        <div className="flex-1 overflow-hidden flex flex-col" style={{ minHeight: "calc(50vh - 80px)" }}>
+          {file.type === "image" && (
+            <>
+              <div className="flex-1 w-full overflow-auto flex items-center justify-center p-4" style={{ backgroundColor: "#525252", minHeight: 0 }}>
+                <img
+                  src={file.url}
+                  alt={file.name}
+                  style={{
+                    transform: `scale(${imageScale}) rotate(${imageRotation}deg)`,
+                    transition: "transform 0.2s ease",
+                    maxWidth: "100%",
+                    maxHeight: "100%",
+                    objectFit: "contain",
+                  }}
+                />
+              </div>
+              <div className="flex-shrink-0 flex flex-col sm:flex-row items-center justify-between gap-2 px-4 py-2" style={{ borderTop: `1px solid ${COLORS.border}`, backgroundColor: COLORS.surface }}>
+                <div className="flex items-center gap-1 flex-wrap justify-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleImageZoomOut}
+                    disabled={imageScale <= 0.5}
+                    rounded
+                    title={t("documentVault.zoomOut", "Zoom Out")}
+                    style={{ minWidth: "36px", padding: "6px 12px" }}
+                  >
+                    −
+                  </Button>
+                  <span style={{ color: COLORS.textMuted, minWidth: "50px", textAlign: "center", fontSize: "0.875rem", whiteSpace: "nowrap" }}>
+                    {Math.round(imageScale * 100)}%
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleImageZoomIn}
+                    disabled={imageScale >= 3.0}
+                    rounded
+                    title={t("documentVault.zoomIn", "Zoom In")}
+                    style={{ minWidth: "36px", padding: "6px 12px" }}
+                  >
+                    +
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleImageRotate}
+                    rounded
+                    title={t("documentVault.rotate", "Rotate")}
+                    style={{ fontSize: "0.75rem", padding: "6px 12px" }}
+                  >
+                    ↻
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleImageReset}
+                    rounded
+                    title={t("documentVault.reset", "Reset")}
+                    style={{ fontSize: "0.75rem", padding: "6px 12px" }}
+                  >
+                    {t("documentVault.reset", "Reset")}
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  {file.documentId && file.applicantId && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={<Download className="h-4 w-4" />}
+                      onClick={handleDownload}
+                      rounded
+                      title={t("common.download", "Download")}
+                      style={{ fontSize: "0.75rem", padding: "6px 12px" }}
+                    >
+                      {t("common.download", "Download")}
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => window.open(file.url, "_blank")}
+                    rounded
+                    style={{ fontSize: "0.75rem", padding: "6px 12px" }}
+                  >
+                    {t("common.openInNewTab", "Open")}
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
           {file.type === "pdf" && (
-            <div className="w-full h-full flex flex-col" style={{ minHeight: "calc(95vh - 120px)" }}>
-              {loading ? (
+            <div className="w-full h-full flex flex-col" style={{ minHeight: "calc(50vh - 120px)" }}>
+              {/* For S3 pre-signed URLs with inline disposition, use iframe to avoid CORS */}
+              {file.url.includes('s3.amazonaws.com') && file.url.includes('response-content-disposition=inline') ? (
+                <div className="flex-1 w-full h-full overflow-hidden">
+                  <iframe
+                    src={file.url}
+                    className="w-full h-full border-0"
+                    title={file.name}
+                    style={{ minHeight: "calc(50vh - 120px)" }}
+                  />
+                </div>
+              ) : loading ? (
                 <div className="flex items-center justify-center h-full">
                   <p style={{ color: COLORS.textMuted }}>{t("common.loading", "Loading...")}</p>
                 </div>
@@ -183,18 +371,18 @@ const UploadDocView = ({ isOpen, file, onClose }: UploadDocViewProps) => {
                     {t("common.openInNewTab", "Open in New Tab")}
                   </Button>
                 </div>
-              ) : (
+              ) : pdfDocument ? (
                 <>
                   <div 
                     ref={containerRef}
                     className="flex-1 w-full overflow-auto flex items-center justify-center p-4" 
-                    style={{ minHeight: "calc(95vh - 160px)", backgroundColor: "#525252" }}
+                    style={{ minHeight: "calc(50vh - 160px)", backgroundColor: "#525252" }}
                   >
                     <canvas ref={canvasRef} className="shadow-lg" />
                   </div>
                   {numPages > 0 && (
-                    <div className="mt-2 flex items-center justify-between gap-4 px-4 py-2" style={{ borderTop: `1px solid ${COLORS.border}` }}>
-                      <div className="flex items-center gap-2">
+                    <div className="mt-2 flex flex-col sm:flex-row items-center justify-between gap-2 px-4 py-2" style={{ borderTop: `1px solid ${COLORS.border}` }}>
+                      <div className="flex items-center gap-2 flex-wrap justify-center">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -204,7 +392,7 @@ const UploadDocView = ({ isOpen, file, onClose }: UploadDocViewProps) => {
                         >
                           {t("common.previous", "Previous")}
                         </Button>
-                        <span style={{ color: COLORS.textMuted }}>
+                        <span style={{ color: COLORS.textMuted, fontSize: "0.875rem", whiteSpace: "nowrap" }}>
                           {t("documentVault.page", "Page")} {currentPage} {t("common.of", "of")} {numPages}
                         </span>
                         <Button
@@ -217,27 +405,69 @@ const UploadDocView = ({ isOpen, file, onClose }: UploadDocViewProps) => {
                           {t("common.next", "Next")}
                         </Button>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => window.open(file.url, "_blank")}
-                        rounded
-                      >
-                        {t("common.openInNewTab", "Open in New Tab")}
-                      </Button>
+                      <div className="flex items-center gap-1 flex-wrap justify-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleZoomOut}
+                          disabled={pdfScale <= 0.5}
+                          rounded
+                          title={t("documentVault.zoomOut", "Zoom Out")}
+                          style={{ minWidth: "36px", padding: "6px 12px" }}
+                        >
+                          −
+                        </Button>
+                        <span style={{ color: COLORS.textMuted, minWidth: "50px", textAlign: "center", fontSize: "0.875rem", whiteSpace: "nowrap" }}>
+                          {Math.round(pdfScale * 100)}%
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleZoomIn}
+                          disabled={pdfScale >= 3.0}
+                          rounded
+                          title={t("documentVault.zoomIn", "Zoom In")}
+                          style={{ minWidth: "36px", padding: "6px 12px" }}
+                        >
+                          +
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleResetZoom}
+                          rounded
+                          title={t("documentVault.resetZoom", "Reset Zoom")}
+                          style={{ fontSize: "0.75rem", padding: "6px 12px" }}
+                        >
+                          {t("documentVault.reset", "Reset")}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => window.open(file.url, "_blank")}
+                          rounded
+                          style={{ fontSize: "0.75rem", padding: "6px 12px" }}
+                        >
+                          {t("common.openInNewTab", "Open")}
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full space-y-4">
+                  <File className="h-16 w-16" style={{ color: COLORS.textMuted }} />
+                  <p style={{ color: COLORS.textDark }}>{t("common.loading", "Loading PDF...")}</p>
+                  <Button
+                    variant="accent"
+                    size="sm"
+                    onClick={() => window.open(file.url, "_blank")}
+                    rounded
+                  >
+                    {t("common.openInNewTab", "Open in New Tab")}
+                  </Button>
+                </div>
               )}
-            </div>
-          )}
-          {file.type === "image" && (
-            <div className="flex items-center justify-center h-full">
-              <img
-                src={file.url}
-                alt={file.name}
-                className="max-w-full max-h-full object-contain"
-              />
             </div>
           )}
           {file.type === "text" && (

@@ -153,8 +153,11 @@ const DocumentsDisplay = ({
                   </span>
                 ) : (
                   <span
-                    className="text-sm"
-                    style={{ color: COLORS.textMuted }}
+                    className="px-3 py-1 rounded-full text-xs font-medium"
+                    style={{
+                      backgroundColor: `${COLORS.warning}20`,
+                      color: COLORS.warning,
+                    }}
                   >
                     {t("applicantDetailView.pending", "Pending")}
                   </span>
