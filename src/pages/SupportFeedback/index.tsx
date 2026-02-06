@@ -9,6 +9,10 @@ import { Eye } from "../../assets";
 import { useLoggedInUserInfo } from "../../hooks";
 import { formatDateTime } from "../../utils/dateUtils";
 import { Tooltip } from "@mui/material";
+import { supportService } from "../../services";
+import { useAppDispatch } from "../../redux/hooks";
+import { addToast } from "../../redux/slices/toast/toastSlice";
+import { showLoader, hideLoader } from "../../redux/slices/loader/loaderSlice";
 
 // Types
 interface Query {
@@ -28,8 +32,9 @@ interface QueryFormValues {
 
 const SupportFeedback = () => {
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
   const loggedInUser = useLoggedInUserInfo();
-  
+
   // State
   const [queries, setQueries] = useState<Query[]>([]);
   const [selectedQuery, setSelectedQuery] = useState<Query | null>(null);
@@ -53,20 +58,57 @@ const SupportFeedback = () => {
       content: "",
     },
     validationSchema,
-    onSubmit: (values, { resetForm }) => {
-      const newQuery: Query = {
-        id: Date.now().toString(),
-        submittedBy: loggedInUser?.displayName || "User",
-        submittedByEmail: loggedInUser?.email || "",
-        submittedTo: "", // Will be set by backend or can be removed
-        subject: values.subject,
-        content: values.content,
-        createdAt: new Date(),
-      };
-      
-      setQueries((prev) => [newQuery, ...prev]);
-      resetForm();
-      setIsSubmitModalOpen(false);
+    onSubmit: async (values, { resetForm }) => {
+      const agencyId = loggedInUser?.agencyId ?? null;
+      const userId = loggedInUser?.userId;
+
+      if (agencyId == null || userId == null) {
+        dispatch(addToast({
+          type: "error",
+          message: t("supportFeedback.missingUserContext", "Unable to raise query: user context is missing."),
+        }));
+        return;
+      }
+
+      dispatch(showLoader());
+      try {
+        const response = await supportService.raiseSupport(agencyId, userId, {
+          subject: values.subject,
+          content: values.content,
+        });
+
+        if (response.status === "success") {
+          const newQuery: Query = {
+            id: Date.now().toString(),
+            submittedBy: loggedInUser?.displayName ?? "User",
+            submittedByEmail: loggedInUser?.email ?? "",
+            submittedTo: "",
+            subject: values.subject,
+            content: values.content,
+            createdAt: new Date(),
+          };
+          setQueries((prev) => [newQuery, ...prev]);
+          resetForm();
+          setIsSubmitModalOpen(false);
+          dispatch(addToast({
+            type: "success",
+            message: response.message || t("supportFeedback.queryRaisedSuccess", "Query raised successfully."),
+          }));
+        } else {
+          dispatch(addToast({
+            type: "error",
+            message: response.message || t("supportFeedback.queryRaisedFailed", "Failed to raise query."),
+          }));
+        }
+      } catch (error: unknown) {
+        const message =
+          (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+          (error as Error)?.message ||
+          t("supportFeedback.queryRaisedFailed", "Failed to raise query.");
+        dispatch(addToast({ type: "error", message }));
+      } finally {
+        dispatch(hideLoader());
+      }
     },
   });
 

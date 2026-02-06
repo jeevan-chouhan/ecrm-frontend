@@ -68,6 +68,14 @@ export interface RefreshTokenData {
 
 export type RefreshTokenResponse = ApiResponse<RefreshTokenData>;
 
+// Support - Raise Query
+export interface RaiseSupportPayload {
+  subject: string;
+  content: string;
+}
+
+export type RaiseSupportResponse = ApiResponse<null>;
+
 // User Data (decoded from JWT token)
 export interface UserData {
   userId: number;

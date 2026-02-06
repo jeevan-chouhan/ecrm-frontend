@@ -55,6 +55,12 @@ export const ENDPOINTS = {
     GET_ALL: "/plan/getAll",
   },
 
+  // Support Endpoints
+  SUPPORT: {
+    RAISE: (agencyId: number | string, userId: number | string) =>
+      `/support/raise?agencyId=${agencyId}&userId=${userId}`,
+  },
+
   // Menu Endpoints
   MENU: {
     GET_BY_ROLE: "/menu",

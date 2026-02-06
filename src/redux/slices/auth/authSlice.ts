@@ -24,20 +24,21 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    // Set tokens after successful login
+    // Set tokens after successful login (refresh token not used for login/register/forgot/reset/verify-otp)
     setCredentials: (
       state,
-      action: PayloadAction<{ accessToken: string; refreshToken: string }>
+      action: PayloadAction<{ accessToken: string; refreshToken?: string | null }>
     ) => {
       const { accessToken, refreshToken } = action.payload;
       state.accessToken = accessToken;
-      state.refreshToken = refreshToken;
+      state.refreshToken = refreshToken ?? null;
       state.user = decodeToken(accessToken);
       state.isAuthenticated = true;
 
-      // Also save to localStorage for persistence
       localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("refreshToken", refreshToken);
+      if (refreshToken) {
+        localStorage.setItem("refreshToken", refreshToken);
+      }
     },
 
     // Update access token only
@@ -78,13 +79,12 @@ const authSlice = createSlice({
       const accessToken = localStorage.getItem("accessToken");
       const refreshToken = localStorage.getItem("refreshToken");
 
-      if (accessToken && refreshToken && !isTokenExpired(accessToken)) {
+      if (accessToken && !isTokenExpired(accessToken)) {
         state.accessToken = accessToken;
-        state.refreshToken = refreshToken;
+        state.refreshToken = refreshToken || null;
         state.user = decodeToken(accessToken);
         state.isAuthenticated = true;
       } else {
-        // Token expired or invalid, clear everything
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
       }

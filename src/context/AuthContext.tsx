@@ -68,11 +68,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const response = await authService.login(payload);
 
       if (response.status === "success" && response.data) {
-        // Save tokens to Redux (which also saves to localStorage)
+        // Save access token only (no refresh token for login)
         dispatch(
           setCredentials({
             accessToken: response.data.accessToken,
-            refreshToken: response.data.refreshToken,
           })
         );
       }

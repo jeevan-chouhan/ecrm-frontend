@@ -14,25 +14,26 @@ import {
 // ==========================================
 
 // Base URL for API requests - Must be set in .env file
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const BASE_URL: string = import.meta.env.VITE_API_BASE_URL ?? "";
 // Request timeout (80 seconds)
 const TIMEOUT = 80000;
 
 // Common headers for all requests
-const COMMON_HEADERS = {
+const COMMON_HEADERS: Record<string, string> = {
   "Content-Type": "application/json",
   "Accept": "application/json",
   "ngrok-skip-browser-warning": "69420",
 };
 
-// Public endpoints - No authentication token required
-const PUBLIC_ENDPOINTS = [
+// Public endpoints - No authentication token required (login, register, forgot-password, verify-otp, refresh, update-password, plan getAll)
+const PUBLIC_ENDPOINTS: readonly string[] = [
   ENDPOINTS.AUTH.LOGIN,
   ENDPOINTS.AUTH.REGISTER,
   ENDPOINTS.AUTH.FORGOT_PASSWORD,
   ENDPOINTS.AUTH.VERIFY_OTP,
   ENDPOINTS.AUTH.UPDATE_PASSWORD,
   ENDPOINTS.AUTH.REFRESH,
+  ENDPOINTS.PLAN.GET_ALL,
 ];
 
 // ==========================================
@@ -49,14 +50,16 @@ const api: AxiosInstance = axios.create({
 // Token Refresh Queue Management
 // ==========================================
 
+type PendingRequest = {
+  resolve: (token: string) => void;
+  reject: (error: AxiosError) => void;
+};
+
 // Flag to track if token refresh is in progress
 let isRefreshing = false;
 
 // Queue to hold pending requests while token is being refreshed
-let pendingRequests: Array<{
-  resolve: (token: string) => void;
-  reject: (error: AxiosError) => void;
-}> = [];
+let pendingRequests: PendingRequest[] = [];
 
 /**
  * Process all pending requests after token refresh
@@ -94,15 +97,25 @@ const isPublicEndpoint = (url: string | undefined): boolean => {
 // ==========================================
 
 /**
+ * Get message from API error response
+ */
+const getApiErrorMessage = (error: AxiosError): string | undefined => {
+  const data = error.response?.data as { message?: string } | undefined;
+  return data?.message;
+};
+
+/**
  * Call refresh token API to get new access token
+ * @param originalError - The 401 error that triggered the refresh (used for message when no refresh token)
  * @returns New access token or throws error
  */
-const refreshAccessToken = async (): Promise<string> => {
+const refreshAccessToken = async (originalError?: AxiosError): Promise<string> => {
   const refreshToken = getRefreshToken();
 
-  // No refresh token available
+  // No refresh token available - use message from API response if present
   if (!refreshToken) {
-    throw new Error("No refresh token available");
+    const message = originalError ? getApiErrorMessage(originalError) : undefined;
+    throw new Error(message ?? "No refresh token available");
   }
 
   // Call refresh token API
@@ -200,8 +213,8 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Get new access token
-        const newAccessToken = await refreshAccessToken();
+        // Get new access token (pass original 401 error so message can be used if no refresh token)
+        const newAccessToken = await refreshAccessToken(error);
 
         // Update header for original request
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
