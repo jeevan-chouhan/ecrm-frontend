@@ -53,6 +53,7 @@ import type {
   GetDocumentsResponse,
   UploadDocumentResponse,
   ApplicationPreferenceDocumentsResponse,
+  DownloadDocumentUrlResponse,
 } from "./types";
 
 /**
@@ -847,6 +848,22 @@ const applicantService = {
   ): Promise<ApiResponse<null>> => {
     const url = ENDPOINTS.APPLICANTS.VERIFY_DOCUMENT(applicantId, documentId, isVerified);
     const response = await api.put<ApiResponse<null>>(url);
+    
+    return response.data;
+  },
+
+  /**
+   * Get download URL for a document
+   * @param applicantId - Applicant ID
+   * @param documentId - Document ID
+   * @returns Promise with download URL response
+   */
+  getDocumentDownloadUrl: async (
+    applicantId: number | string,
+    documentId: number | string
+  ): Promise<DownloadDocumentUrlResponse> => {
+    const url = ENDPOINTS.APPLICANTS.DOWNLOAD_DOCUMENT_URL(applicantId, documentId);
+    const response = await api.get<DownloadDocumentUrlResponse>(url);
     
     return response.data;
   },

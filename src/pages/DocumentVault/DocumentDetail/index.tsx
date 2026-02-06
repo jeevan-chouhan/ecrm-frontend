@@ -500,13 +500,48 @@ const DocumentDetail = () => {
     setApprovingDocId(null);
   };
 
-  const handleDownload = (fileUrl: string, fileName: string) => {
-    const link = document.createElement("a");
-    link.href = fileUrl;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownload = async (doc: DocumentItem) => {
+    if (!doc.id || !applicantId) return;
+
+    dispatch(showLoader());
+    try {
+      const response = await applicantService.getDocumentDownloadUrl(applicantId, doc.id);
+      
+      if (response.status === "success" && response.data) {
+        const downloadUrl = response.data; // data is a string URL
+        
+        // Create a link and trigger download directly to avoid CORS issues
+        // Since the URL works in browser, we'll use a direct link approach
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.download = doc.fileName || doc.name;
+        link.target = "_blank"; // Open in new tab as fallback
+        link.rel = "noopener noreferrer"; // Security best practice
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Show success message
+        dispatch(
+          addToast({
+            type: "success",
+            message: t("documentVault.downloadStarted", "Download started"),
+          })
+        );
+      } else {
+        throw new Error(response.message || "Failed to get download URL");
+      }
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      dispatch(
+        addToast({
+          type: "error",
+          message: typeof errorMessage === "string" ? errorMessage : "Failed to download document",
+        })
+      );
+    } finally {
+      dispatch(hideLoader());
+    }
   };
 
   const handleViewDocument = (doc: DocumentItem) => {
@@ -569,13 +604,13 @@ const DocumentDetail = () => {
     setDocuments([...documents, newDoc]);
   };
 
-  const handleDownloadSelected = () => {
-    selectedDocs.forEach((docId) => {
+  const handleDownloadSelected = async () => {
+    for (const docId of selectedDocs) {
       const doc = documents.find((d) => d.id === String(docId));
-      if (doc?.fileUrl && doc?.fileName && doc.uploaded) {
-        handleDownload(doc.fileUrl, doc.fileName);
+      if (doc && doc.uploaded) {
+        await handleDownload(doc);
       }
-    });
+    }
   };
 
   // Check if any selected documents have files to download
@@ -713,7 +748,7 @@ const DocumentDetail = () => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (doc.fileUrl && doc.fileName) handleDownload(doc.fileUrl, doc.fileName);
+                    handleDownload(doc);
                   }}
                   className="p-1.5 rounded-md transition-colors hover:bg-slate-100"
                   style={{ color: COLORS.accent }}

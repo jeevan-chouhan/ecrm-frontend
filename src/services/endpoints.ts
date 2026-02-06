@@ -96,6 +96,7 @@ export const ENDPOINTS = {
     },
     DELETE_DOCUMENT: (applicantId: number | string, documentId: number | string) => `/applicants/documents?applicantId=${applicantId}&documentId=${documentId}`,
     VERIFY_DOCUMENT: (applicantId: number | string, documentId: number | string, isVerified: boolean) => `/applicants/verify?applicantId=${applicantId}&documentId=${documentId}&isVerified=${isVerified}`,
+    DOWNLOAD_DOCUMENT_URL: (applicantId: number | string, documentId: number | string) => `/applicants/documents/download-url?applicantId=${applicantId}&documentId=${documentId}`,
   },
 
   //   // User Endpoints
