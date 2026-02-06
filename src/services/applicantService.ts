@@ -867,6 +867,24 @@ const applicantService = {
     
     return response.data;
   },
+
+  /**
+   * Download multiple documents as a zip file
+   * @param applicantId - Applicant ID
+   * @param documentIds - Array of document IDs
+   * @returns Promise with blob data for the zip file
+   */
+  getDocumentZipDownloadUrl: async (
+    applicantId: number | string,
+    documentIds: (number | string)[]
+  ): Promise<Blob> => {
+    const url = ENDPOINTS.APPLICANTS.DOWNLOAD_ZIP_URL(applicantId, documentIds);
+    const response = await api.post(url, {}, {
+      responseType: "blob", // Request binary data
+    });
+    
+    return response.data as Blob;
+  },
 };
 
 export default applicantService;

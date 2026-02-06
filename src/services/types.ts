@@ -1033,6 +1033,10 @@ export type ApplicationPreferenceDocumentsResponse = ApiResponse<ApplicationPref
 // The API returns the download URL as a string in the data field
 export type DownloadDocumentUrlResponse = ApiResponse<string>;
 
+// Download Zip URL Response
+// The API returns the download URL as a string in the data field
+export type DownloadZipUrlResponse = ApiResponse<string>;
+
 // Upload Document Request Payload
 export interface UploadDocumentPayload {
   documentName: string;

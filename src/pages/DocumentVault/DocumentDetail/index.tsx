@@ -605,11 +605,61 @@ const DocumentDetail = () => {
   };
 
   const handleDownloadSelected = async () => {
-    for (const docId of selectedDocs) {
-      const doc = documents.find((d) => d.id === String(docId));
-      if (doc && doc.uploaded) {
-        await handleDownload(doc);
-      }
+    if (!applicantId || selectedDocs.length === 0) return;
+
+    // Get only uploaded documents from selected
+    const selectedDocumentIds = selectedDocs
+      .map((docId) => {
+        const doc = documents.find((d) => d.id === String(docId));
+        return doc && doc.uploaded ? doc.id : null;
+      })
+      .filter((id): id is string => id !== null);
+
+    if (selectedDocumentIds.length === 0) {
+      dispatch(
+        addToast({
+          type: "warning",
+          message: t("documentVault.noDocumentsSelected", "Please select uploaded documents to download"),
+        })
+      );
+      return;
+    }
+
+    dispatch(showLoader());
+    try {
+      // API returns the ZIP file as binary data (blob)
+      const blob = await applicantService.getDocumentZipDownloadUrl(applicantId, selectedDocumentIds);
+      
+      // Create a blob URL from the binary data
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      // Create a link and trigger download
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `documents-${applicantId}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the blob URL
+      window.URL.revokeObjectURL(blobUrl);
+      
+      dispatch(
+        addToast({
+          type: "success",
+          message: t("documentVault.downloadStarted", "Download started"),
+        })
+      );
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      dispatch(
+        addToast({
+          type: "error",
+          message: typeof errorMessage === "string" ? errorMessage : "Failed to download documents",
+        })
+      );
+    } finally {
+      dispatch(hideLoader());
     }
   };
 
