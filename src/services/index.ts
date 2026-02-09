@@ -30,9 +30,13 @@ export type {
   UserListDataWithCounts,
   CountryItem,
   UniversityItem,
+  CampusItem,
+  CourseItem,
   UniversityParams,
   CountriesResponse,
   UniversitiesResponse,
+  CampusesResponse,
+  CoursesResponse,
   UserDetailsParams,
   UserPersonalData,
   UserSubordinate,
@@ -138,5 +142,9 @@ export type {
   MenuResponse,
   RaiseSupportPayload,
   RaiseSupportResponse,
+  SupportQueryItem,
+  MyQueriesParams,
+  MyQueriesData,
+  MyQueriesResponse,
 } from "./types";
 

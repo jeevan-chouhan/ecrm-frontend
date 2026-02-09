@@ -25,6 +25,7 @@ import teamOverviewReducer from "./slices/teamOverview/teamOverviewSlice";
 import applicantTrackerReducer from "./slices/applicantTracker/applicantTrackerSlice";
 import applicantDetailReducer from "./slices/applicantDetail/applicantDetailSlice";
 import settingsReducer from "./slices/settings/settingsSlice";
+import supportFeedbackReducer from "./slices/supportFeedback/supportFeedbackSlice";
 
 // Persist configuration for manageTeam - only persist filter/sort/pagination, not members data
 const manageTeamPersistConfig = {
@@ -111,6 +112,7 @@ const rootReducer = combineReducers({
   teamOverview: persistedTeamOverviewReducer,
   applicantTracker: persistedApplicantTrackerReducer,
   applicantDetail: persistedApplicantDetailReducer,
+  supportFeedback: supportFeedbackReducer,
 });
 
 // Root persist configuration

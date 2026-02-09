@@ -17,9 +17,13 @@ export interface FeeItem {
   amount: string;
 }
 
-// Fee Structure for courses
+// Program type for fee structure
+export type ProgramType = "BACHELOR" | "MASTER" | "PHD";
+
+// Fee Structure for courses (by program type)
 export interface FeeStructure {
   id: number;
+  programType: ProgramType;
   courseProgram: string;
   tuitionFeePerYear: number;
   admissionFee: number;
@@ -32,6 +36,7 @@ export interface FeeStructure {
 export interface CollegeInfo {
   campusName: string;
   dliNumber?: string;
+  officialWebsite?: string;
   location?: string;
   city: string;
   state: string;

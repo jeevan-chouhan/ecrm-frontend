@@ -1,30 +1,28 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Layout, Input, Button, Popup, DataTable } from "../../components";
 import type { GridColDef } from "../../components";
+import type { GridPaginationModel, GridSortModel } from "@mui/x-data-grid";
 import { COLORS } from "../../constants";
 import { Eye } from "../../assets";
 import { useLoggedInUserInfo } from "../../hooks";
 import { formatDateTime } from "../../utils/dateUtils";
 import { Tooltip } from "@mui/material";
 import { supportService } from "../../services";
-import { useAppDispatch } from "../../redux/hooks";
+import type { SupportQueryItem } from "../../services";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { addToast } from "../../redux/slices/toast/toastSlice";
 import { showLoader, hideLoader } from "../../redux/slices/loader/loaderSlice";
-
-// Types
-interface Query {
-  id: string;
-  submittedBy: string;
-  submittedByEmail: string;
-  submittedTo: string;
-  subject: string;
-  content: string;
-  createdAt: Date;
-  respondedAt?: Date | null;
-}
+import {
+  setQueries,
+  setLoading,
+  setError,
+  setPage,
+  setPageSize,
+  setSort,
+} from "../../redux/slices/supportFeedback/supportFeedbackSlice";
 
 interface QueryFormValues {
   subject: string;
@@ -36,11 +34,16 @@ const SupportFeedback = () => {
   const dispatch = useAppDispatch();
   const loggedInUser = useLoggedInUserInfo();
 
-  // State
-  const [queries, setQueries] = useState<Query[]>([]);
-  const [selectedQuery, setSelectedQuery] = useState<Query | null>(null);
+  // Redux state
+  const { queries, pagination, sort, isLoading } = useAppSelector((state) => state.supportFeedback);
+
+  // Local state
+  const [selectedQuery, setSelectedQuery] = useState<SupportQueryItem | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+
+  // Prevent duplicate fetch (e.g. from React Strict Mode double-invoking effects)
+  const lastFetchKeyRef = useRef<string | null>(null);
 
   // Validation schema
   const validationSchema = useMemo(() => Yup.object({
@@ -79,23 +82,24 @@ const SupportFeedback = () => {
         });
 
         if (response.status === "success") {
-          const newQuery: Query = {
-            id: Date.now().toString(),
-            submittedBy: loggedInUser?.displayName ?? "User",
-            submittedByEmail: loggedInUser?.email ?? "",
-            submittedTo: "",
-            subject: values.subject,
-            content: values.content,
-            createdAt: new Date(),
-            respondedAt: null,
-          };
-          setQueries((prev) => [newQuery, ...prev]);
           resetForm();
           setIsSubmitModalOpen(false);
           dispatch(addToast({
             type: "success",
             message: response.message || t("supportFeedback.queryRaisedSuccess", "Query raised successfully."),
           }));
+          // Refetch first page so the new query appears
+          try {
+            const refetch = await supportService.getMyQueries(userId, {
+              page: 0,
+              size: pagination.size,
+              sortBy: sort.sortBy,
+              asc: sort.asc,
+            });
+            if (refetch.status === "success" && refetch.data) dispatch(setQueries(refetch.data));
+          } catch {
+            // ignore refetch error
+          }
         } else {
           dispatch(addToast({
             type: "error",
@@ -114,9 +118,16 @@ const SupportFeedback = () => {
     },
   });
 
-  // Handle view
-  const handleView = useCallback((query: Query) => {
-    setSelectedQuery(query);
+  // Handle view (row has queryId, subject, createdAt, respondedAt, lastReply, status)
+  const handleView = useCallback((row: { queryId: number; subject: string; createdAt: string; respondedAt: string | null; lastReply: string | null; status: string }) => {
+    setSelectedQuery({
+      queryId: row.queryId,
+      subject: row.subject,
+      createdAt: row.createdAt,
+      lastRespondedAt: row.respondedAt,
+      lastReply: row.lastReply,
+      status: row.status,
+    });
     setIsViewModalOpen(true);
   }, []);
 
@@ -138,27 +149,90 @@ const SupportFeedback = () => {
     formik.resetForm();
   }, [formik]);
 
+  // Fetch my queries from API
+  const fetchMyQueries = useCallback(async () => {
+    const userId = loggedInUser?.userId;
+    if (userId == null) return;
+
+    dispatch(setLoading(true));
+    dispatch(showLoader());
+    try {
+      const response = await supportService.getMyQueries(userId, {
+        page: pagination.page,
+        size: pagination.size,
+        sortBy: sort.sortBy,
+        asc: sort.asc,
+      });
+      if (response.status === "success" && response.data) {
+        dispatch(setQueries(response.data));
+      } else {
+        dispatch(setError(response.message || "Failed to load queries"));
+      }
+    } catch (err: unknown) {
+      const message = (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message
+        ?? (err as Error)?.message
+        ?? t("supportFeedback.loadFailed", "Failed to load queries");
+      dispatch(setError(message));
+      dispatch(addToast({ type: "error", message }));
+    } finally {
+      dispatch(setLoading(false));
+      dispatch(hideLoader());
+    }
+  }, [loggedInUser?.userId, pagination.page, pagination.size, sort.sortBy, sort.asc, dispatch, t]);
+
+  // Fetch on mount and when pagination/sort or userId changes (guard against double call on refresh/Strict Mode)
+  useEffect(() => {
+    const userId = loggedInUser?.userId;
+    if (userId == null) return;
+
+    const fetchKey = `${userId}-${pagination.page}-${pagination.size}-${sort.sortBy}-${sort.asc}`;
+    if (lastFetchKeyRef.current === fetchKey) return;
+    lastFetchKeyRef.current = fetchKey;
+
+    fetchMyQueries();
+  }, [loggedInUser?.userId, fetchMyQueries, pagination.page, pagination.size, sort.sortBy, sort.asc]);
+
+  // Pagination and sort handlers
+  const handlePaginationModelChange = useCallback((model: GridPaginationModel) => {
+    if (model.page !== pagination.page) dispatch(setPage(model.page));
+    if (model.pageSize !== pagination.size) dispatch(setPageSize(model.pageSize));
+  }, [dispatch, pagination.page, pagination.size]);
+
+  const handleSortModelChange = useCallback((model: GridSortModel) => {
+    if (model.length > 0) {
+      const { field, sort: sortOrder } = model[0];
+      dispatch(setSort({ sortBy: field === "createdAt" ? "createdAt" : field, asc: sortOrder === "asc" }));
+    } else {
+      dispatch(setSort({ sortBy: "createdAt", asc: false }));
+    }
+  }, [dispatch]);
+
+  const paginationModel: GridPaginationModel = useMemo(() => ({
+    page: pagination.page,
+    pageSize: pagination.size,
+  }), [pagination.page, pagination.size]);
+
+  const sortModel: GridSortModel = useMemo(() => {
+    if (!sort.sortBy) return [];
+    return [{ field: sort.sortBy, sort: sort.asc ? "asc" : "desc" }];
+  }, [sort.sortBy, sort.asc]);
+
+  // Map API rows to DataTable rows (id required for MUI DataGrid)
+  const rows = useMemo(() => queries.map((q) => ({
+    id: q.queryId,
+    queryId: q.queryId,
+    subject: q.subject,
+    createdAt: q.createdAt,
+    respondedAt: q.lastRespondedAt,
+    lastReply: q.lastReply,
+    status: q.status,
+  })), [queries]);
+
   // DataTable columns
   const columns: GridColDef[] = useMemo(() => [
     {
-      field: "submittedBy",
-      headerName: t("supportFeedback.submittedBy", "Submitted by"),
-      flex: 1,
-      minWidth: 180,
-      renderCell: (params) => (
-        <div>
-          <div style={{ color: COLORS.textDark, fontWeight: 500 }}>
-            {params.row.submittedBy}
-          </div>
-          <div className="text-xs" style={{ color: COLORS.textMuted }}>
-            {params.row.submittedByEmail}
-          </div>
-        </div>
-      ),
-    },
-    {
       field: "subject",
-      headerName: t("supportFeedback.subject", "subject"),
+      headerName: t("supportFeedback.subject", "Subject"),
       flex: 1,
       minWidth: 150,
     },
@@ -198,7 +272,7 @@ const SupportFeedback = () => {
     },
     {
       field: "actions",
-      headerName: t("supportFeedback.action", "action"),
+      headerName: t("supportFeedback.action", "Action"),
       width: 100,
       sortable: false,
       align: "center",
@@ -240,11 +314,19 @@ const SupportFeedback = () => {
 
         {/* Sent Queries DataTable */}
         <DataTable
-          rows={queries}
+          rows={rows}
           columns={columns}
+          loading={isLoading}
           pageSizeOptions={[5, 10, 25]}
           disableRowSelectionOnClick
           autoHeight
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={handlePaginationModelChange}
+          rowCount={pagination.totalElements}
+          sortingMode="server"
+          sortModel={sortModel}
+          onSortModelChange={handleSortModelChange}
         />
       </div>
 
@@ -313,68 +395,47 @@ const SupportFeedback = () => {
       >
         {selectedQuery && (
           <div className="max-h-[70vh] overflow-y-auto">
-            {/* Header Info Section */}
-            <div className="space-y-3 mb-6">
-              {/* Submitted By */}
-              <div>
-                <span className="text-sm" style={{ color: COLORS.textMuted }}>
-                  {t("supportFeedback.submittedBy", "Submitted By")}:
-                </span>
-                <p className="font-semibold" style={{ color: COLORS.textDark }}>
-                  {selectedQuery.submittedBy} ({selectedQuery.submittedByEmail})
-                </p>
-              </div>
-            </div>
-
-            {/* Timeline Item */}
             <div className="relative pl-6 border-l-2" style={{ borderColor: COLORS.accent }}>
-              {/* Purple Bullet */}
-              <div 
+              <div
                 className="absolute -left-[9px] top-0 w-4 h-4 rounded-sm"
                 style={{ backgroundColor: COLORS.accent }}
               />
-              
               <div className="pb-4">
-                {/* Subject as Title */}
                 <h3 className="font-semibold text-base mb-2" style={{ color: COLORS.textDark }}>
                   {selectedQuery.subject}
                 </h3>
-                
-                {/* Content */}
-                <div className="mb-2">
-                  <span className="text-sm" style={{ color: COLORS.textMuted }}>
-                    {t("supportFeedback.content", "Content")}:
-                  </span>
-                  <p 
-                    className="text-sm mt-1" 
-                    style={{ 
-                      color: COLORS.textDark, 
-                      whiteSpace: "pre-wrap"
-                    }}
-                  >
-                    {selectedQuery.content}
+                <div className="space-y-2 text-sm mb-3">
+                  <p style={{ color: COLORS.textMuted }}>
+                    {t("supportFeedback.createdDate", "Created Date")}:{" "}
+                    <Tooltip title={formatDateTime(selectedQuery.createdAt)} arrow placement="top">
+                      <span style={{ color: COLORS.textDark }}>{formatDateTime(selectedQuery.createdAt)}</span>
+                    </Tooltip>
+                  </p>
+                  <p style={{ color: COLORS.textMuted }}>
+                    {t("supportFeedback.respondedDate", "Responded Date")}:{" "}
+                    <span style={{ color: COLORS.textDark }}>
+                      {selectedQuery.lastRespondedAt ? formatDateTime(selectedQuery.lastRespondedAt) : "—"}
+                    </span>
+                  </p>
+                  <p style={{ color: COLORS.textMuted }}>
+                    {t("supportFeedback.status", "Status")}:{" "}
+                    <span style={{ color: COLORS.textDark }}>{selectedQuery.status}</span>
                   </p>
                 </div>
-                
-                {/* Date and Creator */}
-                <p className="text-sm" style={{ color: COLORS.textMuted }}>
-                  <Tooltip title={formatDateTime(selectedQuery.createdAt)} arrow placement="top">
-                    <span>{formatDateTime(selectedQuery.createdAt)}</span>
-                  </Tooltip>
-                  {" • "}
-                  {t("supportFeedback.createdBy", "Created by")} {selectedQuery.submittedBy}
-                </p>
+                {selectedQuery.lastReply && (
+                  <div className="mb-2">
+                    <span className="text-sm" style={{ color: COLORS.textMuted }}>
+                      {t("supportFeedback.lastReply", "Last Reply")}:
+                    </span>
+                    <p className="text-sm mt-1" style={{ color: COLORS.textDark, whiteSpace: "pre-wrap" }}>
+                      {selectedQuery.lastReply}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
-
-            {/* Close Button */}
             <div className="flex justify-end pt-4 mt-4 border-t" style={{ borderColor: COLORS.border }}>
-              <Button
-                type="button"
-                variant="cancel"
-                rounded
-                onClick={handleCloseViewModal}
-              >
+              <Button type="button" variant="cancel" rounded onClick={handleCloseViewModal}>
                 {t("common.close", "Close")}
               </Button>
             </div>
