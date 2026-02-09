@@ -6,49 +6,77 @@ interface FeesTabProps {
   university: UniversityDetail;
 }
 
+const formatFee = (value: number) => `$${value}`;
+
+const PROGRAM_TYPE_LABELS: Record<string, string> = {
+  BACHELOR: "Bachelor",
+  MASTER: "Master",
+  PHD: "PhD",
+};
+
 const FeesTab = ({ university }: FeesTabProps) => {
   const { t } = useTranslation();
+  const hasFeeStructures = university.feeStructures && university.feeStructures.length > 0;
+
+  if (!hasFeeStructures) {
+    return (
+      <div className="space-y-4">
+        <p className="text-sm" style={{ color: COLORS.textMuted }}>
+          {t("universityDetail.noFeeStructures", "No fee structures available.")}
+        </p>
+      </div>
+    );
+  }
+
+  const structures = university.feeStructures!;
 
   return (
     <div className="space-y-4">
-      <h3 className="font-semibold text-lg mb-3" style={{ color: COLORS.textDark }}>
-        {t("universityDetail.feesStructure", "Fees Structure")}
-      </h3>
-      
+      <h4 className="font-semibold text-base" style={{ color: COLORS.textDark }}>
+        {t("universityDetail.feeStructureTitle", "Fee Structure")}
+      </h4>
       <div className="rounded-lg overflow-hidden border" style={{ borderColor: COLORS.border }}>
         <table className="w-full">
           <thead>
             <tr style={{ backgroundColor: COLORS.background }}>
               <th className="text-left text-sm font-medium px-4 py-3" style={{ color: COLORS.textDark }}>
-                {t("universityDetail.feeType", "Fee Type")}
+                {t("universityDetail.programType", "Program Type")}
               </th>
               <th className="text-right text-sm font-medium px-4 py-3" style={{ color: COLORS.textDark }}>
-                {t("universityDetail.amount", "Amount")}
+                {t("universityDetail.tuitionFeePerYear", "Tuition Fee (per year)")}
+              </th>
+              <th className="text-right text-sm font-medium px-4 py-3" style={{ color: COLORS.textDark }}>
+                {t("universityDetail.admissionFee", "Admission Fee")}
+              </th>
+              <th className="text-right text-sm font-medium px-4 py-3" style={{ color: COLORS.textDark }}>
+                {t("universityDetail.otherFees", "Other Fees")}
               </th>
             </tr>
           </thead>
           <tbody>
-            {university.fees.map((fee, index) => (
+            {structures.map((row) => (
               <tr
-                key={index}
+                key={row.id}
                 className="border-t"
                 style={{ borderColor: COLORS.border }}
               >
-                <td className="text-sm px-4 py-3" style={{ color: COLORS.textMuted }}>
-                  {fee.label}
+                <td className="text-sm px-4 py-3" style={{ color: COLORS.textDark }}>
+                  {PROGRAM_TYPE_LABELS[row.programType] ?? row.programType}
                 </td>
-                <td className="text-sm font-medium text-right px-4 py-3" style={{ color: COLORS.textDark }}>
-                  {fee.amount}
+                <td className="text-sm text-right px-4 py-3" style={{ color: COLORS.textDark }}>
+                  {formatFee(row.tuitionFeePerYear)}
+                </td>
+                <td className="text-sm text-right px-4 py-3" style={{ color: COLORS.textDark }}>
+                  {formatFee(row.admissionFee)}
+                </td>
+                <td className="text-sm text-right px-4 py-3" style={{ color: COLORS.textDark }}>
+                  {formatFee(row.otherFees)}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      
-      <p className="text-xs" style={{ color: COLORS.textMuted }}>
-        * {t("universityDetail.feesDisclaimer", "Fees are subject to change. Please verify on official website.")}
-      </p>
     </div>
   );
 };

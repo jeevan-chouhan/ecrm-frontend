@@ -91,10 +91,41 @@ const getMockUniversityDetail = (universityId: string): UniversityDetail => ({
   fees: [
     { label: "Tuition Fee (per year)", amount: "$53,790" },
     { label: "Student Activity Fee", amount: "$340" },
-    { label: "Health Insurance", amount: "$3,500" },
     { label: "Housing (on-campus)", amount: "$11,000" },
     { label: "Meal Plan", amount: "$6,500" },
     { label: "Books & Supplies", amount: "$1,000" },
+  ],
+  feeStructures: [
+    {
+      id: 1,
+      programType: "BACHELOR",
+      courseProgram: "B.Tech Computer Science",
+      tuitionFeePerYear: 50000,
+      admissionFee: 5000,
+      hostelFeePerYear: 20000,
+      otherFees: 10000,
+      totalFeePerYear: 85000,
+    },
+    {
+      id: 2,
+      programType: "MASTER",
+      courseProgram: "M.Tech Computer Science",
+      tuitionFeePerYear: 60000,
+      admissionFee: 6000,
+      hostelFeePerYear: 22000,
+      otherFees: 12000,
+      totalFeePerYear: 100000,
+    },
+    {
+      id: 3,
+      programType: "PHD",
+      courseProgram: "Ph.D. Computer Science",
+      tuitionFeePerYear: 45000,
+      admissionFee: 5000,
+      hostelFeePerYear: 20000,
+      otherFees: 8000,
+      totalFeePerYear: 78000,
+    },
   ],
   admissionSteps: [
     { step: 1, title: "Online Application", description: "Submit your application through the official portal with required details" },
@@ -161,7 +192,7 @@ const UniversityDetailPage = () => {
       case "collegeInfo":
         return <CollegeInfoTab university={universityDetail} />;
       case "campus":
-        return <CampusTab university={universityDetail} />;
+        return <CampusTab university={universityDetail} universityId={universityId ?? null} />;
       case "fees":
         return <FeesTab university={universityDetail} />;
       case "scholarship":
@@ -211,45 +242,8 @@ const UniversityDetailPage = () => {
           </h1>
         </div>
 
-        {/* Banner Image */}
-        <div className="relative h-40 md:h-56 overflow-hidden mx-4 md:mx-6 mt-4 rounded-lg">
-          {universityDetail.bannerImage ? (
-            <img
-              src={universityDetail.bannerImage}
-              alt={universityDetail.name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div
-              className="w-full h-full"
-              style={{ backgroundColor: COLORS.background }}
-            />
-          )}
-          
-          {/* Logo */}
-          <div
-            className="absolute -bottom-10 left-6 w-20 h-20 md:w-24 md:h-24 rounded-lg bg-white shadow-lg flex items-center justify-center overflow-hidden"
-            style={{ border: `2px solid ${COLORS.border}` }}
-          >
-            {universityDetail.logoImage ? (
-              <img
-                src={universityDetail.logoImage}
-                alt={`${universityDetail.name} logo`}
-                className="w-full h-full object-contain p-2"
-              />
-            ) : (
-              <span
-                className="text-2xl md:text-3xl font-bold"
-                style={{ color: COLORS.textDark }}
-              >
-                {universityDetail.shortName || universityDetail.name.charAt(0)}
-              </span>
-            )}
-          </div>
-        </div>
-
         {/* University Info */}
-        <div className="pt-14 px-4 md:px-6 pb-4">
+        <div className="px-4 md:px-6 pt-4 pb-4">
           <h1
             className="text-xl md:text-2xl font-bold"
             style={{ color: COLORS.textDark }}

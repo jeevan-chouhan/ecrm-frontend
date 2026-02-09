@@ -3,6 +3,7 @@ export { default as authService } from "./authService";
 export { default as userService } from "./userService";
 export { default as applicantService } from "./applicantService";
 export { default as agencyService } from "./agencyService";
+export { default as supportService } from "./supportService";
 export { ENDPOINTS } from "./endpoints";
 
 // Export all types from types.ts
@@ -29,9 +30,13 @@ export type {
   UserListDataWithCounts,
   CountryItem,
   UniversityItem,
+  CampusItem,
+  CourseItem,
   UniversityParams,
   CountriesResponse,
   UniversitiesResponse,
+  CampusesResponse,
+  CoursesResponse,
   UserDetailsParams,
   UserPersonalData,
   UserSubordinate,
@@ -135,5 +140,11 @@ export type {
   AgencyBrandingResponse,
   MenuItem,
   MenuResponse,
+  RaiseSupportPayload,
+  RaiseSupportResponse,
+  SupportQueryItem,
+  MyQueriesParams,
+  MyQueriesData,
+  MyQueriesResponse,
 } from "./types";
 

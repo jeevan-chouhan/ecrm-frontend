@@ -77,13 +77,9 @@ const CountryUniversity = () => {
 
   // Filter states (pending filters - not applied yet)
   const [pendingCountry, setPendingCountry] = useState("");
-  const [pendingProgram, setPendingProgram] = useState("");
-  const [pendingCourse, setPendingCourse] = useState("");
 
   // Applied filters
   const [appliedCountry, setAppliedCountry] = useState("");
-  const [appliedProgram, setAppliedProgram] = useState("");
-  const [appliedCourse, setAppliedCourse] = useState("");
 
   // Loading states
   const [isLoadingCountries, setIsLoadingCountries] = useState(false);
@@ -194,24 +190,12 @@ const CountryUniversity = () => {
       );
     }
 
-    // Note: Program and Course filters would need proper data from API
-    // Currently using placeholder logic
-    if (appliedProgram) {
-      // Filter by program when API provides this data
-    }
-
-    if (appliedCourse) {
-      // Filter by course when API provides this data
-    }
-
     setFilteredUniversities(filtered);
-  }, [searchValue, universities, appliedCountry, appliedProgram, appliedCourse]);
+  }, [searchValue, universities, appliedCountry]);
 
   // Handle Apply filters
   const handleApplyFilters = useCallback(() => {
     setAppliedCountry(pendingCountry);
-    setAppliedProgram(pendingProgram);
-    setAppliedCourse(pendingCourse);
 
     // Fetch universities with selected country
     if (pendingCountry) {
@@ -219,16 +203,12 @@ const CountryUniversity = () => {
     } else {
       fetchUniversities(null);
     }
-  }, [pendingCountry, pendingProgram, pendingCourse, fetchUniversities]);
+  }, [pendingCountry, fetchUniversities]);
 
   // Handle Clear filters
   const handleClearFilters = useCallback(() => {
     setPendingCountry("");
-    setPendingProgram("");
-    setPendingCourse("");
     setAppliedCountry("");
-    setAppliedProgram("");
-    setAppliedCourse("");
     fetchUniversities(null);
   }, [fetchUniversities]);
 
@@ -287,28 +267,6 @@ const CountryUniversity = () => {
         renderCell: (params) => (
           <span style={{ color: COLORS.accent, fontWeight: 600 }}>
             {params.row.coursesOffered || 0} {t("countryUniversity.courses", "Courses")}
-          </span>
-        ),
-      },
-      {
-        field: "tuitionFees",
-        headerName: t("countryUniversity.tuitionFees", "1st Year Tuition Fees"),
-        flex: 1,
-        minWidth: 150,
-        renderCell: (params) => (
-          <span style={{ color: COLORS.textDark }}>
-            {params.row.tuitionFees || "N/A"}
-          </span>
-        ),
-      },
-      {
-        field: "scholarships",
-        headerName: t("countryUniversity.scholarships", "No. of Scholarships"),
-        flex: 1,
-        minWidth: 150,
-        renderCell: (params) => (
-          <span style={{ color: COLORS.accent }}>
-            {params.row.scholarships || 0}
           </span>
         ),
       },
@@ -376,14 +334,8 @@ const CountryUniversity = () => {
             searchValue={searchValue}
             onSearchChange={setSearchValue}
             pendingCountry={pendingCountry}
-            pendingProgram={pendingProgram}
-            pendingCourse={pendingCourse} 
             onCountryChange={setPendingCountry}
-            onProgramChange={setPendingProgram}
-            onCourseChange={setPendingCourse}
             appliedCountry={appliedCountry}
-            appliedProgram={appliedProgram}
-            appliedCourse={appliedCourse}
             onApply={handleApplyFilters}
             onClear={handleClearFilters}
             countries={countries}

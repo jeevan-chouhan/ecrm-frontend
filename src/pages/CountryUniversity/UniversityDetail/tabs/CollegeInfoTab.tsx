@@ -18,66 +18,95 @@ const InfoItem = ({ label, value }: { label: string; value?: string | number }) 
   </div>
 );
 
+// Official website as clickable link
+const WebsiteLink = ({
+  label,
+  url,
+}: {
+  label: string;
+  url?: string;
+}) => {
+  const href = url?.trim();
+  if (!href) {
+    return (
+      <div>
+        <p className="text-xs font-medium mb-1" style={{ color: COLORS.textMuted }}>
+          {label}
+        </p>
+        <p className="text-sm" style={{ color: COLORS.textDark }}>
+          -
+        </p>
+      </div>
+    );
+  }
+  const displayUrl = href.startsWith("http") ? href : `https://${href}`;
+  return (
+    <div>
+      <p className="text-xs font-medium mb-1" style={{ color: COLORS.textMuted }}>
+        {label}
+      </p>
+      <a
+        href={displayUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-sm underline hover:opacity-80"
+        style={{ color: COLORS.primary }}
+      >
+        {displayUrl}
+      </a>
+    </div>
+  );
+};
+
 const CollegeInfoTab = ({ university }: CollegeInfoTabProps) => {
   const { t } = useTranslation();
   const { collegeInfo } = university;
 
   return (
     <div className="space-y-6">
-      {/* College Information Section */}
       <div>
         <h3 className="font-semibold text-lg mb-4" style={{ color: COLORS.textDark }}>
           {t("collegeInfo.collegeInformation", "College Information")}
         </h3>
-        
-        {/* Row 1: Campus Name, DLI Number, Location */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <InfoItem 
-            label={t("collegeInfo.universityCampusName", "University Campus Name")} 
-            value={collegeInfo?.campusName || university.name} 
-          />
-          <InfoItem 
-            label={t("collegeInfo.dliNumber", "DLI Number")} 
-            value={collegeInfo?.dliNumber} 
-          />
-          <InfoItem 
-            label={t("collegeInfo.location", "Location")} 
-            value={collegeInfo?.location || university.location} 
-          />
-        </div>
 
-        {/* Row 2: City, State, Email */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <InfoItem 
-            label={t("collegeInfo.city", "City")} 
-            value={collegeInfo?.city} 
-          />
-          <InfoItem 
-            label={t("collegeInfo.state", "State")} 
-            value={collegeInfo?.state} 
-          />
-          <InfoItem 
-            label={t("collegeInfo.email", "Email")} 
-            value={collegeInfo?.email} 
-          />
-        </div>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+          {/* Row 1: Description (full width) */}
+          <div className="col-span-2">
+            <p className="text-xs font-medium mb-1" style={{ color: COLORS.textMuted }}>
+              {t("collegeInfo.description", "Description")}
+            </p>
+            <p className="text-sm" style={{ color: COLORS.textDark }}>
+              {collegeInfo?.description || university.description || "-"}
+            </p>
+          </div>
 
-        {/* Row 3: Phone */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <InfoItem 
-            label={t("collegeInfo.phone", "Phone")} 
-            value={collegeInfo?.phone} 
-          />
-        </div>
+          {/* Row 2: DLI Number | Official Website */}
+          <div>
+            <InfoItem
+              label={t("collegeInfo.dliNumber", "DLI Number")}
+              value={collegeInfo?.dliNumber}
+            />
+          </div>
+          <div>
+            <WebsiteLink
+              label={t("collegeInfo.officialWebsite", "Official Website")}
+              url={collegeInfo?.officialWebsite || university.website}
+            />
+          </div>
 
-        {/* Description - full width */}
-        <div>
-          <p className="text-xs font-medium mb-1" style={{ color: COLORS.textMuted }}>
-            {t("collegeInfo.description", "Description")}
-          </p>
-          <p className="text-sm" style={{ color: COLORS.textDark }}>
-            {collegeInfo?.description || university.description || "-"}
-          </p>
+          {/* Row 3: Contact Number | Email */}
+          <div>
+            <InfoItem
+              label={t("collegeInfo.contactNumber", "Contact Number")}
+              value={collegeInfo?.phone}
+            />
+          </div>
+          <div>
+            <InfoItem
+              label={t("collegeInfo.email", "Email")}
+              value={collegeInfo?.email}
+            />
+          </div>
         </div>
       </div>
     </div>

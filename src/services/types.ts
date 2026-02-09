@@ -68,6 +68,46 @@ export interface RefreshTokenData {
 
 export type RefreshTokenResponse = ApiResponse<RefreshTokenData>;
 
+// Support - Raise Query
+export interface RaiseSupportPayload {
+  subject: string;
+  content: string;
+}
+
+export type RaiseSupportResponse = ApiResponse<null>;
+
+// Support - My Queries List
+export interface SupportQueryItem {
+  queryId: number;
+  subject: string;
+  createdAt: string;
+  lastRespondedAt: string | null;
+  lastReply: string | null;
+  status: string;
+}
+
+export interface MyQueriesParams {
+  page: number;
+  size: number;
+  sortBy: string;
+  asc: boolean;
+}
+
+export interface MyQueriesData {
+  content: SupportQueryItem[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+  numberOfElements: number;
+  nextPage: number | null;
+  prevPage: number | null;
+}
+
+export type MyQueriesResponse = ApiResponse<MyQueriesData>;
+
 // User Data (decoded from JWT token)
 export interface UserData {
   userId: number;
@@ -228,6 +268,9 @@ export interface CampusItem {
   name: string;
   universityId?: number;
   universityName?: string;
+  address?: string;
+  totalStudents?: number | string;
+  website?: string;
 }
 
 export interface CourseItem {
