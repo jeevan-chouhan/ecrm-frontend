@@ -2194,13 +2194,25 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
     }
   }, [isSaving, formik, editingIndex, getPreferenceSchema, markAllFieldsAsTouched, handleValidationErrors, isPreferenceComplete, dispatch, t, onSaveAndNext, applicantId, convertPreferenceToApiFormat, applicantService, onUpdate, originalPreferencesRef, setIsSaving]);
 
+  // Memoize incomplete and complete preferences to avoid recalculating on every render
+  const incomplete = useMemo(() => getIncompletePreferences(), [getIncompletePreferences]);
+  const complete = useMemo(() => getCompletePreferences(), [getCompletePreferences]);
+  
+  // Memoize first incomplete preference and its index
+  const firstIncomplete = useMemo(() => incomplete.length > 0 ? incomplete[0] : null, [incomplete]);
+  const firstIncompleteIndex = useMemo(() => {
+    if (!firstIncomplete) return -1;
+    return formik.values.preferences.findIndex((p) => p.id === firstIncomplete.id);
+  }, [firstIncomplete, formik.values.preferences]);
 
-  const incomplete = getIncompletePreferences();
-  const complete = getCompletePreferences();
-  const firstIncomplete = incomplete.length > 0 ? incomplete[0] : null;
-  const firstIncompleteIndex = firstIncomplete
-    ? formik.values.preferences.findIndex((p) => p.id === firstIncomplete.id)
-    : -1;
+  // Create a map of preference id to index for O(1) lookup instead of O(n) findIndex in map
+  const preferenceIndexMap = useMemo(() => {
+    const map = new Map<string, number>();
+    formik.values.preferences.forEach((pref, index) => {
+      map.set(pref.id, index);
+    });
+    return map;
+  }, [formik.values.preferences]);
 
   return (
     <div className="space-y-6">
@@ -2254,48 +2266,30 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
 
           <div className="space-y-4">
             {complete.map((preference) => {
-              const index = formik.values.preferences.findIndex((p) => p.id === preference.id);
+              // Use O(1) lookup instead of O(n) findIndex
+              const index = preferenceIndexMap.get(preference.id) ?? -1;
               const isEditing = editingIndex === index;
 
               // Get university options for this specific preference based on its country
-              const preferenceUniversityOptions = (() => {
-                if (preference.desiredCountry) {
-                  const countryIdStr = preference.desiredCountry;
-                  // Use ref to get the latest map value
-                  return universityOptionsMapRef.current.get(countryIdStr) || universityOptions;
-                }
-                return universityOptions;
-              })();
+              // Memoize these lookups to avoid recreating on every render
+              const preferenceUniversityOptions = preference.desiredCountry
+                ? (universityOptionsMapRef.current.get(preference.desiredCountry) || universityOptions)
+                : universityOptions;
 
               // Get campus options for this specific preference based on its university
-              const preferenceCampusOptions = (() => {
-                if (preference.desiredUniversity) {
-                  const universityIdStr = preference.desiredUniversity;
-                  // Use ref to get the latest map value
-                  return campusOptionsMapRef.current.get(universityIdStr) || campusOptions;
-                }
-                return campusOptions;
-              })();
+              const preferenceCampusOptions = preference.desiredUniversity
+                ? (campusOptionsMapRef.current.get(preference.desiredUniversity) || campusOptions)
+                : campusOptions;
 
               // Get course options for this specific preference based on its campus and program
-              const preferenceCourseOptions = (() => {
-                if (preference.desiredCampus && preference.program) {
-                  const key = `${preference.desiredCampus}-${preference.program}`;
-                  // Use ref to get the latest map value
-                  return courseOptionsMapRef.current.get(key) || courseOptions;
-                }
-                return courseOptions;
-              })();
+              const preferenceCourseOptions = (preference.desiredCampus && preference.program)
+                ? (courseOptionsMapRef.current.get(`${preference.desiredCampus}-${preference.program}`) || courseOptions)
+                : courseOptions;
 
               // Get counselor options for this specific preference based on its country
-              const preferenceCounselorOptions = (() => {
-                if (preference.desiredCountry) {
-                  const countryIdStr = preference.desiredCountry;
-                  // Use ref to get the latest map value
-                  return counselorOptionsMapRef.current.get(countryIdStr) || counselorOptions;
-                }
-                return counselorOptions;
-              })();
+              const preferenceCounselorOptions = preference.desiredCountry
+                ? (counselorOptionsMapRef.current.get(preference.desiredCountry) || counselorOptions)
+                : counselorOptions;
 
               return (
                 <PreferenceCard

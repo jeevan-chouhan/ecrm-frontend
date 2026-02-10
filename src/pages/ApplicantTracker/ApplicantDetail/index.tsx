@@ -330,7 +330,7 @@ const ApplicantDetailView = () => {
         applicationStage: null,
         universityId: null,
         desiredIntake: null,
-        agencyPartnerId: null,
+        enrollmentTypeId: null,
         appliedFrom: null,
         appliedTo: null,
         updatedFrom: null,

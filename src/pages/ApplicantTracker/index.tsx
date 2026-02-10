@@ -35,7 +35,6 @@ import {
   setSearch,
   applyFilters,
   clearFilters,
-  setEnrollmentTypeFilter,
 } from "../../redux/slices/applicantTracker/applicantTrackerSlice";
 import { formatDateToYYYYMMDD, formatDateToISODateTime } from "../../utils";
 
