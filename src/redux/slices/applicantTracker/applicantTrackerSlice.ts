@@ -30,7 +30,7 @@ interface FilterState {
   applicationStage: string;
   university: string;
   intake: string;
-  agencyPartner: string;
+  enrollmentType: string;
   appliedFromDate: string | null; // ISO string format for serialization
   appliedToDate: string | null; // ISO string format for serialization
   lastUpdatedFromDate: string | null; // ISO string format for serialization
@@ -84,7 +84,7 @@ const initialState: ApplicantTrackerState = {
     applicationStage: "",
     university: "",
     intake: "",
-    agencyPartner: "",
+    enrollmentType: "",
     appliedFromDate: null,
     appliedToDate: null,
     lastUpdatedFromDate: null,
@@ -214,8 +214,8 @@ const applicantTrackerSlice = createSlice({
       state.pagination.page = 0;
     },
 
-    setAgencyPartnerFilter: (state, action: PayloadAction<string>) => {
-      state.filter.agencyPartner = action.payload;
+    setEnrollmentTypeFilter: (state, action: PayloadAction<string>) => {
+      state.filter.enrollmentType = action.payload;
       state.pagination.page = 0;
     },
 
@@ -254,7 +254,7 @@ const applicantTrackerSlice = createSlice({
       state.filter.applicationStage = "";
       state.filter.university = "";
       state.filter.intake = "";
-      state.filter.agencyPartner = "";
+      state.filter.enrollmentType = "";
       state.filter.appliedFromDate = null;
       state.filter.appliedToDate = null;
       state.filter.lastUpdatedFromDate = null;
@@ -287,7 +287,7 @@ export const {
   setApplicationStageFilter,
   setUniversityFilter,
   setIntakeFilter,
-  setAgencyPartnerFilter,
+  setEnrollmentTypeFilter,
   setAppliedFromDateFilter,
   setAppliedToDateFilter,
   setLastUpdatedFromDateFilter,

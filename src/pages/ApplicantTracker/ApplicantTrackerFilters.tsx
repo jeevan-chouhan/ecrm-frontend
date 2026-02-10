@@ -11,14 +11,14 @@ interface ApplicantTrackerFiltersProps {
   managerOptions: SelectOption[];
   counselorOptions: SelectOption[];
   universityOptions: SelectOption[];
-  agencyPartnerOptions: SelectOption[];
+  enrollmentTypeOptions: SelectOption[];
   selectedAdmin: string;
   selectedManager: string;
   selectedCounselor: string;
   selectedUniversity: string;
   selectedApplicantStages: string[];
   selectedIntake: string;
-  selectedAgencyPartner: string;
+  selectedEnrollmentType: string;
   appliedFromDate: Date | null;
   appliedToDate: Date | null;
   lastUpdatedFromDate: Date | null;
@@ -29,7 +29,7 @@ interface ApplicantTrackerFiltersProps {
   onUniversityChange: (value: string) => void;
   onApplicantStagesChange: (values: string[]) => void;
   onIntakeChange: (value: string) => void;
-  onAgencyPartnerChange: (value: string) => void;
+  onEnrollmentTypeChange: (value: string) => void;
   onAppliedFromDateChange: (date: Date | null) => void;
   onAppliedToDateChange: (date: Date | null) => void;
   onLastUpdatedFromDateChange: (date: Date | null) => void;
@@ -45,14 +45,14 @@ const ApplicantTrackerFilters = ({
   managerOptions,
   counselorOptions,
   universityOptions,
-  agencyPartnerOptions,
+  enrollmentTypeOptions,
   selectedAdmin,
   selectedManager,
   selectedCounselor,
   selectedUniversity,
   selectedApplicantStages,
   selectedIntake,
-  selectedAgencyPartner,
+  selectedEnrollmentType,
   appliedFromDate,
   appliedToDate,
   lastUpdatedFromDate,
@@ -63,7 +63,7 @@ const ApplicantTrackerFilters = ({
   onUniversityChange,
   onApplicantStagesChange,
   onIntakeChange,
-  onAgencyPartnerChange,
+  onEnrollmentTypeChange,
   onAppliedFromDateChange,
   onAppliedToDateChange,
   onLastUpdatedFromDateChange,
@@ -93,13 +93,13 @@ const ApplicantTrackerFilters = ({
     return isPrimaryAdmin || role === UserRole.PRIMARY_ADMIN || role === UserRole.ADMIN || role === "ADMIN_BILLING" || role === UserRole.MANAGER || role === "MANAGER_BILLING";
   }, [userRole, isPrimaryAdmin]);
 
-  // Check if any dropdown is hidden (to determine if Agency should move to first row)
+  // Check if any dropdown is hidden (to determine if Enrollment Type should move to first row)
   const hasHiddenDropdowns = useMemo(() => {
     return !showAdminFilter || !showManagerFilter || !showCounselorFilter;
   }, [showAdminFilter, showManagerFilter, showCounselorFilter]);
 
   // Check if user is Manager, Manager_Billing, or Counsellor
-  // For these roles, we show Applied dates in first row after Agency
+  // For these roles, we show Applied dates in first row after Enrollment Type
   const isCounselorOnly = useMemo(() => {
     const role = userRole?.toUpperCase() || "";
     // For MANAGER/MANAGER_BILLING: Admin and Manager filters are hidden, only Counselor filter is visible
@@ -152,10 +152,10 @@ const ApplicantTrackerFilters = ({
   ], [t, universityOptions]);
 
 
-  const agencyPartnerOptionsWithPlaceholder = useMemo(() => [
-    { value: "", label: t("applicantTracker.selectAgencyPartner", "Agency Partner") },
-    ...agencyPartnerOptions,
-  ], [t, agencyPartnerOptions]);
+  const enrollmentTypeOptionsWithPlaceholder = useMemo(() => [
+    { value: "", label: t("applicantTracker.selectEnrollmentType", "Select Enrolment Type") },
+    ...enrollmentTypeOptions,
+  ], [t, enrollmentTypeOptions]);
 
   return (
     <div className="space-y-3">
@@ -240,20 +240,20 @@ const ApplicantTrackerFilters = ({
           />
         </div>
 
-        {/* Agency Partner Select - Show in first row if any dropdowns are hidden */}
+        {/* Enrollment Type Select - Show in first row if any dropdowns are hidden */}
         {hasHiddenDropdowns && (
           <div className={`${filterWidthClass} applicant-tracker-filter-placeholder`}>
             <Select
-              label={t("applicantTracker.agencyPartnerLabel", "Agency Partner")}
-              options={agencyPartnerOptionsWithPlaceholder}
-              value={selectedAgencyPartner}
-              onChange={onAgencyPartnerChange}
+              label={t("applicantTracker.enrollmentTypeLabel", "Enrolment Type")}
+              options={enrollmentTypeOptionsWithPlaceholder}
+              value={selectedEnrollmentType}
+              onChange={onEnrollmentTypeChange}
               searchable
             />
           </div>
         )}
 
-        {/* Applied From Date - Show in first row after Agency for Counselor role */}
+        {/* Applied From Date - Show in first row after Enrollment Type for Counselor role */}
         {isCounselorOnly && (
           <div className={filterWidthClass}>
             <DatePicker
@@ -282,16 +282,16 @@ const ApplicantTrackerFilters = ({
         )}
       </div>
 
-      {/* Second Row - Agency Partner (if no dropdowns hidden), Date Pickers and Buttons */}
+      {/* Second Row - Enrollment Type (if no dropdowns hidden), Date Pickers and Buttons */}
       <div className="flex flex-wrap items-center gap-3">
-        {/* Agency Partner Select - Show in second row only if no dropdowns are hidden */}
+        {/* Enrollment Type Select - Show in second row only if no dropdowns are hidden */}
         {!hasHiddenDropdowns && (
           <div className={`${filterWidthClass} applicant-tracker-filter-placeholder`}>
             <Select
-              label={t("applicantTracker.agencyPartnerLabel", "Agency Partner")}
-              options={agencyPartnerOptionsWithPlaceholder}
-              value={selectedAgencyPartner}
-              onChange={onAgencyPartnerChange}
+              label={t("applicantTracker.enrollmentTypeLabel", "Enrolment Type")}
+              options={enrollmentTypeOptionsWithPlaceholder}
+              value={selectedEnrollmentType}
+              onChange={onEnrollmentTypeChange}
               searchable
             />
           </div>

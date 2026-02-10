@@ -20,7 +20,7 @@ import ApplicantTrackerFilters from "./ApplicantTrackerFilters";
 import ApplicationStatusHistoryPopup from "./ApplicantDetail/ApplicationStatusHistoryPopup";
 import type { ApplicationStatusHistory } from "./ApplicantDetail/types";
 import { applicantService, userService } from "../../services";
-import type { ApplicationListItem, AdminItem, ManagerItem, CounselorItem, UniversityItem, AgencyPartnerNameItem, PaginatedData } from "../../services";
+import type { ApplicationListItem, AdminItem, ManagerItem, CounselorItem, UniversityItem, PaginatedData } from "../../services";
 import type { SelectOption } from "../../components";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { addToast } from "../../redux/slices/toast/toastSlice";
@@ -35,6 +35,7 @@ import {
   setSearch,
   applyFilters,
   clearFilters,
+  setEnrollmentTypeFilter,
 } from "../../redux/slices/applicantTracker/applicantTrackerSlice";
 import { formatDateToYYYYMMDD, formatDateToISODateTime } from "../../utils";
 
@@ -72,7 +73,9 @@ const ApplicantTracker = () => {
   const [managerOptions, setManagerOptions] = useState<SelectOption[]>([]);
   const [counselorOptions, setCounselorOptions] = useState<SelectOption[]>([]);
   const [universityOptions, setUniversityOptions] = useState<SelectOption[]>([]);
-  const [agencyPartnerOptions, setAgencyPartnerOptions] = useState<SelectOption[]>([]);
+  const [enrollmentTypeOptions, setEnrollmentTypeOptions] = useState<SelectOption[]>([]);
+  // Map to store enrollment type code -> ID mapping for API conversion
+  const enrollmentTypeIdMapRef = useRef<Map<string, number>>(new Map());
   
 
   // Loading state
@@ -159,10 +162,13 @@ const ApplicantTracker = () => {
       // Get applicationStage - backend expects single value
       const applicationStageValue = filter.applicationStage || null;
 
-      // Get universityId, desiredIntake, and agencyPartnerId values
+      // Get universityId, desiredIntake, and enrollmentTypeId values
       const universityIdValue = filter.university ? parseInt(filter.university) : null;
       const desiredIntakeValue = filter.intake || null;
-      const agencyPartnerIdValue = filter.agencyPartner ? parseInt(filter.agencyPartner) : null;
+      // Convert enrollmentType code to enrollmentTypeId
+      const enrollmentTypeIdValue = filter.enrollmentType 
+        ? (enrollmentTypeIdMapRef.current.get(filter.enrollmentType) || null)
+        : null;
 
       // Map sort field - lastUpdatedDate -> updatedAt for API
       const sortByField = sort.sortBy === "lastUpdatedDate" ? "updatedAt" : (sort.sortBy || "updatedAt");
@@ -177,7 +183,7 @@ const ApplicantTracker = () => {
         applicationStage: applicationStageValue,
         universityId: universityIdValue,
         desiredIntake: desiredIntakeValue,
-        agencyPartnerId: agencyPartnerIdValue,
+        enrollmentTypeId: enrollmentTypeIdValue,
         appliedFrom: appliedFromFormatted,
         appliedTo: appliedToFormatted,
         updatedFrom: updatedFromFormatted,
@@ -220,7 +226,7 @@ const ApplicantTracker = () => {
       dispatch(setLoading(false));
       dispatch(hideLoader());
     }
-  }, [dispatch, filter.admin, filter.manager, filter.counselor, filter.applicationStatus, filter.applicationStage, filter.university, filter.intake, filter.agencyPartner, filter.appliedFromDate, filter.appliedToDate, filter.lastUpdatedFromDate, filter.lastUpdatedToDate, filter.search, pagination.page, pagination.size, sort.sortBy, sort.asc, mapApplicationListItemToApplicant]);
+  }, [dispatch, filter.admin, filter.manager, filter.counselor, filter.applicationStatus, filter.applicationStage, filter.university, filter.intake, filter.enrollmentType, filter.appliedFromDate, filter.appliedToDate, filter.lastUpdatedFromDate, filter.lastUpdatedToDate, filter.search, pagination.page, pagination.size, sort.sortBy, sort.asc, mapApplicationListItemToApplicant]);
 
   // Initial fetch when user is loaded or filters/pagination/sort change
   useEffect(() => {
@@ -228,7 +234,7 @@ const ApplicantTracker = () => {
       fetchApplications();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.agencyId, filter.admin, filter.manager, filter.counselor, filter.applicationStatus, filter.applicationStage, filter.university, filter.intake, filter.agencyPartner, filter.appliedFromDate, filter.appliedToDate, filter.lastUpdatedFromDate, filter.lastUpdatedToDate, filter.search, pagination.page, pagination.size, sort.sortBy, sort.asc]);
+  }, [user?.agencyId, filter.admin, filter.manager, filter.counselor, filter.applicationStatus, filter.applicationStage, filter.university, filter.intake, filter.enrollmentType, filter.appliedFromDate, filter.appliedToDate, filter.lastUpdatedFromDate, filter.lastUpdatedToDate, filter.search, pagination.page, pagination.size, sort.sortBy, sort.asc]);
 
   /**
    * Fetch filter options (admins, managers, counselors, universities) from API
@@ -255,7 +261,7 @@ const ApplicantTracker = () => {
       // Only fetch admins if user is PRIMARY_ADMIN
       const fetchPromises: Promise<any>[] = [
         applicantService.getUniversities(user.agencyId),
-        applicantService.getAgencyPartnerNames(user.agencyId),
+        applicantService.getEnrollmentTypes(),
       ];
 
       if (currentIsPrimaryAdmin) {
@@ -316,26 +322,41 @@ const ApplicantTracker = () => {
         dispatch(addToast({ type: "error", message: "Failed to fetch universities" }));
       }
 
-      // Process agency partners response
-      const agencyPartnersResult = results[1];
-      if (agencyPartnersResult.status === 'fulfilled') {
-        const agencyPartnersResponse = agencyPartnersResult.value;
+      // Process enrollment types response
+      const enrollmentTypesResult = results[1];
+      if (enrollmentTypesResult.status === 'fulfilled') {
+        const enrollmentTypesResponse = enrollmentTypesResult.value;
         
-        // API returns array directly: [{id, name}, ...]
-        let agencyPartners: AgencyPartnerNameItem[] = [];
-        if (Array.isArray(agencyPartnersResponse)) {
-          agencyPartners = agencyPartnersResponse;
+        // Handle both array and wrapped response
+        let enrollmentTypes: any[] = [];
+        if (Array.isArray(enrollmentTypesResponse)) {
+          enrollmentTypes = enrollmentTypesResponse;
+        } else if (enrollmentTypesResponse && typeof enrollmentTypesResponse === 'object' && 'data' in enrollmentTypesResponse) {
+          // Handle wrapped response if needed
+          enrollmentTypes = (enrollmentTypesResponse as any).data || [];
         }
         
-        // Convert to SelectOption format
-        const agencyPartnerOptionsData = agencyPartners.map((partner: AgencyPartnerNameItem) => ({
-          value: partner.id.toString(),
-          label: partner.name,
-        }));
+        // Convert to SelectOption format, filter by isActive and sort by sortOrder
+        const enrollmentTypeOptionsData = enrollmentTypes
+          .filter((type: any) => type.isActive)
+          .sort((a: any, b: any) => a.sortOrder - b.sortOrder)
+          .map((type: any) => ({
+            value: type.code,
+            label: type.name,
+          }));
         
-        setAgencyPartnerOptions(agencyPartnerOptionsData);
+        // Create mapping from code to ID for API conversion
+        const idMap = new Map<string, number>();
+        enrollmentTypes
+          .filter((type: any) => type.isActive)
+          .forEach((type: any) => {
+            idMap.set(type.code, type.id);
+          });
+        enrollmentTypeIdMapRef.current = idMap;
+        
+        setEnrollmentTypeOptions(enrollmentTypeOptionsData);
       } else {
-        dispatch(addToast({ type: "error", message: "Failed to fetch agency partners" }));
+        dispatch(addToast({ type: "error", message: "Failed to fetch enrollment types" }));
       }
 
       // For ADMIN role: automatically fetch managers using logged-in admin's ID
@@ -414,7 +435,7 @@ const ApplicantTracker = () => {
   const [selectedUniversity, setSelectedUniversity] = useState("");
   const [selectedApplicantStages, setSelectedApplicantStages] = useState<string[]>([]);
   const [selectedIntake, setSelectedIntake] = useState("");
-  const [selectedAgencyPartner, setSelectedAgencyPartner] = useState("");
+  const [selectedEnrollmentType, setSelectedEnrollmentType] = useState("");
   const [appliedFromDate, setAppliedFromDate] = useState<Date | null>(null);
   const [appliedToDate, setAppliedToDate] = useState<Date | null>(null);
   const [lastUpdatedFromDate, setLastUpdatedFromDate] = useState<Date | null>(null);
@@ -548,7 +569,7 @@ const ApplicantTracker = () => {
       if (filter.university) setSelectedUniversity(filter.university);
       if (filter.applicationStage) setSelectedApplicantStages([filter.applicationStage]);
       if (filter.intake) setSelectedIntake(filter.intake);
-      if (filter.agencyPartner) setSelectedAgencyPartner(filter.agencyPartner);
+      if (filter.enrollmentType) setSelectedEnrollmentType(filter.enrollmentType);
       if (filter.appliedFromDate) setAppliedFromDate(new Date(filter.appliedFromDate));
       if (filter.appliedToDate) setAppliedToDate(new Date(filter.appliedToDate));
       if (filter.lastUpdatedFromDate) setLastUpdatedFromDate(new Date(filter.lastUpdatedFromDate));
@@ -636,13 +657,13 @@ const ApplicantTracker = () => {
       applicationStage: selectedApplicantStages.length > 0 ? selectedApplicantStages[0] : "", // Backend expects single value
       university: selectedUniversity,
       intake: selectedIntake,
-      agencyPartner: selectedAgencyPartner,
+      enrollmentType: selectedEnrollmentType,
       appliedFromDate: formatDateToYYYYMMDD(appliedFromDate),
       appliedToDate: formatDateToYYYYMMDD(appliedToDate),
       lastUpdatedFromDate: formatDateToYYYYMMDD(lastUpdatedFromDate),
       lastUpdatedToDate: formatDateToYYYYMMDD(lastUpdatedToDate),
     }));
-  }, [selectedAdmin, selectedManager, selectedCounselor, selectedApplicantStages, selectedUniversity, selectedIntake, selectedAgencyPartner, appliedFromDate, appliedToDate, lastUpdatedFromDate, lastUpdatedToDate, filter.search, dispatch]);
+  }, [selectedAdmin, selectedManager, selectedCounselor, selectedApplicantStages, selectedUniversity, selectedIntake, selectedEnrollmentType, appliedFromDate, appliedToDate, lastUpdatedFromDate, lastUpdatedToDate, filter.search, dispatch]);
 
   // Handle clear filters
   const handleClearFilters = useCallback(() => {
@@ -653,7 +674,7 @@ const ApplicantTracker = () => {
     setSelectedUniversity("");
     setSelectedApplicantStages([]);
     setSelectedIntake("");
-    setSelectedAgencyPartner("");
+    setSelectedEnrollmentType("");
     setAppliedFromDate(null);
     setAppliedToDate(null);
     setLastUpdatedFromDate(null);
@@ -1278,14 +1299,14 @@ const ApplicantTracker = () => {
           managerOptions={managerOptions}
           counselorOptions={counselorOptions}
           universityOptions={universityOptions}
-          agencyPartnerOptions={agencyPartnerOptions}
+          enrollmentTypeOptions={enrollmentTypeOptions}
           selectedAdmin={selectedAdmin}
           selectedManager={selectedManager}
           selectedCounselor={selectedCounselor}
           selectedUniversity={selectedUniversity}
           selectedApplicantStages={selectedApplicantStages}
           selectedIntake={selectedIntake}
-          selectedAgencyPartner={selectedAgencyPartner}
+          selectedEnrollmentType={selectedEnrollmentType}
           appliedFromDate={appliedFromDate}
           appliedToDate={appliedToDate}
           lastUpdatedFromDate={lastUpdatedFromDate}
@@ -1296,7 +1317,7 @@ const ApplicantTracker = () => {
           onUniversityChange={setSelectedUniversity}
           onApplicantStagesChange={setSelectedApplicantStages}
           onIntakeChange={setSelectedIntake}
-          onAgencyPartnerChange={setSelectedAgencyPartner}
+          onEnrollmentTypeChange={setSelectedEnrollmentType}
           onAppliedFromDateChange={setAppliedFromDate}
           onAppliedToDateChange={setAppliedToDate}
           onLastUpdatedFromDateChange={setLastUpdatedFromDate}

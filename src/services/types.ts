@@ -459,7 +459,7 @@ export interface ApplicationsListParams {
   applicationStage: string | null; // Optional: ApplicationStage enum value (single value, not array)
   universityId: number | null; // Optional: University ID filter
   desiredIntake: string | null; // Optional: Intake filter (e.g., "jan-2026")
-  agencyPartnerId: number | null; // Optional: Agency Partner ID filter
+  enrollmentTypeId: number | null; // Optional: Enrollment Type ID filter
   appliedFrom: string | null; // Optional: ISO DATE_TIME format (YYYY-MM-DDTHH:mm:ss)
   appliedTo: string | null; // Optional: ISO DATE_TIME format (YYYY-MM-DDTHH:mm:ss)
   updatedFrom: string | null; // Optional: ISO DATE_TIME format (YYYY-MM-DDTHH:mm:ss)

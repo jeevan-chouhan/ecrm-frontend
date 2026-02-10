@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { GridColDef, GridPaginationModel, GridRenderCellParams, GridSortModel } from "@mui/x-data-grid";
 import { Tooltip } from "@mui/material";
 import { DataTable, StatusChangePopup, SearchBar, Select, Button } from "../../components";
-import { COLORS, ROUTES, typography, enrollmentTypes, statusFilterOptions, UserRole } from "../../constants";
+import { COLORS, ROUTES, typography, statusFilterOptions, UserRole } from "../../constants";
 import { Eye, ToggleStatus } from "../../assets";
 import { formatDateTime } from "../../utils/dateUtils";
 import { getEnrollmentTypeLabel, cleanContactNumber } from "../../utils/commonUtils";
@@ -22,7 +22,6 @@ import {
   setSort,
   setSearch,
   setStatusFilter,
-  setEnrollmentTypeFilter,
   clearFilters,
   updateApplicantStatus,
 } from "../../redux/slices/dashboard/dashboardSlice";
@@ -67,7 +66,6 @@ const ApplicantOverview = () => {
 
   // Local state for input fields (for controlled inputs with debounce)
   const [searchInput, setSearchInput] = useState(() => filter.search);
-  const [selectedEnrollmentType, setSelectedEnrollmentType] = useState(() => filter.enrollmentType);
   const [selectedStatus, setSelectedStatus] = useState(() => filter.status);
 
   // Status change popup state

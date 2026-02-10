@@ -96,10 +96,10 @@ const buildApplicationsListQueryParams = (
   appendQueryParam(queryParams, "applicationStatus", params.applicationStatus, { skipEmptyString: true });
   appendQueryParam(queryParams, "applicationStage", params.applicationStage, { skipEmptyString: true });
 
-  // 5. University, intake, and agency partner filters
+  // 5. University, intake, and enrollment type filters
   appendQueryParam(queryParams, "universityId", params.universityId);
   appendQueryParam(queryParams, "desiredIntake", params.desiredIntake, { skipEmptyString: true });
-  appendQueryParam(queryParams, "agencyPartnerId", params.agencyPartnerId);
+  appendQueryParam(queryParams, "enrollmentTypeId", params.enrollmentTypeId);
 
   // 6. Date filters - format dates according to backend requirements
   // appliedFrom and appliedTo use ISO DATE_TIME format (YYYY-MM-DDTHH:mm:ss)
