@@ -42,6 +42,12 @@ const PreferenceForm = ({
 }: PreferenceFormProps) => {
   const { t } = useTranslation();
 
+  // Check if agency partner name should be shown and required
+  const shouldShowAgencyPartner = preference.enrollmentType !== "WALK_IN";
+  const isAgencyPartnerRequired = 
+    preference.enrollmentType === "REFERRED_BY_AGENCY_PARTNER" || 
+    preference.enrollmentType === "REFERRED_TO_AGENCY_PARTNER";
+
   return (
     <form onSubmit={(e) => { e.preventDefault(); }}>
       <div className="space-y-4">
@@ -198,23 +204,26 @@ const PreferenceForm = ({
             />
           </div>
 
-          <div className="w-full">
-            <label
-              className="block text-sm font-medium mb-1.5"
-              style={{ color: COLORS.textDark,  }}
-            >
-              {t("applicant.agencyPartnerName")}
-            </label>
-            <Select
-              options={agencyPartnerOptions}
-              value={preference.agencyPartnerName}
-              onChange={(value) => onFieldChange(index, "agencyPartnerName", value)}
-              placeholder={t("applicant.selectAgencyPartner")}
-              error={getFieldError(index, "agencyPartnerName")}
-              fullWidth
-              searchable
-            />
-          </div>
+          {shouldShowAgencyPartner && (
+            <div className="w-full">
+              <label
+                className="block text-sm font-medium mb-1.5"
+                style={{ color: COLORS.textDark,  }}
+              >
+                {t("applicant.agencyPartnerName")}
+                {isAgencyPartnerRequired && <span style={{ color: COLORS.error }}>*</span>}
+              </label>
+              <Select
+                options={agencyPartnerOptions}
+                value={preference.agencyPartnerName}
+                onChange={(value) => onFieldChange(index, "agencyPartnerName", value)}
+                placeholder={t("applicant.selectAgencyPartner")}
+                error={getFieldError(index, "agencyPartnerName")}
+                fullWidth
+                searchable
+              />
+            </div>
+          )}
         </div>
 
         {/* Action Buttons Row */}

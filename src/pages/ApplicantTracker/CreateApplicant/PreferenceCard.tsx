@@ -75,6 +75,9 @@ const PreferenceCard = ({
 }: PreferenceCardProps) => {
   const { t } = useTranslation();
 
+  // Check if agency partner name should be shown
+  const shouldShowAgencyPartner = preference.enrollmentType !== "WALK_IN";
+
   // Memoize label lookups to prevent recalculation on every render
   const labels = useMemo(() => ({
     enrollmentType: enrollmentTypeOptions.find((e) => e.value === preference.enrollmentType)?.label || preference.enrollmentType,
@@ -224,14 +227,16 @@ const PreferenceCard = ({
               {labels.counselor}
             </p>
           </div>
-          <div>
-            <p className="text-sm font-medium mb-1" style={{ color: COLORS.textMuted }}>
-              {t("applicant.agencyPartnerName")}
-            </p>
-            <p className="text-sm" style={{ color: COLORS.textDark }}>
-              {labels.agency}
-            </p>
-          </div>
+          {shouldShowAgencyPartner && (
+            <div>
+              <p className="text-sm font-medium mb-1" style={{ color: COLORS.textMuted }}>
+                {t("applicant.agencyPartnerName")}
+              </p>
+              <p className="text-sm" style={{ color: COLORS.textDark }}>
+                {labels.agency}
+              </p>
+            </div>
+          )}
         </div>
         <div className="flex items-end justify-end gap-2">
           <Button

@@ -305,9 +305,10 @@ const CreateApplicant = () => {
         onSaveAndNext={handleNextTab}
         onBack={handlePreviousTab}
         applicantId={applicantId}
+        activeTab={activeTab}
       />
     ),
-    [formState.applicationPreferences, updateApplicationPreferences, handleNextTab, handlePreviousTab, applicantId]
+    [formState.applicationPreferences, updateApplicationPreferences, handleNextTab, handlePreviousTab, applicantId, activeTab]
   );
 
   const educationalTabContent = useMemo(

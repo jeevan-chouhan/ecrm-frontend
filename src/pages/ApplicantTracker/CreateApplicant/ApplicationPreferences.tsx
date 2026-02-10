@@ -22,9 +22,10 @@ interface ApplicationPreferencesProps {
   onSaveAndNext?: () => void;
   onBack?: () => void;
   applicantId?: number | string | null; // Current applicant ID (required for API)
+  activeTab?: string; // Track which tab is active to detect when this tab becomes active
 }
 
-const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack, applicantId }: ApplicationPreferencesProps) => {
+const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack, applicantId, activeTab }: ApplicationPreferencesProps) => {
   const { t, i18n } = useTranslation();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
@@ -87,7 +88,15 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
       course: Yup.string().required(t("validation.courseRequired")),
       desiredIntake: Yup.string().required(t("validation.intakeRequired")),
       assignCounselor: Yup.string().nullable(),
-      agencyPartnerName: Yup.string().nullable(),
+      agencyPartnerName: Yup.string()
+        .nullable()
+        .when("enrollmentType", {
+          is: (enrollmentType: string) => 
+            enrollmentType === "REFERRED_BY_AGENCY_PARTNER" || 
+            enrollmentType === "REFERRED_TO_AGENCY_PARTNER",
+          then: (schema) => schema.required(t("validation.agencyPartnerRequired", "Agency Partner Name is required")),
+          otherwise: (schema) => schema.nullable(),
+        }),
     });
   }, [t, i18n.language]);
 
@@ -117,7 +126,7 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
   });
 
   const isPreferenceComplete = (pref: PreferenceItem): boolean => {
-    return !!(
+    const baseFieldsComplete = !!(
       pref.enrollmentType &&
       pref.desiredCountry &&
       pref.program &&
@@ -126,6 +135,17 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
       pref.course &&
       pref.desiredIntake
     );
+
+    // If enrollment type requires agency partner, check if it's filled
+    const requiresAgencyPartner = 
+      pref.enrollmentType === "REFERRED_BY_AGENCY_PARTNER" || 
+      pref.enrollmentType === "REFERRED_TO_AGENCY_PARTNER";
+    
+    if (requiresAgencyPartner) {
+      return baseFieldsComplete && !!pref.agencyPartnerName;
+    }
+
+    return baseFieldsComplete;
   };
 
   // Map program value to API course type (program already uses enum values: BACHELOR, MASTER, PHD)
@@ -199,8 +219,8 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
       payload.preferenceId = pref.preferenceId;
     }
 
-    // If agency partner is selected, send agencyPartnerId (agency partner ID)
-    if (pref.agencyPartnerName && pref.agencyPartnerName !== "") {
+    // If agency partner is selected and enrollment type is not WALK_IN, send agencyPartnerId (agency partner ID)
+    if (pref.enrollmentType !== "WALK_IN" && pref.agencyPartnerName && pref.agencyPartnerName !== "") {
       payload.agencyPartnerId = parseInt(pref.agencyPartnerName) || null;
     }
 
@@ -239,6 +259,8 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
       preferences: initialPreferences,
     },
     enableReinitialize: true,
+    validateOnChange: false, // Disable validation on field change
+    validateOnBlur: false, // Disable validation on field blur
     validationSchema,
     onSubmit: async (values) => {
       // Prevent duplicate submissions
@@ -262,10 +284,11 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
       dispatch(showLoader());
 
       try {
-        // Separate preferences into updates (have preferenceId) and creates (don't have preferenceId)
-        const savedPreferences = values.preferences.filter((pref) => pref.saved && isPreferenceComplete(pref));
+        // Get preferences that are complete (either saved or need to be saved)
+        // This includes preferences that are complete but not yet marked as saved (from handleSave)
+        const completePreferences = values.preferences.filter((pref) => isPreferenceComplete(pref));
         
-        if (savedPreferences.length === 0) {
+        if (completePreferences.length === 0) {
           dispatch(
             addToast({
               type: "error",
@@ -757,32 +780,34 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
   // 1. After "Save & Next" from personal details (applicantId is set)
   // 2. After POST/PUT operations (already handled in onSubmit)
   // 3. After back button from educational details (applicantId is available)
+  // 4. When tab becomes active again (to refresh data from API)
   // Note: Ensure enrollment types are fetched first before fetching preferences
+  const previousActiveTabRef = useRef<string | undefined>(activeTab);
+  
   useEffect(() => {
     if (applicantId && !isFetchingPreferencesRef.current && hasFetchedEnrollmentTypesRef.current) {
       // Check if we've already fetched preferences for this applicantId
       const hasAlreadyFetched = hasFetchedPreferencesRef.current && 
                                 lastFetchedApplicantIdRef.current?.toString() === applicantId.toString();
       
-      // Only fetch if:
-      // 1. We haven't fetched before for this applicantId, AND
-      // 2. We don't have saved preferences with preferenceId
-      // 3. Enrollment types have been fetched (needed for mapping enrollmentTypeId to code)
-      if (!hasAlreadyFetched) {
-        const hasSavedPreferences = formik.values.preferences.some(pref => pref.saved && pref.preferenceId);
-        
-        // Fetch if no saved preferences exist (this includes empty array case)
-        if (!hasSavedPreferences) {
-          fetchApplicationPreferences(applicantId);
-        } else {
-          // If we have saved preferences, mark as fetched to prevent re-fetching
-          hasFetchedPreferencesRef.current = true;
-          lastFetchedApplicantIdRef.current = applicantId;
-        }
+      // Check if tab just became active (was not active before, now is active)
+      const tabJustBecameActive = previousActiveTabRef.current !== "preferences" && activeTab === "preferences";
+      
+      // Always fetch when:
+      // 1. We haven't fetched before for this applicantId, OR
+      // 2. Tab just became active (user navigated back to this tab)
+      // This ensures we always have the latest data from the API when navigating back
+      const shouldFetch = !hasAlreadyFetched || tabJustBecameActive;
+      
+      if (shouldFetch) {
+        fetchApplicationPreferences(applicantId);
       }
+      
+      // Update previous active tab ref
+      previousActiveTabRef.current = activeTab;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [applicantId, hasFetchedEnrollmentTypesRef.current]); // Depend on enrollment types being fetched
+  }, [applicantId, hasFetchedEnrollmentTypesRef.current, activeTab]); // Depend on activeTab to detect tab changes
 
   // Fetch application preferences from API
   const fetchApplicationPreferences = useCallback(async (id: number | string) => {
@@ -1222,6 +1247,11 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
 
     // Get current preference values for dependent field updates
     const currentPreference = formik.values.preferences[index];
+
+    // If enrollment type changed to WALK_IN, clear agency partner name
+    if (field === "enrollmentType" && value === "WALK_IN") {
+      await formik.setFieldValue(`preferences[${index}].agencyPartnerName`, "");
+    }
 
     // If country changed, fetch universities and counselors for that country
     if (field === "desiredCountry" && value) {
@@ -1681,7 +1711,7 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
     if (unsavedCompletePreferences.length > 0) {
       // Create a hash function to uniquely identify preferences
       const getPreferenceHash = (pref: PreferenceItem): string => {
-        return `${pref.desiredCountry}|${pref.program}|${pref.desiredUniversity}|${pref.desiredCampus}|${pref.course}|${pref.desiredIntake}|${pref.assignCounselor}|${pref.agencyPartnerName}`;
+        return `${pref.enrollmentType}|${pref.desiredCountry}|${pref.program}|${pref.desiredUniversity}|${pref.desiredCampus}|${pref.course}|${pref.desiredIntake}|${pref.assignCounselor}|${pref.agencyPartnerName}`;
       };
       
       // Filter out preferences that have already been sent to API
@@ -1796,56 +1826,55 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
   const handleSave = useCallback(async () => {
     if (isSaving || isSubmittingRef.current) return;
 
-    // Validate all unsaved preferences first
-    const unsavedPreferences = formik.values.preferences.filter((pref) => !pref.saved && isPreferenceComplete(pref));
-    
-    if (unsavedPreferences.length > 0) {
-      // Validate each unsaved preference
-      const preferenceSchema = getPreferenceSchema();
+    // Create a hash function to uniquely identify preferences
+    const getPreferenceHash = (pref: PreferenceItem): string => {
+      return `${pref.enrollmentType}|${pref.desiredCountry}|${pref.program}|${pref.desiredUniversity}|${pref.desiredCampus}|${pref.course}|${pref.desiredIntake}|${pref.assignCounselor}|${pref.agencyPartnerName}`;
+    };
 
-      let hasErrors = false;
-      const touchedPreferences = [...(formik.touched.preferences || [])];
-
-      for (const pref of unsavedPreferences) {
-        const index = formik.values.preferences.findIndex((p) => p.id === pref.id);
-        try {
-          await preferenceSchema.validate(pref, { abortEarly: false });
-        } catch (error) {
-          hasErrors = true;
-          // Mark all fields as touched to show errors
-          touchedPreferences[index] = markAllFieldsAsTouched();
-          handleValidationErrors(error, index);
-        }
-      }
-
-      // Update touched state
-      formik.setTouched({
-        ...formik.touched,
-        preferences: touchedPreferences as any,
-      });
-
-      // If there are validation errors, don't proceed with form submission
-      if (hasErrors) {
-        dispatch(
-          addToast({
-            type: "error",
-            message: t("validation.pleaseFillRequiredFields", "Please fill all required fields"),
-          })
-        );
-        return;
-      }
+    // Quick check: if all complete preferences already have preferenceId, skip API call
+    const allCompletePreferences = formik.values.preferences.filter((pref) => isPreferenceComplete(pref));
+    const allHavePreferenceId = allCompletePreferences.length > 0 && allCompletePreferences.every((pref) => pref.preferenceId);
+    if (allHavePreferenceId) {
+      dispatch(
+        addToast({
+          type: "success",
+          message: t("applicant.preferencesAlreadySaved", "Application preferences already saved"),
+        })
+      );
+      return;
     }
 
-    // Check if there are any preferences that need to be saved (no preferenceId)
-    // Also check originalPreferencesRef to see if preference was already saved (to prevent duplicate saves)
-    // If a preference was already saved, restore its preferenceId synchronously before filtering
-    // Note: PUT API for existing preferences is only called from individual preference card Save button
+    // First, restore preferenceIds from originalPreferencesRef to prevent duplicate saves
+    // This ensures preferences saved previously are not saved again when navigating back
     let restoredPreferences = [...formik.values.preferences];
+    let preferencesUpdated = false;
     
     for (let i = 0; i < restoredPreferences.length; i++) {
       const pref = restoredPreferences[i];
+      // Check if preference is complete and doesn't have preferenceId
       if (isPreferenceComplete(pref) && !pref.preferenceId) {
-        // Check if this preference was already saved by matching against originalPreferencesRef
+        const currentHash = getPreferenceHash(pref);
+        
+        // First check: if hash is already in preferencesSentToApiRef, find matching original by hash
+        if (preferencesSentToApiRef.current.has(currentHash)) {
+          const matchingOriginal = originalPreferencesRef.current.find((orig) => {
+            if (!orig.preferenceId) return false;
+            const origHash = getPreferenceHash(orig);
+            return origHash === currentHash;
+          });
+          
+          if (matchingOriginal) {
+            restoredPreferences[i] = {
+              ...pref,
+              preferenceId: matchingOriginal.preferenceId,
+              saved: true,
+            };
+            preferencesUpdated = true;
+            continue;
+          }
+        }
+        
+        // Second check: match by checking if all key fields are the same (fallback)
         const matchingOriginal = originalPreferencesRef.current.find((orig) => {
           if (!orig.preferenceId) return false;
           // Match by checking if all key fields are the same
@@ -1863,36 +1892,96 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
         });
         
         if (matchingOriginal) {
-          // Restore preferenceId and saved flag synchronously
+          // Restore preferenceId and saved flag, and add hash to preferencesSentToApiRef
           restoredPreferences[i] = {
             ...pref,
             preferenceId: matchingOriginal.preferenceId,
             saved: true,
           };
+          preferencesSentToApiRef.current.add(currentHash);
+          preferencesUpdated = true;
         }
       }
     }
     
-    // Don't update formik state here if we're going to update it later anyway
-    // We'll use restoredPreferences for filtering and update formik only when needed
-    // This prevents unnecessary re-renders and flashing
-    
-    // Now filter using the restored preferences array
-    const preferencesNeedingSave = restoredPreferences.filter((pref) => {
-      return isPreferenceComplete(pref) && !pref.preferenceId;
+    // Update formik state if we restored any preferenceIds
+    if (preferencesUpdated) {
+      await formik.setFieldValue("preferences", restoredPreferences);
+    }
+
+    // Filter for complete preferences that don't have preferenceId (after restoration)
+    const completePreferences = restoredPreferences.filter((pref) => 
+      isPreferenceComplete(pref) && !pref.preferenceId
+    );
+
+    // Filter out preferences that have already been sent to API (using hash)
+    const preferencesNeedingSave = completePreferences.filter((pref) => {
+      const hash = getPreferenceHash(pref);
+      return !preferencesSentToApiRef.current.has(hash);
     });
 
     // If no new preferences need to be created, skip API call
-    // PUT API is only called from individual preference card Save button, not from main Save button
     if (preferencesNeedingSave.length === 0) {
+      // Check if there are any saved preferences (with preferenceId or already sent to API)
+      const savedPreferences = restoredPreferences.filter((pref) => 
+        isPreferenceComplete(pref) && (pref.preferenceId || preferencesSentToApiRef.current.has(getPreferenceHash(pref)))
+      );
+      
+      if (savedPreferences.length > 0) {
+        dispatch(
+          addToast({
+            type: "success",
+            message: t("applicant.preferencesAlreadySaved", "Application preferences already saved"),
+          })
+        );
+      }
+      return;
+    }
+
+    // Validate preferences that need to be saved
+    const preferenceSchema = getPreferenceSchema();
+    let hasErrors = false;
+    const touchedPreferences = [...(formik.touched.preferences || [])];
+
+    for (const pref of preferencesNeedingSave) {
+      const index = restoredPreferences.findIndex((p) => p.id === pref.id);
+      try {
+        await preferenceSchema.validate(pref, { abortEarly: false });
+      } catch (error) {
+        hasErrors = true;
+        // Mark all fields as touched to show errors
+        touchedPreferences[index] = markAllFieldsAsTouched();
+        handleValidationErrors(error, index);
+      }
+    }
+
+    // Update touched state
+    formik.setTouched({
+      ...formik.touched,
+      preferences: touchedPreferences as any,
+    });
+
+    // If there are validation errors, don't proceed with form submission
+    if (hasErrors) {
       dispatch(
         addToast({
-          type: "success",
-          message: t("applicant.preferencesAlreadySaved", "Application preferences already saved"),
+          type: "error",
+          message: t("validation.pleaseFillRequiredFields", "Please fill all required fields"),
         })
       );
       return;
     }
+
+    // Mark preferences as saved before submitting (this will hide the form)
+    // Update formik state to mark preferences as saved (use restoredPreferences as base)
+    const updatedPreferences = restoredPreferences.map((pref) => {
+      if (preferencesNeedingSave.some((p) => p.id === pref.id)) {
+        return { ...pref, saved: true };
+      }
+      return pref;
+    });
+    // Wait for state update to complete before submitting (this ensures form hides immediately)
+    await formik.setFieldValue("preferences", updatedPreferences);
 
     // Close edit mode if any preference was being edited
     if (editingIndex !== null) {
@@ -1911,16 +2000,52 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
   const handleSaveAndNextClick = useCallback(async () => {
     if (isSaving || isSubmittingRef.current) return;
 
-    // Validate and save all unsaved complete preferences first
-    // Also check originalPreferencesRef to see if preference was already saved (to prevent duplicate saves)
-    // If a preference was already saved, restore its preferenceId synchronously before filtering
-    let updatedPreferences = [...formik.values.preferences];
+    // Create a hash function to uniquely identify preferences
+    const getPreferenceHash = (pref: PreferenceItem): string => {
+      return `${pref.enrollmentType}|${pref.desiredCountry}|${pref.program}|${pref.desiredUniversity}|${pref.desiredCampus}|${pref.course}|${pref.desiredIntake}|${pref.assignCounselor}|${pref.agencyPartnerName}`;
+    };
+
+    // Quick check: if all complete preferences already have preferenceId, skip API call and navigate
+    const allCompletePreferences = formik.values.preferences.filter((pref) => isPreferenceComplete(pref));
+    const allHavePreferenceId = allCompletePreferences.length > 0 && allCompletePreferences.every((pref) => pref.preferenceId);
+    if (allHavePreferenceId) {
+      if (onSaveAndNext) {
+        onSaveAndNext();
+      }
+      return;
+    }
+
+    // First, restore preferenceIds from originalPreferencesRef to prevent duplicate saves
+    // This ensures preferences saved previously are not saved again when navigating back
+    let restoredPreferences = [...formik.values.preferences];
     let preferencesUpdated = false;
     
-    for (let i = 0; i < updatedPreferences.length; i++) {
-      const pref = updatedPreferences[i];
-      if (!pref.saved && isPreferenceComplete(pref) && !pref.preferenceId) {
-        // Check if this preference was already saved by matching against originalPreferencesRef
+    for (let i = 0; i < restoredPreferences.length; i++) {
+      const pref = restoredPreferences[i];
+      // Check if preference is complete and doesn't have preferenceId
+      if (isPreferenceComplete(pref) && !pref.preferenceId) {
+        const currentHash = getPreferenceHash(pref);
+        
+        // First check: if hash is already in preferencesSentToApiRef, find matching original by hash
+        if (preferencesSentToApiRef.current.has(currentHash)) {
+          const matchingOriginal = originalPreferencesRef.current.find((orig) => {
+            if (!orig.preferenceId) return false;
+            const origHash = getPreferenceHash(orig);
+            return origHash === currentHash;
+          });
+          
+          if (matchingOriginal) {
+            restoredPreferences[i] = {
+              ...pref,
+              preferenceId: matchingOriginal.preferenceId,
+              saved: true,
+            };
+            preferencesUpdated = true;
+            continue;
+          }
+        }
+        
+        // Second check: match by checking if all key fields are the same (fallback)
         const matchingOriginal = originalPreferencesRef.current.find((orig) => {
           if (!orig.preferenceId) return false;
           // Match by checking if all key fields are the same
@@ -1938,12 +2063,13 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
         });
         
         if (matchingOriginal) {
-          // Restore preferenceId and saved flag synchronously
-          updatedPreferences[i] = {
+          // Restore preferenceId and saved flag, and add hash to preferencesSentToApiRef
+          restoredPreferences[i] = {
             ...pref,
             preferenceId: matchingOriginal.preferenceId,
             saved: true,
           };
+          preferencesSentToApiRef.current.add(currentHash);
           preferencesUpdated = true;
         }
       }
@@ -1951,13 +2077,19 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
     
     // Update formik state if we restored any preferenceIds
     if (preferencesUpdated) {
-      formik.setFieldValue("preferences", updatedPreferences);
+      await formik.setFieldValue("preferences", restoredPreferences);
     }
-    
-    // Now filter using the updated preferences array
-    const unsavedCompletePreferences = updatedPreferences.filter(
-      (pref) => !pref.saved && isPreferenceComplete(pref) && !pref.preferenceId
+
+    // Filter for complete preferences that don't have preferenceId (after restoration)
+    const completePreferences = restoredPreferences.filter((pref) => 
+      isPreferenceComplete(pref) && !pref.preferenceId
     );
+
+    // Filter out preferences that have already been sent to API (using hash)
+    const unsavedCompletePreferences = completePreferences.filter((pref) => {
+      const hash = getPreferenceHash(pref);
+      return !preferencesSentToApiRef.current.has(hash);
+    });
     
     // If there are unsaved complete preferences, save them first
     if (unsavedCompletePreferences.length > 0) {
@@ -1972,7 +2104,7 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
       });
 
       for (const pref of unsavedCompletePreferences) {
-        const index = formik.values.preferences.findIndex((p) => p.id === pref.id);
+        const index = restoredPreferences.findIndex((p) => p.id === pref.id);
         try {
           await preferenceSchema.validate(pref, { abortEarly: false });
         } catch (error) {
@@ -2008,11 +2140,6 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
       }
 
       if (isSubmittingRef.current) return;
-
-      // Create a hash function to uniquely identify preferences
-      const getPreferenceHash = (pref: PreferenceItem): string => {
-        return `${pref.desiredCountry}|${pref.program}|${pref.desiredUniversity}|${pref.desiredCampus}|${pref.course}|${pref.desiredIntake}|${pref.assignCounselor}|${pref.agencyPartnerName}`;
-      };
       
       // Filter out preferences that have already been sent to API
       const preferencesToSave = unsavedCompletePreferences.filter((pref) => {
@@ -2020,16 +2147,20 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
         return !preferencesSentToApiRef.current.has(hash);
       });
       
-      // If all preferences have already been sent, skip API call
+      // If all preferences have already been sent, skip API call and navigate
       if (preferencesToSave.length === 0) {
         // Reset submitting flag
         isSubmittingRef.current = false;
         setIsSaving(false);
         dispatch(hideLoader());
         
-        // Check if there are any remaining preferences to save after restoration
-        const finalCheck = formik.values.preferences.filter((pref: PreferenceItem) => isPreferenceComplete(pref) && !pref.preferenceId);
-        if (finalCheck.length === 0) {
+        // Check if there are any saved preferences (either have preferenceId or were already sent to API)
+        const savedPreferences = restoredPreferences.filter((pref: PreferenceItem) => 
+          isPreferenceComplete(pref) && (pref.preferenceId || preferencesSentToApiRef.current.has(getPreferenceHash(pref)))
+        );
+        
+        // If we have saved preferences, navigate to next tab
+        if (savedPreferences.length > 0) {
           if (onSaveAndNext) {
             onSaveAndNext();
           }
@@ -2052,7 +2183,7 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
         const createResponse = await applicantService.createApplicationPreferences(applicantId, createPayload);
 
         if (createResponse.status === "success" && createResponse.data) {
-          const updatedPreferences = [...formik.values.preferences];
+          const updatedPreferences = [...restoredPreferences];
           let responseIndex = 0;
 
           for (let i = 0; i < updatedPreferences.length; i++) {
@@ -2139,38 +2270,34 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
       return;
     }
 
-    // Check if there are any preferences that need to be saved (no preferenceId)
-    // Also check originalPreferencesRef to see if preference was already saved (to prevent duplicate saves)
-    // Note: PUT API for existing preferences is only called from individual preference card Save button
+    // Check if there are any preferences that need to be saved (no preferenceId and not already sent to API)
+    // Create hash function for checking
+    const getPreferenceHashForCheck = (pref: PreferenceItem): string => {
+      return `${pref.enrollmentType}|${pref.desiredCountry}|${pref.program}|${pref.desiredUniversity}|${pref.desiredCampus}|${pref.course}|${pref.desiredIntake}|${pref.assignCounselor}|${pref.agencyPartnerName}`;
+    };
+    
     const preferencesNeedingSave = formik.values.preferences.filter((pref) => {
       if (!isPreferenceComplete(pref) || pref.preferenceId) {
         return false; // Skip if incomplete or already has preferenceId
       }
-      // Check if this preference was already saved (exists in originalPreferencesRef with same data)
-      const alreadySaved = originalPreferencesRef.current.some((orig) => {
-        // Match by checking if all key fields are the same
-        return (
-          orig.enrollmentType === pref.enrollmentType &&
-          orig.desiredCountry === pref.desiredCountry &&
-          orig.program === pref.program &&
-          orig.desiredUniversity === pref.desiredUniversity &&
-          orig.desiredCampus === pref.desiredCampus &&
-          orig.course === pref.course &&
-          orig.desiredIntake === pref.desiredIntake &&
-          orig.assignCounselor === pref.assignCounselor &&
-          orig.agencyPartnerName === pref.agencyPartnerName &&
-          orig.preferenceId !== null // Must have been saved (has preferenceId)
-        );
-      });
-      return !alreadySaved; // Only include if not already saved
+      // Check if this preference was already sent to API (using hash)
+      const hash = getPreferenceHashForCheck(pref);
+      return !preferencesSentToApiRef.current.has(hash); // Only include if not already sent
     });
 
     // If no new preferences need to be created, just navigate
     // PUT API is only called from individual preference card Save button, not from Save & Next button
     if (preferencesNeedingSave.length === 0) {
-      // Navigate to next step without API call
-      if (onSaveAndNext) {
-        onSaveAndNext();
+      // Check if we have any saved preferences before navigating
+      const savedPreferences = formik.values.preferences.filter((pref) => 
+        pref.saved && isPreferenceComplete(pref)
+      );
+      
+      if (savedPreferences.length > 0) {
+        // Navigate to next step without API call
+        if (onSaveAndNext) {
+          onSaveAndNext();
+        }
       }
       return;
     }
@@ -2375,3 +2502,4 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
 };
 
 export default ApplicationPreferences;
+
