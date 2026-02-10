@@ -46,6 +46,7 @@ interface PreferenceCardProps {
   onCancel: () => void;
   onFieldChange: (index: number, field: keyof PreferenceItem, value: string) => void;
   getFieldError: (index: number, fieldName: keyof PreferenceItem) => string | undefined;
+  enrollmentTypeOptions?: SelectOption[]; // Enrollment types from API
   countryOptions?: SelectOption[]; // Countries from API
   universityOptions?: SelectOption[]; // Universities from API (filtered by country)
   campusOptions?: SelectOption[]; // Campuses from API (filtered by university)
@@ -64,6 +65,7 @@ const PreferenceCard = ({
   onCancel,
   onFieldChange,
   getFieldError,
+  enrollmentTypeOptions = [], // Default to empty array if not provided
   countryOptions = [], // Default to empty array if not provided
   universityOptions = [], // Default to empty array if not provided
   campusOptions = [], // Default to empty array if not provided
@@ -75,6 +77,7 @@ const PreferenceCard = ({
 
   // Memoize label lookups to prevent recalculation on every render
   const labels = useMemo(() => ({
+    enrollmentType: enrollmentTypeOptions.find((e) => e.value === preference.enrollmentType)?.label || preference.enrollmentType,
     country: countryOptions.find((c) => c.value === preference.desiredCountry)?.label || preference.desiredCountry,
     program: programs.find((p) => p.value === preference.program)?.label || preference.program,
     university: universityOptions.find((u) => u.value === preference.desiredUniversity)?.label || preference.desiredUniversity,
@@ -84,6 +87,7 @@ const PreferenceCard = ({
     counselor: counselorOptions.find((c) => c.value === preference.assignCounselor)?.label || preference.assignCounselor,
     agency: agencyPartnerOptions.find((a) => a.value === preference.agencyPartnerName)?.label || preference.agencyPartnerName,
   }), [
+    preference.enrollmentType,
     preference.desiredCountry,
     preference.program,
     preference.desiredUniversity,
@@ -92,6 +96,7 @@ const PreferenceCard = ({
     preference.desiredIntake,
     preference.assignCounselor,
     preference.agencyPartnerName,
+    enrollmentTypeOptions,
     countryOptions,
     universityOptions,
     campusOptions,
@@ -113,6 +118,7 @@ const PreferenceCard = ({
           getFieldError={getFieldError}
           showCancel={false}
           showAddMore={false}
+          enrollmentTypeOptions={enrollmentTypeOptions}
           countryOptions={countryOptions}
           universityOptions={universityOptions}
           campusOptions={campusOptions}
@@ -152,6 +158,14 @@ const PreferenceCard = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <p className="text-sm font-medium mb-1" style={{ color: COLORS.textMuted }}>
+              {t("applicant.enrollmentType")}
+            </p>
+            <p className="text-sm" style={{ color: COLORS.textDark }}>
+              {labels.enrollmentType}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm font-medium mb-1" style={{ color: COLORS.textMuted }}>
               {t("applicant.desiredCountry")}
             </p>
             <p className="text-sm" style={{ color: COLORS.textDark }}>
@@ -166,6 +180,16 @@ const PreferenceCard = ({
               {labels.university}
             </p>
           </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <p className="text-sm font-medium mb-1" style={{ color: COLORS.textMuted }}>
+              {t("applicant.desiredCampus")}
+            </p>
+            <p className="text-sm" style={{ color: COLORS.textDark }}>
+              {labels.campus}
+            </p>
+          </div>
           <div>
             <p className="text-sm font-medium mb-1" style={{ color: COLORS.textMuted }}>
               {t("applicant.program")}
@@ -174,8 +198,6 @@ const PreferenceCard = ({
               {labels.program}
             </p>
           </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <p className="text-sm font-medium mb-1" style={{ color: COLORS.textMuted }}>
               {t("applicant.course")}
@@ -184,6 +206,8 @@ const PreferenceCard = ({
               {labels.course}
             </p>
           </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <p className="text-sm font-medium mb-1" style={{ color: COLORS.textMuted }}>
               {t("applicant.desiredIntake")}
@@ -200,8 +224,6 @@ const PreferenceCard = ({
               {labels.counselor}
             </p>
           </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <p className="text-sm font-medium mb-1" style={{ color: COLORS.textMuted }}>
               {t("applicant.agencyPartnerName")}
@@ -210,36 +232,28 @@ const PreferenceCard = ({
               {labels.agency}
             </p>
           </div>
-          <div>
-            <p className="text-sm font-medium mb-1" style={{ color: COLORS.textMuted }}>
-              {t("applicant.desiredCampus")}
-            </p>
-            <p className="text-sm" style={{ color: COLORS.textDark }}>
-              {labels.campus}
-            </p>
-          </div>
-          <div className="flex items-end justify-end gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              icon={<Edit className="h-5 w-5" style={{ color: COLORS.accent }} />}
-              iconOnly
-              onClick={onEdit}
-              title={t("common.edit")}
-              rounded
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              icon={<Trash className="h-5 w-5" style={{ color: COLORS.error }} />}
-              iconOnly
-              onClick={onDelete}
-              title={t("common.delete")}
-              rounded
-            />
-          </div>
+        </div>
+        <div className="flex items-end justify-end gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            icon={<Edit className="h-5 w-5" style={{ color: COLORS.accent }} />}
+            iconOnly
+            onClick={onEdit}
+            title={t("common.edit")}
+            rounded
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            icon={<Trash className="h-5 w-5" style={{ color: COLORS.error }} />}
+            iconOnly
+            onClick={onDelete}
+            title={t("common.delete")}
+            rounded
+          />
         </div>
       </div>
     </div>

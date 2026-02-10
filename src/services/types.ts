@@ -280,6 +280,14 @@ export interface CourseItem {
   campusId?: number;
 }
 
+export interface EnrollmentTypeItem {
+  id: number;
+  code: string;
+  name: string;
+  isActive: boolean;
+  sortOrder: number;
+}
+
 export interface UniversityParams {
   agencyId: number | null;
   countryId: number | number[] | string | null;
@@ -289,6 +297,7 @@ export type CountriesResponse = ApiResponse<CountryItem[]>;
 export type UniversitiesResponse = ApiResponse<UniversityItem[]>;
 export type CampusesResponse = ApiResponse<CampusItem[]>;
 export type CoursesResponse = ApiResponse<CourseItem[]>;
+export type EnrollmentTypeResponse = ApiResponse<EnrollmentTypeItem[]>;
 
 // ==========================================
 // User Details Types
@@ -474,6 +483,7 @@ export interface ApplicationListItem {
   universityName: string;
   desiredIntake: string;
   updatedAt: string | null;
+  enrollmentType?: string | null;
   countryName?: string | null;
   counselorName?: string | null;
   agencyName?: string | null; // Keep for backward compatibility
@@ -589,7 +599,6 @@ export type ApplicantOverviewResponse = ApiResponse<ApplicantOverviewData>;
 export interface CreatePersonalDetailsPayload {
   name: string;
   profilePhoto?: string | null; // JSON string with accessUrl and fileName, or null
-  enrollmentType: string;
   dob: string; // Format: "YYYY-MM-DD"
   gender: string;
   email: string;
@@ -607,7 +616,6 @@ export type UpdatePersonalDetailsPayload = CreatePersonalDetailsPayload;
 export interface PersonalDetailsData {
   applicantId: number;
   name: string;
-  enrollmentType: string;
   dob: string; // Format: "YYYY-MM-DD"
   gender: string;
   email: string;
@@ -634,6 +642,7 @@ export type UpdatePersonalDetailsResponse = ApiResponse<PersonalDetailsData>;
 
 // Application Preference Item (for API payload)
 export interface ApplicationPreferenceItem {
+  enrollmentTypeId: number;
   desiredCountryId: number;
   desiredUniversityId: number;
   desiredCourseType: string; // e.g., "BACHELOR", "MASTER"
@@ -654,6 +663,10 @@ export type CreateApplicationPreferencesPayload = ApplicationPreferenceItem[];
 export interface ApplicationPreferenceData {
   id?: number; // Preference ID (for updates)
   applicantId: number;
+  enrollmentType: {
+    id: number;
+    name: string; // This is the code like "WALK_IN"
+  };
   desiredCountryId: number;
   desiredUniversityId: number;
   desiredCourseType: string;
@@ -671,6 +684,10 @@ export interface ApplicationPreferenceData {
 export interface ApplicationPreferenceGetData {
   preferenceId: number; // Preference ID
   applicantId: number;
+  enrollmentType: {
+    id: number;
+    name: string; // This is the code like "WALK_IN"
+  };
   desiredCountryId: {
     id: number;
     name: string;

@@ -15,7 +15,7 @@ import {
 } from "../../components";
 import { COLORS, applicationStatusOptions, typography, type Applicant, ROUTES, UserRole } from "../../constants";
 import { Calendar, Edit, Document } from "../../assets";
-import { formatDateTime, handleApiError, getApplicationStatusLabel, getApplicationStageLabel } from "../../utils";
+import { formatDateTime, handleApiError, getApplicationStatusLabel, getApplicationStageLabel, toTitleCase } from "../../utils";
 import ApplicantTrackerFilters from "./ApplicantTrackerFilters";
 import ApplicationStatusHistoryPopup from "./ApplicantDetail/ApplicationStatusHistoryPopup";
 import type { ApplicationStatusHistory } from "./ApplicantDetail/types";
@@ -98,6 +98,7 @@ const ApplicantTracker = () => {
       course: item.course,
       applicantStage: item.applicantStage,
       applicantStatus: item.applicantStatus,
+      enrollmentType: item.enrollmentType || undefined,
       // Store dates as ISO strings for Redux serialization (formatDateTime can handle strings)
       appliedDate: item.appliedDate || undefined,
       lastUpdatedDate: item.updatedAt || undefined,
@@ -1143,19 +1144,20 @@ const ApplicantTracker = () => {
     </div>
   ), [t, handleViewDocuments, handleViewStatusHistory, handleUpdateStatus]);
 
-  // Render ID cell with tooltip
-  const renderIdCell = useCallback((params: GridRenderCellParams<Applicant>) => {
-    const id = params.row.applicantId?.toString() || "-";
+  // Render Enrollment Type cell with tooltip and title case
+  const renderEnrollmentTypeCell = useCallback((params: GridRenderCellParams<Applicant>) => {
+    const enrollmentType = params.row.enrollmentType || "-";
+    const displayValue = enrollmentType !== "-" ? toTitleCase(enrollmentType.replace(/_/g, " ")) : "-";
     return (
-      <Tooltip title={id} arrow placement="top">
+      <Tooltip title={displayValue} arrow placement="top">
         <span
           className="truncate block cursor-default"
           style={{
-            color: COLORS.textDark,
+            color: enrollmentType !== "-" ? COLORS.textDark : COLORS.textMuted,
             fontSize: typography.fontSize.small,
           }}
         >
-          {id}
+          {displayValue}
         </span>
       </Tooltip>
     );
@@ -1164,12 +1166,12 @@ const ApplicantTracker = () => {
   // Table columns - memoized to prevent recreation
   const columns: GridColDef[] = useMemo(() => [
     {
-      field: "applicantId",
-      headerName: t("applicantTracker.applicantId", "ID"),
-      flex: 0.8,
-      minWidth: 100,
+      field: "enrollmentType",
+      headerName: t("applicantTracker.enrollmentType", "Enrolment Type"),
+      flex: 1.2,
+      minWidth: 140,
       sortable: true,
-      renderCell: renderIdCell,
+      renderCell: renderEnrollmentTypeCell,
     },
     {
       field: "applicantName",
@@ -1243,7 +1245,7 @@ const ApplicantTracker = () => {
       sortable: false,
       renderCell: renderActionsCell,
     },
-  ], [t, renderIdCell, renderApplicantNameCell, renderUniversityCell, renderCourseCell, renderAppliedDateCell, renderLastUpdatedDateCell, renderIntakeYearCell, renderStageCell, renderStatusCell, renderActionsCell]);
+  ], [t, renderEnrollmentTypeCell, renderApplicantNameCell, renderUniversityCell, renderCourseCell, renderAppliedDateCell, renderLastUpdatedDateCell, renderIntakeYearCell, renderStageCell, renderStatusCell, renderActionsCell]);
 
   return (
     <Layout>

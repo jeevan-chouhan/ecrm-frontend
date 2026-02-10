@@ -39,7 +39,9 @@ export function usePreferenceLogic({
       if (editingIndex === index) {
         return true;
       }
-      return isPreferenceComplete(pref) && pref.saved;
+      // Show preferences that are saved AND either complete OR have a preferenceId (already saved to API)
+      // This ensures preferences fetched from API are displayed even if enrollmentType mapping failed
+      return pref.saved && (isPreferenceComplete(pref) || !!pref.preferenceId);
     });
   }, [formik.values.preferences, editingIndex, isPreferenceComplete]);
 

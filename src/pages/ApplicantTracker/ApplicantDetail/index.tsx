@@ -183,6 +183,7 @@ const transformApplicationListItemToUniversityApplication = (
   return {
     id: item.preferenceId.toString(),
     no: index + 1,
+    enrollmentType: item.enrollmentType || "-",
     university: item.universityName || "-",
     country: item.countryName || "-",
     course: item.course || "-",
@@ -282,6 +283,7 @@ const ApplicantDetailView = () => {
   const isMountedRef = useRef(true);
   const fetchedApplicationsForApplicantId = useRef<string | null>(null);
   const hasFetchedApplicationsOnMountRef = useRef(false);
+  const isInitialPaginationSortRef = useRef(true); // Track if this is the first pagination/sort effect run
 
   // Set mounted ref
   useEffect(() => {
@@ -464,6 +466,7 @@ const ApplicantDetailView = () => {
       // Fetch applications only once when applicantId changes (not on pagination change)
       if (!hasFetchedApplicationsOnMountRef.current) {
         hasFetchedApplicationsOnMountRef.current = true;
+        isInitialPaginationSortRef.current = true; // Reset flag when applicantId changes
         fetchApplicantApplications(false);
       }
     }
@@ -472,13 +475,21 @@ const ApplicantDetailView = () => {
 
   // Refetch applications when pagination or sort changes (but not on initial mount or applicantId change)
   useEffect(() => {
+    // Skip on initial mount - only refetch when pagination/sort actually changes
+    if (isInitialPaginationSortRef.current) {
+      isInitialPaginationSortRef.current = false;
+      return;
+    }
+
+    // Only refetch if we've already done the initial fetch and applicantId/agencyId are available
     if (applicantId && user?.agencyId && hasFetchedApplicationsOnMountRef.current) {
       // Reset the ref to allow refetch when pagination/sort changes
       fetchedApplicationsForApplicantId.current = null;
       fetchApplicantApplications(false);
     }
+    // Only depend on pagination and sort, not applicantId/user (those are handled by the first useEffect)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page, pagination.size, sort.sortBy, sort.asc, applicantId, user?.agencyId]);
+  }, [pagination.page, pagination.size, sort.sortBy, sort.asc]);
 
   // Pagination model for DataTable (synced with Redux)
   const paginationModel: GridPaginationModel = useMemo(
