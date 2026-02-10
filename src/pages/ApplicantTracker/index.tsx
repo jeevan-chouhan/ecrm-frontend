@@ -1286,7 +1286,7 @@ const ApplicantTracker = () => {
               <SearchBar
                 onSearch={handleSearch}
                 placeholder={t("applicantTracker.searchPlaceholder", "Search Applications...")}
-                tooltip={t("applicantTracker.searchPlaceholder", "Search Applications...")}
+                tooltip={t("applicantTracker.searchTooltip", "Search With Applicant Name, Contact Number, Email, Desired Course, Application Stage And Status, Agency Partner Name")}
               />
             </div>
           </div>

@@ -393,8 +393,8 @@ const userService = {
     if (params.assignedCounselorId !== null && params.assignedCounselorId !== undefined) {
       queryParams.append("assignedCounselorId", params.assignedCounselorId.toString());
     }
-    if (params.enrollmentType !== null && params.enrollmentType !== undefined && params.enrollmentType !== "") {
-      queryParams.append("enrollmentType", params.enrollmentType);
+    if (params.enrollmentTypeId !== null && params.enrollmentTypeId !== undefined) {
+      queryParams.append("enrollmentTypeId", params.enrollmentTypeId.toString());
     }
     if (params.fromDate !== null && params.fromDate !== undefined && params.fromDate !== "") {
       queryParams.append("fromDate", params.fromDate);

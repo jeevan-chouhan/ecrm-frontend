@@ -575,7 +575,7 @@ const ApplicantOverview = () => {
             placeholder={t("dashboard.searchApplicants", "Search By Name, Email Or Contact...")}
             value={searchInput}
             onChange={handleSearchChange}
-            tooltip={t("dashboard.searchApplicants", "Search By Name, Email Or Contact...")}
+            tooltip={t("dashboard.searchTooltip", "Search With Applicant Id, Applicant Name, Email")}
           />
         </div>
 

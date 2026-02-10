@@ -1125,7 +1125,7 @@ export interface TeamOverviewParams {
   assignedAdminId?: number | null;
   assignedManagerId?: number | null;
   assignedCounselorId?: number | null;
-  enrollmentType?: string | null;
+  enrollmentTypeId?: number | null;
   fromDate?: string | null;
   toDate?: string | null;
 }

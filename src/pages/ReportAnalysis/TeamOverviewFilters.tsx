@@ -1,12 +1,13 @@
 import { useMemo, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Select, DatePicker, type SelectOption } from "../../components";
-import { enrollmentTypes, UserRole } from "../../constants";
+import { UserRole } from "../../constants";
 
 interface TeamOverviewFiltersProps {
   adminOptions: SelectOption[];
   managerOptions: SelectOption[];
   counselorOptions: SelectOption[];
+  enrollmentTypeOptions: SelectOption[];
   selectedAdmin: string;
   selectedManager: string;
   selectedCounselor: string;
@@ -29,6 +30,7 @@ const TeamOverviewFilters = ({
   adminOptions,
   managerOptions,
   counselorOptions,
+  enrollmentTypeOptions,
   selectedAdmin,
   selectedManager,
   selectedCounselor,
@@ -76,11 +78,8 @@ const TeamOverviewFilters = ({
   // Enrollment type options with placeholder
   const enrollmentTypeOptionsWithPlaceholder = useMemo(() => [
     { value: "", label: t("dashboard.selectEnrollmentType", "Select Enrolment Type") },
-    ...enrollmentTypes.map((type) => ({
-      value: type.value,
-      label: t(`enrollmentType.${type.value}`, type.label),
-    })),
-  ], [t]);
+    ...enrollmentTypeOptions,
+  ], [t, enrollmentTypeOptions]);
 
   // Admin options with placeholder
   const adminOptionsWithPlaceholder = useMemo(() => [

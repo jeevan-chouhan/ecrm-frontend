@@ -151,6 +151,7 @@
     "activate": "सक्रिय करें",
     "deactivate": "निष्क्रिय करें",
     "searchApplicants": "नाम, ईमेल या संपर्क से खोजें...",
+    "searchTooltip": "आवेदक आईडी, आवेदक नाम, ईमेल से खोजें",
     "selectEnrollmentType": "नामांकन प्रकार चुनें",
     "selectStatus": "स्थिति चुनें",
     "all": "सभी",
@@ -409,6 +410,7 @@
   "applicantTracker": {
     "title": "आवेदन ट्रैकर",
     "searchPlaceholder": "आवेदन खोजें...",
+    "searchTooltip": "आवेदक नाम, संपर्क संख्या, ईमेल, वांछित कोर्स, आवेदन स्टेज और स्थिति, एजेंसी पार्टनर नाम से खोजें",
     "adminLabel": "एडमिन",
     "managerLabel": "मैनेजर",
     "counselorLabel": "काउंसलर",
