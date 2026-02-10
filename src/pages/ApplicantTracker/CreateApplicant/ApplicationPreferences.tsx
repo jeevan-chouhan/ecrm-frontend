@@ -2325,13 +2325,6 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
   const incomplete = useMemo(() => getIncompletePreferences(), [getIncompletePreferences]);
   const complete = useMemo(() => getCompletePreferences(), [getCompletePreferences]);
   
-  // Memoize first incomplete preference and its index
-  const firstIncomplete = useMemo(() => incomplete.length > 0 ? incomplete[0] : null, [incomplete]);
-  const firstIncompleteIndex = useMemo(() => {
-    if (!firstIncomplete) return -1;
-    return formik.values.preferences.findIndex((p) => p.id === firstIncomplete.id);
-  }, [firstIncomplete, formik.values.preferences]);
-
   // Create a map of preference id to index for O(1) lookup instead of O(n) findIndex in map
   const preferenceIndexMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -2340,6 +2333,51 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
     });
     return map;
   }, [formik.values.preferences]);
+  
+  // Memoize first incomplete preference and its index
+  const firstIncomplete = useMemo(() => incomplete.length > 0 ? incomplete[0] : null, [incomplete]);
+  const firstIncompleteIndex = useMemo(() => {
+    if (!firstIncomplete) return -1;
+    // Use O(1) map lookup instead of O(n) findIndex
+    return preferenceIndexMap.get(firstIncomplete.id) ?? -1;
+  }, [firstIncomplete, preferenceIndexMap]);
+
+  // Memoize option lookups for each preference to avoid recalculating on every render
+  const preferenceOptionsMap = useMemo(() => {
+    const map = new Map<string, {
+      universityOptions: SelectOption[];
+      campusOptions: SelectOption[];
+      courseOptions: SelectOption[];
+      counselorOptions: SelectOption[];
+    }>();
+    
+    complete.forEach((preference) => {
+      const prefUniversityOptions = preference.desiredCountry
+        ? (universityOptionsMapRef.current.get(preference.desiredCountry) || universityOptions)
+        : universityOptions;
+      
+      const prefCampusOptions = preference.desiredUniversity
+        ? (campusOptionsMapRef.current.get(preference.desiredUniversity) || campusOptions)
+        : campusOptions;
+      
+      const prefCourseOptions = (preference.desiredCampus && preference.program)
+        ? (courseOptionsMapRef.current.get(`${preference.desiredCampus}-${preference.program}`) || courseOptions)
+        : courseOptions;
+      
+      const prefCounselorOptions = preference.desiredCountry
+        ? (counselorOptionsMapRef.current.get(preference.desiredCountry) || counselorOptions)
+        : counselorOptions;
+      
+      map.set(preference.id, {
+        universityOptions: prefUniversityOptions,
+        campusOptions: prefCampusOptions,
+        courseOptions: prefCourseOptions,
+        counselorOptions: prefCounselorOptions,
+      });
+    });
+    
+    return map;
+  }, [complete, universityOptions, campusOptions, courseOptions, counselorOptions]);
 
   return (
     <div className="space-y-6">
@@ -2397,26 +2435,18 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
               const index = preferenceIndexMap.get(preference.id) ?? -1;
               const isEditing = editingIndex === index;
 
-              // Get university options for this specific preference based on its country
-              // Memoize these lookups to avoid recreating on every render
-              const preferenceUniversityOptions = preference.desiredCountry
-                ? (universityOptionsMapRef.current.get(preference.desiredCountry) || universityOptions)
-                : universityOptions;
-
-              // Get campus options for this specific preference based on its university
-              const preferenceCampusOptions = preference.desiredUniversity
-                ? (campusOptionsMapRef.current.get(preference.desiredUniversity) || campusOptions)
-                : campusOptions;
-
-              // Get course options for this specific preference based on its campus and program
-              const preferenceCourseOptions = (preference.desiredCampus && preference.program)
-                ? (courseOptionsMapRef.current.get(`${preference.desiredCampus}-${preference.program}`) || courseOptions)
-                : courseOptions;
-
-              // Get counselor options for this specific preference based on its country
-              const preferenceCounselorOptions = preference.desiredCountry
-                ? (counselorOptionsMapRef.current.get(preference.desiredCountry) || counselorOptions)
-                : counselorOptions;
+              // Use memoized options map for O(1) lookup instead of recalculating on every render
+              const options = preferenceOptionsMap.get(preference.id) || {
+                universityOptions,
+                campusOptions,
+                courseOptions,
+                counselorOptions,
+              };
+              
+              const preferenceUniversityOptions = options.universityOptions;
+              const preferenceCampusOptions = options.campusOptions;
+              const preferenceCourseOptions = options.courseOptions;
+              const preferenceCounselorOptions = options.counselorOptions;
 
               return (
                 <PreferenceCard
