@@ -56,7 +56,13 @@ const authSlice = createSlice({
       const { accessToken, refreshToken } = action.payload;
       state.accessToken = accessToken;
       state.refreshToken = refreshToken;
-      state.user = decodeToken(accessToken);
+      const decodedUser = decodeToken(accessToken);
+      // If password changed flag exists in localStorage, use it as fallback
+      const passwordChangedFlag = localStorage.getItem("passwordChanged");
+      if (decodedUser && passwordChangedFlag === "true") {
+        decodedUser.isPasswordChanged = true;
+      }
+      state.user = decodedUser;
       state.isAuthenticated = true;
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
@@ -72,6 +78,7 @@ const authSlice = createSlice({
       // Clear from localStorage
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
+      localStorage.removeItem("passwordChanged");
     },
 
     // Initialize auth state from localStorage (for page refresh)
@@ -82,11 +89,18 @@ const authSlice = createSlice({
       if (accessToken && !isTokenExpired(accessToken)) {
         state.accessToken = accessToken;
         state.refreshToken = refreshToken || null;
-        state.user = decodeToken(accessToken);
+        const decodedUser = decodeToken(accessToken);
+        // If password changed flag exists in localStorage, use it as fallback
+        const passwordChangedFlag = localStorage.getItem("passwordChanged");
+        if (decodedUser && passwordChangedFlag === "true") {
+          decodedUser.isPasswordChanged = true;
+        }
+        state.user = decodedUser;
         state.isAuthenticated = true;
       } else {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
+        localStorage.removeItem("passwordChanged");
       }
     },
 
@@ -94,6 +108,12 @@ const authSlice = createSlice({
     updatePasswordChangedStatus: (state, action: PayloadAction<boolean>) => {
       if (state.user) {
         state.user.isPasswordChanged = action.payload;
+      }
+      // Store flag in localStorage as fallback for page refresh
+      if (action.payload) {
+        localStorage.setItem("passwordChanged", "true");
+      } else {
+        localStorage.removeItem("passwordChanged");
       }
     },
   },

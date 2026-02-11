@@ -117,7 +117,8 @@ const ChangePassword = ({ onSuccess, onCancel }: ChangePasswordProps) => {
               // Verify the new token has isPasswordChanged: true
               const decodedUser = decodeToken(newAccessToken);
               if (decodedUser?.isPasswordChanged) {
-                // Token is updated correctly, ensure Redux state is in sync
+                // Token is updated correctly - no need for localStorage flag
+                localStorage.removeItem("passwordChanged");
                 dispatch(updatePasswordChangedStatus(true));
                 dispatch(addToast({
                   type: "success",
@@ -128,7 +129,7 @@ const ChangePassword = ({ onSuccess, onCancel }: ChangePasswordProps) => {
                   onSuccess?.();
                 }, 200);
               } else {
-                // Token still shows password not changed, manually update the status as fallback
+                // Token still shows password not changed, use localStorage flag as fallback
                 dispatch(updatePasswordChangedStatus(true));
                 dispatch(addToast({
                   type: "success",
