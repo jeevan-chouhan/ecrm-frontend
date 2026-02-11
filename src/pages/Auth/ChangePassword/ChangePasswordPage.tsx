@@ -5,7 +5,6 @@ import { Layout } from "../../../components";
 import { COLORS, ROUTES } from "../../../constants";
 import ChangePassword from "./index";
 import { useAuth } from "../../../context";
-import { decodeToken } from "../../../utils";
 
 const ChangePasswordPage = () => {
   const { t } = useTranslation();
