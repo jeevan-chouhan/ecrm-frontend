@@ -309,6 +309,7 @@ const ManageTeam = () => {
       sortable: false,
       renderCell: (params) => {
         const isActive = params.row.status?.toUpperCase() === "ACTIVE";
+        const isLoggedInUser = params.row.id === user?.userId;
         return (
           <div className="flex items-center gap-2 mt-2">
             <Button
@@ -318,28 +319,32 @@ const ManageTeam = () => {
               onClick={(e) => { e.stopPropagation(); handleView(params.row); }}
               title={t("common.view", "View")}
             />
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={<Edit className="h-5 w-5" style={{ color: COLORS.accent }} />}
-              onClick={(e) => { e.stopPropagation(); handleEdit(params.row); }}
-              title={t("common.edit", "Edit")}
-            />
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={isActive 
-                ? <ToggleOn className="h-5 w-5" style={{ color: COLORS.error }} />
-                : <ToggleStatus className="h-5 w-5" style={{ color: COLORS.success }} />
-              }
-              onClick={(e) => { e.stopPropagation(); handleStatusToggle(params.row); }}
-              title={isActive ? t("common.inactive", "Inactive") : t("common.active", "Active")}
-            />
+            {!isLoggedInUser && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={<Edit className="h-5 w-5" style={{ color: COLORS.accent }} />}
+                  onClick={(e) => { e.stopPropagation(); handleEdit(params.row); }}
+                  title={t("common.edit", "Edit")}
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={isActive 
+                    ? <ToggleOn className="h-5 w-5" style={{ color: COLORS.error }} />
+                    : <ToggleStatus className="h-5 w-5" style={{ color: COLORS.success }} />
+                  }
+                  onClick={(e) => { e.stopPropagation(); handleStatusToggle(params.row); }}
+                  title={isActive ? t("common.inactive", "Inactive") : t("common.active", "Active")}
+                />
+              </>
+            )}
           </div>
         );
       },
     },
-  ], [t, handleView, handleEdit, handleStatusToggle]);
+  ], [t, handleView, handleEdit, handleStatusToggle, user?.userId]);
 
   return (
     <Layout>

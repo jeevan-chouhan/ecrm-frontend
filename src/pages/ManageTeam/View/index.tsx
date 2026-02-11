@@ -205,27 +205,29 @@ const ViewMember = () => {
               </p>
             </div>
           </div>
-          {/* Status Toggle Icon Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            icon={
-              memberStatus === "ACTIVE" ? (
-                <ToggleOn
-                  className="h-5 w-5"
-                  style={{ color: COLORS.error }}
-                />
-              ) : (
-                <ToggleStatus
-                  className="h-5 w-5"
-                  style={{ color: COLORS.success }}
-                />
-              )
-            }
-            onClick={handleDeactivateClick}
-            title={memberStatus === "ACTIVE" ? t("common.inactive", "Inactive") : t("common.active", "Active")}
-            className="self-start sm:self-center"
-          />
+          {/* Status Toggle Icon Button - Hide for logged-in user */}
+          {memberId && parseInt(memberId) !== user?.userId && (
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={
+                memberStatus === "ACTIVE" ? (
+                  <ToggleOn
+                    className="h-5 w-5"
+                    style={{ color: COLORS.error }}
+                  />
+                ) : (
+                  <ToggleStatus
+                    className="h-5 w-5"
+                    style={{ color: COLORS.success }}
+                  />
+                )
+              }
+              onClick={handleDeactivateClick}
+              title={memberStatus === "ACTIVE" ? t("common.inactive", "Inactive") : t("common.active", "Active")}
+              className="self-start sm:self-center"
+            />
+          )}
         </div>
 
         {/* Stats Cards */}
