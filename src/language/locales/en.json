@@ -872,7 +872,7 @@
     "amountInvalid": "Please Enter A Valid Amount"
   },
   "paymentStatus": {
-    "successTitle": "Payment Success!",
+    "successTitle": "Success!",
     "successMessage": "Your Registration Has Been Completed Successfully. Confirmation And Login Credentials Sent To Your Email",
     "successMessageLine1": "Your Registration Has Been Completed Successfully.",
     "successMessageLine2": "Confirmation And Login Credentials Sent To Your Email",

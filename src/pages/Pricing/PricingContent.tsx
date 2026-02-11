@@ -152,7 +152,7 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
       const response = await agencyService.startTrial(trialUserId);
       if (response.status === "success") {
         dispatch(addToast({ type: "success", message: response.message || t("pricing.trialStarted", "Trial started successfully") }));
-        navigate(ROUTES.LOGIN);
+        navigate(`${ROUTES.PAYMENT_STATUS}?status=success`);
       }
     } catch (error) {
       console.error("Failed to start trial:", error);
