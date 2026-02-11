@@ -39,7 +39,11 @@
     "enterContactNumber": "संपर्क नंबर दर्ज करें",
     "searchCountry": "देश खोजें...",
     "countryCode": "देश कोड",
-    "openInNewTab": "नई टैब में खोलें"
+    "openInNewTab": "नई टैब में खोलें",
+    "loginRequired": "कृपया ट्रायल शुरू करने के लिए लॉगिन करें",
+    "confirmAction": "क्या आप वाकई आगे बढ़ना चाहते हैं?",
+    "inactive": "निष्क्रिय",
+    "active": "सक्रिय"
   },
   "sidebar": {
     "dashboard": "डैशबोर्ड",
@@ -175,7 +179,9 @@
     "tableTotalApplicants": "कुल आवेदन",
     "tableLeads": "लीड्स",
     "tableInProgressApplicants": "प्रगति में आवेदन",
-    "tableEnrolledApplicants": "नामांकित आवेदन"
+    "tableEnrolledApplicants": "नामांकित आवेदन",
+    "currentPlanUpgrade": "वर्तमान योजना अपग्रेड",
+    "applicantLimitMessage": "आवेदक सीमा पहुंच गई। कृपया अपनी योजना अपग्रेड करें।"
   },
   "users": {
     "title": "उपयोगकर्ता",
@@ -380,7 +386,8 @@
     "achievementsRequired": "उपलब्धियों का चयन आवश्यक है",
     "categoryRequired": "श्रेणी आवश्यक है",
     "descriptionRequired": "विवरण आवश्यक है",
-    "atLeastOneAchievementRequired": "कम से कम एक उपलब्धि आवश्यक है"
+    "atLeastOneAchievementRequired": "कम से कम एक उपलब्धि आवश्यक है",
+    "invalidImageType": "केवल JPG, JPEG, और PNG फ़ाइलें अनुमत हैं।"
   },
   "fileUpload": {
     "dropFileHere": "फ़ाइल यहाँ छोड़ें",
@@ -406,7 +413,8 @@
     "password": "पासवर्ड",
     "role": "भूमिका",
     "profileSettings": "प्रोफ़ाइल सेटिंग्स",
-    "logout": "लॉग आउट"
+    "logout": "लॉग आउट",
+    "updateSuccess": "प्रोफ़ाइल सफलतापूर्वक अपडेट की गई"
   },
   "applicantTracker": {
     "title": "आवेदन ट्रैकर",
@@ -567,7 +575,14 @@
     "successfulApplicants": "सफल आवेदक",
     "rejectedApplicants": "अस्वीकृत आवेदक",
     "universityList": "विश्वविद्यालय सूची",
-    "memberDetails": "सदस्य विवरण"
+    "memberDetails": "सदस्य विवरण",
+    "statusUpdated": "स्थिति अपडेट की गई",
+    "assignedAdmin": "असाइन किया गया एडमिन",
+    "assignedManager": "असाइन किया गया मैनेजर",
+    "subordinates": "अधीनस्थ",
+    "noUniversities": "कोई विश्वविद्यालय असाइन नहीं किया गया",
+    "successfulApplications": "सफल आवेदन",
+    "searchTooltip": "नाम, ईमेल या संपर्क नंबर से खोजें"
   },
   "documentVault": {
     "title": "दस्तावेज़ वॉल्ट",
@@ -703,7 +718,8 @@
     "addCountriesServing": "सेवारत देश",
     "addUniversitiesServing": "सेवारत विश्वविद्यालय",
     "multiSelectCountries": "देश चुनें",
-    "multiSelectUniversities": "विश्वविद्यालय चुनें"
+    "multiSelectUniversities": "विश्वविद्यालय चुनें",
+    "currentPlan": "वर्तमान योजना"
   },
   "supportFeedback": {
     "title": "सहायता और प्रतिक्रिया",
@@ -851,5 +867,24 @@
     "pendingMessageLine1": "आपका भुगतान प्रसंस्करण में है। कृपया पुष्टि की प्रतीक्षा करें",
     "pendingMessageLine2": "एक बार भुगतान की पुष्टि होने के बाद हम आपको मेल भेजेंगे",
     "tryAgain": "पुनः प्रयास करें"
+  },
+  "pricing": {
+    "primeMonthly": "प्राइम मासिक",
+    "primeYearly": "प्राइम वार्षिक",
+    "linkNotAvailable": "भुगतान लिंक उपलब्ध नहीं है",
+    "paymentLinkFailed": "भुगतान लिंक प्राप्त करने में विफल",
+    "trialStarted": "ट्रायल सफलतापूर्वक शुरू किया गया",
+    "trialFailed": "ट्रायल शुरू करने में विफल",
+    "confirmStartTrial": "क्या आप वाकई 14-दिवसीय निःशुल्क ट्रायल शुरू करना चाहते हैं?",
+    "confirmPaymentLink": "क्या आप वाकई इस भुगतान के साथ आगे बढ़ना चाहते हैं?",
+    "confirmStripeLink": "क्या आप वाकई इस योजना के साथ आगे बढ़ना चाहते हैं?",
+    "confirmRegister": "क्या आप वाकई पंजीकरण के साथ आगे बढ़ना चाहते हैं?",
+    "confirmAction": "कार्रवाई की पुष्टि करें",
+    "renewProMonthly": "प्रो मासिक नवीनीकरण",
+    "renewProYearly": "प्रो वार्षिक नवीनीकरण",
+    "upgradePrimeMonthly": "प्राइम मासिक में अपग्रेड करें",
+    "upgradePrimeYearly": "प्राइम वार्षिक में अपग्रेड करें",
+    "yearlyPlan": "वार्षिक योजना",
+    "monthlyPlan": "मासिक योजना"
   }
 }

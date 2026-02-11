@@ -39,7 +39,11 @@
     "enterContactNumber": "Enter Contact Number",
     "searchCountry": "Search Country...",
     "countryCode": "Country Code",
-    "openInNewTab": "Open in New Tab"
+    "openInNewTab": "Open in New Tab",
+    "loginRequired": "Please login to start trial",
+    "confirmAction": "Are you sure you want to proceed?",
+    "inactive": "Inactive",
+    "active": "Active"
   },
   "sidebar": {
     "dashboard": "Dashboard",
@@ -177,7 +181,9 @@
     "tableTotalApplicants": "Total Applications",
     "tableLeads": "Leads",
     "tableInProgressApplicants": "In Progress Applications",
-    "tableEnrolledApplicants": "Enrolled Applications"
+    "tableEnrolledApplicants": "Enrolled Applications",
+    "currentPlanUpgrade": "Current Plan Upgrade",
+    "applicantLimitMessage": "Applicant limit reached. Please upgrade your plan."
   },
   "users": {
     "title": "Users",
@@ -407,7 +413,8 @@
     "addCountriesServing": "Countries Serving",
     "addUniversitiesServing": "Universities Serving",
     "multiSelectCountries": "Select Countries",
-    "multiSelectUniversities": "Select Universities"
+    "multiSelectUniversities": "Select Universities",
+    "currentPlan": "Current Plan"
   },
   "supportFeedback": {
     "title": "Support & Feedback",
@@ -508,7 +515,8 @@
     "achievementsRequired": "Achievements Selection Is Required",
     "categoryRequired": "Category Is Required",
     "descriptionRequired": "Description Is Required",
-    "atLeastOneAchievementRequired": "At Least One Achievement Is Required"
+    "atLeastOneAchievementRequired": "At Least One Achievement Is Required",
+    "invalidImageType": "Only JPG, JPEG, and PNG files are allowed."
   },
   "fileUpload": {
     "dropFileHere": "Drop File Here",
@@ -534,7 +542,8 @@
     "password": "Password",
     "role": "Role",
     "profileSettings": "Profile Settings",
-    "logout": "Log Out"
+    "logout": "Log Out",
+    "updateSuccess": "Profile updated successfully"
   },
   "applicantTracker": {
     "title": "Application Tracker",
@@ -695,7 +704,14 @@
     "successfulApplicants": "Successful Applicants",
     "rejectedApplicants": "Rejected Applicants",
     "universityList": "University List",
-    "memberDetails": "Member Details"
+    "memberDetails": "Member Details",
+    "statusUpdated": "Status Updated",
+    "assignedAdmin": "Assigned Admin",
+    "assignedManager": "Assigned Manager",
+    "subordinates": "Subordinates",
+    "noUniversities": "No universities assigned",
+    "successfulApplications": "Successful Applications",
+    "searchTooltip": "Search by Name, Email or Contact Number"
   },
   "documentVault": {
     "title": "Document Vault",
@@ -883,5 +899,24 @@
     "pendingMessageLine1": "Your Payment Is Being Processed. Please Wait For Confirmation",
     "pendingMessageLine2": "Once Payment Confirmed We Will Send You Mail",
     "tryAgain": "Try Again"
+  },
+  "pricing": {
+    "primeMonthly": "Prime Monthly",
+    "primeYearly": "Prime Yearly",
+    "linkNotAvailable": "Payment link not available",
+    "paymentLinkFailed": "Failed to get payment link",
+    "trialStarted": "Trial started successfully",
+    "trialFailed": "Failed to start trial",
+    "confirmStartTrial": "Are you sure you want to start the 14-day free trial?",
+    "confirmPaymentLink": "Are you sure you want to proceed with this payment?",
+    "confirmStripeLink": "Are you sure you want to proceed with this plan?",
+    "confirmRegister": "Are you sure you want to proceed with registration?",
+    "confirmAction": "Confirm Action",
+    "renewProMonthly": "Renew Pro Monthly",
+    "renewProYearly": "Renew Pro Yearly",
+    "upgradePrimeMonthly": "Upgrade to Prime Monthly",
+    "upgradePrimeYearly": "Upgrade to Prime Yearly",
+    "yearlyPlan": "Yearly Plan",
+    "monthlyPlan": "Monthly Plan"
   }
 }
