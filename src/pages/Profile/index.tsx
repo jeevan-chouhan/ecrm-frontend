@@ -6,7 +6,7 @@ import { userService } from "../../services";
 import { useAppSelector, useAppDispatch } from "../../redux/hooks";
 import { showLoader, hideLoader } from "../../redux/slices/loader/loaderSlice";
 import { addToast } from "../../redux/slices/toast/toastSlice";
-import { handleApiError, formatStatus } from "../../utils";
+import { handleApiError, formatStatus, extractDigits } from "../../utils";
 
 interface ProfileData {
   name: string;
@@ -127,6 +127,16 @@ const Profile = () => {
     const phoneNumber = profileData.contactNumber.startsWith(dialCode)
       ? profileData.contactNumber.slice(dialCode.length)
       : profileData.contactNumber;
+
+    // Validate contact number length
+    const phoneDigits = extractDigits(phoneNumber);
+    if (phoneDigits.length < 8 || phoneDigits.length > 15) {
+      dispatch(addToast({
+        type: "error",
+        message: t("validation.contactMinLength", "Contact number must be 8-15 digits"),
+      }));
+      return;
+    }
 
     setIsSaving(true);
     dispatch(showLoader());

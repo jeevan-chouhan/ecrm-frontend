@@ -160,8 +160,8 @@ const AddAgencyPartner = ({ isOpen, onClose, onSuccess, editingPartner }: AddAge
     }
 
     const phoneDigits = extractDigits(formData.contactNo);
-    if (!phoneDigits || phoneDigits.length < 10) {
-      errors.contactNo = t("validation.invalidPhone", "Please enter a valid contact number");
+    if (!phoneDigits || phoneDigits.length < 8 || phoneDigits.length > 15) {
+      errors.contactNo = t("validation.invalidPhone", "Please enter a valid contact number (8-15 digits)");
     }
 
     if (!formData.commissionPercentage.trim()) {

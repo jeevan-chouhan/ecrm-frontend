@@ -10,8 +10,8 @@ export const REGEX = {
   // Password: at least 8 characters
   PASSWORD_MIN: /^.{8,}$/,
 
-  // Phone number: at least 10 digits
-  PHONE: /^\d{10,}$/,
+  // Phone number: 8 to 15 digits
+  PHONE: /^\d{8,15}$/,
 
   // Only letters and spaces
   NAME: /^[a-zA-Z\s]+$/,
@@ -64,7 +64,7 @@ export const isStrongPassword = (password: string): boolean => {
 export const isValidPhone = (phone: string): boolean => {
   // Remove non-digit characters for validation
   const digitsOnly = phone.replace(REGEX.NON_DIGIT, "");
-  return digitsOnly.length >= 10;
+  return digitsOnly.length >= 8 && digitsOnly.length <= 15;
 };
 
 export const isValidName = (name: string): boolean => {

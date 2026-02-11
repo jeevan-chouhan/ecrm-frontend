@@ -323,6 +323,7 @@
     "nameMinLength": "नाम कम से कम 2 अक्षर का होना चाहिए",
     "emailRequired": "ईमेल आवश्यक है",
     "contactMinLength": "संपर्क नंबर कम से कम 8 अंकों का होना चाहिए",
+    "contactMaxLength": "संपर्क नंबर 15 अंकों से अधिक नहीं होना चाहिए",
     "contactRequired": "संपर्क नंबर आवश्यक है",
     "roleRequired": "भूमिका आवश्यक है",
     "countryRequired": "कम से कम एक देश आवश्यक है",

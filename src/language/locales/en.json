@@ -451,6 +451,7 @@
     "nameMinLength": "Name Must Be At Least 2 Characters",
     "emailRequired": "Email Is Required",
     "contactMinLength": "Contact Number Must Be At Least 8 Digits",
+    "contactMaxLength": "Contact Number Must Not Exceed 15 Digits",
     "contactRequired": "Contact Number Is Required",
     "roleRequired": "Role Is Required",
     "countryRequired": "At Least One Country Is Required",
