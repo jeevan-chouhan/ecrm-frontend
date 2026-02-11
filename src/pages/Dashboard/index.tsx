@@ -56,9 +56,10 @@ const Dashboard = () => {
 
   // Check if applicant limit is reached using API data (only if subscription data is available)
   const totalApplicants = subscription?.totalApplicants;
-  const applicantsRegistered = 50;
+  const applicantsRegistered = subscription?.applicantsRegistered ?? 0;
   const isApplicantLimitReached = totalApplicants !== undefined && 
     applicantsRegistered !== undefined && 
+    totalApplicants > 0 && // Only check limit if there's an actual limit set
     applicantsRegistered >= totalApplicants;
   
   // Check if user is counselor

@@ -117,16 +117,8 @@ const ChangePassword = ({ onSuccess, onCancel }: ChangePasswordProps) => {
               // Verify the new token has isPasswordChanged: true
               const decodedUser = decodeToken(newAccessToken);
               if (decodedUser?.isPasswordChanged) {
-                dispatch(addToast({
-                  type: "success",
-                  message: response.message || t("auth.passwordUpdatedSuccess", "Password Updated Successfully"),
-                }));
-                // Small delay to ensure state is updated before navigation
-                setTimeout(() => {
-                  onSuccess?.();
-                }, 100);
-              } else {
-                // Token still shows password not changed, manually update the status as fallback
+                // Token is updated correctly - no need for localStorage flag
+                localStorage.removeItem("passwordChanged");
                 dispatch(updatePasswordChangedStatus(true));
                 dispatch(addToast({
                   type: "success",
@@ -135,32 +127,55 @@ const ChangePassword = ({ onSuccess, onCancel }: ChangePasswordProps) => {
                 // Small delay to ensure state is updated before navigation
                 setTimeout(() => {
                   onSuccess?.();
-                }, 100);
+                }, 200);
+              } else {
+                // Token still shows password not changed, use localStorage flag as fallback
+                dispatch(updatePasswordChangedStatus(true));
+                dispatch(addToast({
+                  type: "success",
+                  message: response.message || t("auth.passwordUpdatedSuccess", "Password Updated Successfully"),
+                }));
+                // Small delay to ensure state is updated before navigation
+                setTimeout(() => {
+                  onSuccess?.();
+                }, 200);
               }
             } else {
-              // Refresh failed, but password was updated
+              // Refresh failed, but password was updated - update status manually
+              dispatch(updatePasswordChangedStatus(true));
               dispatch(addToast({
                 type: "success",
-                message: response.message || t("auth.passwordUpdatedSuccessRelogin", "Password Updated Successfully. Please Log In Again"),
+                message: response.message || t("auth.passwordUpdatedSuccess", "Password Updated Successfully"),
               }));
-              onSuccess?.();
+              // Small delay to ensure state is updated before navigation
+              setTimeout(() => {
+                onSuccess?.();
+              }, 200);
             }
           } else {
-            // No refresh token, but password was updated
+            // No refresh token, but password was updated - update status manually
+            dispatch(updatePasswordChangedStatus(true));
             dispatch(addToast({
               type: "success",
-              message: response.message || t("auth.passwordUpdatedSuccessRelogin", "Password Updated Successfully. Please Log In Again"),
+              message: response.message || t("auth.passwordUpdatedSuccess", "Password Updated Successfully"),
             }));
-            onSuccess?.();
+            // Small delay to ensure state is updated before navigation
+            setTimeout(() => {
+              onSuccess?.();
+            }, 200);
           }
         } catch (refreshError) {
-          // Token refresh failed, but password was updated
+          // Token refresh failed, but password was updated - update status manually
           console.error("Failed to refresh token after password change:", refreshError);
+          dispatch(updatePasswordChangedStatus(true));
           dispatch(addToast({
             type: "success",
-            message: response.message || t("auth.passwordUpdatedSuccessRelogin", "Password Updated Successfully. Please Log In Again"),
+            message: response.message || t("auth.passwordUpdatedSuccess", "Password Updated Successfully"),
           }));
-          onSuccess?.();
+          // Small delay to ensure state is updated before navigation
+          setTimeout(() => {
+            onSuccess?.();
+          }, 200);
         }
       } else {
         dispatch(addToast({

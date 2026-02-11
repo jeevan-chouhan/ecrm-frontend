@@ -58,7 +58,8 @@ const ApplicantPersonalDetails = ({
         countryCode: Yup.string().required(t("validation.countryCodeRequired")),
         contactNumber: Yup.string()
           .required(t("validation.contactNumberRequired"))
-          .min(10, t("validation.minLength", { count: 10 })),
+          .min(8, t("validation.contactMinLength"))
+          .max(15, t("validation.contactMaxLength")),
         emailId: Yup.string().email(t("validation.invalidEmail")).required(t("validation.emailRequired")),
         permanentAddress: Yup.string().nullable(),
         notes: Yup.string().nullable(),

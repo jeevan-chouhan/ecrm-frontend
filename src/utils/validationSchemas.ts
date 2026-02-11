@@ -36,7 +36,8 @@ export const getRegisterSchema = (t: TranslationFunction) =>
       .required(t("validation.phoneRequired"))
       .test("phone-valid", t("validation.phoneInvalid"), (value) => {
         if (!value) return false;
-        return extractDigits(value).length >= 10;
+        const digits = extractDigits(value);
+        return digits.length >= 8 && digits.length <= 15;
       }),
     agreeToTerms: Yup.boolean().oneOf([true], t("validation.agreeToTermsRequired")),
   });
@@ -83,6 +84,7 @@ export const getTeamMemberSchema = (
       .required(t("validation.emailRequired")),
     contactNumber: Yup.string()
       .min(8, t("validation.contactMinLength"))
+      .max(15, t("validation.contactMaxLength"))
       .required(t("validation.contactRequired")),
     role: Yup.string().required(t("validation.roleRequired")),
     assignedCountries: Yup.array()

@@ -10,7 +10,7 @@ import { userService } from "../../../services";
 import { useAppDispatch } from "../../../redux/hooks";
 import { addToast } from "../../../redux/slices/toast/toastSlice";
 import { showLoader, hideLoader } from "../../../redux/slices/loader/loaderSlice";
-import { handleApiError, REGEX } from "../../../utils";
+import { handleApiError, REGEX, extractDigits } from "../../../utils";
 
 interface RegisterFormValues {
   agencyName: string;
@@ -40,7 +40,12 @@ const Register = () => {
       .required(t("validation.emailRequired", "Email is required"))
       .email(t("validation.emailInvalid", "Invalid email address")),
     phone: Yup.string()
-      .required(t("validation.phoneRequired", "Contact number is required")),
+      .required(t("validation.phoneRequired", "Contact number is required"))
+      .test("phone-valid", t("validation.phoneInvalid", "Contact number must be 8-15 digits"), (value) => {
+        if (!value) return false;
+        const digits = extractDigits(value);
+        return digits.length >= 8 && digits.length <= 15;
+      }),
     agreeToTerms: Yup.boolean()
       .oneOf([true], t("validation.agreeToTermsRequired", "You must agree to the terms and conditions")),
   });
