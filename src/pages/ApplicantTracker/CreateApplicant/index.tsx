@@ -33,7 +33,6 @@ interface Tab {
 const getInitialFormState = (): ApplicantFormState => ({
   personalDetails: {
     profilePhoto: null,
-    enrollmentType: "",
     name: "",
     dateOfBirth: null,
     gender: "",
@@ -151,7 +150,6 @@ const CreateApplicant = () => {
         // Map API response to PersonalDetailsFormData
         const personalDetails: PersonalDetailsFormData = {
           profilePhoto: null, // Profile photo would need separate handling if URL is returned
-          enrollmentType: data.enrollmentType || "",
           name: data.name || "",
           dateOfBirth: data.dob ? new Date(data.dob + "T00:00:00") : null, // Add time to avoid timezone issues
           gender: data.gender || "",
@@ -307,9 +305,10 @@ const CreateApplicant = () => {
         onSaveAndNext={handleNextTab}
         onBack={handlePreviousTab}
         applicantId={applicantId}
+        activeTab={activeTab}
       />
     ),
-    [formState.applicationPreferences, updateApplicationPreferences, handleNextTab, handlePreviousTab, applicantId]
+    [formState.applicationPreferences, updateApplicationPreferences, handleNextTab, handlePreviousTab, applicantId, activeTab]
   );
 
   const educationalTabContent = useMemo(

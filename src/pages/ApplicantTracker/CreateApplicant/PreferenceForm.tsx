@@ -14,6 +14,7 @@ interface PreferenceFormProps {
   onAddMore?: () => void;
   showCancel?: boolean;
   showAddMore?: boolean;
+  enrollmentTypeOptions?: SelectOption[]; // Enrollment types from API
   countryOptions?: SelectOption[]; // Countries from API
   universityOptions?: SelectOption[]; // Universities from API (filtered by country)
   campusOptions?: SelectOption[]; // Campuses from API (filtered by university)
@@ -31,6 +32,7 @@ const PreferenceForm = ({
   onAddMore,
   showCancel = false,
   showAddMore = false,
+  enrollmentTypeOptions = [], // Default to empty array if not provided
   countryOptions = [], // Default to empty array if not provided
   universityOptions = [], // Default to empty array if not provided
   campusOptions = [], // Default to empty array if not provided
@@ -40,11 +42,34 @@ const PreferenceForm = ({
 }: PreferenceFormProps) => {
   const { t } = useTranslation();
 
+  // Check if agency partner name should be shown and required
+  const shouldShowAgencyPartner = preference.enrollmentType !== "WALK_IN";
+  const isAgencyPartnerRequired = 
+    preference.enrollmentType === "REFERRED_BY_AGENCY_PARTNER" || 
+    preference.enrollmentType === "REFERRED_TO_AGENCY_PARTNER";
+
   return (
     <form onSubmit={(e) => { e.preventDefault(); }}>
       <div className="space-y-4">
-        {/* Form Fields Row 1: Country, Desired University, Desired Campus */}
+        {/* Form Fields Row 1: Enrolment Type, Country, Desired University */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="w-full">
+            <label
+              className="block text-sm font-medium mb-1.5"
+              style={{ color: COLORS.textDark,  }}
+            >
+              {t("applicant.enrollmentType")} <span style={{ color: COLORS.error }}>*</span>
+            </label>
+            <Select
+              options={enrollmentTypeOptions}
+              value={preference.enrollmentType}
+              onChange={(value) => onFieldChange(index, "enrollmentType", value)}
+              placeholder={t("applicant.selectEnrollmentType")}
+              error={getFieldError(index, "enrollmentType")}
+              fullWidth
+            />
+          </div>
+
           <div className="w-full">
             <label
               className="block text-sm font-medium mb-1.5"
@@ -81,7 +106,10 @@ const PreferenceForm = ({
               disabled={!preference.desiredCountry}
             />
           </div>
+        </div>
 
+        {/* Form Fields Row 2: Desired Campus, Program, Course */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="w-full">
             <label
               className="block text-sm font-medium mb-1.5"
@@ -100,10 +128,7 @@ const PreferenceForm = ({
               disabled={!preference.desiredUniversity}
             />
           </div>
-        </div>
 
-        {/* Form Fields Row 2: Program, Course, Desired Intake */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="w-full">
             <label
               className="block text-sm font-medium mb-1.5"
@@ -140,7 +165,10 @@ const PreferenceForm = ({
               disabled={!preference.desiredCampus || !preference.program}
             />
           </div>
+        </div>
 
+        {/* Form Fields Row 3: Desired Intake, Assign Counselor, Agency Partner Name */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="w-full">
             <label
               className="block text-sm font-medium mb-1.5"
@@ -157,10 +185,7 @@ const PreferenceForm = ({
               allowPastMonths={false}
             />
           </div>
-        </div>
 
-        {/* Form Fields Row 3: Assign Counselor, Agency Partner Name, Action Buttons */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="w-full">
             <label
               className="block text-sm font-medium mb-1.5"
@@ -179,25 +204,31 @@ const PreferenceForm = ({
             />
           </div>
 
-          <div className="w-full">
-            <label
-              className="block text-sm font-medium mb-1.5"
-              style={{ color: COLORS.textDark,  }}
-            >
-              {t("applicant.agencyPartnerName")}
-            </label>
-            <Select
-              options={agencyPartnerOptions}
-              value={preference.agencyPartnerName}
-              onChange={(value) => onFieldChange(index, "agencyPartnerName", value)}
-              placeholder={t("applicant.selectAgencyPartner")}
-              error={getFieldError(index, "agencyPartnerName")}
-              fullWidth
-              searchable
-            />
-          </div>
+          {shouldShowAgencyPartner && (
+            <div className="w-full">
+              <label
+                className="block text-sm font-medium mb-1.5"
+                style={{ color: COLORS.textDark,  }}
+              >
+                {t("applicant.agencyPartnerName")}
+                {isAgencyPartnerRequired && <span style={{ color: COLORS.error }}>*</span>}
+              </label>
+              <Select
+                options={agencyPartnerOptions}
+                value={preference.agencyPartnerName}
+                onChange={(value) => onFieldChange(index, "agencyPartnerName", value)}
+                placeholder={t("applicant.selectAgencyPartner")}
+                error={getFieldError(index, "agencyPartnerName")}
+                fullWidth
+                searchable
+              />
+            </div>
+          )}
+        </div>
 
-          <div className="w-full flex items-end justify-end gap-2">
+        {/* Action Buttons Row */}
+        {(showCancel || showAddMore) && (
+          <div className="flex items-end justify-end gap-2">
             {showCancel && onCancel && (
               <Button
                 type="button"
@@ -219,7 +250,7 @@ const PreferenceForm = ({
               </Button>
             )}
           </div>
-        </div>
+        )}
       </div>
     </form>
   );
@@ -229,6 +260,7 @@ const PreferenceForm = ({
 export default React.memo(PreferenceForm, (prevProps, nextProps) => {
   // Deep comparison for preference object
   if (prevProps.preference.id !== nextProps.preference.id) return false;
+  if (prevProps.preference.enrollmentType !== nextProps.preference.enrollmentType) return false;
   if (prevProps.preference.desiredCountry !== nextProps.preference.desiredCountry) return false;
   if (prevProps.preference.program !== nextProps.preference.program) return false;
   if (prevProps.preference.desiredUniversity !== nextProps.preference.desiredUniversity) return false;

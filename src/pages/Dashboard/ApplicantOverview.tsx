@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { GridColDef, GridPaginationModel, GridRenderCellParams, GridSortModel } from "@mui/x-data-grid";
 import { Tooltip } from "@mui/material";
 import { DataTable, StatusChangePopup, SearchBar, Select, Button } from "../../components";
-import { COLORS, ROUTES, typography, enrollmentTypes, statusFilterOptions, UserRole } from "../../constants";
+import { COLORS, ROUTES, typography, statusFilterOptions, UserRole } from "../../constants";
 import { Eye, ToggleStatus } from "../../assets";
 import { formatDateTime } from "../../utils/dateUtils";
 import { getEnrollmentTypeLabel, cleanContactNumber } from "../../utils/commonUtils";
@@ -22,7 +22,6 @@ import {
   setSort,
   setSearch,
   setStatusFilter,
-  setEnrollmentTypeFilter,
   clearFilters,
   updateApplicantStatus,
 } from "../../redux/slices/dashboard/dashboardSlice";
@@ -67,7 +66,6 @@ const ApplicantOverview = () => {
 
   // Local state for input fields (for controlled inputs with debounce)
   const [searchInput, setSearchInput] = useState(() => filter.search);
-  const [selectedEnrollmentType, setSelectedEnrollmentType] = useState(() => filter.enrollmentType);
   const [selectedStatus, setSelectedStatus] = useState(() => filter.status);
 
   // Status change popup state
@@ -88,11 +86,10 @@ const ApplicantOverview = () => {
   useEffect(() => {
     if (isInitialMount.current) {
       setSearchInput(filter.search);
-      setSelectedEnrollmentType(filter.enrollmentType);
       setSelectedStatus(filter.status);
       isInitialMount.current = false;
     }
-  }, [filter.search, filter.enrollmentType, filter.status]);
+  }, [filter.search, filter.status]);
 
   /**
    * Fetch applicant overview data from API
@@ -116,7 +113,6 @@ const ApplicantOverview = () => {
         assignedManagerId: null,
         search: filter.search || null,
         status: filter.status || null,
-        enrollmentType: filter.enrollmentType || null,
         page: pagination.page,
         size: pagination.size,
         sortBy: sort.sortBy || null,
@@ -154,7 +150,7 @@ const ApplicantOverview = () => {
       dispatch(setLoading(false));
       dispatch(hideLoader());
     }
-  }, [dispatch, filter.search, filter.status, filter.enrollmentType, pagination.page, pagination.size, sort.sortBy, sort.asc]);
+  }, [dispatch, filter.search, filter.status, pagination.page, pagination.size, sort.sortBy, sort.asc]);
 
   // Initial fetch when user is loaded or filters/pagination/sort change
   useEffect(() => {
@@ -162,7 +158,7 @@ const ApplicantOverview = () => {
       fetchApplicantOverview();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.agencyId, filter.search, filter.status, filter.enrollmentType, pagination.page, pagination.size, sort.sortBy, sort.asc]);
+  }, [user?.agencyId, filter.search, filter.status, pagination.page, pagination.size, sort.sortBy, sort.asc]);
 
   // Cleanup debounce on unmount
   useEffect(() => {
@@ -265,17 +261,15 @@ const ApplicantOverview = () => {
     }, 500);
   }, [dispatch]);
 
-  // Handle apply filters (for enrollment type and status)
+  // Handle apply filters (for status)
   const handleApplyFilters = useCallback(() => {
     dispatch(setSearch(searchInput));
     dispatch(setStatusFilter(selectedStatus));
-    dispatch(setEnrollmentTypeFilter(selectedEnrollmentType));
-  }, [dispatch, searchInput, selectedStatus, selectedEnrollmentType]);
+  }, [dispatch, searchInput, selectedStatus]);
 
   // Handle clear filters
   const handleClearFilters = useCallback(() => {
     setSearchInput("");
-    setSelectedEnrollmentType("");
     setSelectedStatus("");
     dispatch(clearFilters());
   }, [dispatch]);
@@ -310,14 +304,6 @@ const ApplicantOverview = () => {
   const sortModel: GridSortModel = useMemo(() => 
     sort.sortBy ? [{ field: sort.sortBy, sort: sort.asc ? "asc" : "desc" }] : []
   , [sort.sortBy, sort.asc]);
-
-  // Enrollment type options with placeholder
-  const enrollmentTypeOptionsWithPlaceholder = useMemo(() => {
-    return [
-      { value: "", label: t("dashboard.selectEnrollmentType", "Select Enrolment Type") },
-      ...enrollmentTypes,
-    ];
-  }, [t]);
 
   // Status options with All as first option
   const statusOptionsWithAll = useMemo(() => {
@@ -589,18 +575,7 @@ const ApplicantOverview = () => {
             placeholder={t("dashboard.searchApplicants", "Search By Name, Email Or Contact...")}
             value={searchInput}
             onChange={handleSearchChange}
-            tooltip={t("dashboard.searchApplicants", "Search By Name, Email Or Contact...")}
-          />
-        </div>
-
-        {/* Enrolment Type Filter */}
-        <div className="w-full md:w-56 applicant-overview-filter-placeholder">
-          <Select
-            label={t("dashboard.enrollmentTypeLabel", "Type")}
-            options={enrollmentTypeOptionsWithPlaceholder}
-            value={selectedEnrollmentType}
-            onChange={setSelectedEnrollmentType}
-            searchable
+            tooltip={t("dashboard.searchTooltip", "Search With Applicant Id, Applicant Name, Email")}
           />
         </div>
 

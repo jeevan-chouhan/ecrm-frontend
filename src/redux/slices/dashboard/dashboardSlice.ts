@@ -23,7 +23,6 @@ interface SortState {
 interface FilterState {
   search: string;
   status: string;
-  enrollmentType: string;
 }
 
 // Transformed applicant row for table display
@@ -80,7 +79,6 @@ const initialState: DashboardState = {
   filter: {
     search: "",
     status: "",
-    enrollmentType: "",
   },
 };
 
@@ -169,11 +167,6 @@ const dashboardSlice = createSlice({
       state.pagination.page = 0;
     },
 
-    setEnrollmentTypeFilter: (state, action: PayloadAction<string>) => {
-      state.filter.enrollmentType = action.payload;
-      state.pagination.page = 0;
-    },
-
     // Apply all filters at once
     applyFilters: (state, action: PayloadAction<FilterState>) => {
       state.filter = action.payload;
@@ -183,7 +176,6 @@ const dashboardSlice = createSlice({
     clearFilters: (state) => {
       state.filter.search = "";
       state.filter.status = "";
-      state.filter.enrollmentType = "";
       state.pagination.page = 0;
     },
 
@@ -217,7 +209,6 @@ export const {
   setSort,
   setSearch,
   setStatusFilter,
-  setEnrollmentTypeFilter,
   applyFilters,
   clearFilters,
   updateApplicantStatus,

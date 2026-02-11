@@ -1,6 +1,7 @@
 export interface PreferenceItem {
   id: string; // Local ID for tracking (e.g., "pref-123456")
   preferenceId?: number | string | null; // API preference ID (for updates)
+  enrollmentType: string;
   desiredCountry: string;
   program: string;
   desiredUniversity: string;
@@ -48,7 +49,6 @@ export interface AchievementFormData {
 
 export interface PersonalDetailsFormData {
   profilePhoto: File | null;
-  enrollmentType: string;
   name: string;
   dateOfBirth: Date | null;
   gender: string;

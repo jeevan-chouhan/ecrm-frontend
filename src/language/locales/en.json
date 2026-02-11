@@ -151,6 +151,7 @@
     "activate": "Activate",
     "deactivate": "Deactivate",
     "searchApplicants": "Search By Name, Email Or Contact...",
+    "searchTooltip": "Search With Applicant Id, Applicant Name, Email",
     "selectEnrollmentType": "Select Enrolment Type",
     "selectStatus": "Select Status",
     "all": "All",
@@ -537,6 +538,7 @@
   "applicantTracker": {
     "title": "Application Tracker",
     "searchPlaceholder": "Search Applications...",
+    "searchTooltip": "Search With Applicant Name, Contact Number, Email, Desired Course, Application Stage And Status, Agency Partner Name",
     "adminLabel": "Admin",
     "managerLabel": "Manager",
     "counselorLabel": "Counselor",

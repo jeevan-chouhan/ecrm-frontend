@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mui/material";
 import { Button } from "../../../components";
 import { COLORS, UserRole } from "../../../constants";
-import { getEnrollmentTypeLabel } from "../../../utils";
 import { ArrowLeft, Edit, ToggleStatus } from "../../../assets";
 import type { ApplicantDetail } from "./types";
 import { useAppSelector } from "../../../redux/hooks";
@@ -46,9 +45,6 @@ const ApplicantHeader = ({ applicant, onBack, onEdit, onStatusToggle }: Applican
             </p>
             <p className="text-sm" style={{ color: COLORS.textMuted }}>
               {t("applicantTracker.applicantStage", "Applicant Stage")} - {applicant.applicantStage}
-            </p>
-            <p className="text-sm" style={{ color: COLORS.textMuted }}>
-              {t("applicantTracker.enrollmentType", "Enrolment Type")} - {getEnrollmentTypeLabel(applicant.enrollmentType)}
             </p>
           </div>
         </div>

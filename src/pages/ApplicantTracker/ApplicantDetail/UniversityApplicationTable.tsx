@@ -5,7 +5,7 @@ import { Tooltip } from "@mui/material";
 import { DataTable, Button } from "../../../components";
 import { COLORS } from "../../../constants";
 import { Edit, Calendar } from "../../../assets";
-import { getApplicationStatusLabel, getApplicationStageLabel } from "../../../utils";
+import { getApplicationStatusLabel, getApplicationStageLabel, toTitleCase } from "../../../utils";
 import type { UniversityApplication } from "./types";
 
 interface UniversityApplicationTableProps {
@@ -163,13 +163,14 @@ const UniversityApplicationTable = ({
     );
   }, []);
 
-  // Render No. cell with tooltip
-  const renderNoCell = useCallback((params: GridRenderCellParams) => {
-    const no = params.value?.toString() || "-";
+  // Render Enrollment Type cell with tooltip and title case
+  const renderEnrollmentTypeCell = useCallback((params: GridRenderCellParams) => {
+    const enrollmentType = params.value || "-";
+    const displayValue = enrollmentType !== "-" ? toTitleCase(enrollmentType.replace(/_/g, " ")) : "-";
     return (
-      <Tooltip title={no} arrow placement="top">
-        <span className="truncate block cursor-default" style={{ color: COLORS.textDark }}>
-          {no}
+      <Tooltip title={displayValue} arrow placement="top">
+        <span className="truncate block cursor-default" style={{ color: enrollmentType !== "-" ? COLORS.textDark : COLORS.textMuted }}>
+          {displayValue}
         </span>
       </Tooltip>
     );
@@ -232,12 +233,12 @@ const UniversityApplicationTable = ({
 
   const columns: GridColDef[] = useMemo(() => [
     {
-      field: "no",
-      headerName: t("applicantDetailView.no", "No."),
-      flex: 0.5,
-      minWidth: 60,
-      sortable: false,
-      renderCell: renderNoCell,
+      field: "enrollmentType",
+      headerName: t("applicantDetailView.enrollmentType", "Enrolment Type"),
+      flex: 1.2,
+      minWidth: 140,
+      sortable: true,
+      renderCell: renderEnrollmentTypeCell,
     },
     {
       field: "country",
@@ -327,7 +328,7 @@ const UniversityApplicationTable = ({
       sortable: false,
       renderCell: renderActionsCell,
     },
-  ], [t, onApply, onUpdateStatus, renderNoCell, renderCourseCell, renderCountryCell, renderUniversityCell, renderIntakeCell, renderCounselorCell, renderAgencyPartnerCell, renderStageCell, renderStatusCell, renderDateCell, renderActionsCell]);
+  ], [t, onApply, onUpdateStatus, renderEnrollmentTypeCell, renderCourseCell, renderCountryCell, renderUniversityCell, renderIntakeCell, renderCounselorCell, renderAgencyPartnerCell, renderStageCell, renderStatusCell, renderDateCell, renderActionsCell]);
 
   return (
     <div className="space-y-4">

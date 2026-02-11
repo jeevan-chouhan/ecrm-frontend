@@ -3,7 +3,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useTranslation } from "react-i18next";
 import { Input, Select, DatePicker, Button, FileUpload, PhoneInput } from "../../../components";
-import { COLORS, enrollmentTypes, genderTypes } from "../../../constants";
+import { COLORS, genderTypes } from "../../../constants";
 import type { SelectOption } from "../../../components";
 import type { PersonalDetailsFormData } from "./types";
 import { useDataChangeTracking, useFormSync, useFormValidation } from "./hooks";
@@ -35,7 +35,6 @@ const ApplicantPersonalDetails = ({
   const { t, i18n } = useTranslation();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
-  const enrollmentTypeOptions: SelectOption[] = enrollmentTypes;
   const genderOptions: SelectOption[] = genderTypes;
   const [shouldNavigateNext, setShouldNavigateNext] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
@@ -53,7 +52,6 @@ const ApplicantPersonalDetails = ({
   const validationSchema = useMemo(
     () =>
       Yup.object().shape({
-        enrollmentType: Yup.string().required(t("validation.enrollmentTypeRequired")),
         name: Yup.string().required(t("validation.nameRequired")).trim(),
         dateOfBirth: Yup.date().nullable().required(t("validation.dateOfBirthRequired")),
         gender: Yup.string().required(t("validation.genderRequired")),
@@ -143,7 +141,6 @@ const ApplicantPersonalDetails = ({
         const payload = {
           name: values.name.trim(),
           profilePhoto: profilePhotoJson,
-          enrollmentType: values.enrollmentType,
           dob: formatDate(values.dateOfBirth),
           gender: values.gender,
           email: values.emailId.trim(),
@@ -224,7 +221,6 @@ const ApplicantPersonalDetails = ({
       
       return (
         profilePhotoChanged ||
-        lastSaved.enrollmentType !== current.enrollmentType ||
         lastSaved.name !== current.name ||
         dateOfBirthChanged ||
         lastSaved.gender !== current.gender ||
@@ -244,7 +240,6 @@ const ApplicantPersonalDetails = ({
   useEffect(() => {
     // Check if all mandatory fields are filled
     const hasAllMandatoryFields = 
-      formik.values.enrollmentType.trim() !== "" &&
       formik.values.name.trim() !== "" &&
       formik.values.dateOfBirth !== null &&
       formik.values.gender !== "" &&
@@ -253,7 +248,7 @@ const ApplicantPersonalDetails = ({
       formik.values.emailId.trim() !== "";
     
     setIsFormValid(hasAllMandatoryFields);
-  }, [formik.values.enrollmentType, formik.values.name, formik.values.dateOfBirth, formik.values.gender, formik.values.countryCode, formik.values.contactNumber, formik.values.emailId]);
+  }, [formik.values.name, formik.values.dateOfBirth, formik.values.gender, formik.values.countryCode, formik.values.contactNumber, formik.values.emailId]);
 
   // Sync formik values to parent state with optimized comparison
   useFormSync<PersonalDetailsFormData>(
@@ -277,7 +272,6 @@ const ApplicantPersonalDetails = ({
       
       return (
         profilePhotoChanged ||
-        prev.enrollmentType !== current.enrollmentType ||
         prev.name !== current.name ||
         dateOfBirthChanged ||
         prev.gender !== current.gender ||
@@ -370,25 +364,8 @@ const ApplicantPersonalDetails = ({
       <div>
         <form onSubmit={formik.handleSubmit}>
           <div className="space-y-4">
-            {/* Enrolment Type, Name, and Date of Birth Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="w-full">
-                <label
-                  className="block text-sm font-medium mb-1.5"
-                  style={{ color: COLORS.textDark,  }}
-                >
-                  {t("applicant.enrollmentType")} <span style={{ color: COLORS.error }}>*</span>
-                </label>
-                <Select
-                  options={enrollmentTypeOptions}
-                  value={formik.values.enrollmentType}
-                  onChange={(value) => formik.setFieldValue("enrollmentType", value)}
-                  placeholder={t("applicant.selectEnrollmentType")}
-                  error={formik.touched.enrollmentType && formik.errors.enrollmentType ? formik.errors.enrollmentType : undefined}
-                  fullWidth
-                />
-              </div>
-
+            {/* Name and Date of Birth Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="w-full">
                 <label
                   className="block text-sm font-medium mb-1.5"

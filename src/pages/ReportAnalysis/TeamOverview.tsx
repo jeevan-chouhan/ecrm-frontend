@@ -51,6 +51,11 @@ const TeamOverview = () => {
   const [adminOptions, setAdminOptions] = useState<SelectOption[]>([]);
   const [managerOptions, setManagerOptions] = useState<SelectOption[]>([]);
   const [counselorOptions, setCounselorOptions] = useState<SelectOption[]>([]);
+  const [enrollmentTypeOptions, setEnrollmentTypeOptions] = useState<SelectOption[]>([]);
+  // Map to store enrollment type code -> ID mapping for API conversion
+  const enrollmentTypeIdMapRef = useRef<Map<string, number>>(new Map());
+  const hasFetchedEnrollmentTypesRef = useRef(false);
+  const isFetchingEnrollmentTypesRef = useRef(false);
 
   // Pagination model for DataTable (synced with Redux)
   const paginationModel: GridPaginationModel = useMemo(
@@ -250,6 +255,52 @@ const TeamOverview = () => {
     }
   }, [user?.agencyId, dispatch]);
 
+  // Fetch enrollment types from API
+  const fetchEnrollmentTypes = useCallback(async () => {
+    if (isFetchingEnrollmentTypesRef.current || hasFetchedEnrollmentTypesRef.current) {
+      return;
+    }
+
+    isFetchingEnrollmentTypesRef.current = true;
+
+    try {
+      const enrollmentTypes = await applicantService.getEnrollmentTypes();
+
+      // Convert to SelectOption format, filter by isActive and sort by sortOrder
+      const options: SelectOption[] = enrollmentTypes
+        .filter((type: any) => type.isActive)
+        .sort((a: any, b: any) => a.sortOrder - b.sortOrder)
+        .map((type: any) => ({
+          value: type.code,
+          label: type.name,
+        }));
+
+      // Create mapping from code to ID for API conversion
+      const idMap = new Map<string, number>();
+      enrollmentTypes
+        .filter((type: any) => type.isActive)
+        .forEach((type: any) => {
+          idMap.set(type.code, type.id);
+        });
+      enrollmentTypeIdMapRef.current = idMap;
+
+      setEnrollmentTypeOptions(options);
+      hasFetchedEnrollmentTypesRef.current = true;
+    } catch (error: any) {
+      const { message } = handleApiError(error, "Failed to fetch enrollment types");
+      dispatch(addToast({ type: "error", message }));
+      setEnrollmentTypeOptions([]);
+      hasFetchedEnrollmentTypesRef.current = false; // Allow retry on error
+    } finally {
+      isFetchingEnrollmentTypesRef.current = false;
+    }
+  }, [dispatch]);
+
+  // Fetch enrollment types on mount
+  useEffect(() => {
+    fetchEnrollmentTypes();
+  }, [fetchEnrollmentTypes]);
+
   // Fetch managers when admin is selected (only for PRIMARY_ADMIN)
   useEffect(() => {
     // Only fetch managers when admin is selected if user is PRIMARY_ADMIN
@@ -386,7 +437,9 @@ const TeamOverview = () => {
         assignedAdminId: assignedAdminId ?? null,
         assignedManagerId: assignedManagerId ?? null,
         assignedCounselorId: assignedCounselorId ?? null,
-        enrollmentType: filter.enrollmentType || null,
+        enrollmentTypeId: filter.enrollmentType 
+          ? (enrollmentTypeIdMapRef.current.get(filter.enrollmentType) || null)
+          : null,
         fromDate: filter.fromDate || null,
         toDate: filter.toDate || null,
       });
@@ -770,6 +823,7 @@ const TeamOverview = () => {
         adminOptions={adminOptions}
         managerOptions={managerOptions}
         counselorOptions={counselorOptions}
+        enrollmentTypeOptions={enrollmentTypeOptions}
         selectedAdmin={selectedAdmin}
         selectedManager={selectedManager}
         selectedCounselor={selectedCounselor}

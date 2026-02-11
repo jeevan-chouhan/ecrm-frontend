@@ -3,6 +3,7 @@
 export interface UniversityApplication {
   id: string;
   no: number;
+  enrollmentType: string;
   university: string;
   country: string;
   course: string;

@@ -39,6 +39,7 @@ export const ENDPOINTS = {
     PARTNERS: "/agencies/partners",
     PARTNERS_LIST: "/agencies/partnersList",
     PARTNER_NAMES: "/agencies/global-agencyPartner-name",
+    AGENCY_PARTNER_NAME: "/agencies/agency-partner-name",
     GENERAL_SETTINGS: "/agencies/general-settings",
     SERVING: "/agencies/serving",
     SETTING_UNIVERSITY_LIST: "/agencies/setting-universityList",
@@ -66,6 +67,11 @@ export const ENDPOINTS = {
   // Menu Endpoints
   MENU: {
     GET_BY_ROLE: "/menu",
+  },
+
+  // Lookup Endpoints
+  LOOKUP: {
+    ENROLLMENT_TYPE: "/lookup/enrollment_type",
   },
 
   // Applicants Endpoints

@@ -659,6 +659,7 @@ export const mockApplicantDetail: ApplicantDetail = {
     {
       id: "1",
       no: 1,
+      enrollmentType: "WALK_IN",
       university: "MIT",
       country: "USA",
       course: "Master - Computers",
@@ -673,6 +674,7 @@ export const mockApplicantDetail: ApplicantDetail = {
     {
       id: "2",
       no: 2,
+      enrollmentType: "REFERRED_BY_AGENCY_PARTNER",
       university: "Stanford University",
       country: "USA",
       course: "Master - Computer Science",

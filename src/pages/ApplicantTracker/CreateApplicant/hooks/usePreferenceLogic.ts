@@ -39,7 +39,9 @@ export function usePreferenceLogic({
       if (editingIndex === index) {
         return true;
       }
-      return isPreferenceComplete(pref) && pref.saved;
+      // Show preferences that are saved AND either complete OR have a preferenceId (already saved to API)
+      // This ensures preferences fetched from API are displayed even if enrollmentType mapping failed
+      return pref.saved && (isPreferenceComplete(pref) || !!pref.preferenceId);
     });
   }, [formik.values.preferences, editingIndex, isPreferenceComplete]);
 
@@ -181,13 +183,11 @@ export function usePreferenceLogic({
   }, [formik.touched.preferences, formik.errors.preferences]);
 
   const updatePreferenceField = useCallback(async (index: number, field: keyof PreferenceItem, value: string) => {
-    // Update the field value
+    // Update the field value only - don't mark as touched or validate yet
+    // Validation will happen when user clicks "Add More" or "Save"
     await formik.setFieldValue(`preferences[${index}].${field}`, value);
     
-    // Mark field as touched
-    formik.setFieldTouched(`preferences[${index}].${field}`, true);
-    
-    // Clear error for this field if value is set
+    // Clear error for this field if value is set (to remove previous errors when user fixes them)
     if (value && formik.errors.preferences?.[index] && typeof formik.errors.preferences[index] === 'object') {
       const currentErrors = { ...(formik.errors.preferences[index] as any) };
       if (currentErrors[field]) {
@@ -200,9 +200,6 @@ export function usePreferenceLogic({
         });
       }
     }
-    
-    // Validate field immediately without setTimeout to prevent race conditions
-    await formik.validateField(`preferences[${index}].${field}`);
   }, [formik]);
 
   return {

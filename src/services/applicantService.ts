@@ -16,6 +16,8 @@ import type {
   UniversityItem,
   CampusItem,
   CourseItem,
+  EnrollmentTypeItem,
+  EnrollmentTypeResponse,
   ApplyApplicationParams,
   ApplyApplicationResponse,
   UpdateApplicationStatusPayload,
@@ -94,10 +96,10 @@ const buildApplicationsListQueryParams = (
   appendQueryParam(queryParams, "applicationStatus", params.applicationStatus, { skipEmptyString: true });
   appendQueryParam(queryParams, "applicationStage", params.applicationStage, { skipEmptyString: true });
 
-  // 5. University, intake, and agency partner filters
+  // 5. University, intake, and enrollment type filters
   appendQueryParam(queryParams, "universityId", params.universityId);
   appendQueryParam(queryParams, "desiredIntake", params.desiredIntake, { skipEmptyString: true });
-  appendQueryParam(queryParams, "agencyPartnerId", params.agencyPartnerId);
+  appendQueryParam(queryParams, "enrollmentTypeId", params.enrollmentTypeId);
 
   // 6. Date filters - format dates according to backend requirements
   // appliedFrom and appliedTo use ISO DATE_TIME format (YYYY-MM-DDTHH:mm:ss)
@@ -738,6 +740,28 @@ const applicantService = {
   },
 
   /**
+   * Get enrollment types from lookup API
+   * @returns Promise with enrollment types response
+   */
+  getEnrollmentTypes: async (): Promise<EnrollmentTypeItem[]> => {
+    const url = ENDPOINTS.LOOKUP.ENROLLMENT_TYPE;
+    const response = await api.get<EnrollmentTypeResponse>(url);
+    
+    // Handle both direct array response and wrapped ApiResponse
+    if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+      // Wrapped ApiResponse
+      if (response.data.status === "success" && response.data.data && Array.isArray(response.data.data)) {
+        return response.data.data;
+      }
+    } else if (Array.isArray(response.data)) {
+      // Direct array response
+      return response.data;
+    }
+    
+    return [];
+  },
+
+  /**
    * Get agency partner names list for an agency
    * @param agencyId - Agency ID
    * @returns Promise with agency partner names response (array directly, not wrapped)
@@ -753,7 +777,7 @@ const applicantService = {
       agencyId,
     });
 
-    const url = `${ENDPOINTS.AGENCIES.PARTNER_NAMES}?${queryParams.toString()}`;
+    const url = `${ENDPOINTS.AGENCIES.AGENCY_PARTNER_NAME}?${queryParams.toString()}`;
 
     // API returns array directly: [{id, name}, ...]
     const response = await api.get<AgencyPartnerNameItem[]>(url);
