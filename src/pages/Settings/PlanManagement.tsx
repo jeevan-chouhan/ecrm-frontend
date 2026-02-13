@@ -34,7 +34,7 @@ const PlanManagement = () => {
         setSubscription(response.data);
       }
     } catch (error) {
-      console.error("Failed to fetch subscription:", error);
+      // Failed to fetch subscription
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);

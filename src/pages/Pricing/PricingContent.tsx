@@ -108,7 +108,7 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
           setPaymentLinks(response.data);
         }
       } catch (error) {
-        console.error("Failed to fetch payment links:", error);
+        // Failed to fetch payment links
       }
     };
 
@@ -155,7 +155,6 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
         navigate(`${ROUTES.PAYMENT_STATUS}?status=success`);
       }
     } catch (error) {
-      console.error("Failed to start trial:", error);
       dispatch(addToast({ type: "error", message: t("pricing.trialFailed", "Failed to start trial") }));
     } finally {
       dispatch(hideLoader());
@@ -269,7 +268,7 @@ const PricingContent = ({ showHeader = true, maxWidth = "max-w-4xl", stripeLinks
           setDynamicPrices(prices);
         }
       } catch (error) {
-        console.error("Error fetching plans:", error);
+        // Error fetching plans
       }
     };
 

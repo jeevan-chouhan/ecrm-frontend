@@ -53,7 +53,6 @@ export const formatDateToISODateTime = (dateStr: string | null, setToStartOfDay 
  */
 export const formatDateOnly = (date: Date | string): string => {
   if (!date) {
-    console.warn("Invalid date provided to formatDateOnly:", date);
     return "";
   }
   
@@ -63,13 +62,11 @@ export const formatDateOnly = (date: Date | string): string => {
     
     // Validate date
     if (!dayjsDate.isValid()) {
-      console.warn("Invalid date provided to formatDateOnly:", date);
       return "";
     }
     
     return dayjsDate.format("DD MMM YYYY");
   } catch (error) {
-    console.warn("Error formatting date:", date, error);
     return "";
   }
 };
@@ -82,7 +79,6 @@ export const formatDateOnly = (date: Date | string): string => {
  */
 export const formatDate = (date: Date | string): string => {
   if (!date) {
-    console.warn("Invalid date provided to formatDate:", date);
     return "";
   }
   
@@ -92,13 +88,11 @@ export const formatDate = (date: Date | string): string => {
     
     // Validate date
     if (!dayjsDate.isValid()) {
-      console.warn("Invalid date provided to formatDate:", date);
       return "";
     }
     
     return dayjsDate.format("DD MMM YYYY, hh:mm A");
   } catch (error) {
-    console.warn("Error formatting date:", date, error);
     return "";
   }
 };
@@ -127,7 +121,6 @@ export const formatDateValue = (date: string | Date | null | undefined): string 
  */
 export const formatDateCustom = (date: Date | string, format: string): string => {
   if (!date) {
-    console.warn("Invalid date provided to formatDateCustom:", date);
     return "";
   }
   
@@ -137,13 +130,11 @@ export const formatDateCustom = (date: Date | string, format: string): string =>
     
     // Validate date
     if (!dayjsDate.isValid()) {
-      console.warn("Invalid date provided to formatDateCustom:", date);
       return "";
     }
     
     return dayjsDate.format(format);
   } catch (error) {
-    console.warn("Error formatting date:", date, error);
     return "";
   }
 };
@@ -160,13 +151,11 @@ export const normalizeDateToStartOfDay = (date: Date | string | null | undefined
     const dayjsDate = dayjs(date).local();
     
     if (!dayjsDate.isValid()) {
-      console.warn("Invalid date provided to normalizeDateToStartOfDay:", date);
       return null;
     }
     
     return dayjsDate.startOf("day").toDate();
   } catch (error) {
-    console.warn("Error normalizing date:", date, error);
     return null;
   }
 };
@@ -183,13 +172,11 @@ export const normalizeDateToEndOfDay = (date: Date | string | null | undefined):
     const dayjsDate = dayjs(date).local();
     
     if (!dayjsDate.isValid()) {
-      console.warn("Invalid date provided to normalizeDateToEndOfDay:", date);
       return null;
     }
     
     return dayjsDate.endOf("day").toDate();
   } catch (error) {
-    console.warn("Error normalizing date:", date, error);
     return null;
   }
 };
@@ -202,7 +189,6 @@ export const normalizeDateToEndOfDay = (date: Date | string | null | undefined):
  */
 export const formatDateTime = (date: Date | string): string => {
   if (!date) {
-    console.warn("Invalid date provided to formatDateTime:", date);
     return "";
   }
   
@@ -212,13 +198,11 @@ export const formatDateTime = (date: Date | string): string => {
     
     // Validate date
     if (!dayjsDate.isValid()) {
-      console.warn("Invalid date provided to formatDateTime:", date);
       return "";
     }
     
     return dayjsDate.format("DD MMM YYYY, hh:mm A");
   } catch (error) {
-    console.warn("Error formatting date:", date, error);
     return "";
   }
 };
@@ -232,7 +216,6 @@ export const formatDateTime = (date: Date | string): string => {
  */
 export const formatDateShort = (date: Date | string): string => {
   if (!date) {
-    console.warn("Invalid date provided to formatDateShort:", date);
     return "";
   }
   
@@ -242,13 +225,11 @@ export const formatDateShort = (date: Date | string): string => {
     
     // Validate date
     if (!dayjsDate.isValid()) {
-      console.warn("Invalid date provided to formatDateShort:", date);
       return "";
     }
     
     return dayjsDate.format("MMM D, YYYY");
   } catch (error) {
-    console.warn("Error formatting date:", date, error);
     return "";
   }
 };
@@ -267,14 +248,12 @@ export const getDaysRemaining = (renewsOn: string): number => {
     const renewDate = dayjs(renewsOn).startOf("day");
     
     if (!renewDate.isValid()) {
-      console.warn("Invalid date provided to getDaysRemaining:", renewsOn);
       return 0;
     }
     
     const diffDays = renewDate.diff(today, "day");
     return diffDays > 0 ? diffDays : 0;
   } catch (error) {
-    console.warn("Error calculating days remaining:", renewsOn, error);
     return 0;
   }
 };

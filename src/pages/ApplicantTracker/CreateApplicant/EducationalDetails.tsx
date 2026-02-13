@@ -84,9 +84,6 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack, ap
 
       // Check if data has changed - skip API call if no changes
       if (!hasDataChanged) {
-        if (import.meta.env.DEV) {
-          console.log("No changes detected. Skipping API call.");
-        }
         
         // Mark data as saved
         markAsSaved(values);

@@ -232,9 +232,6 @@ const ApplicantOverview = () => {
         type: "error",
         message: typeof errorMessage === "string" ? errorMessage : t("dashboard.statusUpdateError", "Failed to update applicant status"),
       }));
-      if (import.meta.env.DEV) {
-        console.error("Error changing status:", error);
-      }
     } finally {
       setIsChangingStatus(false);
     }

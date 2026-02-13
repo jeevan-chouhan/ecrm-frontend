@@ -166,7 +166,6 @@ const ChangePassword = ({ onSuccess, onCancel }: ChangePasswordProps) => {
           }
         } catch (refreshError) {
           // Token refresh failed, but password was updated - update status manually
-          console.error("Failed to refresh token after password change:", refreshError);
           dispatch(updatePasswordChangedStatus(true));
           dispatch(addToast({
             type: "success",

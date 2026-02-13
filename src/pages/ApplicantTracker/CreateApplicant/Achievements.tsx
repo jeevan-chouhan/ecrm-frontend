@@ -170,9 +170,6 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
         // Only create new achievements (no achievementId)
         // PUT API is only called from individual achievement card Save button, not from global Save or Submit
         if (achievementsToCreate.length === 0) {
-          if (import.meta.env.DEV) {
-            console.log("No new achievements to create - all are already saved");
-          }
           
           // Mark data as saved
           markAsSaved(values);
@@ -719,15 +716,9 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
         return;
       }
 
-      if (import.meta.env.DEV) {
-        console.log("Calling DELETE API for achievement ID:", achievementToDelete.achievementId, "applicant ID:", applicantId);
-      }
       
       const response = await applicantService.deleteAchievement(achievementToDelete.achievementId, applicantId);
       
-      if (import.meta.env.DEV) {
-        console.log("DELETE API response:", response);
-      }
 
       if (response.status === "success") {
         // Remove the achievement from form state
@@ -754,9 +745,6 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
         throw new Error(response.message || "Failed to delete achievement");
       }
     } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error("Error deleting achievement:", error);
-      }
       const { message } = handleApiError(error, "Failed to delete achievement");
       dispatch(addToast({ type: "error", message }));
     } finally {

@@ -33,7 +33,6 @@ const ForgotPassword = () => {
         const response = await authService.forgotPassword({
           email: values.email,
         });
-        console.log(response,response?.message);
         
         if (response.status === "success") {
           // Show success toast

@@ -31,7 +31,7 @@ const Dashboard = () => {
         setSubscription(response.data);
       }
     } catch (error) {
-      console.error("Failed to fetch subscription:", error);
+      // Failed to fetch subscription
     }
   }, [user?.agencyId]);
 
@@ -45,7 +45,7 @@ const Dashboard = () => {
         setPaymentLinks(response.data);
       }
     } catch (error) {
-      console.error("Failed to fetch payment links:", error);
+      // Failed to fetch payment links
     }
   }, [user?.agencyId]);
 
@@ -65,22 +65,18 @@ const Dashboard = () => {
   // Check if user is counselor
   const isCounsellor = user?.role?.toUpperCase() === UserRole.COUNSELLOR;
 
-  // Decode and log access token on dashboard load (for debugging)
+  // Decode access token on dashboard load (for debugging)
   useEffect(() => {
     if (import.meta.env.DEV && accessToken) {
       try {
         // JWT token has 3 parts: header.payload.signature
         const tokenParts = accessToken.split('.');
         if (tokenParts.length === 3) {
-          const decodedPayload = JSON.parse(atob(tokenParts[1]));
-          console.log('=== Dashboard - Decoded Access Token ===');
-          console.log('Token:', accessToken);
-          console.log('Decoded Payload:', decodedPayload);
-          console.log('User from Redux:', user);
-          console.log('=========================================');
+          JSON.parse(atob(tokenParts[1]));
+          // Token decoded successfully
         }
       } catch (decodeError) {
-        console.error('Failed to decode token:', decodeError);
+        // Failed to decode token
       }
     }
   }, [accessToken, user]);
@@ -116,7 +112,6 @@ const Dashboard = () => {
           }
         }
       } catch (error) {
-        console.error("Failed to get payment links:", error);
         dispatch(addToast({ type: "error", message: t("pricing.paymentLinkFailed", "Failed to get payment link") }));
       } finally {
         dispatch(hideLoader());

@@ -72,6 +72,7 @@ export const ENDPOINTS = {
   // Lookup Endpoints
   LOOKUP: {
     ENROLLMENT_TYPE: "/lookup/enrollment_type",
+    PROGRAM_TYPE: "/lookup/program_type",
   },
 
   // Applicants Endpoints

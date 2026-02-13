@@ -108,7 +108,6 @@ const CountryUniversity = () => {
         setCountriesCount(countriesList.length);
       }
     } catch (error) {
-      console.error("Failed to fetch countries:", error);
       // Keep mock data on error - don't show toast for better UX with mock data
     } finally {
       setIsLoadingCountries(false);
@@ -154,7 +153,6 @@ const CountryUniversity = () => {
           setUniversitiesCount(universitiesList.length);
         }
       } catch (error) {
-        console.error("Failed to fetch universities:", error);
         // Keep mock data on error - don't clear the list
       } finally {
         dispatch(hideLoader());

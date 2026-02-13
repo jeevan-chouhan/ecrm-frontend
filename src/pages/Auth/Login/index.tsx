@@ -79,13 +79,9 @@ const Login = () => {
               const tokenParts = accessToken.split('.');
               if (tokenParts.length === 3) {
                 decodedPayload = JSON.parse(atob(tokenParts[1]));
-                console.log('=== Decoded Access Token ===');
-                console.log('Token:', accessToken);
-                console.log('Decoded Payload:', decodedPayload);
-                console.log('============================');
               }
             } catch (decodeError) {
-              console.error('Failed to decode token:', decodeError);
+              // Failed to decode token
             }
           }
 
@@ -107,7 +103,7 @@ const Login = () => {
                 }
               }
             } catch (menuError) {
-              console.error("Failed to fetch menu:", menuError);
+              // Failed to fetch menu
             }
 
             // Fetch agency branding and store in Redux
@@ -120,7 +116,7 @@ const Login = () => {
                 }
               }
             } catch (brandingError) {
-              console.error("Failed to fetch branding:", brandingError);
+              // Failed to fetch branding
             }
           }
 
