@@ -42,8 +42,7 @@ export function usePreferenceOptions({
   }, [completePreferences]);
 
   // Memoize option lookups for each preference to avoid recalculating on every render
-  // Don't depend on lastFetchedCourseKey - it causes infinite loops
-  // The refs will have the latest options when needed
+  // Include lastFetchedCourseKey to trigger recalculation when courses are fetched
   const preferenceOptionsMap = useMemo(() => {
     const map = new Map<string, {
       universityOptions: SelectOption[];
@@ -94,7 +93,7 @@ export function usePreferenceOptions({
     });
     
     return map;
-  }, [completePreferences, universityOptions, campusOptions, counselorOptions, preferenceCourseKeys, universityOptionsMapRef, campusOptionsMapRef, courseOptionsMapRef, counselorOptionsMapRef]);
+  }, [completePreferences, universityOptions, campusOptions, counselorOptions, preferenceCourseKeys, lastFetchedCourseKey, universityOptionsMapRef, campusOptionsMapRef, courseOptionsMapRef, counselorOptionsMapRef]);
 
   // Memoize courseOptions for incomplete preferences to ensure stable references
   // Use a stable key that only changes when relevant fields change
@@ -142,8 +141,8 @@ export function usePreferenceOptions({
         }
       }
       
-      // Create a stable key to compare options
-      const optionsKey = JSON.stringify(options.map(opt => ({ value: opt.value, label: opt.label })));
+      // Create a stable key to compare options - more efficient than JSON.stringify
+      const optionsKey = options.map(opt => `${opt.value}:${opt.label}`).join(',');
       
       // If options haven't changed, return previous reference to prevent re-render
       if (prevOptionsKeyRef.current === optionsKey && prevOptionsRef.current.length === options.length) {

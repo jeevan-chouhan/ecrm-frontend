@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useCallback } from "react";
 import PreferenceCard from "../PreferenceCard";
 import { COLORS } from "../../../../constants";
 import type { PreferenceItem } from "../types";
@@ -57,6 +57,75 @@ export const PreferenceListSection: React.FC<PreferenceListSectionProps> = ({
     return null;
   }
 
+  // Memoize callbacks to prevent re-renders - use useCallback to create stable functions per index
+  const createEditHandler = useCallback((index: number) => {
+    return () => onEdit(index);
+  }, [onEdit]);
+
+  const createDeleteHandler = useCallback((index: number) => {
+    return () => onDelete(index);
+  }, [onDelete]);
+
+  const createSaveHandler = useCallback((index: number) => {
+    return () => onSave(index);
+  }, [onSave]);
+
+  // Memoize the preferences list to avoid recreating on every render
+  const preferenceCards = useMemo(() => {
+    return completePreferences.map((preference) => {
+      const index = preferenceIndexMap.get(preference.id) ?? -1;
+      const isEditing = editingIndex === index;
+
+      const options = preferenceOptionsMap.get(preference.id) || {
+        universityOptions,
+        campusOptions,
+        courseOptions: [],
+        counselorOptions,
+      };
+
+      return (
+        <PreferenceCard
+          key={preference.id}
+          preference={preference}
+          index={index}
+          isEditing={isEditing}
+          onEdit={createEditHandler(index)}
+          onDelete={createDeleteHandler(index)}
+          onSave={createSaveHandler(index)}
+          onCancel={onCancel}
+          onFieldChange={onFieldChange}
+          getFieldError={getFieldError}
+          enrollmentTypeOptions={enrollmentTypeOptions}
+          countryOptions={countryOptions}
+          universityOptions={options.universityOptions}
+          campusOptions={options.campusOptions}
+          programTypeOptions={programTypeOptions}
+          courseOptions={options.courseOptions}
+          counselorOptions={options.counselorOptions}
+          agencyPartnerOptions={agencyPartnerOptions}
+        />
+      );
+    });
+  }, [
+    completePreferences,
+    preferenceIndexMap,
+    editingIndex,
+    preferenceOptionsMap,
+    enrollmentTypeOptions,
+    countryOptions,
+    universityOptions,
+    campusOptions,
+    programTypeOptions,
+    counselorOptions,
+    agencyPartnerOptions,
+    createEditHandler,
+    createDeleteHandler,
+    createSaveHandler,
+    onCancel,
+    onFieldChange,
+    getFieldError,
+  ]);
+
   return (
     <div>
       <h2 className="text-lg font-bold mb-4" style={{ color: COLORS.textDark }}>
@@ -64,42 +133,12 @@ export const PreferenceListSection: React.FC<PreferenceListSectionProps> = ({
       </h2>
 
       <div className="space-y-4">
-        {completePreferences.map((preference) => {
-          const index = preferenceIndexMap.get(preference.id) ?? -1;
-          const isEditing = editingIndex === index;
-
-          const options = preferenceOptionsMap.get(preference.id) || {
-            universityOptions,
-            campusOptions,
-            courseOptions: [],
-            counselorOptions,
-          };
-
-          return (
-            <PreferenceCard
-              key={preference.id}
-              preference={preference}
-              index={index}
-              isEditing={isEditing}
-              onEdit={() => onEdit(index)}
-              onDelete={() => onDelete(index)}
-              onSave={() => onSave(index)}
-              onCancel={onCancel}
-              onFieldChange={onFieldChange}
-              getFieldError={getFieldError}
-              enrollmentTypeOptions={enrollmentTypeOptions}
-              countryOptions={countryOptions}
-              universityOptions={options.universityOptions}
-              campusOptions={options.campusOptions}
-              programTypeOptions={programTypeOptions}
-              courseOptions={options.courseOptions}
-              counselorOptions={options.counselorOptions}
-              agencyPartnerOptions={agencyPartnerOptions}
-            />
-          );
-        })}
+        {preferenceCards}
       </div>
     </div>
   );
 };
+
+// Memoize the component to prevent unnecessary re-renders
+export default React.memo(PreferenceListSection);
 

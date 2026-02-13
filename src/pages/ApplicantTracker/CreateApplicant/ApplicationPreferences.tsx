@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useRef } from "react";
+import { useMemo, useEffect, useRef, useCallback } from "react";
 import { useFormik } from "formik";
 import { useTranslation } from "react-i18next";
 import { ConfirmationPopup } from "../../../components";
@@ -444,13 +444,13 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
       }
       previousActiveTabRef.current = activeTab;
     }
-  }, [applicantId, hasFetchedEnrollmentTypesRef.current, activeTab, apiOperations, state]);
+  }, [applicantId, hasFetchedEnrollmentTypesRef.current, activeTab, apiOperations]); // Removed 'state' - only refs are used
 
   useEffect(() => {
     if (applicantId && state.lastFetchedApplicantIdRef.current?.toString() !== applicantId.toString()) {
       state.hasFetchedPreferencesRef.current = false;
     }
-  }, [applicantId, state]);
+  }, [applicantId]); // Removed 'state' - only refs are used
 
   useEffect(() => {
     const prefWithCountry = formik.values.preferences.find((pref) => pref.desiredCountry && pref.desiredCountry !== "");
@@ -461,7 +461,7 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
         fetchUniversities(countryIdNum);
       }
     }
-  }, [formik.values.preferences, state.selectedCountryId, user?.agencyId, fetchUniversities, state]);
+  }, [formik.values.preferences, state.selectedCountryId, user?.agencyId, fetchUniversities, state.setSelectedCountryId]); // Keep state.selectedCountryId, add state.setSelectedCountryId
 
   useEffect(() => {
     const prefWithUniversity = formik.values.preferences.find((pref) => pref.desiredUniversity && pref.desiredUniversity !== "");
@@ -472,14 +472,14 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
         fetchCampuses(universityIdNum);
       }
     }
-  }, [formik.values.preferences, state.selectedUniversityId, user?.agencyId, fetchCampuses, state]);
+  }, [formik.values.preferences, state.selectedUniversityId, user?.agencyId, fetchCampuses, state.setSelectedUniversityId]); // Keep state.selectedUniversityId, add state.setSelectedUniversityId
 
   // Only fetch courses for preferences that are complete and saved (not for incomplete ones being edited)
   // This prevents fetching courses when user is actively changing program type
   useEffect(() => {
     const validPreferences = formik.values.preferences.filter((pref) => isPreferenceComplete(pref) || !!pref.preferenceId);
     state.setIsFormValid(validPreferences.length > 0);
-  }, [formik.values.preferences, isPreferenceComplete, state]);
+  }, [formik.values.preferences, isPreferenceComplete, state.setIsFormValid]); // Use setter directly instead of 'state'
 
   // Get preferences - memoize to prevent unnecessary recalculations
   // Use content-based keys for stable memoization
@@ -521,34 +521,29 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
   const completePrefsKeyRef = useRef<string>("");
   
   useEffect(() => {
-    
     if (!user?.agencyId) {
-        return;
-      }
+      return;
+    }
 
     // Only fetch for complete preferences (saved ones), not for incomplete ones being edited
     const completePrefs = complete.filter((pref: PreferenceItem) => pref.saved);
     
     // Create a stable key from complete preferences to detect actual changes
-    // Use preferenceId if available, otherwise use id + saved status
-    // Only include preferences that have both campus and program
     const completePrefsKey = completePrefs
       .map((pref: PreferenceItem) => {
-        // Only include preferences that have both campus and program
         if (!pref.desiredCampus || !pref.program) return null;
         return `${pref.preferenceId || pref.id}-${pref.desiredCampus}-${pref.program}`;
       })
       .filter(Boolean)
-      .sort() // Sort to ensure consistent key regardless of order
+      .sort()
       .join('|');
-    
     
     // Only proceed if the complete preferences actually changed
     if (completePrefsKeyRef.current === completePrefsKey) {
       return; // No change, skip
     }
     
-    // Don't run if we're in the middle of adding a preference (check if there are incomplete preferences)
+    // Don't run if we're in the middle of adding a preference
     const hasIncomplete = formik.values.preferences.some(pref => !pref.saved);
     if (hasIncomplete && completePrefsKeyRef.current === "") {
       return;
@@ -563,6 +558,8 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
       }
     });
     
+    // Track timeouts for cleanup
+    const timeouts: NodeJS.Timeout[] = [];
     
     // Only fetch for combinations we haven't fetched yet
     combinations.forEach((combination) => {
@@ -572,11 +569,11 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
         if (!isNaN(campusIdNum) && program) {
           fetchedCombinationsRef.current.add(combination);
           // Use setTimeout to debounce and prevent rapid successive calls
-          setTimeout(() => {
+          const timeout = setTimeout(() => {
             fetchCourses(campusIdNum, program);
           }, 100);
+          timeouts.push(timeout);
         }
-        } else {
       }
     });
     
@@ -587,10 +584,14 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
       }
     });
     
+    // Cleanup function to clear timeouts if component unmounts or dependencies change
+    return () => {
+      timeouts.forEach(timeout => clearTimeout(timeout));
+    };
   }, [complete, user?.agencyId, fetchCourses, courseOptionsMapRef, formik.values.preferences]);
 
   // Wrapper for handleEditPreference that fetches dropdowns
-  const handleEditPreference = async (index: number) => {
+  const handleEditPreference = useCallback(async (index: number) => {
     const preference = formik.values.preferences[index];
     if (!user?.agencyId) {
       baseHandleEditPreference(index);
@@ -607,10 +608,10 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
       await fetchCourses(parseInt(preference.desiredCampus), preference.program);
     }
     baseHandleEditPreference(index);
-  };
+  }, [user?.agencyId, fetchUniversities, fetchCounselorsByCountry, fetchCampuses, fetchCourses, baseHandleEditPreference, formik.values.preferences]);
 
   // Wrapper for handleSavePreference that calls API
-  const handleSavePreferenceWithAPI = async (index: number) => {
+  const handleSavePreferenceWithAPI = useCallback(async (index: number) => {
     const preference = formik.values.preferences[index];
     if (preference.preferenceId && applicantId) {
       await apiOperations.updatePreference(index, preference);
@@ -625,7 +626,7 @@ const ApplicationPreferences = ({ initialValues, onUpdate, onSaveAndNext, onBack
     } else {
       handleSavePreference(index);
     }
-  };
+  }, [applicantId, apiOperations, state.editingIndex, state.setEditingIndex, handleSavePreference, formik.values.preferences]);
 
   // Handle delete confirmation
   const handleConfirmDelete = async () => {
