@@ -90,6 +90,7 @@ export function usePreferenceLogic({
   }, [formik]);
 
   const handleAddPreference = useCallback(async () => {
+    
     const incomplete = getIncompletePreferences();
     
     // If there's an incomplete preference, validate it first
@@ -104,25 +105,31 @@ export function usePreferenceLogic({
         await preferenceSchema.validate(firstIncomplete, { abortEarly: false });
       } catch (error) {
         // If validation fails, mark fields as touched to show errors
+        // Call handleValidationErrors directly (it will handle batching internally)
         handleValidationErrors(error, index);
         return; // Don't add new form if validation fails
       }
       
       // If validation passes, mark as saved and add new preference in a single update
+      // Use validate: false to prevent triggering validation loops
       formik.setFieldValue("preferences", (currentPreferences: PreferenceItem[]) => {
         const updatedPreferences = currentPreferences.map((p, i) => 
           i === index ? { ...p, saved: true } : p
         );
         const emptyPref = getEmptyPreference();
-        return [...updatedPreferences, emptyPref];
-      });
+        const newPreferences = [...updatedPreferences, emptyPref];
+        return newPreferences;
+      }, false);
     } else {
       // No incomplete preferences, just add a new one
       const emptyPref = getEmptyPreference();
-      formik.setFieldValue("preferences", (currentPreferences: PreferenceItem[]) => [
-        ...currentPreferences,
-        emptyPref
-      ]);
+      // Use setTimeout to batch the update and prevent immediate re-render
+      setTimeout(() => {
+        formik.setFieldValue("preferences", (currentPreferences: PreferenceItem[]) => {
+          const newPreferences = [...currentPreferences, emptyPref];
+          return newPreferences;
+        }, false);
+      }, 0);
     }
   }, [formik, getIncompletePreferences, getPreferenceSchema, getEmptyPreference, handleValidationErrors]);
 

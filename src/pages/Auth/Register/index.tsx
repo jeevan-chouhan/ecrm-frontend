@@ -109,7 +109,6 @@ const Register = () => {
           } 
         });
       } catch (error) {
-        console.error("Registration error:", error);
         const errorResponse = handleApiError(error);
         dispatch(addToast({
           type: "error",

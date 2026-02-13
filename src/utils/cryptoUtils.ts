@@ -38,12 +38,10 @@ export const encrypt = async (plainText: string): Promise<string> => {
     // Fallback to node-forge (works everywhere including HTTP)
     return encryptWithForge(plainText);
   } catch (error) {
-    console.error("Web Crypto encryption failed, falling back to forge:", error);
     // Fallback to node-forge
     try {
       return encryptWithForge(plainText);
     } catch (fallbackError) {
-      console.error("Fallback encryption also failed:", fallbackError);
       throw new Error("Encryption failed");
     }
   }

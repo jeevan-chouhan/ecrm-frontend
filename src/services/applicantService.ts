@@ -17,7 +17,7 @@ import type {
   CampusItem,
   CourseItem,
   EnrollmentTypeItem,
-  EnrollmentTypeResponse,
+  ProgramTypeItem,
   ApplyApplicationParams,
   ApplyApplicationResponse,
   UpdateApplicationStatusPayload,
@@ -231,30 +231,36 @@ const applicantService = {
   },
 
   /**
-   * Get courses list for an agency, campus, and course type
+   * Get courses list for an agency, campus, and program type
    * @param agencyId - Agency ID
    * @param campusId - Campus ID to filter courses
-   * @param courseType - Course type (BACHELOR, MASTER, PHD)
+   * @param programTypeId - Program type ID (number)
    * @returns Promise with courses response (array directly, not wrapped)
    */
   getCourses: async (
     agencyId: number | string | null,
     campusId?: number | string | null,
-    courseType?: string | null
+    programTypeId?: number | string | null
   ): Promise<CourseItem[]> => {
     const queryParams = createQueryParams({
       agencyId,
       campusId: campusId || null,
-      courseType: courseType || null,
+      programTypeId: programTypeId || null,
     });
 
     const url = `${ENDPOINTS.AGENCIES.COURSES}?${queryParams.toString()}`;
 
-    // API returns array directly: [{id, name, ...}, ...]
-    const response = await api.get<CourseItem[]>(url);
+    const response = await api.get(url);
     
-    // Response.data is the array directly
-    const result: CourseItem[] = Array.isArray(response.data) ? response.data : [];
+    // Handle both direct array and wrapped response formats
+    let result: CourseItem[] = [];
+    if (Array.isArray(response.data)) {
+      // Direct array response: [{id, name, ...}, ...]
+      result = response.data;
+    } else if (response.data && typeof response.data === 'object' && 'data' in response.data && Array.isArray(response.data.data)) {
+      // Wrapped response: {status: "success", data: [{id, name, ...}, ...]}
+      result = response.data.data;
+    }
     
     return result;
   },
@@ -740,12 +746,14 @@ const applicantService = {
   },
 
   /**
-   * Get enrollment types from lookup API
-   * @returns Promise with enrollment types response
+   * Generic lookup service function - reusable for different lookup types
+   * @param endpoint - Lookup endpoint (e.g., ENROLLMENT_TYPE, PROGRAM_TYPE)
+   * @returns Promise with lookup items array
    */
-  getEnrollmentTypes: async (): Promise<EnrollmentTypeItem[]> => {
-    const url = ENDPOINTS.LOOKUP.ENROLLMENT_TYPE;
-    const response = await api.get<EnrollmentTypeResponse>(url);
+  getLookupData: async <T extends { id: number; code: string; name: string; isActive: boolean; sortOrder: number }>(
+    endpoint: string
+  ): Promise<T[]> => {
+    const response = await api.get<ApiResponse<T[]>>(endpoint);
     
     // Handle both direct array response and wrapped ApiResponse
     if (response.data && typeof response.data === 'object' && 'data' in response.data) {
@@ -759,6 +767,22 @@ const applicantService = {
     }
     
     return [];
+  },
+
+  /**
+   * Get enrollment types from lookup API
+   * @returns Promise with enrollment types response
+   */
+  getEnrollmentTypes: async (): Promise<EnrollmentTypeItem[]> => {
+    return applicantService.getLookupData<EnrollmentTypeItem>(ENDPOINTS.LOOKUP.ENROLLMENT_TYPE);
+  },
+
+  /**
+   * Get program types from lookup API
+   * @returns Promise with program types response
+   */
+  getProgramTypes: async (): Promise<ProgramTypeItem[]> => {
+    return applicantService.getLookupData<ProgramTypeItem>(ENDPOINTS.LOOKUP.PROGRAM_TYPE);
   },
 
   /**

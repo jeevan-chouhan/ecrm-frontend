@@ -288,6 +288,14 @@ export interface EnrollmentTypeItem {
   sortOrder: number;
 }
 
+export interface ProgramTypeItem {
+  id: number;
+  code: string;
+  name: string;
+  isActive: boolean;
+  sortOrder: number;
+}
+
 export interface UniversityParams {
   agencyId: number | null;
   countryId: number | number[] | string | null;
@@ -645,7 +653,7 @@ export interface ApplicationPreferenceItem {
   enrollmentTypeId: number;
   desiredCountryId: number;
   desiredUniversityId: number;
-  desiredCourseType: string; // e.g., "BACHELOR", "MASTER"
+  desiredProgramType: number; // Program type ID (e.g., 5 for MASTER)
   desiredCampusId: number;
   desiredCourseId: number;
   desiredIntake: string; // Format: "YYYY-MM"
@@ -684,10 +692,6 @@ export interface ApplicationPreferenceData {
 export interface ApplicationPreferenceGetData {
   preferenceId: number; // Preference ID
   applicantId: number;
-  enrollmentType: {
-    id: number;
-    name: string; // This is the code like "WALK_IN"
-  };
   desiredCountryId: {
     id: number;
     name: string;
@@ -696,7 +700,7 @@ export interface ApplicationPreferenceGetData {
     id: number;
     name: string;
   };
-  desiredCourseType: string;
+  desiredProgramType: string; // e.g., "PHD", "MASTER", "BACHELOR"
   desiredCampusId: {
     id: number;
     name: string;
@@ -706,26 +710,30 @@ export interface ApplicationPreferenceGetData {
     name: string;
   };
   desiredIntake: string;
+  enrollmentType: {
+    id: number;
+    name: string; // This is the code like "WALK_IN"
+  };
   assignedManager: {
     id: number;
     name: string;
-  } | number | null;
+  } | null;
   assignedCounselor: {
     id: number;
     name: string;
-  } | number | null;
+  } | null;
   assignedAgency: {
     id: number;
     name: string;
-  } | number | null;
-  agencyPartner: {
-    id: number;
-    name: string;
-  } | number | null;
+  } | null;
   assignedAdmin: {
     id: number;
     name: string;
-  } | number | null;
+  } | null;
+  agencyPartner: {
+    id: number;
+    name: string;
+  } | null;
   message?: string;
 }
 

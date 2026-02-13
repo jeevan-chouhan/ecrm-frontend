@@ -60,22 +60,14 @@ const StandaloneFileUploadExample = () => {
   const handleSubmit = async () => {
     // Convert single file to base64
     if (singleFile) {
-      const base64 = await convertFileToBase64(singleFile);
-      const payload = {
-        profilePhoto: base64,
-      };
+      await convertFileToBase64(singleFile);
       // TODO: Send to backend API
-      console.log("Single file payload:", payload);
     }
 
     // Convert multiple files to base64
     if (multipleFiles && multipleFiles.length > 0) {
-      const base64Array = await convertFilesToBase64(multipleFiles);
-      const payload = {
-        documents: base64Array,
-      };
+      await convertFilesToBase64(multipleFiles);
       // TODO: Send to backend API
-      console.log("Multiple files payload:", payload);
     }
   };
 
@@ -159,29 +151,27 @@ const FormikFileUploadExample = () => {
       name: Yup.string().required(t("validation.required")),
       email: Yup.string().email(t("validation.invalidEmail")).required(t("validation.required")),
     }),
-    onSubmit: async (values) => {
+    onSubmit: async (_values) => {
       try {
+        // TODO: Send to backend API
         // Convert profile photo to base64
-        let profilePhotoBase64: string | null = null;
-        if (values.profilePhoto) {
-          profilePhotoBase64 = await convertFileToBase64(values.profilePhoto);
-        }
+        // let profilePhotoBase64: string | null = null;
+        // if (values.profilePhoto) {
+        //   profilePhotoBase64 = await convertFileToBase64(values.profilePhoto);
+        // }
 
         // Convert documents to base64 array
-        let documentsBase64: string[] | null = null;
-        if (values.documents && values.documents.length > 0) {
-          documentsBase64 = await convertFilesToBase64(values.documents);
-        }
+        // let documentsBase64: string[] | null = null;
+        // if (values.documents && values.documents.length > 0) {
+        //   documentsBase64 = await convertFilesToBase64(values.documents);
+        // }
 
-        // Create JSON payload
-        const payload = {
-          profilePhoto: profilePhotoBase64,
-          documents: documentsBase64,
-          name: values.name,
-          email: values.email,
-        };
-
-        // TODO: Send to backend API
+        // const payload = {
+        //   profilePhoto: profilePhotoBase64,
+        //   documents: documentsBase64,
+        //   name: values.name,
+        //   email: values.email,
+        // };
         // const response = await fetch("/api/applicant", {
         //   method: "POST",
         //   headers: {
@@ -190,10 +180,8 @@ const FormikFileUploadExample = () => {
         //   body: JSON.stringify(payload),
         // });
         // const result = await response.json();
-
-        console.log("Payload ready for API:", payload);
       } catch (error) {
-        console.error("Error submitting form:", error);
+        // Error submitting form
       }
     },
   });

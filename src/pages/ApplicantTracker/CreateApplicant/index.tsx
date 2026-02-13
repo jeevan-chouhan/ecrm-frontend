@@ -225,22 +225,18 @@ const CreateApplicant = () => {
   // Final submit handler - submits all form data and redirects
   const handleFinalSubmit = useCallback(async () => {
     try {
-      // Prepare the complete payload with all form data
-      const payload = {
-        personalDetails: formState.personalDetails,
-        applicationPreferences: formState.applicationPreferences,
-        educationalDetails: formState.educationalDetails,
-        workExperience: formState.workExperience,
-        achievements: formState.achievements,
-      };
-
-      // Determine API endpoint and method based on edit mode
-      const method = isEditMode ? "PUT" : "POST";
-      const endpoint = isEditMode 
-        ? `/api/applicants/${applicantId}`
-        : "/api/applicant/submit";
-
       // TODO: Replace with actual API endpoint
+      // const payload = {
+      //   personalDetails: formState.personalDetails,
+      //   applicationPreferences: formState.applicationPreferences,
+      //   educationalDetails: formState.educationalDetails,
+      //   workExperience: formState.workExperience,
+      //   achievements: formState.achievements,
+      // };
+      // const method = isEditMode ? "PUT" : "POST";
+      // const endpoint = isEditMode 
+      //   ? `/api/applicants/${applicantId}`
+      //   : "/api/applicant/submit";
       // const response = await fetch(endpoint, {
       //   method,
       //   headers: {
@@ -253,11 +249,6 @@ const CreateApplicant = () => {
       // }
       // const result = await response.json();
 
-      // Log payload in development only
-      if (import.meta.env.DEV) {
-        console.log("Final submit payload ready for API:", payload);
-        console.log(`API endpoint: ${method} ${endpoint}`);
-      }
 
       // Simulate API call success
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -265,10 +256,6 @@ const CreateApplicant = () => {
       // After successful API response, redirect to dashboard
       navigate(ROUTES.DASHBOARD);
     } catch (error) {
-      // TODO: Show error message to user
-      if (import.meta.env.DEV) {
-        console.error(`Error ${isEditMode ? "updating" : "submitting"} applicant:`, error);
-      }
       // TODO: Show error message to user
     }
   }, [formState, navigate, isEditMode, applicantId]);

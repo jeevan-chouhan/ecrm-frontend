@@ -86,9 +86,6 @@ const ApplicantPersonalDetails = ({
 
       return profilePhotoJson;
     } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error("Error converting file to base64:", error);
-      }
       throw error;
     }
   }, []);
@@ -120,9 +117,6 @@ const ApplicantPersonalDetails = ({
         // Only call API if data has changed since last save
         // This prevents duplicate API calls when clicking Save and then Save & Next with same data
         if (!hasDataChanged) {
-          if (import.meta.env.DEV) {
-            console.log("No changes detected. Skipping API call.");
-          }
           
           // Mark data as saved (in case it wasn't marked before)
           markAsSaved(values);
@@ -301,9 +295,6 @@ const ApplicantPersonalDetails = ({
     
     // Check if data has changed before making API call
     if (!hasDataChanged) {
-      if (import.meta.env.DEV) {
-        console.log("No changes detected. Skipping API call for Save.");
-      }
       dispatch(
         addToast({
           type: "success",
@@ -334,9 +325,6 @@ const ApplicantPersonalDetails = ({
     // Check if data has changed before making API call
     // If no changes, just navigate to next step without API call
     if (!hasDataChanged) {
-      if (import.meta.env.DEV) {
-        console.log("No changes detected. Skipping API call for Save & Next.");
-      }
       // Navigate to next step without API call
       if (onSaveAndNext) {
         onSaveAndNext();

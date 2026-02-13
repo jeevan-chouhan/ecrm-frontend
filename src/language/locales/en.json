@@ -318,7 +318,11 @@
     "noAchievementsAdded": "No Achievements Added Yet",
     "deleteAchievement": "Delete Achievement",
     "deleteAchievementConfirmation": "Are You Sure You Want To Delete This Achievement?",
-    "documentAttached": "Document Attached"
+    "documentAttached": "Document Attached",
+    "preferencesSaved": "Application Preferences Saved Successfully",
+    "preferencesAlreadySaved": "Application Preferences Already Saved",
+    "failedToSavePreferences": "Failed To Save Application Preferences",
+    "applicantIdRequired": "Please Save Personal Details First To Get Applicant ID"
   },
   "countryUniversity": {
     "title": "Country & University Directory",

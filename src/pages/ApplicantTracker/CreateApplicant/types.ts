@@ -7,6 +7,7 @@ export interface PreferenceItem {
   desiredUniversity: string;
   desiredCampus: string;
   course: string;
+  courseName?: string; // Course name from API (for display purposes)
   desiredIntake: string;
   assignCounselor: string;
   agencyPartnerName: string;

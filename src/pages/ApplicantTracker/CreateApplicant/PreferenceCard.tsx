@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Button } from "../../../components";
-import { COLORS, programs } from "../../../constants";
+import { COLORS } from "../../../constants";
 import { Edit, Trash } from "../../../assets";
 import { useTranslation } from "react-i18next";
 import PreferenceForm from "./PreferenceForm";
@@ -50,6 +50,7 @@ interface PreferenceCardProps {
   countryOptions?: SelectOption[]; // Countries from API
   universityOptions?: SelectOption[]; // Universities from API (filtered by country)
   campusOptions?: SelectOption[]; // Campuses from API (filtered by university)
+  programTypeOptions?: SelectOption[]; // Program types from API
   courseOptions?: SelectOption[]; // Courses from API (filtered by campus and course type)
   counselorOptions?: SelectOption[]; // Counselors from API (filtered by user role)
   agencyPartnerOptions?: SelectOption[]; // Agency partners from API
@@ -69,6 +70,7 @@ const PreferenceCard = ({
   countryOptions = [], // Default to empty array if not provided
   universityOptions = [], // Default to empty array if not provided
   campusOptions = [], // Default to empty array if not provided
+  programTypeOptions = [], // Default to empty array if not provided
   courseOptions = [], // Default to empty array if not provided
   counselorOptions = [], // Default to empty array if not provided
   agencyPartnerOptions = [], // Default to empty array if not provided
@@ -82,10 +84,10 @@ const PreferenceCard = ({
   const labels = useMemo(() => ({
     enrollmentType: enrollmentTypeOptions.find((e) => e.value === preference.enrollmentType)?.label || preference.enrollmentType,
     country: countryOptions.find((c) => c.value === preference.desiredCountry)?.label || preference.desiredCountry,
-    program: programs.find((p) => p.value === preference.program)?.label || preference.program,
+    program: programTypeOptions.find((p) => p.value === preference.program)?.label || preference.program,
     university: universityOptions.find((u) => u.value === preference.desiredUniversity)?.label || preference.desiredUniversity,
     campus: campusOptions.find((c) => c.value === preference.desiredCampus)?.label || preference.desiredCampus,
-    course: courseOptions.find((c) => c.value === preference.course)?.label || preference.course,
+    course: preference.courseName || courseOptions.find((c) => c.value === preference.course)?.label || preference.course,
     intake: formatIntakeDisplay(preference.desiredIntake),
     counselor: counselorOptions.find((c) => c.value === preference.assignCounselor)?.label || preference.assignCounselor,
     agency: agencyPartnerOptions.find((a) => a.value === preference.agencyPartnerName)?.label || preference.agencyPartnerName,
@@ -96,6 +98,7 @@ const PreferenceCard = ({
     preference.desiredUniversity,
     preference.desiredCampus,
     preference.course,
+    preference.courseName,
     preference.desiredIntake,
     preference.assignCounselor,
     preference.agencyPartnerName,
@@ -103,6 +106,7 @@ const PreferenceCard = ({
     countryOptions,
     universityOptions,
     campusOptions,
+    programTypeOptions,
     courseOptions,
     counselorOptions,
     agencyPartnerOptions,
@@ -125,6 +129,7 @@ const PreferenceCard = ({
           countryOptions={countryOptions}
           universityOptions={universityOptions}
           campusOptions={campusOptions}
+          programTypeOptions={programTypeOptions}
           courseOptions={courseOptions}
           counselorOptions={counselorOptions}
           agencyPartnerOptions={agencyPartnerOptions}
@@ -265,6 +270,36 @@ const PreferenceCard = ({
   );
 };
 
-// Memoize component to prevent unnecessary re-renders when props haven't changed
-export default React.memo(PreferenceCard);
+// Memoize component with custom comparison to prevent unnecessary re-renders
+export default React.memo(PreferenceCard, (prevProps, nextProps) => {
+  // Compare preference object fields
+  if (prevProps.preference.id !== nextProps.preference.id) return false;
+  if (prevProps.preference.enrollmentType !== nextProps.preference.enrollmentType) return false;
+  if (prevProps.preference.desiredCountry !== nextProps.preference.desiredCountry) return false;
+  if (prevProps.preference.program !== nextProps.preference.program) return false;
+  if (prevProps.preference.desiredUniversity !== nextProps.preference.desiredUniversity) return false;
+  if (prevProps.preference.desiredCampus !== nextProps.preference.desiredCampus) return false;
+  if (prevProps.preference.course !== nextProps.preference.course) return false;
+  if (prevProps.preference.courseName !== nextProps.preference.courseName) return false;
+  if (prevProps.preference.desiredIntake !== nextProps.preference.desiredIntake) return false;
+  if (prevProps.preference.assignCounselor !== nextProps.preference.assignCounselor) return false;
+  if (prevProps.preference.agencyPartnerName !== nextProps.preference.agencyPartnerName) return false;
+  if (prevProps.preference.saved !== nextProps.preference.saved) return false;
+  if (prevProps.isEditing !== nextProps.isEditing) return false;
+  if (prevProps.index !== nextProps.index) return false;
+  
+  // Compare options arrays by reference (they should be memoized)
+  // Use shallow comparison - if references are the same, arrays haven't changed
+  if (prevProps.enrollmentTypeOptions !== nextProps.enrollmentTypeOptions) return false;
+  if (prevProps.countryOptions !== nextProps.countryOptions) return false;
+  if (prevProps.universityOptions !== nextProps.universityOptions) return false;
+  if (prevProps.campusOptions !== nextProps.campusOptions) return false;
+  if (prevProps.courseOptions !== nextProps.courseOptions) return false;
+  if (prevProps.counselorOptions !== nextProps.counselorOptions) return false;
+  if (prevProps.agencyPartnerOptions !== nextProps.agencyPartnerOptions) return false;
+  
+  // Functions are stable (useCallback), so we don't need to compare them
+  
+  return true; // Props are equal, skip re-render
+});
 

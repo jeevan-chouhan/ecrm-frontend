@@ -316,7 +316,11 @@
     "noAchievementsAdded": "अभी तक कोई उपलब्धि नहीं जोड़ी गई है",
     "deleteAchievement": "उपलब्धि हटाएं",
     "deleteAchievementConfirmation": "क्या आप वाकई इस उपलब्धि को हटाना चाहते हैं?",
-    "documentAttached": "दस्तावेज़ संलग्न"
+    "documentAttached": "दस्तावेज़ संलग्न",
+    "preferencesSaved": "आवेदन प्राथमिकताएं सफलतापूर्वक सहेजी गईं",
+    "preferencesAlreadySaved": "आवेदन प्राथमिकताएं पहले से सहेजी गई हैं",
+    "failedToSavePreferences": "आवेदन प्राथमिकताएं सहेजने में विफल",
+    "applicantIdRequired": "कृपया पहले व्यक्तिगत विवरण सहेजें ताकि आवेदक आईडी प्राप्त हो सके"
   },
   "validation": {
     "required": "यह फ़ील्ड आवश्यक है",

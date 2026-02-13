@@ -1,6 +1,6 @@
 import React from "react";
 import { Select, Button, IntakeSelector } from "../../../components";
-import { programs, COLORS } from "../../../constants";
+import { COLORS } from "../../../constants";
 import { useTranslation } from "react-i18next";
 import type { PreferenceItem } from "./types";
 import type { SelectOption } from "../../../components";
@@ -18,6 +18,7 @@ interface PreferenceFormProps {
   countryOptions?: SelectOption[]; // Countries from API
   universityOptions?: SelectOption[]; // Universities from API (filtered by country)
   campusOptions?: SelectOption[]; // Campuses from API (filtered by university)
+  programTypeOptions?: SelectOption[]; // Program types from API
   courseOptions?: SelectOption[]; // Courses from API (filtered by campus and course type)
   counselorOptions?: SelectOption[]; // Counselors from API (filtered by user role)
   agencyPartnerOptions?: SelectOption[]; // Agency partners from API
@@ -36,6 +37,7 @@ const PreferenceForm = ({
   countryOptions = [], // Default to empty array if not provided
   universityOptions = [], // Default to empty array if not provided
   campusOptions = [], // Default to empty array if not provided
+  programTypeOptions = [], // Default to empty array if not provided
   courseOptions = [], // Default to empty array if not provided
   counselorOptions = [], // Default to empty array if not provided
   agencyPartnerOptions = [], // Default to empty array if not provided
@@ -137,9 +139,14 @@ const PreferenceForm = ({
               {t("applicant.program")} <span style={{ color: COLORS.error }}>*</span>
             </label>
             <Select
-              options={programs}
+              options={programTypeOptions}
               value={preference.program}
-              onChange={(value) => onFieldChange(index, "program", value)}
+              onChange={(value) => {
+                // Only call onFieldChange if value actually changed
+                if (value !== preference.program) {
+                  onFieldChange(index, "program", value);
+                }
+              }}
               placeholder={t("applicant.selectProgram")}
               error={getFieldError(index, "program")}
               fullWidth
@@ -157,7 +164,9 @@ const PreferenceForm = ({
             <Select
               options={courseOptions}
               value={preference.course}
-              onChange={(value) => onFieldChange(index, "course", value)}
+              onChange={(value) => {
+                onFieldChange(index, "course", value);
+              }}
               placeholder={preference.desiredCampus && preference.program ? t("applicant.selectCourse") : t("applicant.selectCampusAndProgram", "Please select campus and program first")}
               error={getFieldError(index, "course")}
               fullWidth
@@ -243,7 +252,9 @@ const PreferenceForm = ({
               <Button
                 type="button"
                 variant="accent"
-                onClick={onAddMore}
+                onClick={() => {
+                  onAddMore();
+                }}
                 rounded
               >
                 {t("common.addMore")}

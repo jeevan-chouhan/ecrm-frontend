@@ -141,7 +141,6 @@ const UploadDocView = ({ isOpen, file, onClose }: UploadDocViewProps) => {
           setNumPages(pdf.numPages);
           setLoading(false);
         } catch (err) {
-          console.error("PDF loading error:", err);
           // If PDF.js fails, fall back to iframe
           setLoading(false);
         }

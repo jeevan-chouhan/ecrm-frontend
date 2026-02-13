@@ -178,9 +178,6 @@ const WorkExperience = ({ initialValues, onUpdate, onSaveAndNext, onBack, applic
         // Only create new work experiences (no workExperienceId)
         // PUT API is only called from individual work experience card Save button, not from global Save or Save & Next
         if (workExperiencesToCreate.length === 0) {
-          if (import.meta.env.DEV) {
-            console.log("No new work experiences to create - all are already saved");
-          }
           
           // Mark data as saved
           markAsSaved(values);
@@ -718,16 +715,8 @@ const WorkExperience = ({ initialValues, onUpdate, onSaveAndNext, onBack, applic
         dispatch(hideLoader());
         return;
       }
-
-      if (import.meta.env.DEV) {
-        console.log("Calling DELETE API for work experience ID:", workExperienceToDelete.workExperienceId, "applicant ID:", applicantId);
-      }
       
       const response = await applicantService.deleteWorkExperience(workExperienceToDelete.workExperienceId, applicantId);
-      
-      if (import.meta.env.DEV) {
-        console.log("DELETE API response:", response);
-      }
 
       if (response.status === "success") {
         // Remove the work experience from form state
@@ -754,9 +743,6 @@ const WorkExperience = ({ initialValues, onUpdate, onSaveAndNext, onBack, applic
         throw new Error(response.message || "Failed to delete work experience");
       }
     } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error("Error deleting work experience:", error);
-      }
       const { message } = handleApiError(error, "Failed to delete work experience");
       dispatch(addToast({ type: "error", message }));
     } finally {

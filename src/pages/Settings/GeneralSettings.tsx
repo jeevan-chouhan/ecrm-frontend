@@ -65,7 +65,6 @@ const GeneralSettings = () => {
         }
       }
     } catch (error) {
-      console.error("Failed to fetch universities:", error);
       dispatch(addToast({ type: "error", message: t("common.fetchFailed", "Failed to fetch universities") }));
     }
   };
@@ -117,7 +116,6 @@ const GeneralSettings = () => {
           shouldFetchUniversitiesOnChange.current = true;
         }
       } catch (error) {
-        console.error("Failed to fetch general settings:", error);
         dispatch(addToast({ type: "error", message: t("common.fetchFailed", "Failed to fetch data") }));
       } finally {
         dispatch(hideLoader());
@@ -156,7 +154,6 @@ const GeneralSettings = () => {
 
       dispatch(addToast({ type: "success", message: t("common.savedSuccessfully", "Saved successfully") }));
     } catch (error) {
-      console.error("Failed to save settings:", error);
       dispatch(addToast({ type: "error", message: t("common.saveFailed", "Failed to save") }));
     } finally {
       dispatch(hideLoader());
