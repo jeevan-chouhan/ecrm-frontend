@@ -39,6 +39,7 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack, ap
   const [qualificationOptions, setQualificationOptions] = useState<SelectOption[]>([]);
   const [scoreTypeOptions, setScoreTypeOptions] = useState<SelectOption[]>([]);
   const [isFormValid, setIsFormValid] = useState(false);
+  const [qualificationMapUpdated, setQualificationMapUpdated] = useState(0); // Track map updates to trigger showMajor recalculation
 
   // Helper function to create educational detail validation schema
   const getEducationalDetailSchema = useCallback(() => {
@@ -334,10 +335,16 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack, ap
         
         // Only proceed if data is not empty/null
         if (data && (data.highestQualificationCode || data.instituteName || data.universityName)) {
-          // Check if the qualification has isMajor true/false from the map
-          // If isMajor is false, we should not populate major field even if it exists in response
+          // Get isMajor from GET response
           const qualificationCode = data.highestQualificationCode || "";
-          const isMajor = highestQualificationIsMajorMapRef.current.get(qualificationCode);
+          const isMajor = data.isMajor === true;
+          
+          // Update the map with the value from GET response for future reference
+          if (data.isMajor !== undefined && data.isMajor !== null) {
+            highestQualificationIsMajorMapRef.current.set(qualificationCode, isMajor);
+            // Trigger recalculation of showMajor by updating state
+            setQualificationMapUpdated(prev => prev + 1);
+          }
           
           // Map API response to EducationalDetailFormData
           // Use codes from API response (highestQualificationCode, scoreTypeCode) for form values
@@ -412,6 +419,8 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack, ap
         });
       highestQualificationIdMapRef.current = idMap;
       highestQualificationIsMajorMapRef.current = isMajorMap;
+      // Trigger recalculation of showMajor when qualifications are loaded
+      setQualificationMapUpdated(prev => prev + 1);
 
       setQualificationOptions(options);
     } catch (error: any) {
@@ -501,7 +510,7 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack, ap
     }
     const isMajor = highestQualificationIsMajorMapRef.current.get(formik.values.highestQualification);
     return isMajor === true;
-  }, [formik.values.highestQualification]);
+  }, [formik.values.highestQualification, qualificationMapUpdated]); // Include qualificationMapUpdated to recalculate when map is updated
 
   // Clear major field when qualification changes and isMajor becomes false
   useEffect(() => {

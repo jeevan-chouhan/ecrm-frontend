@@ -895,6 +895,7 @@ export interface EducationalDetailsData {
   highestQualificationId: number;
   highestQualificationCode: string;
   highestQualificationName: string;
+  isMajor?: boolean | null; // isMajor value from GET response
   instituteName: string;
   universityName: string;
   courseType: string;
