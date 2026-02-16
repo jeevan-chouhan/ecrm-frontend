@@ -109,9 +109,9 @@ const CampusTab = ({ university, universityId }: CampusTabProps) => {
     <div className="space-y-8">
       {/* Campus-based courses UI: Select campus first, then campus info, then list courses */}
       <div className="space-y-4">
-        <h3 className="font-semibold text-lg" style={{ color: COLORS.textDark }}>
+        <h4 className="font-semibold text-base" style={{ color: COLORS.textDark }}>
           {t("universityDetail.coursesByCampus", "Courses by Campus")}
-        </h3>
+        </h4>
         {agencyId && universityId && (
           <div className="space-y-2">
             <label className="text-sm font-medium" style={{ color: COLORS.textDark }}>
@@ -137,7 +137,7 @@ const CampusTab = ({ university, universityId }: CampusTabProps) => {
           </div>
         )}
 
-        {/* Campus info: Campus Name, Address, Total Students | Visit College Website */}
+        {/* Campus info: Campus Name, Address, Total Students | Visit Campus Website */}
         {selectedCampus && (
           <div className="rounded-lg border p-4 space-y-4" style={{ borderColor: COLORS.border }}>
             <div className="grid grid-cols-2 gap-x-6 gap-y-4">
@@ -169,7 +169,7 @@ const CampusTab = ({ university, universityId }: CampusTabProps) => {
               </div>
               <div>
                 <p className="text-xs font-medium mb-1" style={{ color: COLORS.textMuted }}>
-                  {t("universityDetail.visitCollegeWebsite", "Visit College Website")}
+                  {t("universityDetail.visitCollegeWebsite", "Visit Campus Website")}
                 </p>
                 {selectedCampus.website?.trim() ? (
                   <a
@@ -198,9 +198,9 @@ const CampusTab = ({ university, universityId }: CampusTabProps) => {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h3 className="font-semibold text-lg" style={{ color: COLORS.textDark }}>
+            <h4 className="font-semibold text-base" style={{ color: COLORS.textDark }}>
               {t("universityDetail.availableCourses", "Available Courses")}
-            </h3>
+            </h4>
             {selectedCampusName && (
               <p className="text-sm mt-0.5" style={{ color: COLORS.textMuted }}>
                 {t("universityDetail.forCampus", "For campus")}: {selectedCampusName}

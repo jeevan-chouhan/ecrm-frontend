@@ -84,6 +84,7 @@ const translationKeyMap: Record<string, string> = {
   "Application Tracker": "sidebar.applicationTracker",
   "Country & Directory": "sidebar.countryUniversity",
   "Country & University Directory": "sidebar.countryUniversity",
+  "University Directory": "sidebar.countryUniversity",
   "Master Ledger": "sidebar.masterLedger",
   "Agency Partner": "sidebar.agencyPartner",
   "Manage Team": "sidebar.manageTeam",

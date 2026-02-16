@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Layout, Button } from "../../../components";
-import { COLORS, ROUTES } from "../../../constants";
+import { COLORS, ROUTES, typography } from "../../../constants";
 import { ArrowLeft } from "../../../assets";
 
 // Types
@@ -80,6 +80,27 @@ const getMockUniversityDetail = (universityId: string): UniversityDetail => ({
     "Letters of recommendation (2-3)",
     "Statement of purpose",
   ],
+  eligibilityCriteria: [
+    {
+      programType: "Bachelor's",
+      description: [
+        "university entrance qualification (Abitur, IB, or equivalent)",
+        "English: IELTS 6.5 / TOEFL 88 (or equivalent)",
+        "German: typically B2-C2",
+        "GPA, GRE/GMAT scores, and interviews",
+        "minimum 8-week internship",
+      ],
+    },
+    {
+      programType: "Master's",
+      description: [
+        "Bachelor's degree from a recognized institution (relevant field)",
+        "Subject-specific requirements: high GPA (varies by program; examples >= 7.5 or >= 8.5)",
+        "Tests (if required): GRE/GATE (e.g., GRE 164Q / 4.0W or top percentile), GMAT (e.g., 585+)",
+        "interviews or additional assessments",
+      ],
+    },
+  ],
   campusInfo: "MIT's 168-acre campus spans approximately a mile of the Cambridge side of the Charles River basin. The campus features world-class facilities and a vibrant student life.",
   campusHighlights: [
     "Modern research laboratories",
@@ -100,30 +121,39 @@ const getMockUniversityDetail = (universityId: string): UniversityDetail => ({
       id: 1,
       programType: "BACHELOR",
       courseProgram: "B.Tech Computer Science",
-      tuitionFeePerYear: 50000,
-      admissionFee: 5000,
+      tuitionFeePerYear: 45000,
+      tuitionFeePerYearMax: 55000,
+      admissionFee: 4000,
+      admissionFeeMax: 6000,
       hostelFeePerYear: 20000,
-      otherFees: 10000,
+      otherFees: 8000,
+      otherFeesMax: 12000,
       totalFeePerYear: 85000,
     },
     {
       id: 2,
       programType: "MASTER",
       courseProgram: "M.Tech Computer Science",
-      tuitionFeePerYear: 60000,
-      admissionFee: 6000,
+      tuitionFeePerYear: 55000,
+      tuitionFeePerYearMax: 65000,
+      admissionFee: 5000,
+      admissionFeeMax: 7000,
       hostelFeePerYear: 22000,
-      otherFees: 12000,
+      otherFees: 10000,
+      otherFeesMax: 14000,
       totalFeePerYear: 100000,
     },
     {
       id: 3,
       programType: "PHD",
       courseProgram: "Ph.D. Computer Science",
-      tuitionFeePerYear: 45000,
-      admissionFee: 5000,
+      tuitionFeePerYear: 40000,
+      tuitionFeePerYearMax: 50000,
+      admissionFee: 4000,
+      admissionFeeMax: 6000,
       hostelFeePerYear: 20000,
-      otherFees: 8000,
+      otherFees: 7000,
+      otherFeesMax: 9000,
       totalFeePerYear: 78000,
     },
   ],
@@ -134,6 +164,16 @@ const getMockUniversityDetail = (universityId: string): UniversityDetail => ({
     { step: 4, title: "Interview (if required)", description: "Selected candidates may be invited for an interview" },
     { step: 5, title: "Decision", description: "Receive admission decision via email and portal" },
   ],
+  admissionDetails: [
+    {
+      programType: "Bachelor's",
+      admissionProcedure: "Applicants will be granted admission to a program with unrestricted admission when the online application was submitted in time and complete with all required documents, and your documents have been reviewed.",
+    },
+    {
+      programType: "Master's",
+      admissionProcedure: "In the initial stage of this procedure, the grades you obtained during your Bachelor's program, as well as your written documents, will be evaluated using a point system. Depending on the number of points accumulated, applicants are either immediately admitted, rejected, or invited to a 20 minute admissions interview carried out by the school. In some cases interviews by telephone or video for international students are common. The interview helps determine if the applicant is capable of successfully completing the desired course of study. For some programs offered by the TUM School of Engineering and Design and the TUM School of Management a written test or the assessment of your academic qualification and your essay replace the interview.",
+    },
+  ],
   documents: [
     "Official Academic Transcripts",
     "Standardized Test Scores (IELTS/TOEFL/GRE/GMAT)",
@@ -143,6 +183,36 @@ const getMockUniversityDetail = (universityId: string): UniversityDetail => ({
     "Portfolio (for specific programs)",
     "Passport Copy",
     "Financial Documents",
+  ],
+  programSpecificDocuments: [
+    {
+      programType: "Bachelor's",
+      documents: [
+        "Certified Copies of Certificates",
+        "Change of Program or Subject",
+        "Mandatory Health Insurance",
+        "Online Application",
+        "Proof of German-Language Skills",
+        "Proof of English-Language Skills",
+        "Recognizing Credits",
+        "Reserving your Spot",
+        "Special Conditions for Certain Countries",
+        "StudentCard",
+        "Uni-Assist (recognition of international university entrance qualification)",
+      ],
+    },
+    {
+      programType: "Master's",
+      documents: [
+        "Certified Copies of Certificates",
+        "Mandatory Health Insurance",
+        "Online Application",
+        "Proof of German-Language Skills",
+        "Proof of English-Language Skills",
+        "Recognizing Credits",
+        "Uni-Assist (recognition of international university entrance qualification)",
+      ],
+    },
   ],
   scholarships: [
     { name: "Merit-Based Scholarship", amount: "Up to $25,000/year", eligibility: "Outstanding academic performance" },
@@ -224,38 +294,31 @@ const UniversityDetailPage = () => {
         className="bg-white rounded-lg shadow-sm"
         style={{ backgroundColor: COLORS.surface }}
       >
-        {/* Header with Back Button */}
-        <div className="flex items-center gap-3 p-4 md:p-6 border-b" style={{ borderColor: COLORS.border }}>
-          <Button
-            variant="accent"
-            icon={<ArrowLeft className="h-5 w-5" />}
-            onClick={handleBack}
-            rounded
-            size="sm"
-            className="shrink-0"
-          />
-          <h1
-            className="text-xl md:text-2xl font-bold"
-            style={{ color: COLORS.textDark }}
-          >
-            {t("countryUniversity.title", "Country & University")}
-          </h1>
-        </div>
-
-        {/* University Info */}
-        <div className="px-4 md:px-6 pt-4 pb-4">
-          <h1
-            className="text-xl md:text-2xl font-bold"
-            style={{ color: COLORS.textDark }}
-          >
-            {universityDetail.name}
-            {universityDetail.shortName && ` (${universityDetail.shortName})`}
-          </h1>
-          
-          <div className="flex flex-wrap items-center gap-2 mt-2">
-            <span className="text-sm" style={{ color: COLORS.accent }}>
-              📍 {universityDetail.location}, {universityDetail.country}
-            </span>
+        {/* University name and address (back button + name + location) */}
+        <div className="px-4 md:px-6 pt-4 pb-4 border-b" style={{ borderColor: COLORS.border }}>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="accent"
+              icon={<ArrowLeft className="h-5 w-5" />}
+              onClick={handleBack}
+              rounded
+              size="sm"
+              className="shrink-0"
+            />
+            <div className="min-w-0">
+              <h1
+                className="text-xl md:text-2xl font-bold"
+                style={{ color: COLORS.textDark }}
+              >
+                {universityDetail.name}
+                {universityDetail.shortName && ` (${universityDetail.shortName})`}
+              </h1>
+              <div className="flex flex-wrap items-center gap-2 mt-2">
+                <span className="text-sm" style={{ color: COLORS.accent }}>
+                 {universityDetail.location}, {universityDetail.country}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -271,8 +334,9 @@ const UniversityDetailPage = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className="px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors relative"
+                  className="px-4 py-3 font-medium whitespace-nowrap transition-colors relative"
                   style={{
+                    fontSize: typography.fontSize.body,
                     color: isActive ? COLORS.accent : COLORS.textMuted,
                     backgroundColor: "transparent",
                   }}

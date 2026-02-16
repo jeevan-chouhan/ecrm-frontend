@@ -2,16 +2,18 @@ import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { Layout, Input, Button, Popup, DataTable } from "../../components";
+import { Layout, Button, Popup, DataTable } from "../../components";
 import type { GridColDef } from "../../components";
+import ReplySection from "./ReplySection";
+import RaiseQuery from "./RaiseQuery";
 import type { GridPaginationModel, GridSortModel } from "@mui/x-data-grid";
 import { COLORS } from "../../constants";
-import { Eye } from "../../assets";
+import { Reply, Calendar } from "../../assets";
 import { useLoggedInUserInfo } from "../../hooks";
 import { formatDateTime } from "../../utils/dateUtils";
 import { Tooltip } from "@mui/material";
 import { supportService } from "../../services";
-import type { SupportQueryItem } from "../../services";
+import type { SupportReplyItem } from "../../services";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { addToast } from "../../redux/slices/toast/toastSlice";
 import { showLoader, hideLoader } from "../../redux/slices/loader/loaderSlice";
@@ -35,12 +37,22 @@ const SupportFeedback = () => {
   const loggedInUser = useLoggedInUserInfo();
 
   // Redux state
-  const { queries, pagination, sort, isLoading } = useAppSelector((state) => state.supportFeedback);
+  const { queries, pagination, sort } = useAppSelector((state) => state.supportFeedback);
 
   // Local state
-  const [selectedQuery, setSelectedQuery] = useState<SupportQueryItem | null>(null);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  // Replies modal (when clicking reply icon)
+  const [replies, setReplies] = useState<SupportReplyItem[]>([]);
+  const [repliesLoading, setRepliesLoading] = useState(false);
+  const [repliesPage, setRepliesPage] = useState(0);
+  const [repliesSize] = useState(10);
+  const [repliesTotal, setRepliesTotal] = useState(0);
+  const [repliesModalOpen, setRepliesModalOpen] = useState(false);
+  const [repliesQueryId, setRepliesQueryId] = useState<number | null>(null);
+  const [repliesSubject, setRepliesSubject] = useState("");
+  const [repliesCreatedAt, setRepliesCreatedAt] = useState("");
+  const [repliesDescription, setRepliesDescription] = useState("");
+  const [replyInput, setReplyInput] = useState("");
 
   // Prevent duplicate fetch (e.g. from React Strict Mode double-invoking effects)
   const lastFetchKeyRef = useRef<string | null>(null);
@@ -118,23 +130,59 @@ const SupportFeedback = () => {
     },
   });
 
-  // Handle view (row has queryId, subject, createdAt, respondedAt, lastReply, status)
-  const handleView = useCallback((row: { queryId: number; subject: string; createdAt: string; respondedAt: string | null; lastReply: string | null; status: string }) => {
-    setSelectedQuery({
-      queryId: row.queryId,
-      subject: row.subject,
-      createdAt: row.createdAt,
-      lastRespondedAt: row.respondedAt,
-      lastReply: row.lastReply,
-      status: row.status,
-    });
-    setIsViewModalOpen(true);
+  // Open replies modal and fetch replies for the query
+  const handleReply = useCallback((row: { queryId: number; subject: string; createdAt?: string; description?: string }) => {
+    setRepliesQueryId(row.queryId);
+    setRepliesSubject(row.subject);
+    setRepliesCreatedAt(row.createdAt ?? "");
+    setRepliesDescription(row.description ?? "");
+    setReplyInput("");
+    setRepliesModalOpen(true);
+    setRepliesPage(0);
+    setReplies([]);
   }, []);
 
-  // Close view modal
-  const handleCloseViewModal = useCallback(() => {
-    setIsViewModalOpen(false);
-    setSelectedQuery(null);
+  // Fetch replies when replies modal is open and queryId is set
+  const fetchReplies = useCallback(async () => {
+    if (repliesQueryId == null) return;
+    setRepliesLoading(true);
+    try {
+      const response = await supportService.getReplies(repliesQueryId, repliesPage, repliesSize);
+      if (response.status === "success" && response.data) {
+        setReplies(response.data.content);
+        setRepliesTotal(response.data.totalElements);
+      } else {
+        setReplies([]);
+        setRepliesTotal(0);
+      }
+    } catch (err) {
+      setReplies([]);
+      setRepliesTotal(0);
+      const message = (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message
+        ?? (err as Error)?.message
+        ?? t("supportFeedback.repliesLoadFailed", "Failed to load replies");
+      dispatch(addToast({ type: "error", message }));
+    } finally {
+      setRepliesLoading(false);
+    }
+  }, [repliesQueryId, repliesPage, repliesSize, dispatch, t]);
+
+  useEffect(() => {
+    if (repliesModalOpen && repliesQueryId != null) {
+      fetchReplies();
+    }
+  }, [repliesModalOpen, repliesQueryId, repliesPage, fetchReplies]);
+
+  // Close replies modal
+  const handleCloseRepliesModal = useCallback(() => {
+    setRepliesModalOpen(false);
+    setRepliesQueryId(null);
+    setRepliesSubject("");
+    setRepliesCreatedAt("");
+    setRepliesDescription("");
+    setReplyInput("");
+    setReplies([]);
+    setRepliesTotal(0);
   }, []);
 
   // Open submit modal
@@ -222,6 +270,7 @@ const SupportFeedback = () => {
     id: q.queryId,
     queryId: q.queryId,
     subject: q.subject,
+    description: q.description,
     createdAt: q.createdAt,
     respondedAt: q.lastRespondedAt,
     lastReply: q.lastReply,
@@ -282,14 +331,14 @@ const SupportFeedback = () => {
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => handleView(params.row)}
-          title={t("supportFeedback.viewQuery", "View Query")}
+          onClick={() => handleReply(params.row)}
+          title={t("supportFeedback.viewReplies", "View Replies")}
         >
-          <Eye className="w-5 h-5" style={{ color: COLORS.accent }} />
+          <Reply className="w-5 h-5" style={{ color: COLORS.accent }} />
         </Button>
       ),
     },
-  ], [t, handleView]);
+  ], [t, handleReply]);
 
   return (
     <Layout>
@@ -316,7 +365,6 @@ const SupportFeedback = () => {
         <DataTable
           rows={rows}
           columns={columns}
-          loading={isLoading}
           pageSizeOptions={[5, 10, 25]}
           disableRowSelectionOnClick
           autoHeight
@@ -330,117 +378,140 @@ const SupportFeedback = () => {
         />
       </div>
 
-      {/* Submit Query Modal */}
-      <Popup
+      <RaiseQuery
         isOpen={isSubmitModalOpen}
         onClose={handleCloseSubmitModal}
-        title={t("supportFeedback.raiseQuery", "Raise Query")}
-        size="xl"
-      >
-        <form onSubmit={formik.handleSubmit} className="space-y-4">
-          {/* Subject */}
-          <Input
-            label={t("supportFeedback.subject", "Subject")}
-            name="subject"
-            placeholder={t("supportFeedback.enterSubject", "Enter subject")}
-            value={formik.values.subject}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-            error={formik.touched.subject && formik.errors.subject ? formik.errors.subject : undefined}
-            fullWidth
-          />
+        formik={formik}
+      />
 
-          {/* Content */}
-          <Input
-            inputType="textarea"
-            label={t("supportFeedback.content", "Content")}
-            name="content"
-            placeholder={t("supportFeedback.enterContent", "Enter your query details...")}
-            value={formik.values.content}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-            error={formik.touched.content && formik.errors.content ? formik.errors.content : undefined}
-            rows={4}
-            fullWidth
-          />
-
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-4">
-            <Button
-              type="button"
-              variant="cancel"
-              rounded
-              onClick={handleCloseSubmitModal}
-            >
-              {t("common.cancel", "Cancel")}
-            </Button>
-            <Button
-              type="submit"
-              variant="accent"
-              rounded
-              disabled={formik.isSubmitting}
-            >
-              {t("common.submit", "Submit")}
-            </Button>
-          </div>
-        </form>
-      </Popup>
-
-      {/* View Query Modal */}
+      {/* Replies Modal (opened when clicking reply icon) - UI matches design: subject + description card, reply list with avatars, reply input */}
       <Popup
-        isOpen={isViewModalOpen}
-        onClose={handleCloseViewModal}
-        title={t("supportFeedback.viewQueryDetails", "Query Details")}
+        isOpen={repliesModalOpen}
+        onClose={handleCloseRepliesModal}
+        title={t("supportFeedback.replies", "Replies")}
         size="xl"
       >
-        {selectedQuery && (
-          <div className="max-h-[70vh] overflow-y-auto">
-            <div className="relative pl-6 border-l-2" style={{ borderColor: COLORS.accent }}>
-              <div
-                className="absolute -left-[9px] top-0 w-4 h-4 rounded-sm"
-                style={{ backgroundColor: COLORS.accent }}
-              />
-              <div className="pb-4">
-                <h3 className="font-semibold text-base mb-2" style={{ color: COLORS.textDark }}>
-                  {selectedQuery.subject}
-                </h3>
-                <div className="space-y-2 text-sm mb-3">
-                  <p style={{ color: COLORS.textMuted }}>
-                    {t("supportFeedback.createdDate", "Created Date")}:{" "}
-                    <Tooltip title={formatDateTime(selectedQuery.createdAt)} arrow placement="top">
-                      <span style={{ color: COLORS.textDark }}>{formatDateTime(selectedQuery.createdAt)}</span>
-                    </Tooltip>
-                  </p>
-                  <p style={{ color: COLORS.textMuted }}>
-                    {t("supportFeedback.respondedDate", "Responded Date")}:{" "}
-                    <span style={{ color: COLORS.textDark }}>
-                      {selectedQuery.lastRespondedAt ? formatDateTime(selectedQuery.lastRespondedAt) : "—"}
-                    </span>
-                  </p>
-                  <p style={{ color: COLORS.textMuted }}>
-                    {t("supportFeedback.status", "Status")}:{" "}
-                    <span style={{ color: COLORS.textDark }}>{selectedQuery.status}</span>
-                  </p>
+        <div className="max-h-[75vh] flex flex-col gap-6">
+          {/* Original issue card: Subject, Submitted on date, Description */}
+          <div
+            className="rounded-lg p-4 border"
+            style={{ borderColor: COLORS.border, backgroundColor: COLORS.surface }}
+          >
+            <h3 className="font-semibold text-base mb-2" style={{ color: COLORS.textDark }}>
+              {repliesSubject || "—"}
+            </h3>
+            {repliesCreatedAt && (
+              <div className="flex items-center gap-2 mb-3" style={{ color: COLORS.textMuted }}>
+                <Calendar className="w-3 h-3 shrink-0" style={{ color: COLORS.textMuted }} />
+                <span className="text-xs">
+                  {t("supportFeedback.submittedOn", "Submitted on")} {formatDateTime(repliesCreatedAt)}
+                </span>
+              </div>
+            )}
+            {(repliesDescription != null && repliesDescription !== "") ? (
+              <p className="text-sm" style={{ color: COLORS.textDark, whiteSpace: "pre-wrap" }}>
+                {repliesDescription}
+              </p>
+            ) : (
+              <p className="text-sm" style={{ color: COLORS.textMuted }}>
+                {t("supportFeedback.noDescription", "No description provided.")}
+              </p>
+            )}
+          </div>
+
+          {/* Reply section: heading, list / empty / loading, and reply input (ReplySection component) */}
+          <ReplySection
+            title={t("supportFeedback.reply", "Reply")}
+            emptyMessage={t("supportFeedback.noReplies", "No replies yet.")}
+            isLoading={repliesLoading}
+            loadingMessage={t("supportFeedback.loadingReplies", "Loading replies...")}
+            value={replyInput}
+            onChange={setReplyInput}
+            onSubmit={() => {
+              // TODO: wire to POST reply API when available
+              setReplyInput("");
+            }}
+            placeholder={t("supportFeedback.typeReplyPlaceholder", "Type your reply here....")}
+            submitLabel={t("supportFeedback.replyToResponse", "Reply to Response")}
+            rows={4}
+          >
+            {replies.length > 0 ? (
+              <>
+                <div className="space-y-4">
+                  {replies.map((item, index) => (
+                    <div
+                      key={index}
+                      className="rounded-lg p-4 border flex gap-3"
+                      style={{
+                        borderColor: COLORS.border,
+                        backgroundColor: COLORS.surface,
+                      }}
+                    >
+                      <div
+                        className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-sm font-semibold"
+                        style={{
+                          backgroundColor: item.replyByType === "ADMIN" ? COLORS.accentLight : "#E5E7EB",
+                          color: item.replyByType === "ADMIN" ? COLORS.accent : COLORS.textDark,
+                        }}
+                      >
+                        {item.replyByType === "USER"
+                          ? t("supportFeedback.you", "You").charAt(0)
+                          : t("supportFeedback.admin", "Admin").charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <span className="font-medium text-sm" style={{ color: COLORS.textDark }}>
+                            {item.replyByType === "USER"
+                              ? t("supportFeedback.you", "You")
+                              : t("supportFeedback.admin", "Admin")}
+                          </span>
+                          <Tooltip title={formatDateTime(item.repliedAt)} arrow placement="top">
+                            <span className="text-xs" style={{ color: COLORS.textMuted }}>
+                              {formatDateTime(item.repliedAt)}
+                            </span>
+                          </Tooltip>
+                        </div>
+                        <p className="text-sm mt-1" style={{ color: COLORS.textDark, whiteSpace: "pre-wrap" }}>
+                          {item.message}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                {selectedQuery.lastReply && (
-                  <div className="mb-2">
+                {repliesTotal > repliesSize && (
+                  <div className="flex items-center justify-between gap-4 pt-2" style={{ borderColor: COLORS.border }}>
                     <span className="text-sm" style={{ color: COLORS.textMuted }}>
-                      {t("supportFeedback.lastReply", "Last Reply")}:
+                      {t("supportFeedback.repliesCount", "{{count}} of {{total}} replies", {
+                        count: replies.length,
+                        total: repliesTotal,
+                      })}
                     </span>
-                    <p className="text-sm mt-1" style={{ color: COLORS.textDark, whiteSpace: "pre-wrap" }}>
-                      {selectedQuery.lastReply}
-                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={repliesPage <= 0}
+                        onClick={() => setRepliesPage((p) => Math.max(0, p - 1))}
+                      >
+                        {t("common.previous", "Previous")}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={repliesPage >= Math.ceil(repliesTotal / repliesSize) - 1}
+                        onClick={() => setRepliesPage((p) => p + 1)}
+                      >
+                        {t("common.next", "Next")}
+                      </Button>
+                    </div>
                   </div>
                 )}
-              </div>
-            </div>
-            <div className="flex justify-end pt-4 mt-4 border-t" style={{ borderColor: COLORS.border }}>
-              <Button type="button" variant="cancel" rounded onClick={handleCloseViewModal}>
-                {t("common.close", "Close")}
-              </Button>
-            </div>
-          </div>
-        )}
+              </>
+            ) : undefined}
+          </ReplySection>
+        </div>
       </Popup>
     </Layout>
   );

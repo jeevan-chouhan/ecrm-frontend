@@ -6,7 +6,10 @@ interface FeesTabProps {
   university: UniversityDetail;
 }
 
-const formatFee = (value: number) => `$${value}`;
+const formatFeeRange = (min: number, max?: number) =>
+  max != null && max !== min
+    ? `$${min.toLocaleString()} - $${max.toLocaleString()}`
+    : `$${min.toLocaleString()}`;
 
 const PROGRAM_TYPE_LABELS: Record<string, string> = {
   BACHELOR: "Bachelor",
@@ -64,13 +67,13 @@ const FeesTab = ({ university }: FeesTabProps) => {
                   {PROGRAM_TYPE_LABELS[row.programType] ?? row.programType}
                 </td>
                 <td className="text-sm text-right px-4 py-3" style={{ color: COLORS.textDark }}>
-                  {formatFee(row.tuitionFeePerYear)}
+                  {formatFeeRange(row.tuitionFeePerYear, row.tuitionFeePerYearMax)}
                 </td>
                 <td className="text-sm text-right px-4 py-3" style={{ color: COLORS.textDark }}>
-                  {formatFee(row.admissionFee)}
+                  {formatFeeRange(row.admissionFee, row.admissionFeeMax)}
                 </td>
                 <td className="text-sm text-right px-4 py-3" style={{ color: COLORS.textDark }}>
-                  {formatFee(row.otherFees)}
+                  {formatFeeRange(row.otherFees, row.otherFeesMax)}
                 </td>
               </tr>
             ))}

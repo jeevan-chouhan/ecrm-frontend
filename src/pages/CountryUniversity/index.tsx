@@ -258,17 +258,6 @@ const CountryUniversity = () => {
         ),
       },
       {
-        field: "coursesOffered",
-        headerName: t("countryUniversity.coursesOffered", "Courses Offered"),
-        flex: 1,
-        minWidth: 130,
-        renderCell: (params) => (
-          <span style={{ color: COLORS.accent, fontWeight: 600 }}>
-            {params.row.coursesOffered || 0} {t("countryUniversity.courses", "Courses")}
-          </span>
-        ),
-      },
-      {
         field: "actions",
         headerName: t("common.action", "Action"),
         flex: 0.6,
@@ -300,14 +289,14 @@ const CountryUniversity = () => {
             className="text-xl md:text-2xl font-bold"
             style={{ color: COLORS.textDark }}
           >
-            {t("countryUniversity.title", "Country & University Directory")}
+            {t("countryUniversity.title", "University Directory")}
           </h1>
 
           {/* Stats */}
           <div className="flex items-center gap-6">
             <div className="flex flex-col">
               <span className="text-sm" style={{ color: COLORS.textMuted }}>
-                {t("countryUniversity.countriesServing", "Countries Serving")}
+                {t("countryUniversity.countriesServing", "Agency Countries Serving")}
               </span>
               <span className="text-xl font-bold" style={{ color: COLORS.textDark }}>
                 {countriesCount}
@@ -316,7 +305,7 @@ const CountryUniversity = () => {
             <div className="h-10 w-px" style={{ backgroundColor: COLORS.border }} />
             <div className="flex flex-col">
               <span className="text-sm" style={{ color: COLORS.textMuted }}>
-                {t("countryUniversity.universitiesServing", "Universities Serving")}
+                {t("countryUniversity.universitiesServing", "Agency Universities Serving")}
               </span>
               <span className="text-xl font-bold" style={{ color: COLORS.textDark }}>
                 {universitiesCount}

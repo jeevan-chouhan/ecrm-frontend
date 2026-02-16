@@ -12,9 +12,9 @@ const ScholarshipTab = ({ university }: ScholarshipTabProps) => {
 
   return (
     <div className="space-y-4">
-      <h3 className="font-semibold text-lg mb-3" style={{ color: COLORS.textDark }}>
+      <h4 className="font-semibold text-base mb-3" style={{ color: COLORS.textDark }}>
         {t("universityDetail.availableScholarships", "Available Scholarships")}
-      </h3>
+      </h4>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {university.scholarships.map((scholarship, index) => (

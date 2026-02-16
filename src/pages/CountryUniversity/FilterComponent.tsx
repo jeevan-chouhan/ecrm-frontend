@@ -78,7 +78,7 @@ const FilterComponent = ({
     <div className="flex flex-wrap items-center gap-3 mb-6">
       {/* Search Bar */}
       <Tooltip
-        title={t("countryUniversity.searchTooltip", "Search by University Name, Courses")}
+        title={t("countryUniversity.searchTooltip", "Search By University Name")}
         arrow
         placement="top"
       >
@@ -86,7 +86,7 @@ const FilterComponent = ({
           <SearchBar
             value={searchValue}
             onChange={onSearchChange}
-            placeholder={t("countryUniversity.searchPlaceholder", "Search by university, course...")}
+            placeholder={t("countryUniversity.searchPlaceholder", "Search By University Name")}
           />
         </div>
       </Tooltip>
