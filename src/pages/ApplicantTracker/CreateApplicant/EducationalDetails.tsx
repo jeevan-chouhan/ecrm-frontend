@@ -32,6 +32,7 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack, ap
   const isFetchingHighestQualificationsRef = useRef(false); // Prevent duplicate fetches for highest qualifications
   const isFetchingScoreTypesRef = useRef(false); // Prevent duplicate fetches for score types
   const highestQualificationIdMapRef = useRef<Map<string, number>>(new Map()); // Map code to ID for highest qualifications
+  const highestQualificationIsMajorMapRef = useRef<Map<string, boolean>>(new Map()); // Map code to isMajor for highest qualifications
   const scoreTypeIdMapRef = useRef<Map<string, number>>(new Map()); // Map code to ID for score types
   const [isSaving, setIsSaving] = useState(false);
   const [shouldNavigateNext, setShouldNavigateNext] = useState(false);
@@ -47,9 +48,13 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack, ap
       boardUniversity: Yup.string().required(t("validation.boardUniversityRequired")).trim(),
       program: Yup.string(),
       major: Yup.string().when("highestQualification", {
-        is: (val: string) => val === "HIGH_SCHOOL",
-        then: (schema) => schema.nullable(), // Optional when High School is selected (field is hidden)
-        otherwise: (schema) => schema.nullable(), // Optional for other qualifications
+        is: (val: string) => {
+          // Check if the selected qualification has isMajor true
+          const isMajor = highestQualificationIsMajorMapRef.current.get(val || "");
+          return isMajor === true;
+        },
+        then: (schema) => schema.required(t("validation.majorRequired", "Major field is required")), // Required when isMajor is true
+        otherwise: (schema) => schema.nullable(), // Optional when isMajor is false or null
       }),
       scoreType: Yup.string().required(t("validation.scoreTypeRequired")),
       score: Yup.string()
@@ -122,6 +127,11 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack, ap
           throw new Error("Invalid score type selected");
         }
 
+        // Check if the selected qualification has isMajor true
+        // If isMajor is false, reset major field to null in the payload
+        const isMajor = highestQualificationIsMajorMapRef.current.get(values.highestQualification);
+        const majorValue = isMajor === true ? (values.major || null) : null;
+
         // Map form fields to API payload format
         const payload = {
           applicantId: typeof applicantId === 'string' ? parseInt(applicantId) : applicantId,
@@ -129,7 +139,7 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack, ap
           instituteName: values.institutionName, // Map institutionName -> instituteName
           universityName: values.boardUniversity, // Map boardUniversity -> universityName
           courseType: values.program || null, // Map program -> courseType
-          fieldType: values.major || null, // Map major -> fieldType
+          fieldType: majorValue, // Map major -> fieldType (null if isMajor is false)
           scoreTypeId: scoreTypeId,
           score: values.score,
           passingYear: passingYearFormatted,
@@ -324,14 +334,20 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack, ap
         
         // Only proceed if data is not empty/null
         if (data && (data.highestQualificationCode || data.instituteName || data.universityName)) {
+          // Check if the qualification has isMajor true/false from the map
+          // If isMajor is false, we should not populate major field even if it exists in response
+          const qualificationCode = data.highestQualificationCode || "";
+          const isMajor = highestQualificationIsMajorMapRef.current.get(qualificationCode);
+          
           // Map API response to EducationalDetailFormData
           // Use codes from API response (highestQualificationCode, scoreTypeCode) for form values
           const educationalDetails: EducationalDetailFormData = {
-            highestQualification: data.highestQualificationCode || "",
+            highestQualification: qualificationCode,
             institutionName: data.instituteName || "", // Map instituteName -> institutionName
             boardUniversity: data.universityName || "", // Map universityName -> boardUniversity
             program: data.courseType || "", // Map courseType -> program
-            major: data.fieldType || "", // Map fieldType -> major
+            // Only populate major if isMajor is true, otherwise clear it
+            major: isMajor === true ? (data.fieldType || "") : "",
             scoreType: data.scoreTypeCode || "",
             score: data.score || "",
             passingYear: data.passingYear ? new Date(data.passingYear + "T00:00:00") : null, // Add time to avoid timezone issues
@@ -386,12 +402,16 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack, ap
 
       // Create mapping from code to ID for API conversion
       const idMap = new Map<string, number>();
+      const isMajorMap = new Map<string, boolean>();
       highestQualifications
         .filter((qualification) => qualification.isActive)
         .forEach((qualification) => {
           idMap.set(qualification.code, qualification.id);
+          // Store isMajor value (convert null to false for easier checking)
+          isMajorMap.set(qualification.code, qualification.isMajor === true);
         });
       highestQualificationIdMapRef.current = idMap;
+      highestQualificationIsMajorMapRef.current = isMajorMap;
 
       setQualificationOptions(options);
     } catch (error: any) {
@@ -456,11 +476,42 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack, ap
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applicantId]); // Only depend on applicantId to avoid infinite loops
 
-  // Show Major field for all qualification types except High School
-  const showMajor = useMemo(
-    () => formik.values.highestQualification !== "HIGH_SCHOOL",
-    [formik.values.highestQualification]
-  );
+  // Re-process educational details when qualifications are loaded (to handle isMajor correctly)
+  // This ensures that if educational details were fetched before qualifications, we can now properly handle isMajor
+  useEffect(() => {
+    if (
+      applicantId &&
+      hasEducationalDetailsDataRef.current &&
+      qualificationOptions.length > 0 &&
+      formik.values.highestQualification
+    ) {
+      // Check if the current qualification has isMajor false, and if so, clear major field
+      const isMajor = highestQualificationIsMajorMapRef.current.get(formik.values.highestQualification);
+      if (isMajor !== true && formik.values.major) {
+        formik.setFieldValue("major", "");
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qualificationOptions.length, applicantId]);
+
+  // Show Major field based on isMajor value from selected qualification
+  const showMajor = useMemo(() => {
+    if (!formik.values.highestQualification) {
+      return false;
+    }
+    const isMajor = highestQualificationIsMajorMapRef.current.get(formik.values.highestQualification);
+    return isMajor === true;
+  }, [formik.values.highestQualification]);
+
+  // Clear major field when qualification changes and isMajor becomes false
+  useEffect(() => {
+    if (formik.values.highestQualification) {
+      const isMajor = highestQualificationIsMajorMapRef.current.get(formik.values.highestQualification);
+      if (isMajor !== true && formik.values.major) {
+        formik.setFieldValue("major", "");
+      }
+    }
+  }, [formik.values.highestQualification, formik]);
 
   return (
     <div className="space-y-6">
@@ -542,7 +593,7 @@ const EducationalDetails = ({ initialValues, onUpdate, onSaveAndNext, onBack, ap
                     className="block text-sm font-medium mb-1.5"
                     style={{ color: COLORS.textDark,  }}
                   >
-                    {t("applicant.major")}
+                    {t("applicant.major")} <span style={{ color: COLORS.error }}>*</span>
                   </label>
                   <Input
                     value={formik.values.major}

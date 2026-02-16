@@ -301,6 +301,7 @@ export interface HighestQualificationItem {
   code: string;
   name: string;
   isActive: boolean;
+  isMajor: boolean | null;
   sortOrder: number;
 }
 
