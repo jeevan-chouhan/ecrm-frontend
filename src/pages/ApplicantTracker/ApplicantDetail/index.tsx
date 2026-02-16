@@ -94,12 +94,12 @@ const transformCompleteDetails = (
 
   // Transform educational details
   const transformedEducationalDetails: EducationalDetails = {
-    highestQualification: educationalDetails.highestQualification,
+    highestQualification: educationalDetails.highestQualificationCode,
     institutionName: educationalDetails.instituteName,
     boardUniversity: educationalDetails.universityName,
     program: educationalDetails.courseType,
-    major: educationalDetails.fieldType,
-    scoreType: educationalDetails.scoreType,
+    major: educationalDetails.fieldType || undefined,
+    scoreType: educationalDetails.scoreTypeCode,
     score: educationalDetails.score,
     passingYear: educationalDetails.passingYear,
   };

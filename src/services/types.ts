@@ -296,6 +296,22 @@ export interface ProgramTypeItem {
   sortOrder: number;
 }
 
+export interface HighestQualificationItem {
+  id: number;
+  code: string;
+  name: string;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+export interface ScoreTypeItem {
+  id: number;
+  code: string;
+  name: string;
+  isActive: boolean;
+  sortOrder: number;
+}
+
 export interface UniversityParams {
   agencyId: number | null;
   countryId: number | number[] | string | null;
@@ -807,12 +823,16 @@ export interface CompleteDetailsPersonal {
 
 export interface CompleteDetailsEducational {
   applicantId: number;
-  highestQualification: string;
+  highestQualificationId: number;
+  highestQualificationCode: string;
+  highestQualificationName: string;
   instituteName: string;
   universityName: string;
   courseType: string;
-  fieldType: string;
-  scoreType: string;
+  fieldType: string | null;
+  scoreTypeId: number;
+  scoreTypeCode: string;
+  scoreTypeName: string;
   score: string;
   passingYear: string | null;
   message: string;
@@ -858,12 +878,12 @@ export type CompleteDetailsResponse = ApiResponse<CompleteDetailsData>;
 // Educational Details Payload (for POST and PUT)
 export interface EducationalDetailsPayload {
   applicantId: number;
-  highestQualification: string;
+  highestQualificationId: number;
   instituteName: string;
   universityName: string;
   courseType: string | null;
   fieldType: string | null;
-  scoreType: string;
+  scoreTypeId: number;
   score: string;
   passingYear: string; // Format: "YYYY-MM-DD"
 }
@@ -871,12 +891,16 @@ export interface EducationalDetailsPayload {
 // Educational Details Data (from API response)
 export interface EducationalDetailsData {
   applicantId: number;
-  highestQualification: string;
+  highestQualificationId: number;
+  highestQualificationCode: string;
+  highestQualificationName: string;
   instituteName: string;
   universityName: string;
   courseType: string;
-  fieldType: string;
-  scoreType: string;
+  fieldType: string | null;
+  scoreTypeId: number;
+  scoreTypeCode: string;
+  scoreTypeName: string;
   score: string;
   passingYear: string;
   message?: string;

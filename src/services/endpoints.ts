@@ -73,6 +73,8 @@ export const ENDPOINTS = {
   LOOKUP: {
     ENROLLMENT_TYPE: "/lookup/enrollment_type",
     PROGRAM_TYPE: "/lookup/program_type",
+    HIGHEST_QUALIFICATION: "/lookup/highest_qualification",
+    SCORE_TYPE: "/lookup/score_type",
   },
 
   // Applicants Endpoints
