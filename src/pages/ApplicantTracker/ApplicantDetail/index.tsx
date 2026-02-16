@@ -130,7 +130,7 @@ const transformCompleteDetails = (
     
     return {
       id: ach.id.toString(),
-      category: ach.category,
+      category: ach.categoryCode, // Use categoryCode from API response
       description: ach.description,
       documents: documentFileName,
     };

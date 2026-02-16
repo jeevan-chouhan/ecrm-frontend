@@ -1,10 +1,15 @@
-import { memo } from "react";
+import { memo, useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { COLORS, achievementCategories } from "../../../constants";
+import { COLORS } from "../../../constants";
 import { getLabelFromConstant } from "../../../utils";
 import { DetailField, EmptyState } from "./DisplayComponents";
 import ScrollableContainer from "./ScrollableContainer";
 import { File } from "../../../assets";
+import type { SelectOption } from "../../../components";
+import { applicantService } from "../../../services";
+import { useAppDispatch } from "../../../redux/hooks";
+import { addToast } from "../../../redux/slices/toast/toastSlice";
+import { handleApiError } from "../../../utils";
 
 export interface AchievementItem {
   id: string;
@@ -19,6 +24,44 @@ interface AchievementsDisplayProps {
 
 const AchievementsDisplay = ({ achievements }: AchievementsDisplayProps) => {
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
+  const isFetchingCategoriesRef = useRef(false);
+  const [categoryOptions, setCategoryOptions] = useState<SelectOption[]>([]);
+
+  // Fetch categories from API
+  const fetchCategories = useCallback(async () => {
+    if (isFetchingCategoriesRef.current) {
+      return;
+    }
+
+    isFetchingCategoriesRef.current = true;
+
+    try {
+      const categories = await applicantService.getCategories();
+      
+      // Convert to SelectOption format, filter by isActive and sort by sortOrder
+      const options: SelectOption[] = categories
+        .filter((category) => category.isActive)
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((category) => ({
+          value: category.code,
+          label: category.name,
+        }));
+
+      setCategoryOptions(options);
+    } catch (error: any) {
+      const { message } = handleApiError(error, "Failed to fetch categories");
+      dispatch(addToast({ type: "error", message }));
+      setCategoryOptions([]);
+    } finally {
+      isFetchingCategoriesRef.current = false;
+    }
+  }, [dispatch]);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   if (!achievements || achievements.length === 0) {
     return (
@@ -41,7 +84,7 @@ const AchievementsDisplay = ({ achievements }: AchievementsDisplayProps) => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
               <DetailField
                 label={t("applicant.selectCategory", "Category")}
-                value={getLabelFromConstant(achievement.category, achievementCategories)}
+                value={getLabelFromConstant(achievement.category, categoryOptions)}
               />
               <div className="md:col-span-2 lg:col-span-2">
                 <DetailField

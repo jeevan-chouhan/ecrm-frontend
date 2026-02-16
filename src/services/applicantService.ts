@@ -20,6 +20,7 @@ import type {
   ProgramTypeItem,
   HighestQualificationItem,
   ScoreTypeItem,
+  CategoryItem,
   ApplyApplicationParams,
   ApplyApplicationResponse,
   UpdateApplicationStatusPayload,
@@ -801,6 +802,14 @@ const applicantService = {
    */
   getScoreTypes: async (): Promise<ScoreTypeItem[]> => {
     return applicantService.getLookupData<ScoreTypeItem>(ENDPOINTS.LOOKUP.SCORE_TYPE);
+  },
+
+  /**
+   * Get categories from lookup API
+   * @returns Promise with categories response
+   */
+  getCategories: async (): Promise<CategoryItem[]> => {
+    return applicantService.getLookupData<CategoryItem>(ENDPOINTS.LOOKUP.CATEGORY);
   },
 
   /**

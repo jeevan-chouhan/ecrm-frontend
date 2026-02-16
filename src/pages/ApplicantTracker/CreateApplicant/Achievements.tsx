@@ -3,6 +3,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useTranslation } from "react-i18next";
 import { Select, Button, ConfirmationPopup } from "../../../components";
+import type { SelectOption } from "../../../components";
 import { COLORS, yesNoOptions } from "../../../constants";
 import AchievementForm from "./AchievementForm";
 import type { AchievementItem, AchievementFormData } from "./types";
@@ -28,6 +29,8 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
   const dispatch = useAppDispatch();
   const isSubmittingRef = useRef(false); // Prevent duplicate submissions
   const isFetchingAchievementsRef = useRef(false); // Prevent duplicate fetches
+  const isFetchingCategoriesRef = useRef(false); // Prevent duplicate fetches for categories
+  const categoryIdMapRef = useRef<Map<string, number>>(new Map()); // Map code to ID for categories
   const originalAchievementsRef = useRef<AchievementItem[]>([]); // Store original achievements from GET API
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
@@ -36,14 +39,15 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
   const [isFormValid, setIsFormValid] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [shouldNavigateNext, setShouldNavigateNext] = useState(false);
+  const [categoryOptions, setCategoryOptions] = useState<SelectOption[]>([]);
 
-  const getEmptyAchievement = (): AchievementItem => ({
+  const getEmptyAchievement = useCallback((): AchievementItem => ({
     id: `achievement-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
     category: "",
     description: "",
     documents: null,
     saved: false,
-  });
+  }), []);
 
   // Reusable achievement validation schema
   const getAchievementSchema = useCallback(() => {
@@ -191,9 +195,15 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
             achievementsToCreate.map(async (a) => {
               const documentJson = await convertFileToDocumentFormat(a.documents);
               
+              // Get category ID from code-to-ID mapping
+              const categoryId = categoryIdMapRef.current.get(a.category);
+              if (!categoryId) {
+                throw new Error(`Invalid category selected for achievement: ${a.description}`);
+              }
+              
               return {
                 isAchievements: true,
-                category: a.category,
+                categoryId: categoryId,
                 description: a.description,
                 document: documentJson,
               };
@@ -215,6 +225,7 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
                   updatedAchievements[i] = {
                     ...a,
                     achievementId: responseData.id || null,
+                    category: responseData.categoryCode || a.category, // Use categoryCode from response
                     saved: true,
                   };
                   createIndex++;
@@ -436,9 +447,15 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
       try {
         const documentJson = await convertFileToDocumentFormat(achievement.documents);
         
+        // Get category ID from code-to-ID mapping
+        const categoryId = categoryIdMapRef.current.get(achievement.category);
+        if (!categoryId) {
+          throw new Error("Invalid category selected");
+        }
+        
         const payload = {
           isAchievements: true,
-          category: achievement.category,
+          categoryId: categoryId,
           description: achievement.description,
           document: documentJson,
         };
@@ -454,6 +471,7 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
           const updatedAchievements = [...formik.values.achievements];
           updatedAchievements[index] = {
             ...achievement,
+            category: response.data?.categoryCode || achievement.category, // Use categoryCode from response
             saved: true,
           };
 
@@ -499,9 +517,15 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
         try {
           const documentJson = await convertFileToDocumentFormat(achievement.documents);
           
+          // Get category ID from code-to-ID mapping
+          const categoryId = categoryIdMapRef.current.get(achievement.category);
+          if (!categoryId) {
+            throw new Error("Invalid category selected");
+          }
+          
           const payload = {
             isAchievements: true,
-            category: achievement.category,
+            categoryId: categoryId,
             description: achievement.description,
             document: documentJson,
           };
@@ -518,6 +542,7 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
             updatedAchievements[index] = {
               ...achievement,
               achievementId: responseData.id || null,
+              category: responseData.categoryCode || achievement.category, // Use categoryCode from response
               saved: true,
             };
 
@@ -600,9 +625,15 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
           unsavedCompleteAchievements.map(async (a) => {
             const documentJson = await convertFileToDocumentFormat(a.documents);
             
+            // Get category ID from code-to-ID mapping
+            const categoryId = categoryIdMapRef.current.get(a.category);
+            if (!categoryId) {
+              throw new Error(`Invalid category selected for achievement: ${a.description}`);
+            }
+            
             return {
               isAchievements: true,
-              category: a.category,
+              categoryId: categoryId,
               description: a.description,
               document: documentJson,
             };
@@ -624,6 +655,7 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
                 updatedAchievements[i] = {
                   ...a,
                   achievementId: responseData.id || null,
+                  category: responseData.categoryCode || a.category, // Use categoryCode from response
                   saved: true,
                 };
                 responseIndex++;
@@ -783,7 +815,7 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
               return {
                 id: `achievement-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
                 achievementId: ach.id || null,
-                category: ach.category || "",
+                category: ach.categoryCode || "", // Use categoryCode from API response
                 description: ach.description || "",
                 documents: null, // Set to null as we can't convert back to File
                 saved: true,
@@ -826,6 +858,47 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
     }
   }, [dispatch, formik, onUpdate, markAsSaved]);
 
+  // Fetch categories from API
+  const fetchCategories = useCallback(async () => {
+    if (isFetchingCategoriesRef.current) {
+      return;
+    }
+
+    isFetchingCategoriesRef.current = true;
+
+    try {
+      const categories = await applicantService.getCategories();
+      
+      // Create mapping from code to ID for API conversion
+      const idMap = new Map<string, number>();
+      // Convert to SelectOption format, filter by isActive and sort by sortOrder
+      const options: SelectOption[] = categories
+        .filter((category) => category.isActive)
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((category) => {
+          idMap.set(category.code, category.id);
+          return {
+            value: category.code,
+            label: category.name,
+          };
+        });
+      
+      categoryIdMapRef.current = idMap;
+      setCategoryOptions(options);
+    } catch (error: any) {
+      const { message } = handleApiError(error, "Failed to fetch categories");
+      dispatch(addToast({ type: "error", message }));
+      setCategoryOptions([]);
+    } finally {
+      isFetchingCategoriesRef.current = false;
+    }
+  }, [dispatch]);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
   // Fetch achievements when applicantId is available
   useEffect(() => {
     if (applicantId && !isFetchingAchievementsRef.current) {
@@ -834,7 +907,7 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applicantId]); // Only depend on applicantId to avoid infinite loops
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     // Prevent duplicate calls
     if (isSubmittingRef.current || isSaving) {
       return;
@@ -842,9 +915,9 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
 
     setShouldNavigateNext(false);
     await formik.submitForm();
-  };
+  }, [formik, isSaving]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     // Prevent duplicate calls
     if (isSubmittingRef.current || isSaving) {
       return;
@@ -852,28 +925,28 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
 
     setShouldNavigateNext(true);
     await formik.submitForm();
-  };
+  }, [formik, isSaving]);
 
   // Find index by ID helper
   const findAchievementIndexById = useCallback((id: string): number => {
     return formik.values.achievements.findIndex((a) => a.id === id);
   }, [formik.values.achievements]);
 
-  const handleHasAchievementsChange = (value: string) => {
+  const handleHasAchievementsChange = useCallback((value: string) => {
     formik.setFieldValue("hasAchievements", value);
     if (value === "no") {
       formik.setFieldValue("achievements", []);
     } else if (value === "yes" && formik.values.achievements.length === 0) {
       formik.setFieldValue("achievements", [getEmptyAchievement()]);
     }
-  };
+  }, [formik, getEmptyAchievement]);
 
-  const incomplete = getIncompleteAchievements();
-  const complete = getCompleteAchievements();
-  const firstIncomplete = incomplete.length > 0 ? incomplete[0] : null;
-  const firstIncompleteIndex = firstIncomplete ? findAchievementIndex(firstIncomplete.id) : -1;
+  const incomplete = useMemo(() => getIncompleteAchievements(), [getIncompleteAchievements]);
+  const complete = useMemo(() => getCompleteAchievements(), [getCompleteAchievements]);
+  const firstIncomplete = useMemo(() => incomplete.length > 0 ? incomplete[0] : null, [incomplete]);
+  const firstIncompleteIndex = useMemo(() => firstIncomplete ? findAchievementIndex(firstIncomplete.id) : -1, [firstIncomplete, findAchievementIndex]);
 
-  const showAchievementForm = formik.values.hasAchievements === "yes";
+  const showAchievementForm = useMemo(() => formik.values.hasAchievements === "yes", [formik.values.hasAchievements]);
 
   return (
     <div className="space-y-6">
@@ -915,6 +988,7 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
                 onAddMore={applicantId ? handleAddAchievementWithAPI : handleAddAchievement}
                 showCancel={incomplete.length > 1 || complete.length > 0}
                 showAddMore={true}
+                categoryOptions={categoryOptions}
               />
             )}
 
@@ -946,6 +1020,7 @@ const Achievements = ({ initialValues, onUpdate, onBack, onSubmit, applicantId }
           onSave={handleSaveAchievement}
           onCancelEdit={handleCancelEdit}
           findIndexById={findAchievementIndexById}
+          categoryOptions={categoryOptions}
         />
 
         {/* Show message if no achievements added */}
