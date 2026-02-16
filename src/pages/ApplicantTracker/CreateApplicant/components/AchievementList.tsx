@@ -1,10 +1,15 @@
-import { memo, useMemo } from "react";
+import { memo, useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../../../components";
-import { COLORS, achievementCategories } from "../../../../constants";
+import { COLORS } from "../../../../constants";
 import { Edit, Trash } from "../../../../assets";
 import AchievementForm from "../AchievementForm";
 import type { AchievementItem } from "../types";
+import type { SelectOption } from "../../../../components";
+import { applicantService } from "../../../../services";
+import { useAppDispatch } from "../../../../redux/hooks";
+import { addToast } from "../../../../redux/slices/toast/toastSlice";
+import { handleApiError } from "../../../../utils";
 
 interface AchievementListProps {
   achievements: AchievementItem[];
@@ -20,6 +25,7 @@ interface AchievementListProps {
   onSave: (index: number) => Promise<void>;
   onCancelEdit: () => void;
   findIndexById: (id: string) => number;
+  categoryOptions?: SelectOption[]; // Optional: if provided, use it instead of fetching
 }
 
 /**
@@ -35,13 +41,57 @@ const AchievementList = ({
   onSave,
   onCancelEdit,
   findIndexById,
+  categoryOptions: propCategoryOptions,
 }: AchievementListProps) => {
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
+  const isFetchingCategoriesRef = useRef(false);
+  const [categoryOptionsState, setCategoryOptionsState] = useState<SelectOption[]>([]);
+
+  // Use provided categoryOptions or fetch if not provided
+  const categoryOptions = propCategoryOptions || categoryOptionsState;
+
+  // Fetch categories from API only if not provided as prop
+  const fetchCategories = useCallback(async () => {
+    if (propCategoryOptions || isFetchingCategoriesRef.current) {
+      return;
+    }
+
+    isFetchingCategoriesRef.current = true;
+
+    try {
+      const categories = await applicantService.getCategories();
+      
+      // Convert to SelectOption format, filter by isActive and sort by sortOrder
+      const options: SelectOption[] = categories
+        .filter((category) => category.isActive)
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((category) => ({
+          value: category.code,
+          label: category.name,
+        }));
+
+      setCategoryOptionsState(options);
+    } catch (error: any) {
+      const { message } = handleApiError(error, "Failed to fetch categories");
+      dispatch(addToast({ type: "error", message }));
+      setCategoryOptionsState([]);
+    } finally {
+      isFetchingCategoriesRef.current = false;
+    }
+  }, [dispatch, propCategoryOptions]);
+
+  // Fetch categories on mount only if not provided as prop
+  useEffect(() => {
+    if (!propCategoryOptions) {
+      fetchCategories();
+    }
+  }, [fetchCategories, propCategoryOptions]);
 
   // Helper function to get category label from value
   const categoryMap = useMemo(() => {
-    return new Map(achievementCategories.map(cat => [cat.value, cat.label]));
-  }, []);
+    return new Map(categoryOptions.map(cat => [cat.value, cat.label]));
+  }, [categoryOptions]);
   
   const getCategoryLabel = (value: string) => categoryMap.get(value) || value;
 
@@ -76,6 +126,7 @@ const AchievementList = ({
                     showCancel={false}
                     showAddMore={false}
                     dismissibleFileUpload={false}
+                    categoryOptions={categoryOptions}
                   />
                   <div className="flex gap-2 mt-4 justify-end">
                     <Button

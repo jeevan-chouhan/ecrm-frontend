@@ -153,7 +153,7 @@ const DatePicker = ({
             fontSize: typography.fontSize.small,
           }}
         >
-          <span className="block truncate pr-10" style={{ color: COLORS.textMuted }}>
+          <span className="block truncate pr-10" style={{ color: value ? COLORS.textDark : COLORS.textMuted }}>
             {value ? formatDate(value) : placeholder}
           </span>
           <span className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
