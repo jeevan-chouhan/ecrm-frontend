@@ -296,6 +296,31 @@ export interface ProgramTypeItem {
   sortOrder: number;
 }
 
+export interface HighestQualificationItem {
+  id: number;
+  code: string;
+  name: string;
+  isActive: boolean;
+  isMajor: boolean | null;
+  sortOrder: number;
+}
+
+export interface ScoreTypeItem {
+  id: number;
+  code: string;
+  name: string;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+export interface CategoryItem {
+  id: number;
+  code: string;
+  name: string;
+  isActive: boolean;
+  sortOrder: number;
+}
+
 export interface UniversityParams {
   agencyId: number | null;
   countryId: number | number[] | string | null;
@@ -807,12 +832,16 @@ export interface CompleteDetailsPersonal {
 
 export interface CompleteDetailsEducational {
   applicantId: number;
-  highestQualification: string;
+  highestQualificationId: number;
+  highestQualificationCode: string;
+  highestQualificationName: string;
   instituteName: string;
   universityName: string;
   courseType: string;
-  fieldType: string;
-  scoreType: string;
+  fieldType: string | null;
+  scoreTypeId: number;
+  scoreTypeCode: string;
+  scoreTypeName: string;
   score: string;
   passingYear: string | null;
   message: string;
@@ -834,7 +863,9 @@ export interface CompleteDetailsAchievement {
   id: number;
   applicantId: number;
   isAchievements: boolean;
-  category: string;
+  categoryId: number;
+  categoryCode: string;
+  categoryName: string;
   description: string;
   document: string | null;
   message: string;
@@ -858,12 +889,12 @@ export type CompleteDetailsResponse = ApiResponse<CompleteDetailsData>;
 // Educational Details Payload (for POST and PUT)
 export interface EducationalDetailsPayload {
   applicantId: number;
-  highestQualification: string;
+  highestQualificationId: number;
   instituteName: string;
   universityName: string;
   courseType: string | null;
   fieldType: string | null;
-  scoreType: string;
+  scoreTypeId: number;
   score: string;
   passingYear: string; // Format: "YYYY-MM-DD"
 }
@@ -871,12 +902,17 @@ export interface EducationalDetailsPayload {
 // Educational Details Data (from API response)
 export interface EducationalDetailsData {
   applicantId: number;
-  highestQualification: string;
+  highestQualificationId: number;
+  highestQualificationCode: string;
+  highestQualificationName: string;
+  isMajor?: boolean | null; // isMajor value from GET response
   instituteName: string;
   universityName: string;
   courseType: string;
-  fieldType: string;
-  scoreType: string;
+  fieldType: string | null;
+  scoreTypeId: number;
+  scoreTypeCode: string;
+  scoreTypeName: string;
   score: string;
   passingYear: string;
   message?: string;
@@ -930,7 +966,7 @@ export type DeleteWorkExperienceResponse = ApiResponse<null>;
 // Achievement Item (for API payload)
 export interface AchievementItemPayload {
   isAchievements: boolean;
-  category: string;
+  categoryId: number;
   description: string;
   document: string | null; // JSON stringified document object or null
 }
@@ -940,7 +976,9 @@ export interface AchievementData {
   id: number;
   applicantId: number;
   isAchievements: boolean;
-  category: string;
+  categoryId: number;
+  categoryCode: string;
+  categoryName: string;
   description: string;
   document: string | null; // JSON stringified document object or null
   message?: string;

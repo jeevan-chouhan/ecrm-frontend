@@ -18,6 +18,9 @@ import type {
   CourseItem,
   EnrollmentTypeItem,
   ProgramTypeItem,
+  HighestQualificationItem,
+  ScoreTypeItem,
+  CategoryItem,
   ApplyApplicationParams,
   ApplyApplicationResponse,
   UpdateApplicationStatusPayload,
@@ -783,6 +786,30 @@ const applicantService = {
    */
   getProgramTypes: async (): Promise<ProgramTypeItem[]> => {
     return applicantService.getLookupData<ProgramTypeItem>(ENDPOINTS.LOOKUP.PROGRAM_TYPE);
+  },
+
+  /**
+   * Get highest qualifications from lookup API
+   * @returns Promise with highest qualifications response
+   */
+  getHighestQualifications: async (): Promise<HighestQualificationItem[]> => {
+    return applicantService.getLookupData<HighestQualificationItem>(ENDPOINTS.LOOKUP.HIGHEST_QUALIFICATION);
+  },
+
+  /**
+   * Get score types from lookup API
+   * @returns Promise with score types response
+   */
+  getScoreTypes: async (): Promise<ScoreTypeItem[]> => {
+    return applicantService.getLookupData<ScoreTypeItem>(ENDPOINTS.LOOKUP.SCORE_TYPE);
+  },
+
+  /**
+   * Get categories from lookup API
+   * @returns Promise with categories response
+   */
+  getCategories: async (): Promise<CategoryItem[]> => {
+    return applicantService.getLookupData<CategoryItem>(ENDPOINTS.LOOKUP.CATEGORY);
   },
 
   /**
