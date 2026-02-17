@@ -65,10 +65,6 @@ const CollegeInfoTab = ({ university }: CollegeInfoTabProps) => {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="font-semibold text-lg mb-4" style={{ color: COLORS.textDark }}>
-          {t("collegeInfo.collegeInformation", "College Information")}
-        </h3>
-
         <div className="grid grid-cols-2 gap-x-6 gap-y-4">
           {/* Row 1: Description (full width) */}
           <div className="col-span-2">

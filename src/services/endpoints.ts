@@ -62,6 +62,8 @@ export const ENDPOINTS = {
       `/support/raise?agencyId=${agencyId}&userId=${userId}`,
     MY_QUERIES: (userId: number | string, page: number, size: number) =>
       `/support/my-queries?userId=${userId}&page=${page}&size=${size}`,
+    REPLIES: (queryId: number | string, page: number, size: number) =>
+      `/support/${queryId}/replies?page=${page}&size=${size}`,
   },
 
   // Menu Endpoints

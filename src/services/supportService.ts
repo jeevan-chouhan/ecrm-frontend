@@ -5,6 +5,7 @@ import type {
   RaiseSupportResponse,
   MyQueriesParams,
   MyQueriesResponse,
+  SupportRepliesResponse,
 } from "./types";
 
 /**
@@ -37,7 +38,22 @@ export const getMyQueries = async (
   return response.data;
 };
 
+/**
+ * Get replies for a support query (paginated).
+ * GET /support/:queryId/replies?page=&size=
+ */
+export const getReplies = async (
+  queryId: number | string,
+  page: number,
+  size: number
+): Promise<SupportRepliesResponse> => {
+  const url = ENDPOINTS.SUPPORT.REPLIES(queryId, page, size);
+  const response = await api.get<SupportRepliesResponse>(url);
+  return response.data;
+};
+
 export default {
   raiseSupport,
   getMyQueries,
+  getReplies,
 };

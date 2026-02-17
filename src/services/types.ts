@@ -80,6 +80,7 @@ export type RaiseSupportResponse = ApiResponse<null>;
 export interface SupportQueryItem {
   queryId: number;
   subject: string;
+  description?: string;
   createdAt: string;
   lastRespondedAt: string | null;
   lastReply: string | null;
@@ -107,6 +108,29 @@ export interface MyQueriesData {
 }
 
 export type MyQueriesResponse = ApiResponse<MyQueriesData>;
+
+// Support - Query Replies
+export interface SupportReplyItem {
+  message: string;
+  replyByType: "USER" | "ADMIN";
+  repliedByUserId: number;
+  repliedAt: string;
+}
+
+export interface SupportRepliesData {
+  content: SupportReplyItem[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+  numberOfElements: number;
+  nextPage: number | null;
+  prevPage: number | null;
+}
+
+export type SupportRepliesResponse = ApiResponse<SupportRepliesData>;
 
 // User Data (decoded from JWT token)
 export interface UserData {

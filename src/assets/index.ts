@@ -36,6 +36,7 @@ import DownloadIcon from "./Download.svg?react";
 import PlusIcon from "./Plus.svg?react";
 import EyeIcon from "./Eye.svg?react";
 import EyeOffIcon from "./EyeOff.svg?react";
+import ReplyIcon from "./Reply.svg?react";
 import FileIcon from "./File.svg?react";
 import UploadIcon from "./Upload.svg?react";
 import ArrowLeftIcon from "./ArrowLeft.svg?react";
@@ -87,6 +88,7 @@ export const Download = DownloadIcon;
 export const Plus = PlusIcon;
 export const Eye = EyeIcon;
 export const EyeOff = EyeOffIcon;
+export const Reply = ReplyIcon;
 export const File = FileIcon;
 export const Upload = UploadIcon;
 export const ArrowLeft = ArrowLeftIcon;
@@ -137,6 +139,7 @@ export const icons = {
   Download: DownloadIcon,
   Eye: EyeIcon,
   EyeOff: EyeOffIcon,
+  Reply: ReplyIcon,
   File: FileIcon,
   Upload: UploadIcon,
   ArrowLeft: ArrowLeftIcon,
