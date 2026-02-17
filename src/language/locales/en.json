@@ -43,7 +43,19 @@
     "loginRequired": "Please login to start trial",
     "confirmAction": "Are you sure you want to proceed?",
     "inactive": "Inactive",
-    "active": "Active"
+    "active": "Active",
+    "action": "Action"
+  },
+  "collegeInfo": {
+    "description": "Description",
+    "dliNumber": "DLI Number",
+    "officialWebsite": "Official Website",
+    "contactNumber": "Contact Number",
+    "email": "Email",
+    "address": "Address",
+    "uniqueId": "Unique ID",
+    "fetchError": "Failed to load college information.",
+    "noData": "No college information available."
   },
   "sidebar": {
     "dashboard": "Dashboard",

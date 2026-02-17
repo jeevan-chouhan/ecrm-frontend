@@ -260,7 +260,7 @@ const UniversityDetailPage = () => {
 
     switch (activeTab) {
       case "collegeInfo":
-        return <CollegeInfoTab university={universityDetail} />;
+        return <CollegeInfoTab universityId={universityId ?? undefined} />;
       case "campus":
         return <CampusTab university={universityDetail} universityId={universityId ?? null} />;
       case "fees":

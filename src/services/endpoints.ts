@@ -71,6 +71,12 @@ export const ENDPOINTS = {
     GET_BY_ROLE: "/menu",
   },
 
+  // University Details Endpoints
+  UNIVERSITY_DETAILS: {
+    INFO: (universityId: number | string) =>
+      `/university-details/info?universityId=${universityId}`,
+  },
+
   // Lookup Endpoints
   LOOKUP: {
     ENROLLMENT_TYPE: "/lookup/enrollment_type",

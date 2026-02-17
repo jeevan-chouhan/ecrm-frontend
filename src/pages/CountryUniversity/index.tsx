@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -15,47 +15,11 @@ import { useAppSelector, useAppDispatch } from "../../redux/hooks";
 import { showLoader, hideLoader } from "../../redux/slices/loader/loaderSlice";
 import FilterComponent from "./FilterComponent";
 
-// Extended university interface with additional fields for display
+// Extended university interface with additional fields for display (API may return type)
 interface UniversityDisplayItem extends UniversityItem {
   location?: string;
   type?: string;
-  coursesOffered?: number;
-  tuitionFees?: string;
-  scholarships?: number;
 }
-
-// Mock data for universities
-const mockUniversities: UniversityDisplayItem[] = [
-  {
-    id: 1,
-    name: "Technical University of Munich",
-    countryId: 1,
-    countryName: "Germany",
-    location: "Munich, Germany",
-    type: "Public",
-    coursesOffered: 4,
-    tuitionFees: "$40,000",
-    scholarships: 2,
-  },
-  {
-    id: 2,
-    name: "Massachusetts Institute of Technology",
-    countryId: 2,
-    countryName: "USA",
-    location: "Cambridge, USA",
-    type: "Private",
-    coursesOffered: 2,
-    tuitionFees: "$82,000",
-    scholarships: 1,
-  },
-];
-
-// Mock data for countries
-const mockCountries: CountryItem[] = [
-  { id: 1, name: "Germany", code: "DE" },
-  { id: 2, name: "USA", code: "US" },
-  { id: 3, name: "Singapore", code: "SG" },
-];
 
 const CountryUniversity = () => {
   const { t } = useTranslation();
@@ -63,14 +27,14 @@ const CountryUniversity = () => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
 
-  // Stats
-  const [countriesCount, setCountriesCount] = useState(mockCountries.length);
-  const [universitiesCount, setUniversitiesCount] = useState(mockUniversities.length);
+  // Stats (from API)
+  const [countriesCount, setCountriesCount] = useState(0);
+  const [universitiesCount, setUniversitiesCount] = useState(0);
 
-  // Data
-  const [countries, setCountries] = useState<CountryItem[]>(mockCountries);
-  const [universities, setUniversities] = useState<UniversityDisplayItem[]>(mockUniversities);
-  const [filteredUniversities, setFilteredUniversities] = useState<UniversityDisplayItem[]>(mockUniversities);
+  // Data (from API, no mock fallback)
+  const [countries, setCountries] = useState<CountryItem[]>([]);
+  const [universities, setUniversities] = useState<UniversityDisplayItem[]>([]);
+  const [filteredUniversities, setFilteredUniversities] = useState<UniversityDisplayItem[]>([]);
 
   // Search (works independently)
   const [searchValue, setSearchValue] = useState("");
@@ -102,19 +66,17 @@ const CountryUniversity = () => {
       } else if (response.data) {
         countriesList = response.data;
       }
-      // Only update if we got data, otherwise keep existing/mock data
-      if (countriesList.length > 0) {
-        setCountries(countriesList);
-        setCountriesCount(countriesList.length);
-      }
+      setCountries(countriesList);
+      setCountriesCount(countriesList.length);
     } catch (error) {
-      // Keep mock data on error - don't show toast for better UX with mock data
+      setCountries([]);
+      setCountriesCount(0);
     } finally {
       setIsLoadingCountries(false);
     }
   }, [user?.agencyId]);
 
-  // Fetch universities
+  // Fetch universities (no mock data; type from API if present)
   const fetchUniversities = useCallback(
     async (countryId?: number | null) => {
       if (!user?.agencyId) return;
@@ -126,46 +88,38 @@ const CountryUniversity = () => {
         });
 
         let universitiesList: UniversityDisplayItem[] = [];
-        if (Array.isArray(response)) {
-          universitiesList = response.map((uni) => ({
-            ...uni,
-            location: uni.countryName || "N/A",
-            type: "Public",
-            coursesOffered: Math.floor(Math.random() * 10) + 1,
-            tuitionFees: `$${(Math.floor(Math.random() * 50) + 10) * 1000}`,
-            scholarships: Math.floor(Math.random() * 5) + 1,
-          }));
-        } else if (response.data) {
-          universitiesList = response.data.map((uni) => ({
-            ...uni,
-            location: uni.countryName || "N/A",
-            type: "Public",
-            coursesOffered: Math.floor(Math.random() * 10) + 1,
-            tuitionFees: `$${(Math.floor(Math.random() * 50) + 10) * 1000}`,
-            scholarships: Math.floor(Math.random() * 5) + 1,
-          }));
-        }
+        const rawList = Array.isArray(response) ? response : response.data ?? [];
+        universitiesList = rawList.map((uni: UniversityItem & { type?: string }) => ({
+          ...uni,
+          location: uni.countryName ?? undefined,
+          type: uni.type ?? undefined,
+        }));
 
-        // Only update if we got data, otherwise keep existing/mock data
-        if (universitiesList.length > 0) {
-          setUniversities(universitiesList);
-          setFilteredUniversities(universitiesList);
-          setUniversitiesCount(universitiesList.length);
-        }
+        setUniversities(universitiesList);
+        setFilteredUniversities(universitiesList);
+        setUniversitiesCount(universitiesList.length);
       } catch (error) {
-        // Keep mock data on error - don't clear the list
+        setUniversities([]);
+        setFilteredUniversities([]);
+        setUniversitiesCount(0);
       } finally {
         dispatch(hideLoader());
       }
     },
-    [user?.agencyId, dispatch, t]
+    [user?.agencyId, dispatch]
   );
+
+  // Prevent duplicate API calls (e.g. from React Strict Mode or callback identity changes)
+  const lastFetchKeyRef = useRef<string | null>(null);
 
   // Initial data fetch
   useEffect(() => {
+    const key = String(user?.agencyId ?? "");
+    if (!key || lastFetchKeyRef.current === key) return;
+    lastFetchKeyRef.current = key;
     fetchCountries();
     fetchUniversities();
-  }, [fetchCountries, fetchUniversities]);
+  }, [fetchCountries, fetchUniversities, user?.agencyId]);
 
   // Apply search filter independently (real-time)
   useEffect(() => {
@@ -245,17 +199,22 @@ const CountryUniversity = () => {
         headerName: t("countryUniversity.type", "Type"),
         flex: 0.8,
         minWidth: 100,
-        renderCell: (params) => (
-          <span
-            className="px-2 py-1 rounded-full text-xs font-medium"
-            style={{
-              backgroundColor: params.row.type === "Public" ? "#E3F2FD" : "#FFF3E0",
-              color: params.row.type === "Public" ? "#1565C0" : "#E65100",
-            }}
-          >
-            {params.row.type || "Public"}
-          </span>
-        ),
+        renderCell: (params) => {
+          const type = params.row.type;
+          if (!type) return <span style={{ color: COLORS.textMuted }}>-</span>;
+          const isPublic = type.toLowerCase() === "public";
+          return (
+            <span
+              className="px-2 py-1 rounded-full text-xs font-medium"
+              style={{
+                backgroundColor: isPublic ? "#E3F2FD" : "#FFF3E0",
+                color: isPublic ? "#1565C0" : "#E65100",
+              }}
+            >
+              {type}
+            </span>
+          );
+        },
       },
       {
         field: "actions",

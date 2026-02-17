@@ -132,6 +132,21 @@ export interface SupportRepliesData {
 
 export type SupportRepliesResponse = ApiResponse<SupportRepliesData>;
 
+// University Details - College Info
+export interface UniversityInfoData {
+  universityId: number;
+  universityName: string;
+  uniqueId: string;
+  address: string | null;
+  dliNumber: string;
+  email: string;
+  website: string;
+  description: string;
+  contactNumber: string;
+}
+
+export type UniversityInfoResponse = ApiResponse<UniversityInfoData>;
+
 // User Data (decoded from JWT token)
 export interface UserData {
   userId: number;

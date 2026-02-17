@@ -4,6 +4,7 @@ export { default as userService } from "./userService";
 export { default as applicantService } from "./applicantService";
 export { default as agencyService } from "./agencyService";
 export { default as supportService } from "./supportService";
+export { default as universityDetailService } from "./universityDetailService";
 export { ENDPOINTS } from "./endpoints";
 
 // Export all types from types.ts
@@ -149,5 +150,7 @@ export type {
   MyQueriesParams,
   MyQueriesData,
   MyQueriesResponse,
+  UniversityInfoData,
+  UniversityInfoResponse,
 } from "./types";
 

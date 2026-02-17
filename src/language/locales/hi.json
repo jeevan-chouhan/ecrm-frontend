@@ -43,7 +43,19 @@
     "loginRequired": "कृपया ट्रायल शुरू करने के लिए लॉगिन करें",
     "confirmAction": "क्या आप वाकई आगे बढ़ना चाहते हैं?",
     "inactive": "निष्क्रिय",
-    "active": "सक्रिय"
+    "active": "सक्रिय",
+    "action": "कार्रवाई"
+  },
+  "collegeInfo": {
+    "description": "विवरण",
+    "dliNumber": "DLI नंबर",
+    "officialWebsite": "आधिकारिक वेबसाइट",
+    "contactNumber": "संपर्क नंबर",
+    "email": "ईमेल",
+    "address": "पता",
+    "uniqueId": "अद्वितीय आईडी",
+    "fetchError": "कॉलेज जानकारी लोड करने में विफल।",
+    "noData": "कोई कॉलेज जानकारी उपलब्ध नहीं है।"
   },
   "sidebar": {
     "dashboard": "डैशबोर्ड",
